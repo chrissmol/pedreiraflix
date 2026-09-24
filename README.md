@@ -34,6 +34,6 @@ npm run deploy
 npx wrangler secret put ALLOWED_HOSTS   # ex.: painel.exemplo.com,cdn.exemplo.com
 ```
 
-Inclua na lista o host do painel **e** os hosts para onde ele redireciona os streams. Para testar local: crie `.dev.vars` com `ALLOWED_HOSTS=...` e rode `npx wrangler dev`.
+Inclua na lista o host do painel e, se as playlists HLS apontarem segmentos para outros hosts, esses também (redirecionamentos HTTP do painel não precisam estar na lista). Para testar local: crie `.dev.vars` com `ALLOWED_HOSTS=...` e rode `npx wrangler dev`.
 
 Limites do plano gratuito: 100 mil requisições/dia (HLS ao vivo gasta muitas). Servir vídeo por proxy pode ferir os termos da Cloudflare; use por sua conta e risco.
