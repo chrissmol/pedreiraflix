@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
-import { useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
+import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import { Search, User } from './icons'
+import PinPrompt from './PinPrompt'
 
 const links = [
   { to: '/', label: 'Início' },
@@ -23,6 +24,17 @@ export default function TopNav() {
   const activeProfile = useActiveProfile()
   const profiles = useProfiles()
   const setActiveProfile = useProfilesStore((s) => s.setActiveProfile)
+  const [pinTarget, setPinTarget] = useState<Profile | null>(null)
+
+  function switchTo(p: Profile) {
+    if (p.pin) {
+      setPinTarget(p)
+      setMenuOpen(false)
+      return
+    }
+    if (accId) setActiveProfile(accId, p.id)
+    setMenuOpen(false)
+  }
 
   // Tap outside closes the account menu (there is no hover on touch screens).
   useEffect(() => {
@@ -109,10 +121,7 @@ export default function TopNav() {
                   .map((p) => (
                     <button
                       key={p.id}
-                      onClick={() => {
-                        if (accId) setActiveProfile(accId, p.id)
-                        setMenuOpen(false)
-                      }}
+                      onClick={() => switchTo(p)}
                       className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
                     >
                       <span
@@ -144,6 +153,17 @@ export default function TopNav() {
           </div>
         )}
       </div>
+
+      {pinTarget && (
+        <PinPrompt
+          profile={pinTarget}
+          onCancel={() => setPinTarget(null)}
+          onSuccess={() => {
+            if (accId) setActiveProfile(accId, pinTarget.id)
+            setPinTarget(null)
+          }}
+        />
+      )}
     </header>
   )
 }

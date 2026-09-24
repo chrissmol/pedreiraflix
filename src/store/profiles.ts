@@ -7,6 +7,10 @@ export interface Profile {
   id: string
   name: string
   color: string
+  /** Hides categories that look like adult content (see lib/parentalControl.ts) across every list, search and direct link. */
+  isKids?: boolean
+  /** 4-digit PIN required to switch into this profile, if set. Household-level friction, not real security. */
+  pin?: string
 }
 
 interface AccountProfiles {
@@ -25,12 +29,31 @@ interface ProfilesState {
   removeProfile: (accId: string, profileId: string) => void
   renameProfile: (accId: string, profileId: string, name: string) => void
   setActiveProfile: (accId: string, profileId: string) => void
+  setKids: (accId: string, profileId: string, isKids: boolean) => void
+  setPin: (accId: string, profileId: string, pin: string | null) => void
 }
 
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
+const EMPTY_PROFILES: Profile[] = []
 
 function newProfile(name: string, colorIndex: number): Profile {
   return { id: `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, name, color: COLORS[colorIndex % COLORS.length] }
+}
+
+function updateProfile(
+  state: ProfilesState,
+  accId: string,
+  profileId: string,
+  patch: Partial<Profile>,
+): Pick<ProfilesState, 'byAccount'> {
+  const account = state.byAccount[accId]
+  if (!account) return state
+  return {
+    byAccount: {
+      ...state.byAccount,
+      [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? { ...p, ...patch } : p)) },
+    },
+  }
 }
 
 export const useProfilesStore = create<ProfilesState>()(
@@ -60,23 +83,15 @@ export const useProfilesStore = create<ProfilesState>()(
           const activeId = account.activeId === profileId ? profiles[0].id : account.activeId
           return { byAccount: { ...state.byAccount, [accId]: { profiles, activeId } } }
         }),
-      renameProfile: (accId, profileId, name) =>
-        set((state) => {
-          const account = state.byAccount[accId]
-          if (!account) return state
-          return {
-            byAccount: {
-              ...state.byAccount,
-              [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? { ...p, name } : p)) },
-            },
-          }
-        }),
+      renameProfile: (accId, profileId, name) => set((state) => updateProfile(state, accId, profileId, { name })),
       setActiveProfile: (accId, profileId) =>
         set((state) => {
           const account = state.byAccount[accId]
           if (!account) return state
           return { byAccount: { ...state.byAccount, [accId]: { ...account, activeId: profileId } } }
         }),
+      setKids: (accId, profileId, isKids) => set((state) => updateProfile(state, accId, profileId, { isKids })),
+      setPin: (accId, profileId, pin) => set((state) => updateProfile(state, accId, profileId, { pin: pin || undefined })),
     }),
     { name: 'iptv-profiles' },
   ),
@@ -90,7 +105,10 @@ export function useActiveAccountId(): string | null {
 
 export function useProfiles(): Profile[] {
   const accId = useActiveAccountId()
-  return useProfilesStore((s) => (accId ? (s.byAccount[accId]?.profiles ?? []) : []))
+  // `?? EMPTY_PROFILES` (a module-level constant), not `?? []`: a fresh array literal here would be a
+  // new reference on every selector check, and zustand's external-store subscription treats "the
+  // selector's result changed" as "re-render" — an infinite loop for any account with no profiles yet.
+  return useProfilesStore((s) => (accId ? (s.byAccount[accId]?.profiles ?? EMPTY_PROFILES) : EMPTY_PROFILES))
 }
 
 export function useActiveProfile(): Profile | null {

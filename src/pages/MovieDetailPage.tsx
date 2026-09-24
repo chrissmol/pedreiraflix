@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import BlockedByProfile from '../components/BlockedByProfile'
 import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
+import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
-import { useActiveProfileId } from '../store/profiles'
+import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
 
 export default function MovieDetailPage() {
@@ -14,21 +16,29 @@ export default function MovieDetailPage() {
   const [movie, setMovie] = useState<MovieDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [blocked, setBlocked] = useState(false)
 
   const profileId = useActiveProfileId()
+  const isKids = Boolean(useActiveProfile()?.isKids)
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'movie', Number(id)))
 
   useEffect(() => {
     if (!client || !id) return
     setLoading(true)
+    setBlocked(false)
     cached(`movie-info:${id}`, () => client.getVodInfo(Number(id)))
-      .then(setMovie)
+      .then((data) => {
+        setMovie(data)
+        // A direct link/bookmark bypasses the already-filtered catalog lists, so this is checked again here.
+        if (isKids) isCategoryBlocked(client, 'movie', data.categoryId).then(setBlocked)
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar filme'))
       .finally(() => setLoading(false))
-  }, [client, id])
+  }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
+  if (blocked) return <BlockedByProfile />
   if (error || !movie) return <div className="pt-32 text-center text-rose-400">{error || 'Filme não encontrado'}</div>
 
   const backdrop = movie.backdropPath[0] || movie.streamIcon

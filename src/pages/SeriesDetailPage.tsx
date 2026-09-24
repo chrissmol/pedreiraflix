@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import BlockedByProfile from '../components/BlockedByProfile'
 import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
+import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
-import { useActiveProfileId } from '../store/profiles'
+import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { SeriesDetails } from '../types'
 
 export default function SeriesDetailPage() {
@@ -15,8 +17,10 @@ export default function SeriesDetailPage() {
   const [activeSeason, setActiveSeason] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [blocked, setBlocked] = useState(false)
 
   const profileId = useActiveProfileId()
+  const isKids = Boolean(useActiveProfile()?.isKids)
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'series', Number(id)))
   const episodeProgress = useLibraryStore((s) => s.progress)
@@ -25,16 +29,19 @@ export default function SeriesDetailPage() {
   useEffect(() => {
     if (!client || !id) return
     setLoading(true)
+    setBlocked(false)
     cached(`series-info:${id}`, () => client.getSeriesInfo(Number(id)))
       .then((data) => {
         setSeries(data)
         setActiveSeason(data.seasons[0]?.seasonNumber ?? 1)
+        if (isKids) isCategoryBlocked(client, 'series', data.categoryId).then(setBlocked)
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar série'))
       .finally(() => setLoading(false))
-  }, [client, id])
+  }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
+  if (blocked) return <BlockedByProfile />
   if (error || !series) return <div className="pt-32 text-center text-rose-400">{error || 'Série não encontrada'}</div>
 
   const backdrop = series.backdropPath[0] || series.cover

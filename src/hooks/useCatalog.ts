@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cached } from '../lib/cache'
+import { isAdultCategoryName } from '../lib/parentalControl'
 import { XtreamApiError, type XtreamClient } from '../lib/xtream'
+import { useActiveProfile } from '../store/profiles'
 import type { Category, LiveChannel, Movie, SeriesItem } from '../types'
 import { useXtream } from './useXtream'
 
@@ -64,6 +66,7 @@ function useCategorizedCatalog<T>(
   client: XtreamClient | null,
   loadCategories: (client: XtreamClient) => Promise<Category[]>,
   loadItemsForCategory: (client: XtreamClient, categoryId: string) => Promise<T[]>,
+  hideAdultCategories: boolean,
 ): CategorizedCatalogState<T> {
   const [state, setState] = useState<CategorizedCatalogState<T>>({
     categories: [],
@@ -81,8 +84,11 @@ function useCategorizedCatalog<T>(
     setState({ categories: [], groups: [], loading: true, error: null })
 
     cached(`${kind}:categories`, () => withRetry(() => loadCategories(client)))
-      .then((categories) => {
+      .then((allCategories) => {
         if (cancelled || myRequest !== requestId.current) return
+        // Applied on every read (not cached), so toggling "Perfil infantil" takes effect immediately
+        // without needing to refetch — the raw category list itself is never filtered in the cache.
+        const categories = hideAdultCategories ? allCategories.filter((c) => !isAdultCategoryName(c.categoryName)) : allCategories
         const groups: CategoryGroup<T>[] = categories.map((category) => ({
           category,
           items: [],
@@ -130,30 +136,33 @@ function useCategorizedCatalog<T>(
     return () => {
       cancelled = true
     }
-  }, [kind, client, loadCategories, loadItemsForCategory])
+  }, [kind, client, loadCategories, loadItemsForCategory, hideAdultCategories])
 
   return state
 }
 
 export function useLiveCatalog() {
   const client = useXtream()
+  const hideAdult = Boolean(useActiveProfile()?.isKids)
   const loadCategories = useCallback((c: XtreamClient) => c.getLiveCategories(), [])
   const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getLiveStreams(categoryId), [])
-  return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems)
+  return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems, hideAdult)
 }
 
 export function useMovieCatalog() {
   const client = useXtream()
+  const hideAdult = Boolean(useActiveProfile()?.isKids)
   const loadCategories = useCallback((c: XtreamClient) => c.getVodCategories(), [])
   const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getVodStreams(categoryId), [])
-  return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems)
+  return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems, hideAdult)
 }
 
 export function useSeriesCatalog() {
   const client = useXtream()
+  const hideAdult = Boolean(useActiveProfile()?.isKids)
   const loadCategories = useCallback((c: XtreamClient) => c.getSeriesCategories(), [])
   const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getSeries(categoryId), [])
-  return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems)
+  return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems, hideAdult)
 }
 
 /** Flattens every loaded item across all category groups, deduped by id. Useful for search/home rails. */

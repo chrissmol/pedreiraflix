@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import BlockedByProfile from '../components/BlockedByProfile'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
+import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
-import { useActiveProfileId } from '../store/profiles'
+import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, LiveChannel, SeriesDetails } from '../types'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
@@ -21,6 +23,7 @@ export default function WatchPage() {
   const client = useXtream()
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
+  const isKids = Boolean(useActiveProfile()?.isKids)
   const setProgress = useLibraryStore((s) => s.setProgress)
   const removeProgress = useLibraryStore((s) => s.removeProgress)
   const markWatched = useLibraryStore((s) => s.markWatched)
@@ -111,6 +114,40 @@ export default function WatchPage() {
     }
   }, [client, kind, seriesId])
 
+  // Direct link/bookmark/deep link guard — the catalog lists themselves already hide adult categories
+  // for a kids profile, but someone could still land here straight from a URL that bypasses them.
+  const [blocked, setBlocked] = useState(false)
+  // Starts true for a kids profile: playback must not start even for the instant it'd take the check
+  // below to resolve, and this flips back to false immediately for every other profile.
+  const [checkingProfile, setCheckingProfile] = useState(isKids)
+  useEffect(() => {
+    if (!client || !kind || !id || !isKids) {
+      setBlocked(false)
+      setCheckingProfile(false)
+      return
+    }
+    // Wait for the data each kind's category lookup depends on, rather than checking too early and
+    // momentarily deciding "not blocked" before it's actually loaded.
+    if (kind === 'live' && liveChannels.length === 0) return
+    if (kind === 'series' && !seriesDetails) return
+    setCheckingProfile(true)
+    let cancelled = false
+    const watchKind = kind
+    async function check() {
+      let categoryId: string | null | undefined
+      if (watchKind === 'live') categoryId = liveChannels.find((c) => c.streamId === Number(id))?.categoryId
+      else if (watchKind === 'series') categoryId = seriesDetails?.categoryId
+      else categoryId = (await cached(`movie-info:${id}`, () => client!.getVodInfo(Number(id)))).categoryId
+      if (cancelled) return
+      setBlocked(await isCategoryBlocked(client!, watchKind, categoryId))
+      setCheckingProfile(false)
+    }
+    check().catch(() => setCheckingProfile(false))
+    return () => {
+      cancelled = true
+    }
+  }, [client, kind, id, isKids, liveChannels, seriesDetails])
+
   const nextEpisode = useMemo(() => {
     if (!seriesDetails || kind !== 'series') return null
     const episodes = flattenEpisodes(seriesDetails)
@@ -159,7 +196,8 @@ export default function WatchPage() {
     if (nextEpisode) goToEpisode(nextEpisode)
   }
 
-  if (!src) return <div className="pt-32 text-center text-zinc-400">Carregando player...</div>
+  if (!src || checkingProfile) return <div className="pt-32 text-center text-zinc-400">Carregando player...</div>
+  if (blocked) return <BlockedByProfile />
 
   const subtitle =
     kind === 'live' && current
