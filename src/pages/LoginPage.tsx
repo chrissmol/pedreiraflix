@@ -1,9 +1,13 @@
 import { type FormEvent, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Trash, User } from '../components/icons'
+import { Eye, EyeOff, Pencil, Trash, User } from '../components/icons'
 import { signIn } from '../lib/session'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
+
+function accountLabel(account: SavedAccount): string {
+  return account.label || account.username
+}
 
 const inputClass =
   'brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors focus:border-brand-500/60'
@@ -21,16 +25,20 @@ export default function LoginPage() {
   const hasSession = useAuthStore((s) => Boolean(s.credentials))
   const accounts = useAccountsStore((s) => s.accounts)
   const removeAccount = useAccountsStore((s) => s.removeAccount)
+  const renameAccount = useAccountsStore((s) => s.renameAccount)
   const last = accounts[0]
   // Prefilled with the last account, so even the "type it again" path is just one tap on Entrar.
   const [baseUrl, setBaseUrl] = useState(last?.baseUrl ?? '')
   const [username, setUsername] = useState(last?.username ?? '')
   const [password, setPassword] = useState(last?.password ?? '')
+  const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [showForm, setShowForm] = useState(accounts.length === 0)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
   if (hasSession && !busyId) return <Navigate to="/" replace />
 
@@ -48,11 +56,16 @@ export default function LoginPage() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    run('form', () => signIn({ baseUrl, username, password }, remember))
+    run('form', () => signIn({ baseUrl, username, password }, remember, name))
   }
 
   function enterSaved(account: SavedAccount) {
-    run(account.id, () => signIn(account))
+    run(account.id, () => signIn(account, true, account.label))
+  }
+
+  function saveRename(id: string) {
+    if (renameValue.trim()) renameAccount(id, renameValue.trim())
+    setRenamingId(null)
   }
 
   return (
@@ -71,39 +84,78 @@ export default function LoginPage() {
 
         {accounts.length > 0 && !showForm && (
           <div className="space-y-2" data-testid="saved-accounts">
-            {accounts.map((account) => (
-              <div key={account.id} className="flex items-stretch gap-2">
-                <button
-                  onClick={() => enterSaved(account)}
-                  disabled={busyId !== null}
-                  className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-3 text-left transition-colors hover:border-brand-500/50 hover:bg-zinc-800 active:bg-zinc-800 disabled:opacity-60"
+            {accounts.map((account) =>
+              renamingId === account.id ? (
+                <form
+                  key={account.id}
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    saveRename(account.id)
+                  }}
+                  className="flex items-center gap-2 rounded-xl border border-brand-500/40 bg-zinc-900/70 px-3.5 py-2"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-white">
                     <User className="h-5 w-5" />
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-white">{account.username}</span>
-                    <span className="block truncate text-xs text-zinc-500">{hostLabel(account.baseUrl)}</span>
-                  </span>
-                  <span className="shrink-0 text-xs font-semibold text-brand-300">
-                    {busyId === account.id ? 'Conectando...' : 'Entrar'}
-                  </span>
-                </button>
-                <button
-                  onClick={() => removeAccount(account.id)}
-                  aria-label={`Esquecer conta ${account.username}`}
-                  title="Esquecer esta conta"
-                  className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400"
-                >
-                  <Trash className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={() => saveRename(account.id)}
+                    placeholder={account.username}
+                    maxLength={30}
+                    className="brand-focus min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-sm text-white"
+                  />
+                </form>
+              ) : (
+                <div key={account.id} className="flex items-stretch gap-2">
+                  <button
+                    onClick={() => enterSaved(account)}
+                    disabled={busyId !== null}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-3 text-left transition-colors hover:border-brand-500/50 hover:bg-zinc-800 active:bg-zinc-800 disabled:opacity-60"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-white">
+                      <User className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-white">{accountLabel(account)}</span>
+                      <span className="block truncate text-xs text-zinc-500">
+                        {account.label ? `${account.username} · ` : ''}
+                        {hostLabel(account.baseUrl)}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs font-semibold text-brand-300">
+                      {busyId === account.id ? 'Conectando...' : 'Entrar'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setRenameValue(account.label ?? '')
+                      setRenamingId(account.id)
+                    }}
+                    aria-label={`Renomear conta ${accountLabel(account)}`}
+                    title="Renomear"
+                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => removeAccount(account.id)}
+                    aria-label={`Esquecer conta ${accountLabel(account)}`}
+                    title="Esquecer esta conta"
+                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                </div>
+              ),
+            )}
             <button
               onClick={() => {
                 setBaseUrl('')
                 setUsername('')
                 setPassword('')
+                setName('')
                 setShowForm(true)
               }}
               className="mt-2 w-full rounded-xl border border-dashed border-zinc-700 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-brand-500/50 hover:text-white"
@@ -134,6 +186,22 @@ export default function LoginPage() {
                   placeholder="http://seuservidor.com:8080"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Nome (opcional)
+                </label>
+                <input
+                  id="account-name"
+                  name="account-name"
+                  type="text"
+                  autoComplete="off"
+                  maxLength={30}
+                  placeholder="ex: Conta principal, TV da sala..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className={inputClass}
                 />
               </div>

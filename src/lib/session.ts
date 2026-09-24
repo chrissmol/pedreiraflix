@@ -63,14 +63,14 @@ export function ensureActiveProfile(creds: XtreamCredentials): void {
 }
 
 /** Validates the credentials against the panel, starts the session and (optionally) remembers the account. */
-export async function signIn(raw: XtreamCredentials, remember = true): Promise<void> {
+export async function signIn(raw: XtreamCredentials, remember = true, label?: string): Promise<void> {
   const creds = normalizeCredentials(raw)
   const { user, server } = await new XtreamClient(creds).login()
   const previous = useAuthStore.getState().credentials
   // Switching accounts: the in-memory catalog belongs to the old server.
   if (previous && (previous.baseUrl !== creds.baseUrl || previous.username !== creds.username)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user))
-  if (remember) useAccountsStore.getState().saveAccount(creds)
+  if (remember) useAccountsStore.getState().saveAccount(creds, label)
   ensureActiveProfile(creds)
 }
 

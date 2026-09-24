@@ -21,6 +21,15 @@ navigator.storage?.persist?.().catch(() => {})
 // Keep account status/expiry fresh on every launch, without ever forcing a new login.
 refreshSession()
 
+// Only in the real build: in dev, Vite serves unhashed/rebuilding modules on every save, and a service
+// worker caching those would fight HMR instead of helping anything. This is what makes "Adicionar à
+// tela de início" behave like an app (instant launch, cached shell) instead of a bookmarked tab.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

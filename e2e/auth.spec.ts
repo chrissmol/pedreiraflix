@@ -72,3 +72,33 @@ test('an existing pre-upgrade session is migrated into saved accounts', async ({
   const accounts = await page.evaluate(() => JSON.parse(localStorage.getItem('iptv-accounts') || '{}'))
   expect(accounts.state.accounts[0]).toMatchObject(MOCK)
 })
+
+test('a saved account can be given a custom name, shown instead of the username', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('Endereço do servidor').fill(MOCK.baseUrl)
+  await page.getByLabel('Nome (opcional)').fill('Conta principal')
+  await page.getByLabel('Usuário', { exact: true }).fill(MOCK.username)
+  await page.getByLabel('Senha', { exact: true }).fill(MOCK.password)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+
+  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Sair' }).click()
+
+  const saved = page.getByTestId('saved-accounts')
+  await expect(saved).toContainText('Conta principal')
+  await expect(saved).toContainText(MOCK.username) // still shown as a secondary detail
+  await saved.getByRole('button', { name: /Entrar/ }).first().click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('an existing saved account can be renamed from the login screen', async ({ page }) => {
+  await login(page)
+  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Sair' }).click()
+
+  await page.getByRole('button', { name: `Renomear conta ${MOCK.username}` }).click()
+  await page.getByPlaceholder(MOCK.username).fill('Servidor de teste')
+  await page.getByPlaceholder(MOCK.username).press('Enter')
+  await expect(page.getByTestId('saved-accounts')).toContainText('Servidor de teste')
+})
