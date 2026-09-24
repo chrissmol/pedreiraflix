@@ -5,18 +5,22 @@
 const UPSTREAM_HEADERS = { 'user-agent': 'Mozilla/5.0' }
 
 // Applied to every response this Worker returns (site and API alike). No inline <script> exists in the
-// build (Vite emits external, hashed <script type="module"> files), so script-src stays strict; inline
-// `style="..."` attributes are used throughout (React's `style={{...}}` prop, e.g. per-profile avatar
-// colors), so style-src needs 'unsafe-inline'. connect-src/media-src are 'self' only because video and
-// every API call already go through our own /api/* proxy, never straight to the IPTV provider's origin.
+// build (Vite emits external, hashed <script type="module"> files) other than the ::cue subtitle style
+// tag and the Cast SDK's own bootstrap, both covered by 'unsafe-inline'/the gstatic.com allowance below;
+// inline `style="..."` attributes are used throughout (React's `style={{...}}` prop, e.g. per-profile
+// avatar colors), so style-src needs 'unsafe-inline' too. connect-src/media-src are 'self' plus Google's
+// Cast sender origin — video/API calls otherwise go through our own /api/* proxy only, never straight to
+// the IPTV provider. www.gstatic.com is the Chromecast sender SDK (lib/cast.ts) — untested against real
+// Cast hardware (no device available here), so if casting doesn't work end to end, check the browser
+// console for a *different* blocked CSP origin the SDK needs and add it here.
 const SECURITY_HEADERS = {
   'content-security-policy': [
     "default-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://www.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
-    "connect-src 'self'",
+    "connect-src 'self' https://www.gstatic.com",
     "media-src 'self'",
     "worker-src 'self'",
     "manifest-src 'self'",

@@ -401,3 +401,12 @@ export function Pencil({ className }: IconProps) {
     </Stroke>
   )
 }
+
+export function AirPlay({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M6 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" />
+      <path d="M12 15l5 6H7z" />
+    </Stroke>
+  )
+}

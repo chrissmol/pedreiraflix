@@ -1,6 +1,8 @@
 import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState } from 'react'
 import {
+  AirPlay,
+  Cast,
   ChevronDown,
   ChevronLeft,
   ChevronUp,
@@ -19,6 +21,8 @@ import {
   VolumeHigh,
   VolumeMute,
 } from './icons'
+import { useAirPlay } from '../hooks/useAirPlay'
+import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
 
 interface NextEpisode {
@@ -136,6 +140,9 @@ export default function VideoPlayer({
   const [isPip, setIsPip] = useState(false)
   const [nextUpVisible, setNextUpVisible] = useState(false)
   const [nextUpDismissed, setNextUpDismissed] = useState(false)
+  const { supported: airPlaySupported, showPicker: showAirPlayPicker } = useAirPlay(videoRef)
+  const [castSupported, setCastSupported] = useState(false)
+  const [casting, setCasting] = useState(false)
 
   // Starts false regardless of the `autoPlay` intent: browsers can silently
   // reject an unmuted autoplay attempt, and if this stayed optimistically
@@ -522,6 +529,39 @@ export default function VideoPlayer({
       video.removeEventListener('leavepictureinpicture', onLeavePip)
     }
   }, [])
+
+  // --- Chromecast: loads the sender SDK lazily (Chromium browsers only — see lib/cast.ts) so a Safari/
+  // Firefox viewer never pays for the extra script. Not testable against real hardware here (see the
+  // caveat in lib/cast.ts); this only verifies the button appears and calls the SDK correctly.
+  useEffect(() => {
+    let cancelled = false
+    ensureCastSdk().then((ok) => {
+      if (!cancelled) setCastSupported(ok)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function handleCast() {
+    if (!casting) {
+      setCasting(true)
+      try {
+        await castMedia({
+          url: new URL(src, window.location.origin).toString(),
+          contentType: isHls ? 'application/x-mpegurl' : 'video/mp4',
+          title: title || 'PedreiraFlix',
+          poster,
+          startAtSeconds: videoRef.current?.currentTime,
+        })
+      } catch {
+        // User cancelled the device picker, or no Cast session — nothing to recover, just stop "casting".
+        setCasting(false)
+      }
+    } else {
+      setCasting(false)
+    }
+  }
 
   // --- Wake Lock: keeps the screen on while actively playing (phones/tablets dim and lock otherwise). ---
   useEffect(() => {
@@ -942,6 +982,28 @@ export default function VideoPlayer({
               }`}
             >
               <PictureInPicture className="h-4 w-4" />
+            </button>
+          )}
+
+          {airPlaySupported && (
+            <button
+              onClick={showAirPlayPicker}
+              aria-label="AirPlay"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40 pointer-coarse:hidden"
+            >
+              <AirPlay className="h-4 w-4" />
+            </button>
+          )}
+
+          {castSupported && (
+            <button
+              onClick={handleCast}
+              aria-label="Transmitir (Chromecast)"
+              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
+                casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+              }`}
+            >
+              <Cast className="h-4 w-4" />
             </button>
           )}
 
