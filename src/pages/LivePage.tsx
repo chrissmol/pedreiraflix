@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Calendar } from '../components/icons'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { matchesQuery } from '../lib/search'
 
@@ -83,13 +84,21 @@ export default function LivePage() {
       <div className="flex-1 px-4 py-4 sm:px-8">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="font-display text-2xl font-bold text-white">Canais ao vivo</h1>
-          <input
-            type="search"
-            placeholder="Filtrar canais..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white transition-colors focus:border-brand-500/60 sm:w-64"
-          />
+          <div className="flex gap-2">
+            <input
+              type="search"
+              placeholder="Filtrar canais..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white transition-colors focus:border-brand-500/60 sm:w-64"
+            />
+            <button
+              onClick={() => navigate(`/guide${activeCategory ? `?category=${activeCategory}` : ''}`)}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+            >
+              <Calendar className="h-4 w-4" /> Guia
+            </button>
+          </div>
         </div>
 
         <select

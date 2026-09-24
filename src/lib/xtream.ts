@@ -13,6 +13,14 @@ import type {
   XtreamCredentials,
 } from '../types'
 
+function decodeEpgText(value: string): string {
+  try {
+    return decodeURIComponent(escape(atob(value)))
+  } catch {
+    return value
+  }
+}
+
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string')
   if (typeof value === 'string' && value.trim()) return [value]
@@ -130,6 +138,8 @@ export class XtreamClient {
         stream_icon: string | null
         category_id: string
         epg_channel_id: string | null
+        tv_archive?: number | string
+        tv_archive_duration?: number | string
       }[]
     >('get_live_streams', categoryId ? { category_id: categoryId } : {})
     return raw.map((s) => ({
@@ -139,6 +149,8 @@ export class XtreamClient {
       streamIcon: proxyImage(s.stream_icon),
       categoryId: s.category_id,
       epgChannelId: s.epg_channel_id,
+      hasArchive: Number(s.tv_archive) === 1,
+      archiveDurationHours: Number(s.tv_archive_duration) || 0,
     }))
   }
 
@@ -314,26 +326,57 @@ export class XtreamClient {
       }[]
     }>('get_short_epg', { stream_id: String(streamId), limit: String(limit) })
 
-    function decodeBase64(value: string): string {
-      try {
-        return decodeURIComponent(escape(atob(value)))
-      } catch {
-        return value
-      }
-    }
+    return (data.epg_listings || []).map((e) => ({
+      id: e.id,
+      title: decodeEpgText(e.title),
+      description: decodeEpgText(e.description),
+      start: e.start,
+      end: e.end,
+    }))
+  }
+
+  /** The channel's whole EPG "day" (~24h, sometimes including a few hours of past programs), used by the
+   * grid guide and to know which past programs are catch-up-eligible. Heavier than getShortEpg, so the
+   * guide only calls this for channels actually on screen, and it's cached like everything else. */
+  async getFullEpg(streamId: number): Promise<EpgProgram[]> {
+    const data = await this.call<{
+      epg_listings?: {
+        id: string
+        title: string
+        description: string
+        start: string
+        end: string
+        start_timestamp?: string | number
+        stop_timestamp?: string | number
+        has_archive?: string | number
+      }[]
+    }>('get_simple_data_table', { stream_id: String(streamId) })
 
     return (data.epg_listings || []).map((e) => ({
       id: e.id,
-      title: decodeBase64(e.title),
-      description: decodeBase64(e.description),
+      title: decodeEpgText(e.title),
+      description: decodeEpgText(e.description),
       start: e.start,
       end: e.end,
+      startTimestamp: e.start_timestamp != null ? Number(e.start_timestamp) : undefined,
+      endTimestamp: e.stop_timestamp != null ? Number(e.stop_timestamp) : undefined,
+      hasArchive: Number(e.has_archive) === 1,
     }))
   }
 
   streamUrl(kind: 'live' | 'movie' | 'series', id: number | string, ext = 'm3u8'): string {
     const folder = kind === 'live' ? 'live' : kind === 'movie' ? 'movie' : 'series'
     const direct = `${this.creds.baseUrl}/${folder}/${this.creds.username}/${this.creds.password}/${id}.${ext}`
+    return `/api/stream?url=${encodeURIComponent(direct)}`
+  }
+
+  /** Catch-up/rewind playback: `startUnixSeconds` is when the program began, `durationMinutes` how long to
+   * play from there. Xtream's own oddly-specific timestamp format for this endpoint ("YYYY-MM-DD:HH-MM"). */
+  timeshiftUrl(streamId: number, startUnixSeconds: number, durationMinutes: number): string {
+    const d = new Date(startUnixSeconds * 1000)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const start = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}:${pad(d.getHours())}-${pad(d.getMinutes())}`
+    const direct = `${this.creds.baseUrl}/timeshift/${this.creds.username}/${this.creds.password}/${Math.ceil(durationMinutes)}/${start}/${streamId}.m3u8`
     return `/api/stream?url=${encodeURIComponent(direct)}`
   }
 

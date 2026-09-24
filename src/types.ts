@@ -31,6 +31,9 @@ export interface LiveChannel {
   streamIcon: string | null
   categoryId: string
   epgChannelId: string | null
+  /** Whether this channel's provider keeps a rewind/catch-up buffer at all, and for how long. */
+  hasArchive: boolean
+  archiveDurationHours: number
 }
 
 export interface Movie {
@@ -95,6 +98,11 @@ export interface EpgProgram {
   description: string
   start: string
   end: string
+  /** Unix seconds — undefined for the short (now/next) EPG, which the grid/catch-up view don't use. */
+  startTimestamp?: number
+  endTimestamp?: number
+  /** True when the provider says this specific past program can still be watched via catch-up. */
+  hasArchive?: boolean
 }
 
 export type CatalogItem = LiveChannel | Movie | SeriesItem

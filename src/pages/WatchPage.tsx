@@ -48,10 +48,18 @@ export default function WatchPage() {
   const isHls = ext === 'm3u8'
   const isLikelyUnsupportedContainer = !isHls && !['mp4', 'webm', 'ts'].includes(ext.toLowerCase())
 
+  // Catch-up/rewind: a live channel watched from the EPG grid ("Assistir de novo"), fixed-length and
+  // seekable like VOD instead of an endless live stream. See EpgGuidePage.tsx.
+  const catchupStart = kind === 'live' ? Number(cleanParam(params.get('start')) || 0) || null : null
+  const catchupDurationMin = Number(cleanParam(params.get('duration')) || 0) || null
+  const isCatchup = catchupStart != null
+
   const src = useMemo(() => {
     if (!client || !kind || !id) return null
+    if (isCatchup && catchupStart && catchupDurationMin) return client.timeshiftUrl(Number(id), catchupStart, catchupDurationMin)
     return client.streamUrl(kind, id, ext)
-  }, [client, kind, id, ext])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, kind, id, ext, isCatchup, catchupStart, catchupDurationMin])
 
   // Stops pull-to-refresh / scroll chaining from reaching the page behind the player on phones.
   useEffect(() => {
@@ -199,8 +207,9 @@ export default function WatchPage() {
   if (!src || checkingProfile) return <div className="pt-32 text-center text-zinc-400">Carregando player...</div>
   if (blocked) return <BlockedByProfile />
 
-  const subtitle =
-    kind === 'live' && current
+  const subtitle = isCatchup
+    ? `Catch-up · ${catchupStart ? new Date(catchupStart * 1000).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}`
+    : kind === 'live' && current
       ? `AGORA ${formatEpgTime(current.start)}-${formatEpgTime(current.end)} ${current.title}${nextProgram ? ` · A seguir: ${nextProgram.title}` : ''}`
       : isLikelyUnsupportedContainer
         ? `Formato .${ext} pode não ser suportado pelo navegador (comum em .mkv/.avi).`
@@ -211,7 +220,7 @@ export default function WatchPage() {
       <VideoPlayer
         src={src}
         isHls={isHls}
-        isLive={kind === 'live'}
+        isLive={kind === 'live' && !isCatchup}
         title={name}
         subtitle={subtitle}
         poster={image}
@@ -220,8 +229,8 @@ export default function WatchPage() {
         onProgress={handleProgress}
         onEnded={handleEnded}
         next={nextEpisode ? { label: `${nextEpisode.title}`, onPlay: () => goToEpisode(nextEpisode) } : null}
-        onChannelUp={kind === 'live' && liveChannels.length > 1 ? zapNext : undefined}
-        onChannelDown={kind === 'live' && liveChannels.length > 1 ? zapPrev : undefined}
+        onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
+        onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
       />
     </div>
   )
