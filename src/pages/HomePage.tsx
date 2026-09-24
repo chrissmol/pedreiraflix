@@ -3,12 +3,30 @@ import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
-import Hero from '../components/Hero'
+import HeroCarousel, { type FeaturedCandidate } from '../components/HeroCarousel'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
-import { useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
+import { flattenGroups, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { favoritesFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
+import type { Movie, SeriesItem } from '../types'
+
+// The rule (explicitly requested): only the household's "must-watch" bar, ≥8.5 — no fallback to
+// lower-rated content if nothing qualifies yet, that's the point of "só". Alternates movie/series/movie/…
+// so it's never two of the same kind back to back, each sorted best-first within its own kind.
+const MIN_RATING = 8.5
+
+function pickFeatured(movies: Movie[], series: SeriesItem[]): (Movie | SeriesItem)[] {
+  const topMovies = movies.filter((m) => m.streamIcon && Number(m.rating) >= MIN_RATING).sort((a, b) => Number(b.rating) - Number(a.rating))
+  const topSeries = series.filter((s) => s.cover && Number(s.rating) >= MIN_RATING).sort((a, b) => Number(b.rating) - Number(a.rating))
+
+  const alternating: (Movie | SeriesItem)[] = []
+  for (let i = 0; i < Math.max(topMovies.length, topSeries.length); i++) {
+    if (topMovies[i]) alternating.push(topMovies[i])
+    if (topSeries[i]) alternating.push(topSeries[i])
+  }
+  return alternating
+}
 
 export default function HomePage() {
   const movies = useMovieCatalog()
@@ -18,17 +36,20 @@ export default function HomePage() {
   const favoritesRecord = useLibraryStore((s) => s.favorites)
   const favorites = useMemo(() => favoritesFor(favoritesRecord, profileId), [favoritesRecord, profileId])
 
-  const featured = useMemo(() => {
-    for (const group of series.groups) {
-      const withImage = group.items.find((s) => s.cover)
-      if (withImage) return withImage
-    }
-    for (const group of movies.groups) {
-      const withImage = group.items.find((m) => m.streamIcon)
-      if (withImage) return withImage
-    }
-    return null
-  }, [movies.groups, series.groups])
+  const featured = useMemo<FeaturedCandidate[]>(() => {
+    const flatMovies = flattenGroups(movies.groups)
+    const flatSeries = flattenGroups(series.groups)
+    return pickFeatured(flatMovies, flatSeries).map((it) => {
+      const isSeries = 'seriesId' in it
+      return {
+        key: isSeries ? `series-${it.seriesId}` : `movie-${it.streamId}`,
+        title: it.name,
+        description: 'plot' in it ? it.plot : null,
+        image: isSeries ? it.cover : it.streamIcon,
+        onPlay: () => navigate(isSeries ? `/series/${it.seriesId}` : `/movies/${it.streamId}`),
+      }
+    })
+  }, [movies.groups, series.groups, navigate])
 
   const visibleMovieGroups = useMemo(
     () => movies.groups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
@@ -39,23 +60,9 @@ export default function HomePage() {
     [series.groups],
   )
 
-  function playFeatured() {
-    if (!featured) return
-    if ('seriesId' in featured) navigate(`/series/${featured.seriesId}`)
-    else navigate(`/movies/${featured.streamId}`)
-  }
-
   return (
     <div>
-      {featured && (
-        <Hero
-          title={featured.name}
-          description={'plot' in featured ? featured.plot : null}
-          image={'cover' in featured ? featured.cover : featured.streamIcon}
-          onPlay={playFeatured}
-          onInfo={playFeatured}
-        />
-      )}
+      <HeroCarousel items={featured} />
 
       <div className="relative z-10 pt-8 sm:pt-10">
         <ContinueWatchingRow />
