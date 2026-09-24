@@ -55,3 +55,34 @@ test('"continuar assistindo" appears on Filmes/Séries instantly, ahead of the c
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(page.getByRole('heading', { name: 'Continuar assistindo' })).toBeVisible()
 })
+
+test('poster shows a visual progress bar in "continuar assistindo"', async ({ page }) => {
+  await login(page)
+  await page.evaluate(() => {
+    const profilesState = JSON.parse(localStorage.getItem('iptv-profiles')!)
+    const account = Object.values(profilesState.state.byAccount)[0] as { activeId: string }
+    localStorage.setItem(
+      'iptv-library',
+      JSON.stringify({
+        state: {
+          favorites: {},
+          watched: {},
+          progress: {
+            [`${account.activeId}:movie-1`]: {
+              kind: 'movie', id: '1', name: 'Filme Explosivo', image: null, ext: 'mp4',
+              positionSeconds: 600, durationSeconds: 1200, updatedAt: Date.now(),
+            },
+          },
+        },
+        version: 1,
+      }),
+    )
+  })
+  await page.reload()
+  const card = page.getByRole('button', { name: 'Filme Explosivo 50% assistido' })
+  await expect(card).toBeVisible()
+  const bar = card.locator('div.bg-gradient-to-r')
+  await expect(bar).toHaveCSS('width', /.+/)
+  const width = await bar.evaluate((el) => el.style.width)
+  expect(width).toBe('50%')
+})

@@ -110,7 +110,7 @@ export default function LivePage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
           {loading && groups.length === 0
             ? Array.from({ length: 18 }).map((_, i) => (
-                <div key={i} className="h-24 animate-pulse rounded-xl border border-white/5 bg-zinc-900" />
+                <div key={i} className="skeleton h-24 rounded-xl border border-white/5 bg-zinc-900" />
               ))
             : channels.map((ch) => (
                 <button

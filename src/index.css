@@ -121,6 +121,22 @@ summary,
   }
 }
 
+/* Loading skeleton: a light sweep instead of a flat pulse — closer to what Netflix/YouTube show while a
+ * row's items are still loading, and reads less like "something is stuck" than a uniform fade. */
+@keyframes shimmer {
+  from {
+    background-position: -150% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.09) 37%, rgba(255, 255, 255, 0.04) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
  * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
  * behavior (a `scroll-behavior` of `auto` here overrides the smooth *request*, per spec) — rather than

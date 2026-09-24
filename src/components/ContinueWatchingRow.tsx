@@ -43,6 +43,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
               )
             }
             subtitle={`${Math.round((p.positionSeconds / (p.durationSeconds || 1)) * 100)}% assistido`}
+            progressPct={(p.positionSeconds / (p.durationSeconds || 1)) * 100}
           />
           <button
             onClick={(e) => {

@@ -55,7 +55,7 @@ export default function Row({ title, children, loading }: RowProps) {
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-2/3 w-32 shrink-0 animate-pulse rounded-xl border border-white/5 bg-zinc-900 sm:w-40 motion-reduce:animate-none"
+                  className="skeleton aspect-2/3 w-32 shrink-0 rounded-xl border border-white/5 bg-zinc-900 sm:w-40"
                 />
               ))
             : children}

@@ -6,9 +6,12 @@ interface PosterCardProps {
   onClick: () => void
   badge?: string | null
   subtitle?: string | null
+  /** 0–100. Renders a thin progress bar across the bottom of the poster, always visible (not just on
+   * hover) — the same at-a-glance "how far in am I" cue Netflix shows in Continue Watching rows. */
+  progressPct?: number | null
 }
 
-export default function PosterCard({ title, image, onClick, badge, subtitle }: PosterCardProps) {
+export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct }: PosterCardProps) {
   return (
     <button
       onClick={onClick}
@@ -43,6 +46,15 @@ export default function PosterCard({ title, image, onClick, badge, subtitle }: P
       {!image && (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 p-2 text-center text-xs font-medium text-zinc-400">
           {title}
+        </div>
+      )}
+
+      {progressPct != null && progressPct > 0 && (
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
+          <div
+            className="h-full bg-gradient-to-r from-brand-500 to-brand-400"
+            style={{ width: `${Math.min(100, progressPct)}%` }}
+          />
         </div>
       )}
     </button>
