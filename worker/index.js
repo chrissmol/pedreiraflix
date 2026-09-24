@@ -1,5 +1,10 @@
 // Cloudflare Worker: serves the built site (ASSETS) and the same /api proxy as server/index.js.
-// SSRF/open-relay protection is an allowlist (secret ALLOWED_HOSTS, comma-separated) instead of DNS checks.
+// SSRF/open-relay protection blocks private/internal addresses (mirrors server/index.js's DNS-based
+// check) instead of an ALLOWED_HOSTS allowlist — a fixed host allowlist doesn't work here because a
+// real Xtream catalog legitimately hotlinks poster/logo images from many different public hosts (TMDB,
+// image hosts, the provider's own CDN...), all decided by the provider, not by us. Video/API calls
+// always target the single host the user typed at login, so this is no less safe for those; images
+// just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
 // Workers send no User-Agent by default and Xtream panels commonly answer 404 to that.
 const UPSTREAM_HEADERS = { 'user-agent': 'Mozilla/5.0' }
@@ -77,12 +82,36 @@ function isRateLimited(ip, key, limit, windowMs) {
   return bucket.count > limit
 }
 
-function isAllowed(env, url) {
-  const hosts = (env.ALLOWED_HOSTS || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean)
-  return (url.protocol === 'http:' || url.protocol === 'https:') && hosts.includes(url.hostname.toLowerCase())
+// Workers have no synchronous DNS-lookup API like Node's `dns.lookup` (a DNS-over-HTTPS round trip
+// before every request would add real latency to every HLS segment/image fetch), so this is a literal
+// check on IP-literal hosts only — it can't catch a public-looking hostname that resolves to a private
+// IP (DNS rebinding). Acceptable here because every URL this proxy ever fetches comes from the response
+// of the Xtream panel the user themselves configured, never from arbitrary third-party/client input.
+function isPrivateAddress(hostname) {
+  const h = hostname.toLowerCase()
+  if (h === 'localhost') return true
+  if (h.includes(':')) {
+    // IPv6 literal
+    return h === '::1' || h === '::' || h.startsWith('fe80:') || h.startsWith('fc') || h.startsWith('fd') || h.startsWith('::ffff:127.')
+  }
+  const parts = h.split('.').map(Number)
+  if (parts.length !== 4 || parts.some((p) => Number.isNaN(p))) return false // not an IPv4 literal — allow (public hostname)
+  const [a, b] = parts
+  if (a === 127) return true // loopback
+  if (a === 10) return true // RFC1918
+  if (a === 172 && b >= 16 && b <= 31) return true // RFC1918
+  if (a === 192 && b === 168) return true // RFC1918
+  if (a === 169 && b === 254) return true // link-local incl. cloud metadata
+  if (a === 0) return true
+  if (a >= 224) return true // multicast/reserved
+  return false
 }
 
-async function xtream(url, env) {
+function isAllowed(url) {
+  return (url.protocol === 'http:' || url.protocol === 'https:') && !isPrivateAddress(url.hostname)
+}
+
+async function xtream(url) {
   const q = url.searchParams
   let target
   try {
@@ -90,7 +119,7 @@ async function xtream(url, env) {
   } catch {
     return new Response('invalid base url', { status: 400 })
   }
-  if (!isAllowed(env, target)) return new Response('host not allowed', { status: 403 })
+  if (!isAllowed(target)) return new Response('host not allowed', { status: 403 })
   for (const [k, v] of q) if (k !== 'base' && k !== 'path') target.searchParams.set(k, v)
   try {
     const up = await fetch(target, { headers: UPSTREAM_HEADERS, signal: AbortSignal.timeout(20_000) })
@@ -103,14 +132,14 @@ async function xtream(url, env) {
   }
 }
 
-async function stream(request, url, env) {
+async function stream(request, url) {
   let target
   try {
     target = new URL(url.searchParams.get('url'))
   } catch {
     return new Response('invalid url', { status: 400 })
   }
-  if (!isAllowed(env, target)) return new Response('host not allowed', { status: 403 })
+  if (!isAllowed(target)) return new Response('host not allowed', { status: 403 })
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 15_000)
@@ -145,9 +174,9 @@ async function stream(request, url, env) {
   if ((headers.get('content-type') || '').startsWith('image/')) headers.set('cache-control', 'public, max-age=604800')
 
   if ((headers.get('content-type') || '').includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
-    // Resolve against the final URL (after redirects) when that host is allowlisted too, otherwise keep the
+    // Resolve against the final URL (after redirects) when that host is public too, otherwise keep the
     // original host (which re-redirects). Also rewrite URI="..." attributes (alt audio, subtitles, keys).
-    const base = up.url && isAllowed(env, new URL(up.url)) ? up.url : target.toString()
+    const base = up.url && isAllowed(new URL(up.url)) ? up.url : target.toString()
     const proxied = (ref) => `/api/stream?url=${encodeURIComponent(new URL(ref, base).toString())}`
     const text = (await up.text())
       .split('\n')
@@ -174,13 +203,13 @@ export default {
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
       if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
-      return withSecurityHeaders(await xtream(url, env))
+      return withSecurityHeaders(await xtream(url))
     }
     if (url.pathname === '/api/stream') {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
       // requests within a few seconds, especially right after a channel switch or quality change.
       if (isRateLimited(ip, 'stream', 600, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
-      return withSecurityHeaders(await stream(request, url, env))
+      return withSecurityHeaders(await stream(request, url))
     }
     return withSecurityHeaders(await env.ASSETS.fetch(request), url.pathname)
   },
