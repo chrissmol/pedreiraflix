@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
@@ -36,10 +36,18 @@ export default function HomePage() {
   const favoritesRecord = useLibraryStore((s) => s.favorites)
   const favorites = useMemo(() => favoritesFor(favoritesRecord, profileId), [favoritesRecord, profileId])
 
+  // Categories stream in one at a time (see useCatalog.ts) — computing `featured` on every partial update
+  // meant the hero flickered through whichever titles happened to be loaded so far, settling only once
+  // everything finished. Freezing it until every category has fully loaded avoids that: it's computed once
+  // per catalog load, from the complete data, not a moving target.
+  const catalogSettled =
+    !movies.loading && !series.loading && movies.groups.every((g) => !g.loading) && series.groups.every((g) => !g.loading)
+  const featuredRef = useRef<FeaturedCandidate[]>([])
   const featured = useMemo<FeaturedCandidate[]>(() => {
+    if (!catalogSettled) return featuredRef.current
     const flatMovies = flattenGroups(movies.groups)
     const flatSeries = flattenGroups(series.groups)
-    return pickFeatured(flatMovies, flatSeries).map((it) => {
+    const next = pickFeatured(flatMovies, flatSeries).map((it) => {
       const isSeries = 'seriesId' in it
       return {
         key: isSeries ? `series-${it.seriesId}` : `movie-${it.streamId}`,
@@ -49,7 +57,9 @@ export default function HomePage() {
         onPlay: () => navigate(isSeries ? `/series/${it.seriesId}` : `/movies/${it.streamId}`),
       }
     })
-  }, [movies.groups, series.groups, navigate])
+    featuredRef.current = next
+    return next
+  }, [catalogSettled, movies.groups, series.groups, navigate])
 
   const visibleMovieGroups = useMemo(
     () => movies.groups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),

@@ -30,12 +30,12 @@ function resolveSlotMs(fallback: number): number {
 /** Rotating hero, restricted to the household's "only the very best" bar (≥8.5 — filtered by the caller)
  * and alternating movie/series: which title is "now" is computed straight from the wall clock (a stable
  * slot index into the sequence), not a running timer, so it survives reloads and new tabs consistently.
- * If a poster image actually fails to load (dead URL, host not on ALLOWED_HOSTS, a broken provider) it's
- * excluded and the slot recomputes over what's left, instead of just sitting there broken. */
+ * No manual dot navigation on purpose — it's meant to just show one pick at a time, not advertise how
+ * many titles qualify. If a poster image actually fails to load (dead URL, blocked host, broken provider)
+ * it's excluded and the slot recomputes over what's left, instead of just sitting there broken. */
 export default function HeroCarousel({ items, slotMs = FOUR_HOURS_MS }: HeroCarouselProps) {
   slotMs = resolveSlotMs(slotMs)
   const [now, setNow] = useState(() => Date.now())
-  const [manualIndex, setManualIndex] = useState<number | null>(null)
   const [broken, setBroken] = useState<Set<string>>(new Set())
 
   // Rechecks often enough to catch the slot boundary even with a tiny test override, without polling
@@ -48,7 +48,7 @@ export default function HeroCarousel({ items, slotMs = FOUR_HOURS_MS }: HeroCaro
 
   const playable = items.filter((it) => !broken.has(it.key))
   const timeSlot = playable.length > 0 ? Math.floor(now / slotMs) % playable.length : 0
-  const index = (manualIndex ?? timeSlot) % Math.max(1, playable.length)
+  const index = timeSlot % Math.max(1, playable.length)
   const current = playable[index]
 
   if (!current) return null
@@ -89,22 +89,6 @@ export default function HeroCarousel({ items, slotMs = FOUR_HOURS_MS }: HeroCaro
           >
             <Info className="h-5 w-5" /> Detalhes
           </button>
-
-          {playable.length > 1 && (
-            <div className="ml-2 flex gap-1.5">
-              {playable.map((it, i) => (
-                <button
-                  key={it.key}
-                  onClick={() => setManualIndex(i)}
-                  aria-label={`Destaque ${i + 1} de ${playable.length}`}
-                  aria-current={i === index}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === index ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
