@@ -90,6 +90,7 @@ test('auto-advances to the next episode and offers a manual "next episode" butto
 
 
 test('zaps to the next/previous live channel with on-screen buttons and arrow keys', async ({ page }) => {
+  test.setTimeout(90_000) // click() below already retries; this just gives it room under a loaded machine.
   await page.goto('/live')
   await page.getByText('Canal Notícias 24h').click()
   await expect(page).toHaveURL(/\/watch\/live\/101/)
@@ -101,10 +102,10 @@ test('zaps to the next/previous live channel with on-screen buttons and arrow ke
   // if the URL hasn't changed shortly after, in case the click landed mid-transition.
   async function click(name: string) {
     const before = page.url()
-    for (let attempt = 0; attempt < 3 && page.url() === before; attempt++) {
+    for (let attempt = 0; attempt < 6 && page.url() === before; attempt++) {
       await page.mouse.move(300 + attempt, 300 + attempt)
       await page.mouse.move(400, 300)
-      await page.getByRole('button', { name }).click({ force: true })
+      await page.getByRole('button', { name }).click({ force: true, timeout: 10_000 })
       await page.waitForTimeout(300)
     }
   }

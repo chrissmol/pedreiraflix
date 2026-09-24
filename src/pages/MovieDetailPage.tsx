@@ -4,6 +4,7 @@ import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
 
 export default function MovieDetailPage() {
@@ -14,8 +15,9 @@ export default function MovieDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const profileId = useActiveProfileId()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
-  const isFavorite = useLibraryStore((s) => s.isFavorite('movie', Number(id)))
+  const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'movie', Number(id)))
 
   useEffect(() => {
     if (!client || !id) return
@@ -73,7 +75,7 @@ export default function MovieDetailPage() {
             </button>
             <button
               onClick={() =>
-                toggleFavorite({ kind: 'movie', id: movie.streamId, name: movie.name, image: movie.streamIcon })
+                toggleFavorite(profileId, { kind: 'movie', id: movie.streamId, name: movie.name, image: movie.streamIcon })
               }
               className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-all ${
                 isFavorite

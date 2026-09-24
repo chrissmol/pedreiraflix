@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useMovieCatalog } from '../hooks/useCatalog'
@@ -57,6 +58,8 @@ export default function MoviesPage() {
           ))}
         </select>
       </div>
+
+      <ContinueWatchingRow kind="movie" />
 
       {error && <p className="px-4 text-rose-400 sm:px-10">{error}</p>}
       <CatalogProgress groups={groups} label="Carregando filmes" />

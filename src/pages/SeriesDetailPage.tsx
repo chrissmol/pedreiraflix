@@ -4,6 +4,7 @@ import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 import type { SeriesDetails } from '../types'
 
 export default function SeriesDetailPage() {
@@ -15,8 +16,9 @@ export default function SeriesDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const profileId = useActiveProfileId()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
-  const isFavorite = useLibraryStore((s) => s.isFavorite('series', Number(id)))
+  const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'series', Number(id)))
   const episodeProgress = useLibraryStore((s) => s.progress)
   const watched = useLibraryStore((s) => s.watched)
 
@@ -64,7 +66,7 @@ export default function SeriesDetailPage() {
           <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() =>
-                toggleFavorite({ kind: 'series', id: series.seriesId, name: series.name, image: series.cover })
+                toggleFavorite(profileId, { kind: 'series', id: series.seriesId, name: series.name, image: series.cover })
               }
               className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-all ${
                 isFavorite
@@ -114,7 +116,7 @@ export default function SeriesDetailPage() {
 
         <div className="space-y-2">
           {season?.episodes.map((ep) => {
-            const key = `series-${ep.id}`
+            const key = `${profileId}:series-${ep.id}`
             const inProgress = episodeProgress[key]
             const isWatched = Boolean(watched[key])
             const watchedPct = inProgress

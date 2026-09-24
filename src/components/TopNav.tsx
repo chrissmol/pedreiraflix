@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
-import { Search } from './icons'
+import { useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
+import { Search, User } from './icons'
 
 const links = [
   { to: '/', label: 'Início' },
@@ -18,6 +19,10 @@ export default function TopNav() {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
+  const accId = useActiveAccountId()
+  const activeProfile = useActiveProfile()
+  const profiles = useProfiles()
+  const setActiveProfile = useProfilesStore((s) => s.setActiveProfile)
 
   // Tap outside closes the account menu (there is no hover on touch screens).
   useEffect(() => {
@@ -87,13 +92,49 @@ export default function TopNav() {
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
+          style={activeProfile ? { background: activeProfile.color } : undefined}
           className="glow-border flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white transition-transform hover:scale-105"
         >
-          {user?.username?.[0]?.toUpperCase() ?? '?'}
+          {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
         </button>
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl">
-            <p className="truncate px-2 py-1.5 text-zinc-400">{user?.username}</p>
+          <div className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl">
+            <p className="truncate px-2 py-1.5 text-zinc-400">
+              {activeProfile?.name} <span className="text-zinc-600">· {user?.username}</span>
+            </p>
+            {profiles.length > 1 && (
+              <div className="my-1 space-y-0.5">
+                {profiles
+                  .filter((p) => p.id !== activeProfile?.id)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        if (accId) setActiveProfile(accId, p.id)
+                        setMenuOpen(false)
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+                    >
+                      <span
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        style={{ background: p.color }}
+                      >
+                        {p.name[0]?.toUpperCase()}
+                      </span>
+                      <span className="truncate">Entrar como {p.name}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/profiles')
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+            >
+              <User className="h-4 w-4 text-zinc-400" /> Gerenciar perfis
+            </button>
             <button
               onClick={logout}
               className="mt-1 w-full rounded-lg px-2 py-2.5 text-left text-rose-400 transition-colors hover:bg-rose-500/10 active:bg-rose-500/10"

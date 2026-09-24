@@ -6,6 +6,7 @@ import LivePage from './pages/LivePage'
 import LoginPage from './pages/LoginPage'
 import MovieDetailPage from './pages/MovieDetailPage'
 import MoviesPage from './pages/MoviesPage'
+import ProfilesPage from './pages/ProfilesPage'
 import SearchPage from './pages/SearchPage'
 import SeriesDetailPage from './pages/SeriesDetailPage'
 import SeriesPage from './pages/SeriesPage'
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/series" element={<SeriesPage />} />
           <Route path="/series/:id" element={<SeriesDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/profiles" element={<ProfilesPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

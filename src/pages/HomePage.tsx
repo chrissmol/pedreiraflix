@@ -1,24 +1,21 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import Hero from '../components/Hero'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
-import { useLibraryStore } from '../store/library'
+import { favoritesFor, useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 
 export default function HomePage() {
   const movies = useMovieCatalog()
   const series = useSeriesCatalog()
   const navigate = useNavigate()
-  const progress = useLibraryStore((s) => s.progress)
-  const favorites = useLibraryStore((s) => s.favorites)
-  const removeProgress = useLibraryStore((s) => s.removeProgress)
-
-  const continueWatching = useMemo(
-    () => Object.values(progress).sort((a, b) => b.updatedAt - a.updatedAt),
-    [progress],
-  )
+  const profileId = useActiveProfileId()
+  const favoritesRecord = useLibraryStore((s) => s.favorites)
+  const favorites = useMemo(() => favoritesFor(favoritesRecord, profileId), [favoritesRecord, profileId])
 
   const featured = useMemo(() => {
     for (const group of series.groups) {
@@ -60,36 +57,7 @@ export default function HomePage() {
       )}
 
       <div className="relative z-10 pt-8 sm:pt-10">
-        {continueWatching.length > 0 && (
-          <Row title="Continuar assistindo">
-            {continueWatching.map((p) => (
-              <div key={`${p.kind}-${p.id}`} className="group relative shrink-0">
-                <PosterCard
-                  title={p.name}
-                  image={p.image}
-                  onClick={() =>
-                    navigate(
-                      `/watch/${p.kind}/${p.id}?ext=${p.ext || 'mp4'}&name=${encodeURIComponent(
-                        p.name,
-                      )}&image=${encodeURIComponent(p.image || '')}${p.seriesId ? `&seriesId=${p.seriesId}` : ''}`,
-                    )
-                  }
-                  subtitle={`${Math.round((p.positionSeconds / (p.durationSeconds || 1)) * 100)}% assistido`}
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeProgress(`${p.kind}-${p.id}`)
-                  }}
-                  className="absolute right-1 top-1 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black group-hover:flex"
-                  title="Remover de continuar assistindo"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </Row>
-        )}
+        <ContinueWatchingRow />
 
         {favorites.length > 0 && (
           <Row title="Minha lista">

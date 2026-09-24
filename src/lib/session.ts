@@ -1,5 +1,7 @@
-import { useAccountsStore } from '../store/accounts'
+import { accountId, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
+import { useLibraryStore } from '../store/library'
+import { useProfilesStore } from '../store/profiles'
 import type { UserInfo, XtreamCredentials } from '../types'
 import { clearCache } from './cache'
 import { XtreamClient } from './xtream'
@@ -18,6 +20,48 @@ export function accountWarning(user: UserInfo): string | null {
     : null
 }
 
+/** Moves the pre-profiles "legacy" favorites/progress/watched bucket onto an account's real first
+ * profile, the first time that profile exists. Safe to call on every login/launch — once the legacy
+ * bucket is empty, it's a no-op forever after. */
+function migrateLegacyLibraryData(profileId: string) {
+  if (profileId === 'legacy') return
+  const { favorites, progress, watched } = useLibraryStore.getState()
+  const legacyFavorites = favorites.legacy
+  const hasLegacyProgress = Object.keys(progress).some((k) => k.startsWith('legacy:'))
+  const hasLegacyWatched = Object.keys(watched).some((k) => k.startsWith('legacy:'))
+  if (!legacyFavorites && !hasLegacyProgress && !hasLegacyWatched) return
+
+  useLibraryStore.setState((state) => {
+    const nextFavorites = { ...state.favorites }
+    if (legacyFavorites) {
+      delete nextFavorites.legacy
+      nextFavorites[profileId] = [...legacyFavorites, ...(nextFavorites[profileId] ?? [])]
+    }
+    const nextProgress = { ...state.progress }
+    for (const [key, value] of Object.entries(state.progress)) {
+      if (!key.startsWith('legacy:')) continue
+      delete nextProgress[key]
+      nextProgress[`${profileId}:${key.slice('legacy:'.length)}`] = value
+    }
+    const nextWatched = { ...state.watched }
+    for (const key of Object.keys(state.watched)) {
+      if (!key.startsWith('legacy:')) continue
+      delete nextWatched[key]
+      nextWatched[`${profileId}:${key.slice('legacy:'.length)}`] = true
+    }
+    return { favorites: nextFavorites, progress: nextProgress, watched: nextWatched }
+  })
+}
+
+/** Ensures the given account has at least one profile (creating a default named after the username the
+ * first time), and folds in any pre-profiles data. Call whenever a session for this account becomes
+ * active — on sign-in, and again at app launch for a session that was already open. */
+export function ensureActiveProfile(creds: XtreamCredentials): void {
+  const accId = accountId(creds)
+  const profileId = useProfilesStore.getState().ensureProfile(accId, creds.username)
+  migrateLegacyLibraryData(profileId)
+}
+
 /** Validates the credentials against the panel, starts the session and (optionally) remembers the account. */
 export async function signIn(raw: XtreamCredentials, remember = true): Promise<void> {
   const creds = normalizeCredentials(raw)
@@ -27,6 +71,7 @@ export async function signIn(raw: XtreamCredentials, remember = true): Promise<v
   if (previous && (previous.baseUrl !== creds.baseUrl || previous.username !== creds.username)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user))
   if (remember) useAccountsStore.getState().saveAccount(creds)
+  ensureActiveProfile(creds)
 }
 
 /** Refreshes account info (status, expiry, connections) for an already-open session, without ever logging out on failure. */

@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { refreshSession } from './lib/session'
+import { ensureActiveProfile, refreshSession } from './lib/session'
 import { useAccountsStore } from './store/accounts'
 import { useAuthStore } from './store/auth'
 
@@ -11,6 +11,9 @@ const { credentials } = useAuthStore.getState()
 if (credentials && useAccountsStore.getState().accounts.length === 0) {
   useAccountsStore.getState().saveAccount(credentials)
 }
+// Sessions from before profiles existed: ensure a default profile and fold in whatever
+// favorites/progress/watched history was saved under the old, unscoped format.
+if (credentials) ensureActiveProfile(credentials)
 
 // Asks the browser not to evict our localStorage under storage pressure (where the login lives).
 navigator.storage?.persist?.().catch(() => {})

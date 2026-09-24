@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useSeriesCatalog } from '../hooks/useCatalog'
@@ -55,6 +56,8 @@ export default function SeriesPage() {
           ))}
         </select>
       </div>
+
+      <ContinueWatchingRow kind="series" />
 
       {error && <p className="px-4 text-rose-400 sm:px-10">{error}</p>}
       <CatalogProgress groups={groups} label="Carregando séries" />

@@ -21,46 +21,89 @@ export interface WatchProgress {
   seriesId?: number
 }
 
+// Every record below is keyed by `${profileId}:${...}` — favorites, resume points and watched
+// history are "who's watching" data (like Netflix profiles), separate per profile even though every
+// profile shares the same Xtream login/subscription.
 interface LibraryState {
-  favorites: FavoriteRef[]
+  favorites: Record<string, FavoriteRef[]>
   progress: Record<string, WatchProgress>
   // Kept separately from `progress`: once something is finished, its resume
   // point is removed (so it drops out of "continue watching"), but this flag
   // stays forever so episode lists can still show "already watched".
   watched: Record<string, true>
-  toggleFavorite: (ref: FavoriteRef) => void
-  isFavorite: (kind: FavoriteRef['kind'], id: number) => boolean
-  setProgress: (entry: WatchProgress) => void
-  removeProgress: (key: string) => void
-  markWatched: (key: string) => void
+  toggleFavorite: (profileId: string, ref: FavoriteRef) => void
+  isFavorite: (profileId: string, kind: FavoriteRef['kind'], id: number) => boolean
+  setProgress: (profileId: string, entry: WatchProgress) => void
+  removeProgress: (profileId: string, key: string) => void
+  markWatched: (profileId: string, key: string) => void
 }
 
 export const useLibraryStore = create<LibraryState>()(
   persist(
     (set, get) => ({
-      favorites: [],
+      favorites: {},
       progress: {},
       watched: {},
-      toggleFavorite: (ref) =>
+      toggleFavorite: (profileId, ref) =>
         set((state) => {
-          const exists = state.favorites.some((f) => f.kind === ref.kind && f.id === ref.id)
-          return {
-            favorites: exists
-              ? state.favorites.filter((f) => !(f.kind === ref.kind && f.id === ref.id))
-              : [ref, ...state.favorites],
-          }
+          const list = state.favorites[profileId] ?? []
+          const exists = list.some((f) => f.kind === ref.kind && f.id === ref.id)
+          const next = exists ? list.filter((f) => !(f.kind === ref.kind && f.id === ref.id)) : [ref, ...list]
+          return { favorites: { ...state.favorites, [profileId]: next } }
         }),
-      isFavorite: (kind, id) => get().favorites.some((f) => f.kind === kind && f.id === id),
-      setProgress: (entry) =>
-        set((state) => ({ progress: { ...state.progress, [`${entry.kind}-${entry.id}`]: entry } })),
-      removeProgress: (key) =>
+      isFavorite: (profileId, kind, id) => (get().favorites[profileId] ?? []).some((f) => f.kind === kind && f.id === id),
+      setProgress: (profileId, entry) =>
+        set((state) => ({ progress: { ...state.progress, [`${profileId}:${entry.kind}-${entry.id}`]: entry } })),
+      removeProgress: (profileId, key) =>
         set((state) => {
           const next = { ...state.progress }
-          delete next[key]
+          delete next[`${profileId}:${key}`]
           return { progress: next }
         }),
-      markWatched: (key) => set((state) => ({ watched: { ...state.watched, [key]: true } })),
+      markWatched: (profileId, key) => set((state) => ({ watched: { ...state.watched, [`${profileId}:${key}`]: true } })),
     }),
-    { name: 'iptv-library' },
+    {
+      name: 'iptv-library',
+      version: 1,
+      // Pre-profiles data was a flat, unscoped list — fold it all into one "legacy" bucket so nothing
+      // gets silently dropped for people updating from before profiles existed. `ensureProfile`
+      // deterministically creates each account's first profile the same way every time, so once that
+      // profile exists, App-level code re-keys this bucket to the real profile id (see useLibraryMigration).
+      migrate: (persisted) => {
+        const state = persisted as { favorites?: unknown; progress?: Record<string, WatchProgress>; watched?: Record<string, true> }
+        if (!Array.isArray(state.favorites)) return state // already on the profile-scoped format
+        const rekey = <T,>(record: Record<string, T> | undefined): Record<string, T> => {
+          const out: Record<string, T> = {}
+          for (const [key, value] of Object.entries(record ?? {})) out[`legacy:${key}`] = value
+          return out
+        }
+        return {
+          ...state,
+          favorites: { legacy: state.favorites },
+          progress: rekey(state.progress),
+          watched: rekey(state.watched),
+        }
+      },
+    },
   ),
 )
+
+const EMPTY_FAVORITES: FavoriteRef[] = []
+
+// These take the raw record (not the zustand selector's `state`) and are meant to be called from a
+// `useMemo` keyed on that record, never directly inside a `useLibraryStore(...)` selector: a selector
+// runs on every store update and must return a stable, `Object.is`-equal reference when nothing it
+// cares about changed, but `progressFor` always builds a brand new array — used as a selector, that
+// "changes" on every check and React's external-store subscription re-renders forever chasing it.
+export function favoritesFor(favorites: LibraryState['favorites'], profileId: string): FavoriteRef[] {
+  return favorites[profileId] ?? EMPTY_FAVORITES
+}
+export function progressFor(progress: LibraryState['progress'], profileId: string): WatchProgress[] {
+  const prefix = `${profileId}:`
+  return Object.entries(progress)
+    .filter(([key]) => key.startsWith(prefix))
+    .map(([, value]) => value)
+}
+export function isWatchedFor(watched: LibraryState['watched'], profileId: string, key: string): boolean {
+  return Boolean(watched[`${profileId}:${key}`])
+}

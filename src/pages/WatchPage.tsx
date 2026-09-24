@@ -5,6 +5,7 @@ import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 import type { Episode, LiveChannel, SeriesDetails } from '../types'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
@@ -19,10 +20,11 @@ export default function WatchPage() {
   const [params] = useSearchParams()
   const client = useXtream()
   const navigate = useNavigate()
+  const profileId = useActiveProfileId()
   const setProgress = useLibraryStore((s) => s.setProgress)
   const removeProgress = useLibraryStore((s) => s.removeProgress)
   const markWatched = useLibraryStore((s) => s.markWatched)
-  const existingProgress = useLibraryStore((s) => s.progress[`${kind}-${id}`])
+  const existingProgress = useLibraryStore((s) => s.progress[`${profileId}:${kind}-${id}`])
   const lastSaved = useRef(0)
 
   // Guard against literal "undefined"/"null" strings ending up in the URL or
@@ -135,11 +137,11 @@ export default function WatchPage() {
     // Treat anything past 95% as finished so it drops out of "continue watching"
     // instead of lingering at "100%" forever.
     if (current / duration > 0.95) {
-      removeProgress(`${kind}-${id}`)
-      markWatched(`${kind}-${id}`)
+      removeProgress(profileId, `${kind}-${id}`)
+      markWatched(profileId, `${kind}-${id}`)
       return
     }
-    setProgress({
+    setProgress(profileId, {
       kind,
       id,
       name,
@@ -153,7 +155,7 @@ export default function WatchPage() {
   }
 
   function handleEnded() {
-    if (kind === 'series' && id) markWatched(`series-${id}`)
+    if (kind === 'series' && id) markWatched(profileId, `series-${id}`)
     if (nextEpisode) goToEpisode(nextEpisode)
   }
 
