@@ -11,6 +11,41 @@ const app = express()
 const ALLOWED_ORIGIN = process.env.WEB_ORIGIN || 'http://localhost:5173'
 app.use(cors({ origin: ALLOWED_ORIGIN }))
 
+// Mirrors worker/index.js's headers on this proxy's own responses (the deployed Cloudflare Worker is
+// what actually matters for CSP on the real site — it serves the HTML too, this dev server only ever
+// serves /api/* — but matching them here keeps local dev honest and gives the same nosniff/rate-limit
+// protection if this ever gets exposed by accident).
+app.use((req, res, next) => {
+  res.setHeader('x-content-type-options', 'nosniff')
+  res.setHeader('referrer-policy', 'strict-origin-when-cross-origin')
+  next()
+})
+
+// Same self-contained per-IP throttle as the Worker — see worker/index.js for the rationale.
+const rateBuckets = new Map()
+function isRateLimited(ip, key, limit, windowMs) {
+  const now = Date.now()
+  if (rateBuckets.size > 5000) {
+    for (const [k, b] of rateBuckets) if (now - b.start > windowMs) rateBuckets.delete(k)
+  }
+  const bucketKey = `${ip}:${key}`
+  const bucket = rateBuckets.get(bucketKey)
+  if (!bucket || now - bucket.start > windowMs) {
+    rateBuckets.set(bucketKey, { start: now, count: 1 })
+    return false
+  }
+  bucket.count++
+  return bucket.count > limit
+}
+app.use('/api/xtream', (req, res, next) => {
+  if (isRateLimited(req.ip, 'xtream', 100, 10_000)) return res.status(429).send('rate limited')
+  next()
+})
+app.use('/api/stream', (req, res, next) => {
+  if (isRateLimited(req.ip, 'stream', 400, 10_000)) return res.status(429).send('rate limited')
+  next()
+})
+
 const PORT = process.env.PORT || 8787
 
 function sanitizeBaseUrl(raw) {

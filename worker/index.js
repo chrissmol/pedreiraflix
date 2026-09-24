@@ -4,6 +4,62 @@
 // Workers send no User-Agent by default and Xtream panels commonly answer 404 to that.
 const UPSTREAM_HEADERS = { 'user-agent': 'Mozilla/5.0' }
 
+// Applied to every response this Worker returns (site and API alike). No inline <script> exists in the
+// build (Vite emits external, hashed <script type="module"> files), so script-src stays strict; inline
+// `style="..."` attributes are used throughout (React's `style={{...}}` prop, e.g. per-profile avatar
+// colors), so style-src needs 'unsafe-inline'. connect-src/media-src are 'self' only because video and
+// every API call already go through our own /api/* proxy, never straight to the IPTV provider's origin.
+const SECURITY_HEADERS = {
+  'content-security-policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "media-src 'self'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'geolocation=(), microphone=(), camera=(), usb=(), payment=()',
+  // No X-Frame-Options: frame-ancestors above already covers it and is the modern replacement.
+}
+
+function withSecurityHeaders(response) {
+  const headers = new Headers(response.headers)
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
+}
+
+// Self-contained per-IP throttle: no KV/Durable Object binding required, so it works on the free Workers
+// plan too. State lives in the isolate's module scope, which Cloudflare keeps warm across many requests
+// under normal traffic (not persisted, not shared across edge locations/isolates) — a soft, best-effort
+// brake on sustained abuse from one IP, not a hard guarantee. Limits are generous by design: live HLS
+// alone can mean several segment requests every few seconds per viewer.
+const rateBuckets = new Map()
+function isRateLimited(ip, key, limit, windowMs) {
+  const now = Date.now()
+  // Opportunistic cleanup instead of a timer (Workers don't run background timers outside a request):
+  // once the map gets big enough that it's worth the pass, drop anything from an already-closed window.
+  if (rateBuckets.size > 5000) {
+    for (const [k, b] of rateBuckets) if (now - b.start > windowMs) rateBuckets.delete(k)
+  }
+  const bucketKey = `${ip}:${key}`
+  const bucket = rateBuckets.get(bucketKey)
+  if (!bucket || now - bucket.start > windowMs) {
+    rateBuckets.set(bucketKey, { start: now, count: 1 })
+    return false
+  }
+  bucket.count++
+  return bucket.count > limit
+}
+
 function isAllowed(env, url) {
   const hosts = (env.ALLOWED_HOSTS || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean)
   return (url.protocol === 'http:' || url.protocol === 'https:') && hosts.includes(url.hostname.toLowerCase())
@@ -91,8 +147,20 @@ async function stream(request, url, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    if (url.pathname === '/api/xtream') return xtream(url, env)
-    if (url.pathname === '/api/stream') return stream(request, url, env)
-    return env.ASSETS.fetch(request)
+    // CF-Connecting-IP is set by Cloudflare's edge itself, not forwardable by a client — safe to trust.
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown'
+
+    if (url.pathname === '/api/xtream') {
+      // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
+      if (isRateLimited(ip, 'xtream', 100, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await xtream(url, env))
+    }
+    if (url.pathname === '/api/stream') {
+      // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
+      // requests within a few seconds, especially right after a channel switch or quality change.
+      if (isRateLimited(ip, 'stream', 400, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await stream(request, url, env))
+    }
+    return withSecurityHeaders(await env.ASSETS.fetch(request))
   },
 }
