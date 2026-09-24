@@ -6,6 +6,10 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    // Was ["/api/*"] only: Cloudflare's edge served static assets straight from cache without ever
+    // running worker/index.js, so the security headers set there (CSP etc.) silently never applied to
+    // the actual site — only to /api/* responses. Routing everything through the Worker costs a
+    // negligible bit of CPU per asset request in exchange for those headers actually landing.
+    "run_worker_first": true
   }
 }
