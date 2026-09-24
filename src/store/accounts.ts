@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { obfuscatedStorage } from '../lib/obfuscatedStorage'
 import type { XtreamCredentials } from '../types'
 
 export interface SavedAccount extends XtreamCredentials {
@@ -40,6 +41,7 @@ export const useAccountsStore = create<AccountsState>()(
           accounts: state.accounts.map((a) => (a.id === id ? { ...a, label: label.trim() || undefined } : a)),
         })),
     }),
-    { name: 'iptv-accounts' },
+    // Obfuscated (not encrypted — see lib/obfuscatedStorage.ts): every saved account's password lives here.
+    { name: 'iptv-accounts', storage: createJSONStorage(() => obfuscatedStorage) },
   ),
 )

@@ -69,8 +69,15 @@ test('an existing pre-upgrade session is migrated into saved accounts', async ({
   }, MOCK)
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Conta' })).toBeVisible()
-  const accounts = await page.evaluate(() => JSON.parse(localStorage.getItem('iptv-accounts') || '{}'))
-  expect(accounts.state.accounts[0]).toMatchObject(MOCK)
+  // Asserts through the app's own behavior (storage is obfuscated on disk — see lib/obfuscatedStorage.ts
+  // — so reading it back out here would just be re-testing that implementation detail): logging out and
+  // back in via the saved-accounts list proves the migrated account round-trips correctly end to end.
+  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Sair' }).click()
+  const saved = page.getByTestId('saved-accounts')
+  await expect(saved).toContainText(MOCK.username)
+  await saved.getByRole('button', { name: /Entrar/ }).first().click()
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('a saved account can be given a custom name, shown instead of the username', async ({ page }) => {

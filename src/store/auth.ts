@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import { clearCache } from '../lib/cache'
+import { obfuscatedStorage } from '../lib/obfuscatedStorage'
 import type { ServerInfo, UserInfo, XtreamCredentials } from '../types'
 
 interface AuthState {
@@ -28,6 +29,8 @@ export const useAuthStore = create<AuthState>()(
         set({ credentials: null, user: null, server: null, sessionWarning: null })
       },
     }),
-    { name: 'iptv-session' },
+    // Obfuscated (not encrypted — see lib/obfuscatedStorage.ts): this holds the Xtream password in plain
+    // reach of anyone with the localStorage key otherwise.
+    { name: 'iptv-session', storage: createJSONStorage(() => obfuscatedStorage) },
   ),
 )
