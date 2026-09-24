@@ -23,3 +23,17 @@ Por isso o app **não funciona só como site estático** (GitHub Pages, etc.): s
 
 - Credenciais ficam só no `localStorage` do seu navegador.
 - Não exponha o proxy na internet sem autenticação: ele repassa requisições para qualquer host público.
+
+## Publicar de graça (Cloudflare Workers)
+
+Um único Worker serve o site (`dist/`) e o proxy (`worker/index.js`) no mesmo domínio. O proxy só aceita hosts de uma lista secreta, então não vira proxy aberto.
+
+```bash
+npx wrangler login
+npm run deploy
+npx wrangler secret put ALLOWED_HOSTS   # ex.: painel.exemplo.com,cdn.exemplo.com
+```
+
+Inclua na lista o host do painel **e** os hosts para onde ele redireciona os streams. Para testar local: crie `.dev.vars` com `ALLOWED_HOSTS=...` e rode `npx wrangler dev`.
+
+Limites do plano gratuito: 100 mil requisições/dia (HLS ao vivo gasta muitas). Servir vídeo por proxy pode ferir os termos da Cloudflare; use por sua conta e risco.
