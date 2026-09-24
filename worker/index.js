@@ -68,12 +68,17 @@ async function stream(request, url, env) {
   }
 
   if ((headers.get('content-type') || '').includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
+    // Resolve against the final URL (after redirects) when that host is allowlisted too, otherwise keep the
+    // original host (which re-redirects). Also rewrite URI="..." attributes (alt audio, subtitles, keys).
+    const base = up.url && isAllowed(env, new URL(up.url)) ? up.url : target.toString()
+    const proxied = (ref) => `/api/stream?url=${encodeURIComponent(new URL(ref, base).toString())}`
     const text = (await up.text())
       .split('\n')
       .map((line) => {
         const t = line.trim()
-        if (!t || t.startsWith('#')) return line
-        return `/api/stream?url=${encodeURIComponent(new URL(t, target).toString())}`
+        if (!t) return line
+        if (t.startsWith('#')) return line.replace(/URI="([^"]+)"/g, (_, ref) => `URI="${proxied(ref)}"`)
+        return proxied(t)
       })
       .join('\n')
     headers.set('content-type', 'application/vnd.apple.mpegurl')

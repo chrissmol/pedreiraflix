@@ -25,3 +25,8 @@ dist-ssr
 
 .wrangler
 .dev.vars
+
+# e2e
+e2e/fixtures
+test-results
+playwright-report

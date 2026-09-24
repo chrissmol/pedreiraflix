@@ -17,6 +17,8 @@ export interface WatchProgress {
   positionSeconds: number
   durationSeconds: number
   updatedAt: number
+  /** Series only: the parent series id, so "continuar assistindo" can offer the next episode without a refetch. */
+  seriesId?: number
 }
 
 interface LibraryState {

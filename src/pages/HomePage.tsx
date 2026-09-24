@@ -71,7 +71,7 @@ export default function HomePage() {
                     navigate(
                       `/watch/${p.kind}/${p.id}?ext=${p.ext || 'mp4'}&name=${encodeURIComponent(
                         p.name,
-                      )}&image=${encodeURIComponent(p.image || '')}`,
+                      )}&image=${encodeURIComponent(p.image || '')}${p.seriesId ? `&seriesId=${p.seriesId}` : ''}`,
                     )
                   }
                   subtitle={`${Math.round((p.positionSeconds / (p.durationSeconds || 1)) * 100)}% assistido`}

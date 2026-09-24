@@ -132,7 +132,7 @@ export default function SeriesDetailPage() {
                   navigate(
                     `/watch/series/${ep.id}?ext=${ep.containerExtension}&name=${encodeURIComponent(
                       `${series.name} - ${ep.title}`,
-                    )}&image=${encodeURIComponent(series.cover || '')}`,
+                    )}&image=${encodeURIComponent(series.cover || '')}&seriesId=${series.seriesId}`,
                   )
                 }
                 onKeyDown={(e) => {

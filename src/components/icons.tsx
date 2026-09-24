@@ -180,3 +180,216 @@ export function Search({ className }: IconProps) {
     </svg>
   )
 }
+
+function Stroke({ className, children, width = 2 }: IconProps & { children: React.ReactNode; width?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      {children}
+    </svg>
+  )
+}
+
+export function Eye({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </Stroke>
+  )
+}
+
+export function EyeOff({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7a10.4 10.4 0 0 0 5.4-1.6" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" />
+    </Stroke>
+  )
+}
+
+export function X({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Stroke>
+  )
+}
+
+export function Trash({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </Stroke>
+  )
+}
+
+export function User({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </Stroke>
+  )
+}
+
+export function Subtitles({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M7 15h4M13 15h4M7 11h2M11 11h6" />
+    </Stroke>
+  )
+}
+
+export function Languages({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M4 5h9M8.5 3v2M11 5c-1 4-3.5 7-7 9M6 9c1.5 2.5 3.5 4 6 5M13 21l4-9 4 9M14.5 18h5" />
+    </Stroke>
+  )
+}
+
+export function Gauge({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M12 14l4-4M3.3 17a10 10 0 1 1 17.4 0" />
+    </Stroke>
+  )
+}
+
+export function PictureInPicture({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor" />
+    </Stroke>
+  )
+}
+
+export function Cast({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
+      <path d="M2 12a9 9 0 0 1 8 8M2 16a5 5 0 0 1 4 4M2 20h.01" />
+    </Stroke>
+  )
+}
+
+export function Lock({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </Stroke>
+  )
+}
+
+export function Unlock({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 7.8-1.2" />
+    </Stroke>
+  )
+}
+
+export function ListIcon({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+    </Stroke>
+  )
+}
+
+export function ChevronUp({ className }: IconProps) {
+  return (
+    <Stroke className={className} width={2.5}>
+      <path d="M6 15l6-6 6 6" />
+    </Stroke>
+  )
+}
+
+export function ChevronDown({ className }: IconProps) {
+  return (
+    <Stroke className={className} width={2.5}>
+      <path d="M6 9l6 6 6-6" />
+    </Stroke>
+  )
+}
+
+export function Calendar({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </Stroke>
+  )
+}
+
+export function Bookmark({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M6 3h12v18l-6-4-6 4z" />
+    </Stroke>
+  )
+}
+
+export function SkipNext({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M6 5v14l9-7zM16 5h2.5v14H16z" />
+    </svg>
+  )
+}
+
+export function Clock({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Stroke>
+  )
+}
+
+export function Sun({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </Stroke>
+  )
+}
+
+export function Keyboard({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10" />
+    </Stroke>
+  )
+}
+
+export function Rewind({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </Stroke>
+  )
+}
+
+export function Shield({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+    </Stroke>
+  )
+}

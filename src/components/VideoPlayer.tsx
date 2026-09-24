@@ -1,18 +1,30 @@
 import type Hls from 'hls.js'
 import { useEffect, useRef, useState } from 'react'
 import {
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
+  Gauge,
+  Languages,
   Maximize,
   Minimize,
   Pause,
+  PictureInPicture,
   Play,
   Settings,
   SkipBack,
   SkipForward,
+  SkipNext,
+  Subtitles,
   VolumeHigh,
   VolumeMute,
 } from './icons'
 import { usePlayerPrefs } from '../store/playerPrefs'
+
+interface NextEpisode {
+  label: string
+  onPlay: () => void
+}
 
 interface VideoPlayerProps {
   src: string
@@ -22,9 +34,15 @@ interface VideoPlayerProps {
   startAt?: number
   title?: string
   subtitle?: string
+  poster?: string | null
   onBack?: () => void
   onProgress?: (currentTime: number, duration: number) => void
   onEnded?: () => void
+  /** Series only: renders a "next episode" button plus an auto-advance prompt in the closing seconds. */
+  next?: NextEpisode | null
+  /** Live only: zapping to the previous/next channel — arrow keys, on-screen buttons, and a vertical swipe on touch. */
+  onChannelUp?: () => void
+  onChannelDown?: () => void
 }
 
 interface QualityLevel {
@@ -32,6 +50,20 @@ interface QualityLevel {
   height: number
   bitrate: number
 }
+
+interface AudioTrack {
+  id: number
+  name: string
+}
+
+interface SubtitleTrack {
+  id: number
+  name: string
+}
+
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
+// Auto-advance countdown, in seconds before the episode ends.
+const NEXT_UP_LEAD = 12
 
 // Chrome/Edge expose a rough downlink estimate (Mbps) via the Network
 // Information API. When present, seed hls.js's bandwidth estimator with it
@@ -62,9 +94,13 @@ export default function VideoPlayer({
   startAt = 0,
   title,
   subtitle,
+  poster,
   onBack,
   onProgress,
   onEnded,
+  next,
+  onChannelUp,
+  onChannelDown,
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -75,6 +111,7 @@ export default function VideoPlayer({
   const lastPointerType = useRef('mouse')
   const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTap = useRef({ time: 0, side: 0 })
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [seekFlash, setSeekFlash] = useState<{ side: -1 | 1; key: number } | null>(null)
 
@@ -89,7 +126,16 @@ export default function VideoPlayer({
   const [levels, setLevels] = useState<QualityLevel[]>([])
   const [currentLevel, setCurrentLevel] = useState(-1)
   const [autoPickedHeight, setAutoPickedHeight] = useState<number | null>(null)
-  const [showQualityMenu, setShowQualityMenu] = useState(false)
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([])
+  const [currentAudioTrack, setCurrentAudioTrack] = useState(-1)
+  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([])
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState(-1)
+  const [playbackRate, setPlaybackRate] = useState(1)
+  const [openMenu, setOpenMenu] = useState<'quality' | 'audio' | 'subtitles' | 'speed' | null>(null)
+  const [pipSupported, setPipSupported] = useState(false)
+  const [isPip, setIsPip] = useState(false)
+  const [nextUpVisible, setNextUpVisible] = useState(false)
+  const [nextUpDismissed, setNextUpDismissed] = useState(false)
 
   // Starts false regardless of the `autoPlay` intent: browsers can silently
   // reject an unmuted autoplay attempt, and if this stayed optimistically
@@ -131,11 +177,20 @@ export default function VideoPlayer({
     setLevels([])
     setCurrentLevel(-1)
     setAutoPickedHeight(null)
+    setAudioTracks([])
+    setCurrentAudioTrack(-1)
+    setSubtitleTracks([])
+    setCurrentSubtitleTrack(-1)
     setNeedsUnmutePrompt(false)
     setDownloadedPct(null)
+    setNextUpVisible(false)
+    setNextUpDismissed(false)
     // Restore the volume level from last time instead of always starting at 100%.
     video.volume = savedVolume
     video.muted = savedMuted
+    // Playback rate is a per-title choice (e.g. lectures vs. movies), not a saved preference, so each new title starts at 1x.
+    video.playbackRate = 1
+    setPlaybackRate(1)
 
     let hls: Hls | null = null
     let cancelled = false
@@ -283,6 +338,22 @@ export default function VideoPlayer({
             const level = hls?.levels[data.level]
             if (level) setAutoPickedHeight(level.height)
           })
+          hls.on(HlsCtor.Events.AUDIO_TRACKS_UPDATED, (_evt, data) => {
+            if (cancelled) return
+            setAudioTracks(
+              data.audioTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}` })),
+            )
+            setCurrentAudioTrack(hls?.audioTrack ?? -1)
+          })
+          hls.on(HlsCtor.Events.AUDIO_TRACK_SWITCHED, (_evt, data) => {
+            if (!cancelled) setCurrentAudioTrack(data.id)
+          })
+          hls.on(HlsCtor.Events.SUBTITLE_TRACKS_UPDATED, (_evt, data) => {
+            if (cancelled) return
+            setSubtitleTracks(
+              data.subtitleTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}` })),
+            )
+          })
 
           hls.on(HlsCtor.Events.ERROR, (_evt, data) => {
             if (!data.fatal) return
@@ -383,18 +454,141 @@ export default function VideoPlayer({
           if (!isLive) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10)
           wakeControls()
           break
+        case 'ArrowUp':
+          if (isLive && onChannelUp) {
+            e.preventDefault()
+            onChannelUp()
+          }
+          break
+        case 'ArrowDown':
+          if (isLive && onChannelDown) {
+            e.preventDefault()
+            onChannelDown()
+          }
+          break
         case 'm':
           video.muted = !video.muted
           break
         case 'f':
           toggleFullscreen()
           break
+        case 'i':
+          togglePip()
+          break
+        case ',':
+        case '<':
+          if (!isLive) setSpeed(Math.max(0.5, Math.round((video.playbackRate - 0.25) * 100) / 100))
+          break
+        case '.':
+        case '>':
+          if (!isLive) setSpeed(Math.min(2, Math.round((video.playbackRate + 0.25) * 100) / 100))
+          break
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLive])
+  }, [isLive, onChannelUp, onChannelDown])
+
+  // --- Picture-in-Picture support + state tracking ---
+  useEffect(() => {
+    setPipSupported(document.pictureInPictureEnabled && !!videoRef.current?.requestPictureInPicture)
+    const video = videoRef.current
+    if (!video) return
+    function onEnterPip() {
+      setIsPip(true)
+    }
+    function onLeavePip() {
+      setIsPip(false)
+    }
+    video.addEventListener('enterpictureinpicture', onEnterPip)
+    video.addEventListener('leavepictureinpicture', onLeavePip)
+    return () => {
+      video.removeEventListener('enterpictureinpicture', onEnterPip)
+      video.removeEventListener('leavepictureinpicture', onLeavePip)
+    }
+  }, [])
+
+  // --- Wake Lock: keeps the screen on while actively playing (phones/tablets dim and lock otherwise). ---
+  useEffect(() => {
+    if (!isPlaying) return
+    let lock: WakeLockSentinel | null = null
+    let cancelled = false
+    navigator.wakeLock
+      ?.request('screen')
+      .then((sentinel) => {
+        if (cancelled) {
+          sentinel.release().catch(() => {})
+          return
+        }
+        lock = sentinel
+      })
+      .catch(() => {
+        // Unsupported browser, or the tab lost focus before the request resolved — playback still works either way.
+      })
+    return () => {
+      cancelled = true
+      lock?.release().catch(() => {})
+    }
+  }, [isPlaying])
+
+  // --- Media Session: lock-screen / notification-shade transport controls and metadata. ---
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title || 'PedreiraFlix',
+      artist: subtitle || 'PedreiraFlix',
+      artwork: poster ? [{ src: poster, sizes: '512x512', type: 'image/png' }] : [],
+    })
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+    navigator.mediaSession.setActionHandler('play', () => videoRef.current?.play().catch(() => {}))
+    navigator.mediaSession.setActionHandler('pause', () => videoRef.current?.pause())
+    if (isLive) {
+      navigator.mediaSession.setActionHandler('seekbackward', null)
+      navigator.mediaSession.setActionHandler('seekforward', null)
+      navigator.mediaSession.setActionHandler('seekto', null)
+    } else {
+      navigator.mediaSession.setActionHandler('seekbackward', () => skip(-10))
+      navigator.mediaSession.setActionHandler('seekforward', () => skip(10))
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (videoRef.current && details.seekTime != null) videoRef.current.currentTime = details.seekTime
+      })
+    }
+    navigator.mediaSession.setActionHandler('nexttrack', next ? next.onPlay : null)
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('seekbackward', null)
+      navigator.mediaSession.setActionHandler('seekforward', null)
+      navigator.mediaSession.setActionHandler('seekto', null)
+      navigator.mediaSession.setActionHandler('nexttrack', null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, subtitle, poster, isPlaying, isLive, next])
+
+  // --- Media Session: keep the lock-screen scrubber in sync with playback position. ---
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession) || isLive) return
+    if (!Number.isFinite(duration) || duration <= 0) return
+    try {
+      navigator.mediaSession.setPositionState({
+        duration,
+        position: Math.min(currentTime, duration),
+        playbackRate,
+      })
+    } catch {
+      // Fires if position/duration briefly disagree (e.g. right after a seek); harmless to skip a frame.
+    }
+  }, [currentTime, duration, playbackRate, isLive])
+
+  // --- Next episode: auto-advance prompt in the closing seconds of a VOD title. ---
+  useEffect(() => {
+    if (!next || isLive || nextUpDismissed || !duration) {
+      setNextUpVisible(false)
+      return
+    }
+    setNextUpVisible(duration - currentTime <= NEXT_UP_LEAD)
+  }, [currentTime, duration, next, isLive, nextUpDismissed])
 
   function togglePlay() {
     const video = videoRef.current
@@ -494,7 +688,42 @@ export default function VideoPlayer({
   function selectLevel(index: number) {
     if (hlsRef.current) hlsRef.current.currentLevel = index
     setCurrentLevel(index)
-    setShowQualityMenu(false)
+    setOpenMenu(null)
+  }
+
+  function selectAudioTrack(id: number) {
+    if (hlsRef.current) hlsRef.current.audioTrack = id
+    setCurrentAudioTrack(id)
+    setOpenMenu(null)
+  }
+
+  function selectSubtitleTrack(id: number) {
+    if (hlsRef.current) hlsRef.current.subtitleTrack = id
+    setCurrentSubtitleTrack(id)
+    setOpenMenu(null)
+  }
+
+  function setSpeed(rate: number) {
+    const video = videoRef.current
+    if (!video) return
+    video.playbackRate = rate
+    setPlaybackRate(rate)
+    setOpenMenu(null)
+  }
+
+  function togglePip() {
+    const video = videoRef.current
+    if (!video || !pipSupported) return
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch(() => {})
+    } else {
+      video.requestPictureInPicture().catch(() => {})
+    }
+  }
+
+  function playNext() {
+    setNextUpVisible(false)
+    next?.onPlay()
   }
 
   return (
@@ -504,6 +733,20 @@ export default function VideoPlayer({
       // Runs before the emulated mouse events, so the handlers below know what kind of pointer this is.
       onPointerDown={(e) => {
         lastPointerType.current = e.pointerType
+        if (isLive && e.pointerType === 'touch') swipeStart.current = { y: e.clientY, x: e.clientX }
+      }}
+      onPointerUp={(e) => {
+        // Vertical swipe zaps channels (live only — horizontal edges are already the seek zone on VOD, and
+        // live has no seek to conflict with here). A near-vertical drag past the threshold wins over a tap.
+        if (!isLive || e.pointerType !== 'touch' || !swipeStart.current) return
+        const { x, y } = swipeStart.current
+        swipeStart.current = null
+        const dy = y - e.clientY
+        const dx = Math.abs(e.clientX - x)
+        if (Math.abs(dy) > 60 && Math.abs(dy) > dx * 1.5) {
+          if (dy > 0) onChannelUp?.()
+          else onChannelDown?.()
+        }
       }}
       // Touch fires an emulated mousemove right before click; ignoring it keeps a tap from re-showing the controls it is about to hide.
       onMouseMove={() => lastPointerType.current !== 'touch' && wakeControls()}
@@ -514,7 +757,7 @@ export default function VideoPlayer({
         toggleFullscreen()
       }}
     >
-      <video ref={videoRef} className="h-full w-full" playsInline />
+      <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
 
       <div
         data-controls
@@ -535,43 +778,177 @@ export default function VideoPlayer({
           {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
           {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
         </div>
-        {levels.length > 1 && (
-          <div className="relative shrink-0">
-            <button
-              onClick={() => setShowQualityMenu((v) => !v)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-            >
-              <Settings className="h-4 w-4" />
-              {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
-            </button>
-            {showQualityMenu && (
-              <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-sm">
-                <button
-                  onClick={() => selectLevel(-1)}
-                  className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                    currentLevel === -1 ? 'text-brand-300' : 'text-white'
-                  }`}
-                >
-                  Automático
-                </button>
-                {[...levels]
-                  .sort((a, b) => b.height - a.height)
-                  .map((lvl) => (
+        <div className="flex shrink-0 items-center gap-1.5">
+          {audioTracks.length > 1 && (
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu((m) => (m === 'audio' ? null : 'audio'))}
+                aria-label="Áudio"
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+              >
+                <Languages className="h-4 w-4" />
+              </button>
+              {openMenu === 'audio' && (
+                <div className="glass-panel absolute right-0 mt-1.5 w-40 overflow-hidden rounded-lg text-sm">
+                  {audioTracks.map((t) => (
                     <button
-                      key={lvl.index}
-                      onClick={() => selectLevel(lvl.index)}
+                      key={t.id}
+                      onClick={() => selectAudioTrack(t.id)}
                       className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                        currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
+                        currentAudioTrack === t.id ? 'text-brand-300' : 'text-white'
                       }`}
                     >
-                      {lvl.height}p
+                      {t.name}
                     </button>
                   ))}
-              </div>
-            )}
-          </div>
-        )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {subtitleTracks.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu((m) => (m === 'subtitles' ? null : 'subtitles'))}
+                aria-label="Legendas"
+                className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors ${
+                  currentSubtitleTrack !== -1
+                    ? 'border-brand-400/50 bg-brand-500/20 text-brand-200'
+                    : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+                }`}
+              >
+                <Subtitles className="h-4 w-4" />
+              </button>
+              {openMenu === 'subtitles' && (
+                <div className="glass-panel absolute right-0 mt-1.5 w-40 overflow-hidden rounded-lg text-sm">
+                  <button
+                    onClick={() => selectSubtitleTrack(-1)}
+                    className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                      currentSubtitleTrack === -1 ? 'text-brand-300' : 'text-white'
+                    }`}
+                  >
+                    Desativadas
+                  </button>
+                  {subtitleTracks.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => selectSubtitleTrack(t.id)}
+                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                        currentSubtitleTrack === t.id ? 'text-brand-300' : 'text-white'
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isLive && (
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
+                aria-label="Velocidade"
+                className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+              >
+                <Gauge className="h-4 w-4" />
+                {playbackRate !== 1 && <span className="tabular-nums">{playbackRate}x</span>}
+              </button>
+              {openMenu === 'speed' && (
+                <div className="glass-panel absolute right-0 mt-1.5 w-28 overflow-hidden rounded-lg text-sm">
+                  {PLAYBACK_RATES.map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => setSpeed(rate)}
+                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                        playbackRate === rate ? 'text-brand-300' : 'text-white'
+                      }`}
+                    >
+                      {rate === 1 ? 'Normal' : `${rate}x`}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {pipSupported && (
+            <button
+              onClick={togglePip}
+              aria-label="Picture-in-Picture"
+              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
+                isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+              }`}
+            >
+              <PictureInPicture className="h-4 w-4" />
+            </button>
+          )}
+
+          {levels.length > 1 && (
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu((m) => (m === 'quality' ? null : 'quality'))}
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+              >
+                <Settings className="h-4 w-4" />
+                {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
+              </button>
+              {openMenu === 'quality' && (
+                <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-sm">
+                  <button
+                    onClick={() => selectLevel(-1)}
+                    className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                      currentLevel === -1 ? 'text-brand-300' : 'text-white'
+                    }`}
+                  >
+                    Automático
+                  </button>
+                  {[...levels]
+                    .sort((a, b) => b.height - a.height)
+                    .map((lvl) => (
+                      <button
+                        key={lvl.index}
+                        onClick={() => selectLevel(lvl.index)}
+                        className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                          currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
+                        }`}
+                      >
+                        {lvl.height}p
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {nextUpVisible && next && !error && (
+        <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">
+          <div className="glass-panel glow-border flex w-64 flex-col gap-2 rounded-xl p-3">
+            <p className="text-xs text-zinc-400">A seguir</p>
+            <p className="truncate text-sm font-semibold text-white">{next.label}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={playNext}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 py-2 text-xs font-bold text-white hover:brightness-110"
+              >
+                <SkipNext className="h-4 w-4" /> Reproduzir
+              </button>
+              <button
+                onClick={() => {
+                  setNextUpVisible(false)
+                  setNextUpDismissed(true)
+                }}
+                className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {seekFlash && (
         <div
@@ -581,6 +958,34 @@ export default function VideoPlayer({
           }`}
         >
           {seekFlash.side === -1 ? '−10s' : '+10s'}
+        </div>
+      )}
+
+      {isLive && (onChannelUp || onChannelDown) && !error && (
+        <div
+          data-controls
+          className={`absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 transition-opacity duration-200 sm:right-4 ${
+            controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+        >
+          <button
+            onClick={onChannelUp}
+            disabled={!onChannelUp}
+            aria-label="Próximo canal"
+            title="Próximo canal (↑)"
+            className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
+          >
+            <ChevronUp className="h-5 w-5" />
+          </button>
+          <button
+            onClick={onChannelDown}
+            disabled={!onChannelDown}
+            aria-label="Canal anterior"
+            title="Canal anterior (↓)"
+            className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </button>
         </div>
       )}
 
@@ -735,7 +1140,17 @@ export default function VideoPlayer({
               </span>
             )}
 
-            <div className="ml-auto flex items-center">
+            <div className="ml-auto flex items-center gap-1">
+              {next && !isLive && (
+                <button
+                  onClick={playNext}
+                  aria-label="Próximo episódio"
+                  title="Próximo episódio"
+                  className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20 pointer-coarse:hidden"
+                >
+                  <SkipNext className="h-5 w-5" />
+                </button>
+              )}
               <button onClick={toggleFullscreen} className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20" aria-label="Tela cheia">
                 {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
               </button>

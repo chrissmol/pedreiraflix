@@ -54,7 +54,11 @@ function isPrivateAddress(address, family) {
   return false
 }
 
+// Only for the local e2e suite, whose mock Xtream panel runs on localhost.
+const ALLOW_PRIVATE_HOSTS = process.env.ALLOW_PRIVATE_HOSTS === '1'
+
 async function assertPublicHost(hostname) {
+  if (ALLOW_PRIVATE_HOSTS) return
   if (net.isIP(hostname)) {
     if (isPrivateAddress(hostname, net.isIP(hostname))) {
       throw new Error(`refusing to contact non-public address: ${hostname}`)
@@ -142,17 +146,22 @@ app.get('/api/stream', async (req, res) => {
 
     const contentType = upstream.headers.get('content-type') || ''
     if (contentType.includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
-      // Rewrite relative playlist entries to route back through this proxy.
+      // Rewrite playlist entries to route back through this proxy. Resolve
+      // against the final URL (panels usually redirect streams to a CDN), and
+      // include URI="..." attributes (alternate audio, subtitles, keys).
+      const base = upstream.url || target.toString()
+      const proxied = (ref) => `/api/stream?url=${encodeURIComponent(new URL(ref, base).toString())}`
       const text = await upstream.text()
       const rewritten = text
         .split('\n')
         .map((line) => {
           const trimmed = line.trim()
-          if (!trimmed || trimmed.startsWith('#')) return line
-          const absolute = new URL(trimmed, target).toString()
-          return `/api/stream?url=${encodeURIComponent(absolute)}`
+          if (!trimmed) return line
+          if (trimmed.startsWith('#')) return line.replace(/URI="([^"]+)"/g, (_, ref) => `URI="${proxied(ref)}"`)
+          return proxied(trimmed)
         })
         .join('\n')
+      res.removeHeader('content-length')
       res.setHeader('content-type', 'application/vnd.apple.mpegurl')
       res.send(rewritten)
       return
