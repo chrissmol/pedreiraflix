@@ -1,6 +1,7 @@
 import type Hls from 'hls.js'
 import { useEffect, useRef, useState } from 'react'
 import {
+  ChevronLeft,
   Maximize,
   Minimize,
   Pause,
@@ -19,6 +20,9 @@ interface VideoPlayerProps {
   isLive?: boolean
   autoPlay?: boolean
   startAt?: number
+  title?: string
+  subtitle?: string
+  onBack?: () => void
   onProgress?: (currentTime: number, duration: number) => void
   onEnded?: () => void
 }
@@ -56,6 +60,9 @@ export default function VideoPlayer({
   isLive = false,
   autoPlay = true,
   startAt = 0,
+  title,
+  subtitle,
+  onBack,
   onProgress,
   onEnded,
 }: VideoPlayerProps) {
@@ -64,6 +71,12 @@ export default function VideoPlayer({
   const hlsRef = useRef<Hls | null>(null)
   const hideControlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const volumeSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Touch vs mouse decides what a tap means (YouTube: tap toggles controls, double-tap on the edges seeks).
+  const lastPointerType = useRef('mouse')
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTap = useRef({ time: 0, side: 0 })
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [seekFlash, setSeekFlash] = useState<{ side: -1 | 1; key: number } | null>(null)
 
   const [error, setError] = useState<string | null>(null)
   // Starts true (not false): a slow origin can take several seconds just to
@@ -326,7 +339,9 @@ export default function VideoPlayer({
   // --- Fullscreen tracking ---
   useEffect(() => {
     function onFsChange() {
-      setIsFullscreen(document.fullscreenElement === containerRef.current)
+      const fs = document.fullscreenElement === containerRef.current
+      setIsFullscreen(fs)
+      if (!fs) orientation()?.unlock?.()
     }
     document.addEventListener('fullscreenchange', onFsChange)
     return () => document.removeEventListener('fullscreenchange', onFsChange)
@@ -426,8 +441,54 @@ export default function VideoPlayer({
   function toggleFullscreen() {
     const container = containerRef.current
     if (!container) return
-    if (document.fullscreenElement) document.exitFullscreen()
-    else container.requestFullscreen().catch(() => {})
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else if (container.requestFullscreen) {
+      container
+        .requestFullscreen()
+        // Phones: rotate to landscape like the YouTube/Netflix apps (Android Chrome only, best effort).
+        .then(() => {
+          if (window.matchMedia('(pointer: coarse)').matches) return orientation()?.lock?.('landscape')
+        })
+        .catch(() => {})
+    } else {
+      // iPhone Safari can only fullscreen the <video> itself (native player takes over).
+      ;(videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null)?.webkitEnterFullscreen?.()
+    }
+  }
+
+  function onContainerClick(e: React.MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('[data-controls]')) return
+    if (lastPointerType.current !== 'touch') {
+      togglePlay()
+      return
+    }
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const side = x < rect.width / 3 ? -1 : x > (rect.width * 2) / 3 ? 1 : 0
+    const now = Date.now()
+    const isRepeat = now - lastTap.current.time < 300 && lastTap.current.side === side
+    lastTap.current = { time: now, side }
+    if (tapTimer.current) clearTimeout(tapTimer.current)
+    if (isRepeat) {
+      // Keeping `time` fresh means a third/fourth tap keeps seeking, as on YouTube.
+      if (side !== 0 && !isLive) {
+        skip(side * 10)
+        setSeekFlash({ side, key: now })
+        if (flashTimer.current) clearTimeout(flashTimer.current)
+        flashTimer.current = setTimeout(() => setSeekFlash(null), 600)
+      }
+      return
+    }
+    // Wait out the double-tap window before treating it as a single tap.
+    tapTimer.current = setTimeout(() => {
+      if (controlsVisible && isPlaying) setControlsVisible(false)
+      else wakeControls()
+    }, 250)
+  }
+
+  function orientation() {
+    return screen.orientation as unknown as { lock?: (o: string) => Promise<void>; unlock?: () => void } | undefined
   }
 
   function selectLevel(index: number) {
@@ -439,55 +500,87 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={`group/player relative h-full w-full bg-black ${controlsVisible ? '' : 'cursor-none'}`}
-      onMouseMove={wakeControls}
-      onClick={(e) => {
-        // Ignore clicks that originate on the control bar itself.
-        if ((e.target as HTMLElement).closest('[data-controls]')) return
-        togglePlay()
+      className={`group/player relative h-full w-full touch-manipulation select-none bg-black ${controlsVisible ? '' : 'cursor-none'}`}
+      // Runs before the emulated mouse events, so the handlers below know what kind of pointer this is.
+      onPointerDown={(e) => {
+        lastPointerType.current = e.pointerType
       }}
-      // YouTube-style: the two clicks of a double-click cancel out (pause+play), net effect is fullscreen only.
+      // Touch fires an emulated mousemove right before click; ignoring it keeps a tap from re-showing the controls it is about to hide.
+      onMouseMove={() => lastPointerType.current !== 'touch' && wakeControls()}
+      onClick={onContainerClick}
+      // Mouse, YouTube-style: the two clicks of a double-click cancel out (pause+play), net effect is fullscreen only.
       onDoubleClick={(e) => {
-        if ((e.target as HTMLElement).closest('[data-controls]')) return
+        if (lastPointerType.current === 'touch' || (e.target as HTMLElement).closest('[data-controls]')) return
         toggleFullscreen()
       }}
     >
       <video ref={videoRef} className="h-full w-full" playsInline />
 
-      {levels.length > 1 && (
-        <div data-controls className={`absolute right-3 top-3 z-20 transition-opacity ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div
+        data-controls
+        className={`absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
+          controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
+        {onBack && (
           <button
-            onClick={() => setShowQualityMenu((v) => !v)}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+            onClick={onBack}
+            aria-label="Voltar"
+            className="shrink-0 rounded-full p-2 text-white transition-colors hover:bg-white/10 active:bg-white/20"
           >
-            <Settings className="h-3.5 w-3.5" />
-            {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
+            <ChevronLeft className="h-6 w-6" />
           </button>
-          {showQualityMenu && (
-            <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-xs">
-              <button
-                onClick={() => selectLevel(-1)}
-                className={`block w-full px-3 py-2 text-left transition-colors hover:bg-white/10 ${
-                  currentLevel === -1 ? 'text-brand-300' : 'text-white'
-                }`}
-              >
-                Automático
-              </button>
-              {[...levels]
-                .sort((a, b) => b.height - a.height)
-                .map((lvl) => (
-                  <button
-                    key={lvl.index}
-                    onClick={() => selectLevel(lvl.index)}
-                    className={`block w-full px-3 py-2 text-left transition-colors hover:bg-white/10 ${
-                      currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
-                    }`}
-                  >
-                    {lvl.height}p
-                  </button>
-                ))}
-            </div>
-          )}
+        )}
+        <div className="min-w-0 flex-1 pt-1.5">
+          {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
+          {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
+        </div>
+        {levels.length > 1 && (
+          <div className="relative shrink-0">
+            <button
+              onClick={() => setShowQualityMenu((v) => !v)}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+            >
+              <Settings className="h-4 w-4" />
+              {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
+            </button>
+            {showQualityMenu && (
+              <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-sm">
+                <button
+                  onClick={() => selectLevel(-1)}
+                  className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                    currentLevel === -1 ? 'text-brand-300' : 'text-white'
+                  }`}
+                >
+                  Automático
+                </button>
+                {[...levels]
+                  .sort((a, b) => b.height - a.height)
+                  .map((lvl) => (
+                    <button
+                      key={lvl.index}
+                      onClick={() => selectLevel(lvl.index)}
+                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
+                        currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
+                      }`}
+                    >
+                      {lvl.height}p
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {seekFlash && (
+        <div
+          key={seekFlash.key}
+          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-sm font-bold text-white ${
+            seekFlash.side === -1 ? 'left-0 rounded-r-[100%]' : 'right-0 rounded-l-[100%]'
+          }`}
+        >
+          {seekFlash.side === -1 ? '−10s' : '+10s'}
         </div>
       )}
 
@@ -511,17 +604,56 @@ export default function VideoPlayer({
         <button
           data-controls
           onClick={unmute}
-          className="glass-panel absolute left-3 top-3 z-20 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:border-brand-400/40"
+          className="glass-panel absolute left-3 top-20 z-20 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-brand-400/40"
         >
           <VolumeMute className="h-4 w-4" /> Ativar som
         </button>
       )}
 
+      {/* Mouse: just an icon while paused (click anywhere toggles). */}
       {!buffering && !isPlaying && !error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center pointer-coarse:hidden">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
             <Play className="ml-1 h-8 w-8 text-white" />
           </div>
+        </div>
+      )}
+
+      {/* Touch: big tappable play/pause with ±10s, shown together with the controls. */}
+      {!buffering && !error && (
+        <div
+          className={`pointer-events-none absolute inset-0 z-10 hidden items-center justify-center gap-10 transition-opacity duration-200 pointer-coarse:flex ${
+            controlsVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {!isLive && (
+            <button
+              data-controls
+              onClick={() => skip(-10)}
+              aria-label="Voltar 10s"
+              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+            >
+              <SkipBack className="h-6 w-6" />
+            </button>
+          )}
+          <button
+            data-controls
+            onClick={togglePlay}
+            aria-label="Play/Pause"
+            className={`rounded-full bg-black/40 p-5 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+          >
+            {isPlaying ? <Pause className="h-9 w-9" /> : <Play className="ml-0.5 h-9 w-9" />}
+          </button>
+          {!isLive && (
+            <button
+              data-controls
+              onClick={() => skip(10)}
+              aria-label="Avançar 10s"
+              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+            >
+              <SkipForward className="h-6 w-6" />
+            </button>
+          )}
         </div>
       )}
 
@@ -543,8 +675,8 @@ export default function VideoPlayer({
       {!error && (
         <div
           data-controls
-          className={`absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 pb-2 pt-8 transition-opacity duration-200 sm:px-4 ${
-            controlsVisible ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-8 transition-opacity duration-200 ${
+            controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
           {isLive ? (
@@ -559,28 +691,30 @@ export default function VideoPlayer({
               max={duration || 0}
               value={currentTime}
               onChange={handleSeek}
-              className="mb-2 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-brand-500"
+              aria-label="Progresso"
+              className="mb-1 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-brand-500 pointer-coarse:h-2"
             />
           )}
 
-          <div className="flex items-center gap-3">
-            <button onClick={togglePlay} className="text-white transition-transform hover:scale-110" aria-label="Play/Pause">
+          {/* Touch hides the buttons the center cluster already has, and the volume (phones use the hardware keys). */}
+          <div className="flex items-center gap-2">
+            <button onClick={togglePlay} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Play/Pause">
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </button>
 
             {!isLive && (
               <>
-                <button onClick={() => skip(-10)} className="text-white transition-transform hover:scale-110" aria-label="Voltar 10s">
+                <button onClick={() => skip(-10)} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Voltar 10s">
                   <SkipBack className="h-5 w-5" />
                 </button>
-                <button onClick={() => skip(10)} className="text-white transition-transform hover:scale-110" aria-label="Avançar 10s">
+                <button onClick={() => skip(10)} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Avançar 10s">
                   <SkipForward className="h-5 w-5" />
                 </button>
               </>
             )}
 
-            <div className="flex items-center gap-2">
-              <button onClick={toggleMute} className="text-white transition-transform hover:scale-110" aria-label="Mudo">
+            <div className="flex items-center gap-2 pointer-coarse:hidden">
+              <button onClick={toggleMute} className="rounded-full p-1.5 text-white transition-transform hover:scale-110" aria-label="Mudo">
                 {isMuted || volume === 0 ? <VolumeMute className="h-5 w-5" /> : <VolumeHigh className="h-5 w-5" />}
               </button>
               <input
@@ -596,13 +730,13 @@ export default function VideoPlayer({
             </div>
 
             {!isLive && (
-              <span className="text-xs text-zinc-300">
+              <span className="text-xs tabular-nums text-zinc-300">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             )}
 
-            <div className="ml-auto flex items-center gap-3">
-              <button onClick={toggleFullscreen} className="text-white transition-transform hover:scale-110" aria-label="Tela cheia">
+            <div className="ml-auto flex items-center">
+              <button onClick={toggleFullscreen} className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20" aria-label="Tela cheia">
                 {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
               </button>
             </div>

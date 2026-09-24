@@ -61,7 +61,7 @@ export default function SeriesDetailPage() {
             <span>{series.seasons.length} temporada(s)</span>
           </div>
 
-          <div className="mt-5 flex gap-3">
+          <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() =>
                 toggleFavorite({ kind: 'series', id: series.seriesId, name: series.name, image: series.cover })
@@ -156,7 +156,7 @@ export default function SeriesDetailPage() {
                     href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
                     download
                     onClick={(e) => e.stopPropagation()}
-                    className="mt-1 shrink-0 rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-white/10 hover:text-brand-300"
+                    className="mt-0.5 shrink-0 rounded-lg p-2.5 text-zinc-500 transition-colors hover:bg-white/10 hover:text-brand-300"
                     title="Baixar episódio"
                   >
                     <Download className="h-5 w-5" />

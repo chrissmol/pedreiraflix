@@ -101,3 +101,22 @@ body {
     0 0 0 2px rgba(6, 7, 12, 1),
     0 0 0 4px rgba(58, 151, 255, 0.55);
 }
+
+/* Touch: no 300ms tap delay / double-tap zoom, no grey tap flash, and 16px form text (smaller makes iOS zoom the page on focus). */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a,
+summary,
+[role='button'] {
+  touch-action: manipulation;
+}
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

@@ -12,7 +12,7 @@ export default function PosterCard({ title, image, onClick, badge, subtitle }: P
   return (
     <button
       onClick={onClick}
-      className="group relative aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900 text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-brand-400/50 hover:shadow-[0_0_0_1px_rgba(58,151,255,0.35),0_20px_45px_-12px_rgba(15,123,255,0.55)] sm:w-40"
+      className="group relative aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900 text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-brand-400/50 hover:shadow-[0_0_0_1px_rgba(58,151,255,0.35),0_20px_45px_-12px_rgba(15,123,255,0.55)] sm:w-40"
     >
       {image ? (
         <img

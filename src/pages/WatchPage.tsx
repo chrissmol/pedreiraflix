@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
@@ -38,6 +38,15 @@ export default function WatchPage() {
     return client.streamUrl(kind, id, ext)
   }, [client, kind, id, ext])
 
+  // Stops pull-to-refresh / scroll chaining from reaching the page behind the player on phones.
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.overscrollBehavior = 'none'
+    return () => {
+      root.style.overscrollBehavior = ''
+    }
+  }, [])
+
   const epgStreamId = kind === 'live' && id ? Number(id) : null
   const { current, next } = useShortEpg(epgStreamId)
 
@@ -67,40 +76,25 @@ export default function WatchPage() {
 
   if (!src) return <div className="pt-32 text-center text-zinc-400">Carregando player...</div>
 
+  const subtitle =
+    kind === 'live' && current
+      ? `AGORA ${formatEpgTime(current.start)}-${formatEpgTime(current.end)} ${current.title}${next ? ` · A seguir: ${next.title}` : ''}`
+      : isLikelyUnsupportedContainer
+        ? `Formato .${ext} pode não ser suportado pelo navegador (comum em .mkv/.avi).`
+        : undefined
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      <div className="glass-panel flex flex-col gap-1 border-x-0 border-t-0 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm font-medium text-zinc-300 transition-colors hover:text-brand-300"
-          >
-            ← Voltar
-          </button>
-          <h1 className="font-display truncate text-sm font-semibold text-white">{name}</h1>
-        </div>
-        {kind === 'live' && current && (
-          <p className="pl-1 text-xs text-zinc-400">
-            <span className="font-semibold text-brand-400">AGORA</span> {formatEpgTime(current.start)}-
-            {formatEpgTime(current.end)} {current.title}
-            {next && <span className="ml-3 text-zinc-500">A seguir: {next.title}</span>}
-          </p>
-        )}
-        {isLikelyUnsupportedContainer && (
-          <p className="pl-1 text-xs text-amber-400">
-            Formato .{ext} pode não ser suportado nativamente pelo navegador (comum em arquivos .mkv/.avi).
-          </p>
-        )}
-      </div>
-      <div className="flex-1">
-        <VideoPlayer
-          src={src}
-          isHls={isHls}
-          isLive={kind === 'live'}
-          startAt={kind !== 'live' ? existingProgress?.positionSeconds ?? 0 : 0}
-          onProgress={handleProgress}
-        />
-      </div>
+    <div className="fixed inset-0 z-50 bg-black">
+      <VideoPlayer
+        src={src}
+        isHls={isHls}
+        isLive={kind === 'live'}
+        title={name}
+        subtitle={subtitle}
+        onBack={() => navigate(-1)}
+        startAt={kind !== 'live' ? existingProgress?.positionSeconds ?? 0 : 0}
+        onProgress={handleProgress}
+      />
     </div>
   )
 }

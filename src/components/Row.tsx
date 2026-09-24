@@ -30,7 +30,7 @@ export default function Row({ title, children, loading }: RowProps) {
 
         <div
           ref={scrollerRef}
-          className="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth px-4 pb-4 pt-6 sm:px-10"
+          className="no-scrollbar flex gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-4 pt-6 sm:px-10"
         >
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
