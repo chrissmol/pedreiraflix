@@ -1,5 +1,5 @@
 import type Hls from 'hls.js'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   ChevronDown,
   ChevronLeft,
@@ -148,6 +148,13 @@ export default function VideoPlayer({
   const savedVolume = usePlayerPrefs((s) => s.volume)
   const savedMuted = usePlayerPrefs((s) => s.muted)
   const setVolumePrefs = usePlayerPrefs((s) => s.setVolumePrefs)
+  const subtitleSize = usePlayerPrefs((s) => s.subtitleSize)
+  const subtitleBackground = usePlayerPrefs((s) => s.subtitleBackground)
+  const setSubtitleSize = usePlayerPrefs((s) => s.setSubtitleSize)
+  const setSubtitleBackground = usePlayerPrefs((s) => s.setSubtitleBackground)
+  // Scopes the ::cue rule below to this player instance — a plain className won't do, ::cue only
+  // accepts a simple selector chain (no descendant combinators into it) so it has to be `#id video::cue`.
+  const playerId = useId().replace(/:/g, '')
   const [volume, setVolume] = useState(savedVolume)
   const [isMuted, setIsMuted] = useState(savedMuted)
   const [needsUnmutePrompt, setNeedsUnmutePrompt] = useState(false)
@@ -733,9 +740,17 @@ export default function VideoPlayer({
     next?.onPlay()
   }
 
+  const CUE_SIZE_EM = { small: 0.9, medium: 1.3, large: 1.8 }[subtitleSize]
+  const CUE_BG = {
+    none: 'transparent',
+    semi: 'rgba(0, 0, 0, 0.65)',
+    solid: 'rgba(0, 0, 0, 0.95)',
+  }[subtitleBackground]
+
   return (
     <div
       ref={containerRef}
+      id={playerId}
       className={`group/player relative h-full w-full touch-manipulation select-none bg-black ${controlsVisible ? '' : 'cursor-none'}`}
       // Runs before the emulated mouse events, so the handlers below know what kind of pointer this is.
       onPointerDown={(e) => {
@@ -764,6 +779,9 @@ export default function VideoPlayer({
         toggleFullscreen()
       }}
     >
+      {/* Styles the browser's native WebVTT rendering (hls.js attaches real <track> elements by default) —
+          ::cue only accepts a bare selector, so this scopes to just this player via its own id. */}
+      <style>{`#${playerId} video::cue { font-size: ${CUE_SIZE_EM}em; background: ${CUE_BG}; }`}</style>
       <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
 
       <div
@@ -847,6 +865,41 @@ export default function VideoPlayer({
                       {t.name}
                     </button>
                   ))}
+                  <div className="border-t border-white/10 px-3 py-2">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Tamanho</p>
+                    <div className="flex gap-1.5">
+                      {(['small', 'medium', 'large'] as const).map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setSubtitleSize(size)}
+                          aria-label={`Legenda tamanho ${size}`}
+                          className={`flex-1 rounded-md border py-1 text-xs transition-colors ${
+                            subtitleSize === size ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {size === 'small' ? 'P' : size === 'medium' ? 'M' : 'G'}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Fundo</p>
+                    <div className="flex gap-1.5">
+                      {([
+                        ['none', 'Nenhum'],
+                        ['semi', 'Leve'],
+                        ['solid', 'Sólido'],
+                      ] as const).map(([bg, label]) => (
+                        <button
+                          key={bg}
+                          onClick={() => setSubtitleBackground(bg)}
+                          className={`flex-1 rounded-md border py-1 text-[11px] transition-colors ${
+                            subtitleBackground === bg ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

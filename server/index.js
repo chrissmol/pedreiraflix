@@ -38,11 +38,11 @@ function isRateLimited(ip, key, limit, windowMs) {
   return bucket.count > limit
 }
 app.use('/api/xtream', (req, res, next) => {
-  if (isRateLimited(req.ip, 'xtream', 100, 10_000)) return res.status(429).send('rate limited')
+  if (isRateLimited(req.ip, 'xtream', 300, 10_000)) return res.status(429).send('rate limited')
   next()
 })
 app.use('/api/stream', (req, res, next) => {
-  if (isRateLimited(req.ip, 'stream', 400, 10_000)) return res.status(429).send('rate limited')
+  if (isRateLimited(req.ip, 'stream', 600, 10_000)) return res.status(429).send('rate limited')
   next()
 })
 

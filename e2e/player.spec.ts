@@ -165,3 +165,25 @@ test('posters served from a non-proxy-friendly host are routed through our own p
   // Prove it actually loads (not just the right src attribute) — a broken image reports 0 natural size.
   await expect.poll(() => poster.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
 })
+
+test('subtitle size and background are adjustable and persist across reload', async ({ page }) => {
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/3/)
+  await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
+
+  await page.getByRole('button', { name: 'Legendas' }).click()
+  await page.getByRole('button', { name: 'Português', exact: true }).click()
+  await page.getByRole('button', { name: 'Legendas' }).click()
+  await page.getByRole('button', { name: 'Legenda tamanho large' }).click()
+  await page.getByRole('button', { name: 'Sólido' }).click()
+
+  const cueRule = () => page.locator('style').evaluateAll((els) => els.map((e) => e.textContent).find((t) => t?.includes('::cue')))
+  await expect.poll(cueRule).toContain('1.8em')
+  await expect.poll(cueRule).toContain('rgba(0, 0, 0, 0.95)')
+
+  // Preferences are global (not per-title), so they should survive a reload/new playback too.
+  await page.reload()
+  await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
+  await expect.poll(cueRule).toContain('1.8em')
+})

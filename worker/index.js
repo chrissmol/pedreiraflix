@@ -152,13 +152,13 @@ export default {
 
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
-      if (isRateLimited(ip, 'xtream', 100, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await xtream(url, env))
     }
     if (url.pathname === '/api/stream') {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
       // requests within a few seconds, especially right after a channel switch or quality change.
-      if (isRateLimited(ip, 'stream', 400, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      if (isRateLimited(ip, 'stream', 600, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await stream(request, url, env))
     }
     return withSecurityHeaders(await env.ASSETS.fetch(request))

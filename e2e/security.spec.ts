@@ -10,17 +10,20 @@ test('security headers are present on proxy responses', async ({ request }) => {
 })
 
 test('excessive requests to /api/xtream get rate-limited with 429', async ({ request }) => {
+  // Every request in this whole suite comes from the same IP (127.0.0.1), same as a real client's IP
+  // would be, and every spec file reuses the same running proxy — so this waits out a full window
+  // *before* starting too, guaranteeing a clean bucket regardless of how much other tests' ordinary
+  // traffic (catalog loads, EPG, search suggestions...) already put into it moments earlier.
+  await new Promise((resolve) => setTimeout(resolve, 10_500))
+
   const url = `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&username=${MOCK.username}&password=${MOCK.password}&action=get_live_categories`
   const statuses: number[] = []
-  for (let i = 0; i < 110; i++) statuses.push((await request.get(url)).status())
+  for (let i = 0; i < 310; i++) statuses.push((await request.get(url)).status())
   expect(statuses).toContain(429)
   // The very first requests, before the limit trips, must have gone through normally.
   expect(statuses[0]).toBe(200)
 
-  // This test deliberately trips the shared-IP bucket (every request in this whole suite comes from
-  // 127.0.0.1, the same as a real request would from a real client's IP) — every other spec file reuses
-  // the same running proxy, so without waiting out the window here, the next test to hit /api/xtream
-  // would get a false 429 that has nothing to do with what it's actually testing.
+  // Waits out the window afterward too, so the *next* test to hit /api/xtream doesn't inherit a false 429.
   await new Promise((resolve) => setTimeout(resolve, 10_500))
 })
 
