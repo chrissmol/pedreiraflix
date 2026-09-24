@@ -6,6 +6,7 @@ import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { isCategoryBlocked } from '../lib/parentalControl'
+import OfflineWatchPage from './OfflineWatchPage'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, LiveChannel, SeriesDetails } from '../types'
@@ -17,8 +18,16 @@ function flattenEpisodes(details: SeriesDetails): Episode[] {
     .flatMap((s) => s.episodes)
 }
 
+// A distinct component (not a branch inside the online player below) because it needs none of that
+// component's network-fetching hooks — and hooks can't be called conditionally, so this has to be a
+// real separate component, picked before any of those hooks run, not an early return partway through.
 export default function WatchPage() {
-  const { kind, id } = useParams<{ kind: 'live' | 'movie' | 'series'; id: string }>()
+  const { kind, id } = useParams<{ kind: 'live' | 'movie' | 'series' | 'offline'; id: string }>()
+  if (kind === 'offline' && id) return <OfflineWatchPage downloadKey={decodeURIComponent(id)} />
+  return <OnlineWatchPage kind={kind} id={id} />
+}
+
+function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'offline'; id?: string }) {
   const [params] = useSearchParams()
   const client = useXtream()
   const navigate = useNavigate()
@@ -55,7 +64,7 @@ export default function WatchPage() {
   const isCatchup = catchupStart != null
 
   const src = useMemo(() => {
-    if (!client || !kind || !id) return null
+    if (!client || !kind || !id || kind === 'offline') return null // 'offline' never actually reaches here — see the dispatcher in the default export below
     if (isCatchup && catchupStart && catchupDurationMin) return client.timeshiftUrl(Number(id), catchupStart, catchupDurationMin)
     return client.streamUrl(kind, id, ext)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,7 +138,7 @@ export default function WatchPage() {
   // below to resolve, and this flips back to false immediately for every other profile.
   const [checkingProfile, setCheckingProfile] = useState(isKids)
   useEffect(() => {
-    if (!client || !kind || !id || !isKids) {
+    if (!client || !kind || !id || !isKids || kind === 'offline') {
       setBlocked(false)
       setCheckingProfile(false)
       return

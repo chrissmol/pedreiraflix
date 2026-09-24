@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import DownloadButton from '../components/DownloadButton'
 import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
@@ -96,13 +97,21 @@ export default function MovieDetailPage() {
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               {isFavorite ? 'Na lista' : 'Minha lista'}
             </button>
+            <DownloadButton
+              kind="movie"
+              id={movie.streamId}
+              ext={movie.containerExtension}
+              name={movie.name}
+              image={movie.streamIcon}
+            />
             {client && (
               <a
                 href={client.downloadUrl('movie', movie.streamId, movie.containerExtension, movie.name)}
                 download
+                title="Baixar o arquivo original (fora do app)"
                 className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 font-medium text-white transition-all hover:border-brand-500/40 hover:bg-zinc-800"
               >
-                <Download className="h-5 w-5" /> Baixar
+                <Download className="h-5 w-5" /> Baixar arquivo
               </a>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import DownloadButton from '../components/DownloadButton'
 import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
@@ -160,13 +161,24 @@ export default function SeriesDetailPage() {
                   {ep.duration && <p className="text-xs text-zinc-500">{ep.duration}</p>}
                   {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ep.plot}</p>}
                 </div>
+                <span onClick={(e) => e.stopPropagation()} className="mt-0.5 shrink-0">
+                  <DownloadButton
+                    kind="series"
+                    id={ep.id}
+                    ext={ep.containerExtension}
+                    name={`${series.name} - ${ep.title}`}
+                    image={series.cover}
+                    seriesId={series.seriesId}
+                    compact
+                  />
+                </span>
                 {client && (
                   <a
                     href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
                     download
                     onClick={(e) => e.stopPropagation()}
                     className="mt-0.5 shrink-0 rounded-lg p-2.5 text-zinc-500 transition-colors hover:bg-white/10 hover:text-brand-300"
-                    title="Baixar episódio"
+                    title="Baixar arquivo original (fora do app)"
                   >
                     <Download className="h-5 w-5" />
                   </a>

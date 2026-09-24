@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
-import { Search, User } from './icons'
+import { Download, Search, User } from './icons'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 
@@ -163,6 +163,15 @@ export default function TopNav() {
               className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
             >
               <User className="h-4 w-4 text-zinc-400" /> Gerenciar perfis
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/downloads')
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+            >
+              <Download className="h-4 w-4 text-zinc-400" /> Downloads
             </button>
             <button
               onClick={logout}
