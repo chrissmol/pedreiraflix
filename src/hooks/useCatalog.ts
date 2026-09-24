@@ -1,0 +1,172 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { cached } from '../lib/cache'
+import { XtreamApiError, type XtreamClient } from '../lib/xtream'
+import type { Category, LiveChannel, Movie, SeriesItem } from '../types'
+import { useXtream } from './useXtream'
+
+export interface CategoryGroup<T> {
+  category: Category
+  items: T[]
+  loading: boolean
+  error: string | null
+}
+
+interface CategorizedCatalogState<T> {
+  categories: Category[]
+  groups: CategoryGroup<T>[]
+  loading: boolean
+  error: string | null
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// A small stagger between requests inside each worker, on top of the
+// concurrency cap, keeps our total request rate well under providers' rate
+// limits instead of firing a burst the instant a slot frees up.
+async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number, staggerMs = 150): Promise<void> {
+  let cursor = 0
+  async function worker() {
+    while (cursor < tasks.length) {
+      const index = cursor++
+      await tasks[index]()
+      if (cursor < tasks.length) await sleep(staggerMs)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker))
+}
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (retries <= 0) throw err
+    // Back off longer on a 429 (rate limited) than on a generic failure,
+    // since retrying immediately just gets rate limited again.
+    const isRateLimited = err instanceof XtreamApiError && err.status === 429
+    await sleep(isRateLimited ? 2500 : 700)
+    return withRetry(fn, retries - 1)
+  }
+}
+
+// Some Xtream panels return every item across every category in one giant
+// unfiltered call, which for large catalogs can take 30s+ or time out
+// entirely. Fetching per category is fast and lets rows render progressively
+// instead of the whole page blocking on one huge request.
+//
+// `client` is a required effect dependency, not just a closure value: it
+// starts out null on a fresh page load until the persisted session finishes
+// rehydrating from localStorage, and if the effect doesn't re-run once it
+// becomes available, the catalog gets stuck on "loading" forever.
+function useCategorizedCatalog<T>(
+  kind: string,
+  client: XtreamClient | null,
+  loadCategories: (client: XtreamClient) => Promise<Category[]>,
+  loadItemsForCategory: (client: XtreamClient, categoryId: string) => Promise<T[]>,
+): CategorizedCatalogState<T> {
+  const [state, setState] = useState<CategorizedCatalogState<T>>({
+    categories: [],
+    groups: [],
+    loading: true,
+    error: null,
+  })
+  const requestId = useRef(0)
+
+  useEffect(() => {
+    if (!client) return
+
+    let cancelled = false
+    const myRequest = ++requestId.current
+    setState({ categories: [], groups: [], loading: true, error: null })
+
+    cached(`${kind}:categories`, () => withRetry(() => loadCategories(client)))
+      .then((categories) => {
+        if (cancelled || myRequest !== requestId.current) return
+        const groups: CategoryGroup<T>[] = categories.map((category) => ({
+          category,
+          items: [],
+          loading: true,
+          error: null,
+        }))
+        setState({ categories, groups, loading: false, error: null })
+
+        const tasks = categories.map((category) => async () => {
+          try {
+            const items = await cached(`${kind}:items:${category.categoryId}`, () =>
+              withRetry(() => loadItemsForCategory(client, category.categoryId)),
+            )
+            if (cancelled || myRequest !== requestId.current) return
+            setState((s) => ({
+              ...s,
+              groups: s.groups.map((g) =>
+                g.category.categoryId === category.categoryId ? { ...g, items, loading: false } : g,
+              ),
+            }))
+          } catch (err) {
+            if (cancelled || myRequest !== requestId.current) return
+            const message = err instanceof Error ? err.message : 'Erro ao carregar categoria'
+            setState((s) => ({
+              ...s,
+              groups: s.groups.map((g) =>
+                g.category.categoryId === category.categoryId ? { ...g, loading: false, error: message } : g,
+              ),
+            }))
+          }
+        })
+
+        runWithConcurrency(tasks, 2)
+      })
+      .catch((err) => {
+        if (cancelled || myRequest !== requestId.current) return
+        setState({
+          categories: [],
+          groups: [],
+          loading: false,
+          error: err instanceof Error ? err.message : 'Erro ao carregar categorias',
+        })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [kind, client, loadCategories, loadItemsForCategory])
+
+  return state
+}
+
+export function useLiveCatalog() {
+  const client = useXtream()
+  const loadCategories = useCallback((c: XtreamClient) => c.getLiveCategories(), [])
+  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getLiveStreams(categoryId), [])
+  return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems)
+}
+
+export function useMovieCatalog() {
+  const client = useXtream()
+  const loadCategories = useCallback((c: XtreamClient) => c.getVodCategories(), [])
+  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getVodStreams(categoryId), [])
+  return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems)
+}
+
+export function useSeriesCatalog() {
+  const client = useXtream()
+  const loadCategories = useCallback((c: XtreamClient) => c.getSeriesCategories(), [])
+  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getSeries(categoryId), [])
+  return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems)
+}
+
+/** Flattens every loaded item across all category groups, deduped by id. Useful for search/home rails. */
+export function flattenGroups<T extends { streamId?: number; seriesId?: number }>(groups: CategoryGroup<T>[]): T[] {
+  const seen = new Set<number>()
+  const out: T[] = []
+  for (const group of groups) {
+    for (const item of group.items) {
+      const id = item.streamId ?? item.seriesId ?? -1
+      if (seen.has(id)) continue
+      seen.add(id)
+      out.push(item)
+    }
+  }
+  return out
+}
