@@ -19,6 +19,18 @@ function toStringArray(value: unknown): string[] {
   return []
 }
 
+// Many Xtream panels serve poster/thumbnail images over plain HTTP, or with a TLS certificate that
+// doesn't match the image host (common on smaller/shadier providers). Loading them directly from the
+// browser either gets silently upgraded-and-blocked as mixed content, or fails outright with
+// ERR_CERT_COMMON_NAME_INVALID — and unlike video, there's no player error state to recover from; the
+// poster is just permanently broken. Routing through our own proxy (already used for video/EPG) sidesteps
+// both: the browser only ever talks to our own HTTPS origin, and the proxy fetches the original URL as-is.
+function proxyImage(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (!/^https?:\/\//i.test(url)) return url // data:/blob:/relative — nothing to proxy
+  return `/api/stream?url=${encodeURIComponent(url)}`
+}
+
 export class XtreamApiError extends Error {
   status?: number
   constructor(message: string, status?: number) {
@@ -124,7 +136,7 @@ export class XtreamClient {
       kind: 'live',
       streamId: s.stream_id,
       name: s.name,
-      streamIcon: s.stream_icon || null,
+      streamIcon: proxyImage(s.stream_icon),
       categoryId: s.category_id,
       epgChannelId: s.epg_channel_id,
     }))
@@ -146,7 +158,7 @@ export class XtreamClient {
       kind: 'movie',
       streamId: s.stream_id,
       name: s.name,
-      streamIcon: s.stream_icon || null,
+      streamIcon: proxyImage(s.stream_icon),
       categoryId: s.category_id,
       rating: s.rating,
       added: s.added,
@@ -176,7 +188,7 @@ export class XtreamClient {
       kind: 'movie',
       streamId: data.movie_data.stream_id,
       name: data.info.name,
-      streamIcon: data.info.movie_image || data.info.cover_big || null,
+      streamIcon: proxyImage(data.info.movie_image || data.info.cover_big),
       categoryId: data.movie_data.category_id,
       rating: data.info.rating,
       added: null,
@@ -187,7 +199,7 @@ export class XtreamClient {
       genre: data.info.genre,
       releaseDate: data.info.releasedate,
       duration: data.info.duration,
-      backdropPath: toStringArray(data.info.backdrop_path),
+      backdropPath: toStringArray(data.info.backdrop_path).map((u) => proxyImage(u)!),
     }
   }
 
@@ -212,13 +224,13 @@ export class XtreamClient {
       kind: 'series',
       seriesId: s.series_id,
       name: s.name,
-      cover: s.cover || null,
+      cover: proxyImage(s.cover),
       categoryId: s.category_id,
       rating: s.rating,
       plot: s.plot,
       genre: s.genre,
       releaseDate: s.release_date || s.releaseDate || null,
-      backdropPath: toStringArray(s.backdrop_path),
+      backdropPath: toStringArray(s.backdrop_path).map((u) => proxyImage(u)!),
       cast: s.cast,
       director: s.director,
     }))
@@ -268,7 +280,7 @@ export class XtreamClient {
         seasonNumber,
         name: meta?.name || `Temporada ${seasonNumber}`,
         overview: meta?.overview || null,
-        cover: meta?.cover || null,
+        cover: proxyImage(meta?.cover),
         episodes: mappedEpisodes.sort((a, b) => a.episodeNum - b.episodeNum),
       }
     })
@@ -278,13 +290,13 @@ export class XtreamClient {
       kind: 'series',
       seriesId,
       name: data.info.name,
-      cover: data.info.cover,
+      cover: proxyImage(data.info.cover),
       categoryId: data.info.category_id,
       rating: data.info.rating,
       plot: data.info.plot,
       genre: data.info.genre,
       releaseDate: data.info.release_date,
-      backdropPath: toStringArray(data.info.backdrop_path),
+      backdropPath: toStringArray(data.info.backdrop_path).map((u) => proxyImage(u)!),
       cast: data.info.cast,
       director: data.info.director,
       seasons,

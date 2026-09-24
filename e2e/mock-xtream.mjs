@@ -49,6 +49,7 @@ function ensureFixtures() {
     'video.m3u8',
     '',
   ].join('\n'))
+  ff(['-f', 'lavfi', '-i', 'color=c=indigo:size=200x300', '-frames:v', '1', path.join(FIX, 'poster.jpg')])
   fs.writeFileSync(marker, '')
 }
 ensureFixtures()
@@ -87,6 +88,10 @@ const movies = [
   { stream_id: 5, name: 'Amor e Confusão', category_id: '11', rating: '9.0', added: '1700000050', year: '2015', genre: 'Comédia, Romance' },
   { stream_id: 9, name: 'Filme Adulto', category_id: '19', rating: '0', added: '1700000000', year: '2020', genre: 'Adulto' },
 ].map((m, i) => ({ ...m, stream_icon: img(m.name.split(' ')[0], 200 + i * 30), container_extension: m.ext || 'mp4' }))
+// One movie gets a real (non-data:) image URL, so e2e can prove such posters are proxied instead of
+// loaded straight from the browser (real panels serve these over plain HTTP or with a mismatched
+// TLS cert — either way, loading them directly breaks the poster).
+movies[1].stream_icon = `http://localhost:${PORT}/fixtures/poster.jpg`
 
 const seriesCategories = [{ category_id: '20', category_name: 'Drama' }]
 const series = [

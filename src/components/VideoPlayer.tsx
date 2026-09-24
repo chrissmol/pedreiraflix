@@ -204,14 +204,20 @@ export default function VideoPlayer({
       setBuffering(false)
       networkRetries = 0
     }
+    // A single failed attempt used to be final — if `video.play()` rejected for a reason other than
+    // the well-known "needs a gesture" case (e.g. it raced the source not being fully ready yet), the
+    // player was stuck showing the big play button forever even though nothing was actually blocking
+    // playback. Retrying from every readiness event (loadedmetadata, canplay, and again once buffering
+    // clears) catches that instead of committing to whichever event happened to fire first.
     function onCanPlay() {
       setBuffering(false)
+      attemptAutoplay()
     }
     function onVideoError() {
       if (!isHls) setError('Não foi possível reproduzir este arquivo. Formato pode não ser suportado pelo navegador.')
     }
     async function attemptAutoplay() {
-      if (!autoPlay || !video) return
+      if (!autoPlay || !video || !video.paused) return
       try {
         await video.play()
       } catch {
@@ -219,13 +225,14 @@ export default function VideoPlayer({
         // Fall back to a muted autoplay (universally allowed) so playback
         // actually starts, and surface a one-tap "unmute" prompt instead of
         // leaving a black screen with no visible next step.
-        if (!video) return
+        if (!video || !video.paused) return
         video.muted = true
         try {
           await video.play()
           setNeedsUnmutePrompt(true)
         } catch {
-          // Autoplay is fully blocked; the big play button (isPlaying=false) is the fallback.
+          // Genuinely blocked (e.g. autoplay disabled site-wide) — the big play button is the fallback,
+          // and the canplay/playing retries above will pick it back up the moment that stops being true.
         }
       }
     }

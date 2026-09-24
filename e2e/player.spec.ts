@@ -125,3 +125,42 @@ test('zaps to the next/previous live channel with on-screen buttons and arrow ke
   await page.keyboard.press('ArrowDown')
   await expect(page).toHaveURL(/\/watch\/live\/102/)
 })
+
+test('recovers from a stray first autoplay rejection instead of getting stuck on the play button', async ({ page }) => {
+  // Simulates a real-world race where the *whole first attempt* (both the unmuted try and its muted
+  // fallback — attemptAutoplay's own internal recovery) rejects for some transient reason, and only a
+  // later readiness event (canplay) gets a clean shot. Proves the canplay-triggered retry, specifically
+  // — not just attemptAutoplay's built-in unmuted→muted fallback — is what recovers playback here.
+  await page.addInitScript(() => {
+    let rejections = 0
+    const original = HTMLMediaElement.prototype.play
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      if (rejections < 2) {
+        rejections++
+        return Promise.reject(new DOMException('simulated race', 'AbortError'))
+      }
+      return original.call(this)
+    }
+  })
+  await page.goto('/movies/1')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/1/)
+  // Despite the forced first rejection, playback should recover on its own — no manual play click.
+  await page.waitForFunction(() => {
+    const v = document.querySelector('video') as HTMLVideoElement | null
+    return !!v && !v.paused && v.currentTime > 0.5
+  }, { timeout: 15000 })
+})
+
+test('posters served from a non-proxy-friendly host are routed through our own proxy', async ({ page }) => {
+  // "Corrida Final" (movie id 2) is seeded with a real http:// image URL in the mock panel, instead of
+  // the data: URIs every other fixture uses — see e2e/mock-xtream.mjs.
+  await page.goto('/movies/2')
+  const poster = page.locator('img[alt="Corrida Final"]').first()
+  await expect(poster).toBeVisible()
+  const src = await poster.getAttribute('src')
+  expect(src).toMatch(/^\/api\/stream\?url=/)
+  expect(decodeURIComponent(src!)).toContain('/fixtures/poster.jpg')
+  // Prove it actually loads (not just the right src attribute) — a broken image reports 0 natural size.
+  await expect.poll(() => poster.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+})
