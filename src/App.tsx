@@ -1,47 +1,62 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
-import HomePage from './pages/HomePage'
-import LivePage from './pages/LivePage'
+
+// Code-split per route: nobody navigating straight to /watch needs the movies/series/profiles
+// bundles, and vice versa. LoginPage stays eager (it's what everyone hits first, unauthenticated;
+// lazy-loading it would just add a network round trip before the very first screen can paint).
 import LoginPage from './pages/LoginPage'
-import MovieDetailPage from './pages/MovieDetailPage'
-import MoviesPage from './pages/MoviesPage'
-import ProfilesPage from './pages/ProfilesPage'
-import SearchPage from './pages/SearchPage'
-import SeriesDetailPage from './pages/SeriesDetailPage'
-import SeriesPage from './pages/SeriesPage'
-import WatchPage from './pages/WatchPage'
+const HomePage = lazy(() => import('./pages/HomePage'))
+const LivePage = lazy(() => import('./pages/LivePage'))
+const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
+const MoviesPage = lazy(() => import('./pages/MoviesPage'))
+const ProfilesPage = lazy(() => import('./pages/ProfilesPage'))
+const SearchPage = lazy(() => import('./pages/SearchPage'))
+const SeriesDetailPage = lazy(() => import('./pages/SeriesDetailPage'))
+const SeriesPage = lazy(() => import('./pages/SeriesPage'))
+const WatchPage = lazy(() => import('./pages/WatchPage'))
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400" />
+    </div>
+  )
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/watch/:kind/:id"
-          element={
-            <RequireAuth>
-              <WatchPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          element={
-            <RequireAuth>
-              <Layout />
-            </RequireAuth>
-          }
-        >
-          <Route path="/" element={<HomePage />} />
-          <Route path="/live" element={<LivePage />} />
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/movies/:id" element={<MovieDetailPage />} />
-          <Route path="/series" element={<SeriesPage />} />
-          <Route path="/series/:id" element={<SeriesDetailPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/profiles" element={<ProfilesPage />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/watch/:kind/:id"
+            element={
+              <RequireAuth>
+                <WatchPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/live" element={<LivePage />} />
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/movies/:id" element={<MovieDetailPage />} />
+            <Route path="/series" element={<SeriesPage />} />
+            <Route path="/series/:id" element={<SeriesDetailPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/profiles" element={<ProfilesPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

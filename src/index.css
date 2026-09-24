@@ -120,3 +120,18 @@ summary,
     font-size: 16px;
   }
 }
+
+/* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
+ * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
+ * behavior (a `scroll-behavior` of `auto` here overrides the smooth *request*, per spec) — rather than
+ * a `motion-reduce:` variant on every individual transition/animation across the app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
