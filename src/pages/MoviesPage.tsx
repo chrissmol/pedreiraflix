@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
-import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useMovieCatalog } from '../hooks/useCatalog'
 import type { Movie } from '../types'
@@ -10,7 +9,7 @@ import type { Movie } from '../types'
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
 
 function sortMovies(items: Movie[], sort: SortKey): Movie[] {
-  if (sort === 'default') return items
+  if (sort === 'default') return items // same reference — see CategoryRow.tsx for why that matters
   const copy = [...items]
   if (sort === 'name') copy.sort((a, b) => a.name.localeCompare(b.name))
   if (sort === 'recent') copy.sort((a, b) => Number(b.added || 0) - Number(a.added || 0))
@@ -22,13 +21,16 @@ export default function MoviesPage() {
   const { groups, loading, error } = useMovieCatalog()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sort, setSort] = useState<SortKey>('default')
-  const navigate = useNavigate()
 
+  // Kept as separate (category, items, loading) tuples rather than one spread `{...g, items: sorted}`
+  // object per group: with the default sort, `sortMovies` returns `g.items` completely untouched, so a
+  // category whose data hasn't changed keeps the exact same `items` array reference across re-renders —
+  // which is what lets CategoryRow's memoization actually skip re-rendering it.
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
       .filter((g) => g.items.length > 0 || g.loading)
-      .map((g) => ({ ...g, items: sortMovies(g.items, sort) }))
+      .map((g) => ({ category: g.category, loading: g.loading, items: sortMovies(g.items, sort) }))
   }, [groups, activeCategory, sort])
 
   return (
@@ -66,17 +68,13 @@ export default function MoviesPage() {
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 
       {visibleGroups.map(({ category, items, loading: groupLoading }) => (
-        <Row key={category.categoryId} title={category.categoryName} loading={groupLoading && items.length === 0}>
-          {items.map((m) => (
-            <PosterCard
-              key={m.streamId}
-              title={m.name}
-              image={m.streamIcon}
-              badge={m.rating && Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null}
-              onClick={() => navigate(`/movies/${m.streamId}`)}
-            />
-          ))}
-        </Row>
+        <CategoryRow
+          key={category.categoryId}
+          kind="movie"
+          title={category.categoryName}
+          loading={groupLoading && items.length === 0}
+          items={items}
+        />
       ))}
     </div>
   )

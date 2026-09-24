@@ -187,3 +187,9 @@ test('subtitle size and background are adjustable and persist across reload', as
   await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
   await expect.poll(cueRule).toContain('1.8em')
 })
+
+test('proxied poster images are served with long-lived cache headers', async ({ request }) => {
+  const res = await request.get('/api/stream?url=' + encodeURIComponent('http://localhost:8790/fixtures/poster.jpg'))
+  expect(res.ok()).toBe(true)
+  expect(res.headers()['cache-control']).toBe('public, max-age=604800')
+})

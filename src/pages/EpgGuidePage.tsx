@@ -115,7 +115,7 @@ export default function EpgGuidePage() {
             {channels.map((ch) => {
               const programs = epgByChannel[ch.streamId]
               return (
-                <div key={ch.streamId} className="flex border-b border-white/[0.04]">
+                <div key={ch.streamId} data-testid={`epg-row-${ch.streamId}`} className="flex border-b border-white/[0.04]">
                   <button
                     onClick={() => navigate(watchUrl(ch))}
                     className="flex w-[140px] shrink-0 items-center gap-2 border-r border-white/[0.06] bg-[#06070c] px-2.5 py-3 text-left transition-colors hover:bg-white/5"

@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
-import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import type { SeriesItem } from '../types'
@@ -10,7 +9,7 @@ import type { SeriesItem } from '../types'
 type SortKey = 'default' | 'name' | 'rating'
 
 function sortSeries(items: SeriesItem[], sort: SortKey): SeriesItem[] {
-  if (sort === 'default') return items
+  if (sort === 'default') return items // same reference — see CategoryRow.tsx for why that matters
   const copy = [...items]
   if (sort === 'name') copy.sort((a, b) => a.name.localeCompare(b.name))
   if (sort === 'rating') copy.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
@@ -21,13 +20,12 @@ export default function SeriesPage() {
   const { groups, loading, error } = useSeriesCatalog()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sort, setSort] = useState<SortKey>('default')
-  const navigate = useNavigate()
 
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
       .filter((g) => g.items.length > 0 || g.loading)
-      .map((g) => ({ ...g, items: sortSeries(g.items, sort) }))
+      .map((g) => ({ category: g.category, loading: g.loading, items: sortSeries(g.items, sort) }))
   }, [groups, activeCategory, sort])
 
   return (
@@ -64,17 +62,13 @@ export default function SeriesPage() {
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 
       {visibleGroups.map(({ category, items, loading: groupLoading }) => (
-        <Row key={category.categoryId} title={category.categoryName} loading={groupLoading && items.length === 0}>
-          {items.map((s) => (
-            <PosterCard
-              key={s.seriesId}
-              title={s.name}
-              image={s.cover}
-              badge={s.rating && Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null}
-              onClick={() => navigate(`/series/${s.seriesId}`)}
-            />
-          ))}
-        </Row>
+        <CategoryRow
+          key={category.categoryId}
+          kind="series"
+          title={category.categoryName}
+          loading={groupLoading && items.length === 0}
+          items={items}
+        />
       ))}
     </div>
   )

@@ -12,7 +12,8 @@ test('EPG grid guide shows channels with a highlighted current program and lets 
   // `.first()`: the earliest program inside the visible window is often clipped at its left edge (it
   // started before the window began) down to a sliver a few px wide, which is real/correct but awkward
   // to click precisely — the block closest to "now" is always fully inside the window.
-  const channelRow = page.locator('div').filter({ has: page.getByRole('button', { name: 'Canal Notícias 24h' }) }).first()
+  // stream_id 101 ("Canal Notícias 24h") in the mock catalog — see e2e/mock-xtream.mjs.
+  const channelRow = page.getByTestId('epg-row-101')
   const reArchive = channelRow.locator('button', { hasText: 'Assistir de novo' }).last()
   await expect(reArchive).toBeVisible({ timeout: 10000 })
   await reArchive.click()
@@ -31,7 +32,8 @@ test('EPG grid guide shows channels with a highlighted current program and lets 
 test('a channel without catch-up support has no "assistir de novo" option in the guide', async ({ page }) => {
   await login(page)
   await page.goto('/guide')
-  const row = page.locator('div', { has: page.getByRole('button', { name: 'Canal Economia' }) }).first()
+  // stream_id 102 ("Canal Economia") in the mock catalog — see e2e/mock-xtream.mjs.
+  const row = page.getByTestId('epg-row-102')
   await expect(row).toBeVisible()
   await expect(row.getByText('Assistir de novo')).toHaveCount(0)
 })

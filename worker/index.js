@@ -35,9 +35,22 @@ const SECURITY_HEADERS = {
   // No X-Frame-Options: frame-ancestors above already covers it and is the modern replacement.
 }
 
-function withSecurityHeaders(response) {
+// `run_worker_first: true` (wrangler.jsonc) routes every asset request through this Worker instead of
+// letting Cloudflare's edge serve them directly — necessary so the security headers above actually land
+// on the page (see the commit that added it), but Cloudflare's default asset headers underneath are
+// `Cache-Control: max-age=0, must-revalidate`, which was invisibly making the browser re-validate every
+// single JS/CSS file on every load. Vite content-hashes every filename under /assets/ (a changed file
+// gets a new URL), so those are safe to cache for a full year with `immutable` — the single biggest,
+// purely-mechanical fix available for load time on repeat visits.
+function withCacheHeaders(headers, pathname) {
+  if (pathname.startsWith('/assets/')) headers.set('cache-control', 'public, max-age=31536000, immutable')
+  else if (/\.(?:png|svg|ico)$/.test(pathname)) headers.set('cache-control', 'public, max-age=86400')
+}
+
+function withSecurityHeaders(response, pathname) {
   const headers = new Headers(response.headers)
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
+  if (pathname) withCacheHeaders(headers, pathname)
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }
 
@@ -126,6 +139,10 @@ async function stream(request, url, env) {
     const name = (url.searchParams.get('filename') || 'download').replace(/[\r\n"]/g, '_')
     headers.set('content-disposition', `attachment; filename="${name}"`)
   }
+  // Posters/logos proxied through here (see proxyImage in src/lib/xtream.ts) never carried any caching
+  // header, so the browser re-fetched every single poster on every visit — video/HLS explicitly isn't
+  // touched here (live in particular must never be cached), only actual image responses.
+  if ((headers.get('content-type') || '').startsWith('image/')) headers.set('cache-control', 'public, max-age=604800')
 
   if ((headers.get('content-type') || '').includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
     // Resolve against the final URL (after redirects) when that host is allowlisted too, otherwise keep the
@@ -165,6 +182,6 @@ export default {
       if (isRateLimited(ip, 'stream', 600, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await stream(request, url, env))
     }
-    return withSecurityHeaders(await env.ASSETS.fetch(request))
+    return withSecurityHeaders(await env.ASSETS.fetch(request), url.pathname)
   },
 }

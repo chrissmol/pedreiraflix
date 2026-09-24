@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import Hero from '../components/Hero'
 import PosterCard from '../components/PosterCard'
@@ -81,30 +82,26 @@ export default function HomePage() {
         <CatalogProgress groups={[...movies.groups, ...series.groups]} label="Carregando catálogo" />
         {movies.error && <p className="px-4 text-sm text-rose-400 sm:px-10">{movies.error}</p>}
         {visibleMovieGroups.map(({ category, items, loading }) => (
-          <Row key={category.categoryId} title={category.categoryName} loading={loading && items.length === 0}>
-            {items.slice(0, 25).map((m) => (
-              <PosterCard
-                key={m.streamId}
-                title={m.name}
-                image={m.streamIcon}
-                onClick={() => navigate(`/movies/${m.streamId}`)}
-              />
-            ))}
-          </Row>
+          <CategoryRow
+            key={category.categoryId}
+            kind="movie"
+            title={category.categoryName}
+            loading={loading && items.length === 0}
+            items={items}
+            limit={25}
+          />
         ))}
 
         {series.error && <p className="px-4 text-sm text-rose-400 sm:px-10">{series.error}</p>}
         {visibleSeriesGroups.map(({ category, items, loading }) => (
-          <Row key={category.categoryId} title={category.categoryName} loading={loading && items.length === 0}>
-            {items.slice(0, 25).map((s) => (
-              <PosterCard
-                key={s.seriesId}
-                title={s.name}
-                image={s.cover}
-                onClick={() => navigate(`/series/${s.seriesId}`)}
-              />
-            ))}
-          </Row>
+          <CategoryRow
+            key={category.categoryId}
+            kind="series"
+            title={category.categoryName}
+            loading={loading && items.length === 0}
+            items={items}
+            limit={25}
+          />
         ))}
       </div>
     </div>

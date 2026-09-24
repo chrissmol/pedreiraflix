@@ -180,6 +180,8 @@ app.get('/api/stream', async (req, res) => {
     }
 
     const contentType = upstream.headers.get('content-type') || ''
+    // Mirrors worker/index.js: posters/logos get real caching, video/HLS is untouched.
+    if (contentType.startsWith('image/')) res.setHeader('cache-control', 'public, max-age=604800')
     if (contentType.includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
       // Rewrite playlist entries to route back through this proxy. Resolve
       // against the final URL (panels usually redirect streams to a CDN), and

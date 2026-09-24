@@ -65,11 +65,13 @@ export class XtreamClient {
     })
     const res = await xtreamQueue.schedule(() => fetch(`/api/xtream?${query.toString()}`))
     if (res.status === 429) {
-      // The provider is telling us our current pacing is still too fast for
-      // its rate limiter — widen the gap between every future request
-      // app-wide so subsequent categories back off automatically instead of
-      // repeating the same mistake for the rest of the session.
-      xtreamQueue.setGap(1500)
+      // The provider is telling us our current pacing is still too fast for its rate limiter — widen
+      // the gap between every future request app-wide so subsequent categories back off automatically
+      // instead of repeating the same mistake. Eases back toward the normal pace after a streak of
+      // clean requests (see requestQueue.ts) rather than staying defensive for the rest of the session.
+      xtreamQueue.reportRateLimited()
+    } else {
+      xtreamQueue.reportSuccess()
     }
     if (!res.ok) throw new XtreamApiError(`Xtream request failed: ${res.status}`, res.status)
     const data = await res.json()
