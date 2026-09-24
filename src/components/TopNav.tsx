@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import { Search, User } from './icons'
 import PinPrompt from './PinPrompt'
+import SearchSuggestions from './SearchSuggestions'
 
 const links = [
   { to: '/', label: 'Início' },
@@ -15,8 +16,10 @@ const links = [
 export default function TopNav() {
   const [scrolled, setScrolled] = useState(false)
   const [query, setQuery] = useState('')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLFormElement>(null)
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
@@ -47,6 +50,15 @@ export default function TopNav() {
   }, [menuOpen])
 
   useEffect(() => {
+    if (!suggestionsOpen) return
+    const close = (e: PointerEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setSuggestionsOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [suggestionsOpen])
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
@@ -54,7 +66,10 @@ export default function TopNav() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+      setSuggestionsOpen(false)
+    }
   }
 
   return (
@@ -86,18 +101,23 @@ export default function TopNav() {
         ))}
       </nav>
 
-      <form onSubmit={handleSearch} className="group ml-auto flex items-center">
+      <form ref={searchRef} onSubmit={handleSearch} className="group relative ml-auto flex items-center">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-brand-400" />
           <input
             type="search"
             enterKeyHint="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSuggestionsOpen(e.target.value.trim().length >= 2)
+            }}
+            onFocus={() => setSuggestionsOpen(query.trim().length >= 2)}
             placeholder="Buscar..."
             className="brand-focus w-32 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-56 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
+        {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
       </form>
 
       <div ref={menuRef} className="relative">
