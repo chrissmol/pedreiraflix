@@ -25,10 +25,10 @@
   --app-fg: #f1f5fb;
 }
 
-/* Light theme: every existing bg-zinc-*/text-white/bg-black/border-zinc-* class in the app resolves to
- * these CSS custom properties (Tailwind v4 compiles color utilities to var(--color-*)), so overriding the
- * scale here re-themes the whole app without touching each component. The scale is inverted: what read as
- * near-black background (zinc-900/950) becomes near-white, and vice versa. */
+/* Light theme: every existing bg-zinc-N, text-white, bg-black and border-zinc-N class in the app
+ * resolves to these CSS custom properties (Tailwind v4 compiles color utilities to var(--color-N)), so
+ * overriding the scale here re-themes the whole app without touching each component. The scale is
+ * inverted: what read as near-black background (zinc-900/950) becomes near-white, and vice versa. */
 :root[data-theme='light'] {
   color-scheme: light;
   --app-bg: #f7f8fb;
