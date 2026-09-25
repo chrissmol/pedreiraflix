@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLockGate from './components/AppLockGate'
 import AutoLogout from './components/AutoLogout'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
+import { useThemeStore } from './store/theme'
 
 // Code-split per route: nobody navigating straight to /watch needs the movies/series/profiles
 // bundles, and vice versa. LoginPage stays eager (it's what everyone hits first, unauthenticated;
@@ -30,6 +31,11 @@ function RouteFallback() {
 }
 
 export default function App() {
+  const theme = useThemeStore((s) => s.theme)
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
   return (
     <BrowserRouter>
       <AppLockGate />

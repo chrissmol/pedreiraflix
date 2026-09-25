@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
-import { Download, Search, User } from './icons'
+import { useThemeStore } from '../store/theme'
+import { Download, Moon, Search, Sun, User } from './icons'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 
@@ -27,6 +28,8 @@ export default function TopNav() {
   const activeProfile = useActiveProfile()
   const profiles = useProfiles()
   const setActiveProfile = useProfilesStore((s) => s.setActiveProfile)
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggle)
   const [pinTarget, setPinTarget] = useState<Profile | null>(null)
 
   function switchTo(p: Profile) {
@@ -172,6 +175,13 @@ export default function TopNav() {
               className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
             >
               <Download className="h-4 w-4 text-zinc-400" /> Downloads
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4 text-zinc-400" /> : <Moon className="h-4 w-4 text-zinc-400" />}
+              Tema {theme === 'dark' ? 'claro' : 'escuro'}
             </button>
             <button
               onClick={logout}

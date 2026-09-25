@@ -21,6 +21,31 @@
   color-scheme: dark;
   --glow-soft: 0 0 0 1px rgba(15, 123, 255, 0.16), 0 0 24px -4px rgba(15, 123, 255, 0.35);
   --glow-strong: 0 0 0 1px rgba(58, 151, 255, 0.35), 0 0 40px -6px rgba(15, 123, 255, 0.65);
+  --app-bg: #06070c;
+  --app-fg: #f1f5fb;
+}
+
+/* Light theme: every existing bg-zinc-*/text-white/bg-black/border-zinc-* class in the app resolves to
+ * these CSS custom properties (Tailwind v4 compiles color utilities to var(--color-*)), so overriding the
+ * scale here re-themes the whole app without touching each component. The scale is inverted: what read as
+ * near-black background (zinc-900/950) becomes near-white, and vice versa. */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --app-bg: #f7f8fb;
+  --app-fg: #10131a;
+  --color-white: #10131a;
+  --color-black: #ffffff;
+  --color-zinc-50: #18181b;
+  --color-zinc-100: #27272a;
+  --color-zinc-200: #3f3f46;
+  --color-zinc-300: #52525b;
+  --color-zinc-400: #71717a;
+  --color-zinc-500: #a1a1aa;
+  --color-zinc-600: #d4d4d8;
+  --color-zinc-700: #e4e4e7;
+  --color-zinc-800: #f4f4f5;
+  --color-zinc-900: #fafafa;
+  --color-zinc-950: #ffffff;
 }
 
 html,
@@ -28,8 +53,8 @@ body,
 #root {
   margin: 0;
   height: 100%;
-  background: #06070c;
-  color: #f1f5fb;
+  background: var(--app-bg);
+  color: var(--app-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
@@ -79,6 +104,9 @@ body {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(58, 151, 255, 0.14);
+}
+:root[data-theme='light'] .glass-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 245, 0.95));
 }
 
 .glow-border {
@@ -135,6 +163,10 @@ summary,
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.09) 37%, rgba(255, 255, 255, 0.04) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
+}
+:root[data-theme='light'] .skeleton {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 25%, rgba(0, 0, 0, 0.09) 37%, rgba(0, 0, 0, 0.04) 63%);
+  background-size: 400% 100%;
 }
 
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
