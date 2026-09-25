@@ -148,6 +148,11 @@ export default function VideoPlayer({
   const { supported: airPlaySupported, showPicker: showAirPlayPicker } = useAirPlay(videoRef)
   const [castSupported, setCastSupported] = useState(false)
   const [casting, setCasting] = useState(false)
+  // iPhone Safari has no element-level Fullscreen API — only <video>'s own native player supports it,
+  // which replaces our whole UI (controls, subtitle/audio menus, the live "Rápido" toggle, etc.) with
+  // Apple's. The watch page is already a fixed full-viewport overlay, so there's nothing left to gain by
+  // reaching for that; the button just doesn't render there instead of trading our UI away for Apple's.
+  const [fsSupported] = useState(() => typeof document !== 'undefined' && Boolean(document.documentElement.requestFullscreen))
 
   // Starts false regardless of the `autoPlay` intent: browsers can silently
   // reject an unmuted autoplay attempt, and if this stayed optimistically
@@ -695,10 +700,10 @@ export default function VideoPlayer({
 
   function toggleFullscreen() {
     const container = containerRef.current
-    if (!container) return
+    if (!container || !container.requestFullscreen) return
     if (document.fullscreenElement) {
       document.exitFullscreen()
-    } else if (container.requestFullscreen) {
+    } else {
       container
         .requestFullscreen()
         // Phones: rotate to landscape like the YouTube/Netflix apps (Android Chrome only, best effort).
@@ -706,9 +711,6 @@ export default function VideoPlayer({
           if (window.matchMedia('(pointer: coarse)').matches) return orientation()?.lock?.('landscape')
         })
         .catch(() => {})
-    } else {
-      // iPhone Safari can only fullscreen the <video> itself (native player takes over).
-      ;(videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null)?.webkitEnterFullscreen?.()
     }
   }
 
@@ -1289,9 +1291,11 @@ export default function VideoPlayer({
                   <SkipNext className="h-5 w-5" />
                 </button>
               )}
-              <button onClick={toggleFullscreen} className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20" aria-label="Tela cheia">
-                {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-              </button>
+              {fsSupported && (
+                <button onClick={toggleFullscreen} className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20" aria-label="Tela cheia">
+                  {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                </button>
+              )}
             </div>
           </div>
         </div>
