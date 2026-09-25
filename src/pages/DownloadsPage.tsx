@@ -26,7 +26,7 @@ export default function DownloadsPage() {
   const totalBytes = downloads.reduce((sum, d) => sum + d.sizeBytes, 0)
 
   return (
-    <div className="min-h-screen px-4 pt-24 sm:px-10">
+    <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <div className="mb-1 flex items-center gap-2">
         <Download className="h-6 w-6 text-brand-400" />
         <h1 className="font-display text-2xl font-bold text-white">Downloads</h1>

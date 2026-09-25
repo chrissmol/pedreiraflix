@@ -81,7 +81,7 @@ export default function EpgGuidePage() {
   }, [windowStart, windowEnd])
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))]">
       <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-8">
         <button
           onClick={() => navigate('/live')}

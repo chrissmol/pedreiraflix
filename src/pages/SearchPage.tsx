@@ -44,7 +44,7 @@ export default function SearchPage() {
   const total = results.movies.length + results.series.length + results.live.length
 
   return (
-    <div className="min-h-screen px-4 pt-24 sm:px-10">
+    <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-white">Resultados para "{query}"</h1>
 
       {loading && <p className="text-zinc-400">Carregando catálogo...</p>}

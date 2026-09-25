@@ -54,7 +54,7 @@ export default function LivePage() {
   }, [allChannels.length])
 
   return (
-    <div className="flex min-h-screen pt-16">
+    <div className="flex min-h-screen pt-[calc(4rem+env(safe-area-inset-top))]">
       <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-white/[0.06] px-2 py-4 sm:block">
         <button
           onClick={() => setActiveCategory(null)}

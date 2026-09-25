@@ -34,7 +34,7 @@ export default function MoviesPage() {
   }, [groups, activeCategory, sort])
 
   return (
-    <div className="min-h-screen pt-24">
+    <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-2xl font-bold text-white">Filmes</h1>
         <select

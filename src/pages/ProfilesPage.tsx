@@ -167,7 +167,7 @@ export default function ProfilesPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-24 sm:px-10">
+    <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display mb-1 text-2xl font-bold text-white">Perfis</h1>
       <p className="mb-8 max-w-lg text-sm text-zinc-400">
         Cada perfil tem sua própria lista, continuar assistindo e histórico — todos usam a mesma assinatura.

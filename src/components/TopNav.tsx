@@ -77,7 +77,11 @@ export default function TopNav() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
+      // `max(0.75rem, env(...))` was the previous approach, but iOS Safari has a known history of not
+      // recalculating `env()` inside `max()`/`min()` reliably — it can get stuck at the plain 0.75rem
+      // fallback and never pick up the real notch/Dynamic Island inset, leaving the header's own content
+      // (search box, account avatar) rendered right under the status bar. Plain addition avoids that.
+      className={`fixed inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
         scrolled
           ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(15,123,255,0.35)]'
           : 'bg-transparent'
