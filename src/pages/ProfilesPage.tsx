@@ -174,7 +174,8 @@ export default function ProfilesPage() {
                     />
                   </form>
                 ) : (
-                  <div className="flex gap-3 text-xs text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100">
+                  // Always visible on touch (no hover to reveal them there); fades in on mouse hover otherwise.
+                  <div className="flex gap-3 text-xs text-zinc-500 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
                     <button
                       onClick={() => {
                         setRenamingId(p.id)

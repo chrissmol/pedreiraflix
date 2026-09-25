@@ -6,18 +6,24 @@ const inFlight = new Map<string, Promise<unknown>>()
 // heavily-throttled catalog fetch every single time. Categories rarely change minute to minute, so a
 // short TTL is enough to make "Filmes"/"Séries"/"Ao vivo" feel instant on every visit after the first.
 const TTL_MS = 15 * 60 * 1000
+// A persisted entry past TTL_MS but still under this age is "stale but usable": returned immediately
+// while a fresh copy loads in the background (see `cached` below), instead of showing a spinner again
+// for data that's still probably fine. Past this age it's dropped entirely — old enough that showing it
+// even briefly would be more likely to confuse than help (e.g. a whole day-old catalog).
+const STALE_MS = 24 * 60 * 60 * 1000
 const STORAGE_PREFIX = 'iptv-cache:v1:'
 
-function readPersisted<T>(key: string): T | undefined {
+function readPersisted<T>(key: string): { value: T; isStale: boolean } | undefined {
   try {
     const raw = sessionStorage.getItem(STORAGE_PREFIX + key)
     if (!raw) return undefined
     const { value, ts } = JSON.parse(raw) as { value: T; ts: number }
-    if (Date.now() - ts > TTL_MS) {
+    const age = Date.now() - ts
+    if (age > STALE_MS) {
       sessionStorage.removeItem(STORAGE_PREFIX + key)
       return undefined
     }
-    return value
+    return { value, isStale: age > TTL_MS }
   } catch {
     return undefined
   }
@@ -32,16 +38,7 @@ function writePersisted<T>(key: string, value: T): void {
   }
 }
 
-export async function cached<T>(key: string, loader: () => Promise<T>): Promise<T> {
-  if (store.has(key)) return store.get(key) as T
-  if (inFlight.has(key)) return inFlight.get(key) as Promise<T>
-
-  const persisted = readPersisted<T>(key)
-  if (persisted !== undefined) {
-    store.set(key, persisted)
-    return persisted
-  }
-
+function refresh<T>(key: string, loader: () => Promise<T>): Promise<T> {
   const promise = loader()
     .then((result) => {
       store.set(key, result)
@@ -53,9 +50,28 @@ export async function cached<T>(key: string, loader: () => Promise<T>): Promise<
       inFlight.delete(key)
       throw err
     })
-
   inFlight.set(key, promise)
   return promise
+}
+
+/** Stale-while-revalidate: a persisted entry older than TTL_MS but younger than STALE_MS is handed back
+ * immediately (so a returning visit never blocks on a refetch) while a fresh copy loads in the
+ * background and silently replaces the in-memory/persisted entry. This call's own caller still gets the
+ * stale value — there's no subscriber list to push an update to an already-rendered page — but the next
+ * `cached()` call for this key (next remount, next visit to the tab) picks up the refreshed data instead
+ * of repeating the wait. */
+export async function cached<T>(key: string, loader: () => Promise<T>): Promise<T> {
+  if (store.has(key)) return store.get(key) as T
+  if (inFlight.has(key)) return inFlight.get(key) as Promise<T>
+
+  const persisted = readPersisted<T>(key)
+  if (persisted !== undefined) {
+    store.set(key, persisted.value)
+    if (persisted.isStale) refresh(key, loader).catch(() => {})
+    return persisted.value
+  }
+
+  return refresh(key, loader)
 }
 
 export function clearCache() {

@@ -24,10 +24,10 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-// A small stagger between requests inside each worker, on top of the
-// concurrency cap, keeps our total request rate well under providers' rate
-// limits instead of firing a burst the instant a slot frees up.
-async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number, staggerMs = 150): Promise<void> {
+// Pacing itself now happens in xtreamQueue (shared app-wide, with its own concurrency cap and gap), so
+// this only needs to keep enough tasks in flight to feed that queue — no per-worker stagger needed on
+// top of it, that would just be a second throttle stacked on the first.
+async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number, staggerMs = 0): Promise<void> {
   let cursor = 0
   async function worker() {
     while (cursor < tasks.length) {
@@ -121,7 +121,9 @@ function useCategorizedCatalog<T>(
           }
         })
 
-        runWithConcurrency(tasks, 2)
+        // Just needs to be >= xtreamQueue's own concurrency so that queue is never left starved waiting
+        // for this pool to hand it more work — the queue is what actually paces requests now.
+        runWithConcurrency(tasks, 8)
       })
       .catch((err) => {
         if (cancelled || myRequest !== requestId.current) return
