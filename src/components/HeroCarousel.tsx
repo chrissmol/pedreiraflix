@@ -18,9 +18,9 @@ interface HeroCarouselProps {
   slotMs?: number
 }
 
-const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
-// Lets e2e tests use a millisecond-scale slot instead of waiting 4h for real; never set outside a test
+// Lets e2e tests use a millisecond-scale slot instead of waiting 2h for real; never set outside a test
 // harness, so this is a no-op in the real app — same pattern as AutoLogout's override.
 function resolveSlotMs(fallback: number): number {
   const override = (typeof window !== 'undefined' && (window as { __HERO_SLOT_MS_OVERRIDE__?: number }).__HERO_SLOT_MS_OVERRIDE__) || 0
@@ -33,13 +33,13 @@ function resolveSlotMs(fallback: number): number {
  * No manual dot navigation on purpose — it's meant to just show one pick at a time, not advertise how
  * many titles qualify. If a poster image actually fails to load (dead URL, blocked host, broken provider)
  * it's excluded and the slot recomputes over what's left, instead of just sitting there broken. */
-export default function HeroCarousel({ items, slotMs = FOUR_HOURS_MS }: HeroCarouselProps) {
+export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS }: HeroCarouselProps) {
   slotMs = resolveSlotMs(slotMs)
   const [now, setNow] = useState(() => Date.now())
   const [broken, setBroken] = useState<Set<string>>(new Set())
 
   // Rechecks often enough to catch the slot boundary even with a tiny test override, without polling
-  // wastefully during the real 4h window.
+  // wastefully during the real 2h window.
   useEffect(() => {
     const recheckMs = Math.max(1000, Math.min(5 * 60 * 1000, Math.floor(slotMs / 10)))
     const timer = setInterval(() => setNow(Date.now()), recheckMs)

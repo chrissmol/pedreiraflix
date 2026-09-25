@@ -16,17 +16,43 @@ function sortSeries(items: SeriesItem[], sort: SortKey): SeriesItem[] {
   return copy
 }
 
+// Xtream's get_series returns `genre` directly on the base listing (unlike movies, whose genre only
+// comes from a per-title detail call), so a genre chip filter is cheap here — no extra requests, just a
+// second cut over data already loaded. Split on the same separators providers use ("Ação, Drama" /
+// "Ação / Drama") since it's a free-text field, not a fixed enum.
+function extractGenres(items: SeriesItem[]): string[] {
+  const set = new Set<string>()
+  for (const item of items) {
+    if (!item.genre) continue
+    for (const g of item.genre.split(/[,/]/)) {
+      const trimmed = g.trim()
+      if (trimmed) set.add(trimmed)
+    }
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+}
+
 export default function SeriesPage() {
   const { groups, loading, error } = useSeriesCatalog()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [activeGenre, setActiveGenre] = useState<string | null>(null)
   const [sort, setSort] = useState<SortKey>('default')
+
+  const allGenres = useMemo(() => extractGenres(groups.flatMap((g) => g.items)), [groups])
 
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
+      .map((g) => ({
+        category: g.category,
+        loading: g.loading,
+        items: sortSeries(
+          activeGenre ? g.items.filter((it) => it.genre?.split(/[,/]/).some((g2) => g2.trim() === activeGenre)) : g.items,
+          sort,
+        ),
+      }))
       .filter((g) => g.items.length > 0 || g.loading)
-      .map((g) => ({ category: g.category, loading: g.loading, items: sortSeries(g.items, sort) }))
-  }, [groups, activeCategory, sort])
+  }, [groups, activeCategory, activeGenre, sort])
 
   return (
     <div className="min-h-screen pt-24">
@@ -54,6 +80,34 @@ export default function SeriesPage() {
           ))}
         </select>
       </div>
+
+      {allGenres.length > 0 && (
+        <div className="mb-6 flex flex-wrap gap-2 px-4 sm:px-10">
+          <button
+            onClick={() => setActiveGenre(null)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              activeGenre === null
+                ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
+                : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-brand-500/40 hover:text-white'
+            }`}
+          >
+            Todos os gêneros
+          </button>
+          {allGenres.map((g) => (
+            <button
+              key={g}
+              onClick={() => setActiveGenre(g === activeGenre ? null : g)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeGenre === g
+                  ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
+                  : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-brand-500/40 hover:text-white'
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ContinueWatchingRow kind="series" />
 

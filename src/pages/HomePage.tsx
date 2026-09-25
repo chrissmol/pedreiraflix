@@ -4,12 +4,21 @@ import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import HeroCarousel, { type FeaturedCandidate } from '../components/HeroCarousel'
+import { Shuffle } from '../components/icons'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { flattenGroups, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
-import { favoritesFor, useLibraryStore } from '../store/library'
+import { favoritesFor, progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import type { Movie, SeriesItem } from '../types'
+
+interface RecommendedItem {
+  kind: 'movie' | 'series'
+  id: number
+  name: string
+  image: string | null
+  rating: number
+}
 
 // The rule (explicitly requested): only the household's "must-watch" bar, ≥8.5 — no fallback to
 // lower-rated content if nothing qualifies yet, that's the point of "só". Alternates movie/series/movie/…
@@ -35,6 +44,8 @@ export default function HomePage() {
   const profileId = useActiveProfileId()
   const favoritesRecord = useLibraryStore((s) => s.favorites)
   const favorites = useMemo(() => favoritesFor(favoritesRecord, profileId), [favoritesRecord, profileId])
+  const progressRecord = useLibraryStore((s) => s.progress)
+  const progressItems = useMemo(() => progressFor(progressRecord, profileId), [progressRecord, profileId])
 
   // Categories stream in one at a time (see useCatalog.ts) — computing `featured` on every partial update
   // meant the hero flickered through whichever titles happened to be loaded so far, settling only once
@@ -70,12 +81,117 @@ export default function HomePage() {
     [series.groups],
   )
 
+  // Only movies carry `added` in the basic catalog listing (get_vod_streams) — series' equivalent field
+  // isn't returned by this provider's get_series call, so this row is movies-only rather than mixed.
+  const recentMovies = useMemo(() => {
+    return flattenGroups(movies.groups)
+      .filter((m) => m.added && Number(m.added) > 0)
+      .sort((a, b) => Number(b.added) - Number(a.added))
+      .slice(0, 25)
+  }, [movies.groups])
+
+  // "Recomendado pra você": genre isn't available in the basic catalog listing for movies (only via a
+  // per-title detail call, too expensive to do for the whole catalog), so this uses categoryId instead —
+  // available on every item already loaded, and in practice close to genre on most Xtream panels (e.g.
+  // "Ação", "Comédia" are categories, not just a metadata field). Categories the profile already likes
+  // (favorited or in progress) surface their other, not-yet-seen titles, best-rated first.
+  const recommended = useMemo<RecommendedItem[]>(() => {
+    const flatMovies = flattenGroups(movies.groups)
+    const flatSeries = flattenGroups(series.groups)
+    const movieById = new Map(flatMovies.map((m) => [m.streamId, m]))
+    const seriesById = new Map(flatSeries.map((s) => [s.seriesId, s]))
+
+    const likedCategoryIds = new Set<string>()
+    for (const f of favorites) {
+      if (f.kind === 'movie') {
+        const categoryId = movieById.get(f.id)?.categoryId
+        if (categoryId) likedCategoryIds.add(categoryId)
+      }
+      if (f.kind === 'series') {
+        const categoryId = seriesById.get(f.id)?.categoryId
+        if (categoryId) likedCategoryIds.add(categoryId)
+      }
+    }
+    for (const p of progressItems) {
+      if (p.kind === 'movie') {
+        const categoryId = movieById.get(Number(p.id))?.categoryId
+        if (categoryId) likedCategoryIds.add(categoryId)
+      }
+      if (p.kind === 'series' && p.seriesId) {
+        const categoryId = seriesById.get(p.seriesId)?.categoryId
+        if (categoryId) likedCategoryIds.add(categoryId)
+      }
+    }
+    if (likedCategoryIds.size === 0) return []
+
+    const excludeMovieIds = new Set([
+      ...favorites.filter((f) => f.kind === 'movie').map((f) => f.id),
+      ...progressItems.filter((p) => p.kind === 'movie').map((p) => Number(p.id)),
+    ])
+    const excludeSeriesIds = new Set([
+      ...favorites.filter((f) => f.kind === 'series').map((f) => f.id),
+      ...progressItems.filter((p) => p.kind === 'series').map((p) => p.seriesId).filter((id): id is number => id != null),
+    ])
+
+    const candidates: RecommendedItem[] = [
+      ...flatMovies
+        .filter((m) => likedCategoryIds.has(m.categoryId) && !excludeMovieIds.has(m.streamId))
+        .map((m) => ({ kind: 'movie' as const, id: m.streamId, name: m.name, image: m.streamIcon, rating: Number(m.rating) || 0 })),
+      ...flatSeries
+        .filter((s) => likedCategoryIds.has(s.categoryId) && !excludeSeriesIds.has(s.seriesId))
+        .map((s) => ({ kind: 'series' as const, id: s.seriesId, name: s.name, image: s.cover, rating: Number(s.rating) || 0 })),
+    ]
+    return candidates.sort((a, b) => b.rating - a.rating).slice(0, 25)
+  }, [movies.groups, series.groups, favorites, progressItems])
+
+  // "Surpreenda-me": picks a uniformly random title from everything loaded so far, favoring nothing —
+  // deliberately not weighted by rating, that's what the hero carousel is already for.
+  function surpreendaMe() {
+    const pool = [
+      ...flattenGroups(movies.groups).map((m) => ({ kind: 'movie' as const, id: m.streamId })),
+      ...flattenGroups(series.groups).map((s) => ({ kind: 'series' as const, id: s.seriesId })),
+    ]
+    if (pool.length === 0) return
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    navigate(pick.kind === 'movie' ? `/movies/${pick.id}` : `/series/${pick.id}`)
+  }
+
   return (
     <div>
       <HeroCarousel items={featured} />
 
       <div className="relative z-10 pt-8 sm:pt-10">
+        <div className="mb-6 flex justify-end px-4 sm:px-10">
+          <button
+            onClick={surpreendaMe}
+            className="glass-panel flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-brand-400/40 hover:bg-white/10"
+          >
+            <Shuffle className="h-4 w-4" /> Surpreenda-me
+          </button>
+        </div>
+
         <ContinueWatchingRow />
+
+        {recentMovies.length > 0 && (
+          <Row title="Adicionados recentemente">
+            {recentMovies.map((m) => (
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} onClick={() => navigate(`/movies/${m.streamId}`)} />
+            ))}
+          </Row>
+        )}
+
+        {recommended.length > 0 && (
+          <Row title="Recomendado pra você">
+            {recommended.map((r) => (
+              <PosterCard
+                key={`${r.kind}-${r.id}`}
+                title={r.name}
+                image={r.image}
+                onClick={() => navigate(r.kind === 'movie' ? `/movies/${r.id}` : `/series/${r.id}`)}
+              />
+            ))}
+          </Row>
+        )}
 
         {favorites.length > 0 && (
           <Row title="Minha lista">
