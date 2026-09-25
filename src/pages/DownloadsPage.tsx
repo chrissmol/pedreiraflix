@@ -56,7 +56,7 @@ export default function DownloadsPage() {
                   if (confirm(`Excluir "${d.name}" dos downloads? (${formatSize(d.sizeBytes)})`)) remove(profileId, d.key)
                 }}
                 aria-label={`Excluir download de ${d.name}`}
-                className="absolute right-1 top-1 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-500/80 group-hover:flex"
+                className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-500/80 pointer-fine:hidden pointer-fine:group-hover:flex"
               >
                 <Trash className="h-3 w-3" />
               </button>

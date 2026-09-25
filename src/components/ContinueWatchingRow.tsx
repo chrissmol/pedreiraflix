@@ -50,7 +50,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
               e.stopPropagation()
               removeProgress(profileId, `${p.kind}-${p.id}`)
             }}
-            className="absolute right-1 top-1 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black group-hover:flex"
+            className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black pointer-fine:hidden pointer-fine:group-hover:flex"
             title="Remover de continuar assistindo"
           >
             ✕
