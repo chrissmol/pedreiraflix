@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import AppLockGate from './components/AppLockGate'
 import AutoLogout from './components/AutoLogout'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
@@ -31,6 +32,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      <AppLockGate />
       <AutoLogout />
       <Suspense fallback={<RouteFallback />}>
         <Routes>

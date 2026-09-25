@@ -2,10 +2,61 @@ import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, Lock, Play, Plus, Settings, Shield, Trash, Unlock } from '../components/icons'
 import PinPrompt from '../components/PinPrompt'
+import { useAppLockStore } from '../store/appLock'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
 const MAX_PROFILES = 6
+
+function AppPinSettings() {
+  const pin = useAppLockStore((s) => s.pin)
+  const setPin = useAppLockStore((s) => s.setPin)
+  const [pinInput, setPinInput] = useState('')
+
+  return (
+    <div className="mb-8 max-w-sm rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-zinc-300">
+          {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+          PIN do app {pin ? 'ativo' : 'desativado'}
+        </span>
+        {pin && (
+          <button onClick={() => setPin(null)} className="text-rose-400 hover:text-rose-300">
+            Remover
+          </button>
+        )}
+      </div>
+      <p className="mt-1 text-[11px] leading-snug text-zinc-600">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
+      {!pin && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (pinInput.length === 4) {
+              setPin(pinInput)
+              setPinInput('')
+            }
+          }}
+          className="mt-2 flex gap-1.5"
+        >
+          <input
+            inputMode="numeric"
+            placeholder="0000"
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="brand-focus w-16 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-center tracking-widest text-white"
+          />
+          <button
+            type="submit"
+            disabled={pinInput.length !== 4}
+            className="rounded-lg bg-brand-600 px-2.5 py-1 font-semibold text-white disabled:opacity-40"
+          >
+            Definir
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
 
 function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: Profile; onClose: () => void }) {
   const setKids = useProfilesStore((s) => s.setKids)
@@ -121,6 +172,8 @@ export default function ProfilesPage() {
       <p className="mb-8 max-w-lg text-sm text-zinc-400">
         Cada perfil tem sua própria lista, continuar assistindo e histórico — todos usam a mesma assinatura.
       </p>
+
+      <AppPinSettings />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {profiles.map((p) => (
