@@ -29,7 +29,9 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, pro
         />
       ) : null}
 
-      <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/20 to-transparent p-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+      {/* Touch has no hover to reveal this on, so it's shown unconditionally there — mouse/keyboard still
+          get the hover/focus reveal instead of a permanent overlay sitting on every poster. */}
+      <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/20 to-transparent p-2.5 opacity-100 transition-opacity duration-300 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-visible:opacity-100">
         <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 shadow-[0_0_16px_rgba(15,123,255,0.7)]">
           <Play className="h-3.5 w-3.5 text-white" />
         </div>

@@ -41,7 +41,7 @@ export default function Row({ title, children, loading }: RowProps) {
         <button
           onClick={() => scrollBy(-600)}
           aria-label={`Rolar "${title}" para a esquerda`}
-          className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-[#06070c] to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 sm:flex"
+          className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-[#06070c] to-transparent opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 sm:flex"
         >
           <ChevronLeft className="h-8 w-8 text-brand-300 drop-shadow-[0_0_8px_rgba(15,123,255,0.6)]" />
         </button>
@@ -64,7 +64,7 @@ export default function Row({ title, children, loading }: RowProps) {
         <button
           onClick={() => scrollBy(600)}
           aria-label={`Rolar "${title}" para a direita`}
-          className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-[#06070c] to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 sm:flex"
+          className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-[#06070c] to-transparent opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 sm:flex"
         >
           <ChevronRight className="h-8 w-8 text-brand-300 drop-shadow-[0_0_8px_rgba(15,123,255,0.6)]" />
         </button>
