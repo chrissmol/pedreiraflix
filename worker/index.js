@@ -26,7 +26,10 @@ const SECURITY_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
     "connect-src 'self' https://www.gstatic.com",
-    "media-src 'self'",
+    // blob: is hls.js's own delivery mechanism (MediaSource + a blob: object URL as video.src) for every
+    // .m3u8 stream — live channels always go through it, so without this every live channel hung forever
+    // ("loading media... violates media-src") while direct-file VOD (mp4/ts) kept working fine.
+    "media-src 'self' blob:",
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
