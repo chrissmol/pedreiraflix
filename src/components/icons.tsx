@@ -376,6 +376,14 @@ export function Moon({ className }: IconProps) {
   )
 }
 
+export function Zap({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+    </Stroke>
+  )
+}
+
 export function Keyboard({ className }: IconProps) {
   return (
     <Stroke className={className}>

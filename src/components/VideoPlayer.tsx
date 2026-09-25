@@ -20,6 +20,7 @@ import {
   Subtitles,
   VolumeHigh,
   VolumeMute,
+  Zap,
 } from './icons'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
@@ -127,6 +128,10 @@ export default function VideoPlayer({
   // clear it as soon as there's real progress.
   const [buffering, setBuffering] = useState(true)
   const [retryToken, setRetryToken] = useState(0)
+  // Live only: trades buffer cushion for latency. Off by default (see the hls.js config below for why:
+  // this provider is known to be flaky, and a tight buffer stalls on it) — a per-session choice, not a
+  // saved preference, since it's a "try it on this channel right now" toggle, not a standing setting.
+  const [fastLive, setFastLive] = useState(false)
   const [levels, setLevels] = useState<QualityLevel[]>([])
   const [currentLevel, setCurrentLevel] = useState(-1)
   const [autoPickedHeight, setAutoPickedHeight] = useState<number | null>(null)
@@ -323,11 +328,13 @@ export default function VideoPlayer({
             // aren't ready yet. 3 segments (~18-21s) is close to hls.js's own
             // default and gives enough cushion to ride out a slow fragment
             // without rebuffering, while staying well short of the old
-            // 4-segment/90s config's delay.
-            maxBufferLength: 20,
-            maxMaxBufferLength: 40,
-            liveSyncDurationCount: 3,
-            liveMaxLatencyDurationCount: 8,
+            // 4-segment/90s config's delay. `fastLive` trades that cushion
+            // away on request (see the toggle in the controls bar) — less
+            // delay, more risk of rebuffering on this same flaky origin.
+            maxBufferLength: fastLive ? 8 : 20,
+            maxMaxBufferLength: fastLive ? 16 : 40,
+            liveSyncDurationCount: fastLive ? 2 : 3,
+            liveMaxLatencyDurationCount: fastLive ? 4 : 8,
             manifestLoadingMaxRetry: 6,
             manifestLoadingRetryDelay: 1000,
             levelLoadingMaxRetry: 6,
@@ -426,7 +433,7 @@ export default function VideoPlayer({
       hls?.destroy()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, isHls, retryToken])
+  }, [src, isHls, retryToken, fastLive])
 
   // --- Fullscreen tracking ---
   useEffect(() => {
@@ -1207,9 +1214,18 @@ export default function VideoPlayer({
           }`}
         >
           {isLive ? (
-            <div className="mb-2 flex items-center gap-1.5">
+            <div className="mb-2 flex items-center gap-2">
               <span className="h-2 w-2 animate-pulse rounded-full bg-brand-400 shadow-[0_0_8px_rgba(15,123,255,0.9)]" />
               <span className="text-xs font-bold tracking-wide text-white">AO VIVO</span>
+              <button
+                onClick={() => setFastLive((v) => !v)}
+                title="Menos delay, mais risco de travar em picos do provedor"
+                className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                  fastLive ? 'border-brand-400/60 bg-brand-500/20 text-brand-300' : 'border-white/15 text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Zap className="h-3 w-3" /> Rápido
+              </button>
             </div>
           ) : (
             <input
