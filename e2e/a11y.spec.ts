@@ -4,6 +4,10 @@ import { login } from './helpers'
 test('arrow keys move focus between posters within a row', async ({ page }) => {
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
+  // Confirms the Filmes page has actually mounted before matching on title text — Home's own "Ação" row
+  // shows the same movie, and the app's single top-level Suspense boundary can briefly render both trees
+  // mid-navigation, which would otherwise make the locator below ambiguous for an instant.
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).focus()
@@ -21,6 +25,7 @@ test('respects prefers-reduced-motion: no CSS transitions/animations run', async
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   const poster = page.getByRole('button', { name: 'Filme Explosivo Filme' })
   await expect(poster).toBeVisible()
   // The browser normalizes "0.01ms" to seconds in computed style ("1e-05s") — assert the value, not the unit spelling.

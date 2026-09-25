@@ -31,6 +31,7 @@ test('does not log out while actively interacting', async ({ page }) => {
 test('does not log out mid-playback even with zero pointer/keyboard activity', async ({ page }) => {
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).click()
   await page.getByRole('button', { name: 'Assistir' }).click()
   await expect(page).toHaveURL(/\/watch\/movie\//)

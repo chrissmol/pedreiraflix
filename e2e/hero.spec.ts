@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { login } from './helpers'
 
 test.beforeEach(async ({ page }) => {
-  // Deterministic, fast slot rotation instead of the real 4h — see HeroCarousel.tsx.
+  // Deterministic, fast slot rotation instead of the real 2h — see HeroCarousel.tsx.
   await page.addInitScript(() => {
     ;(window as any).__HERO_SLOT_MS_OVERRIDE__ = 700
   })

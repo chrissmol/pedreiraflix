@@ -7,8 +7,14 @@ test('catalog is cached across navigations/reloads within the session (no refetc
     if (req.url().includes('action=get_vod_streams')) vodCalls.push(req.url())
   })
 
+  // Home shows the same movie in its own "Ação" row, and the app's single top-level Suspense boundary
+  // can briefly render both trees mid-navigation — waiting for the destination heading first confirms
+  // Home has actually unmounted, so the title-text locators below are never briefly ambiguous.
+  const filmesHeading = page.getByRole('heading', { name: 'Filmes', level: 1 })
+
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(filmesHeading).toBeVisible()
   await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
   // Wait for every category to finish (not just the first one to render) — otherwise a still-in-flight
   // category would legitimately add one more real request later, which isn't the cache failing.
@@ -19,11 +25,13 @@ test('catalog is cached across navigations/reloads within the session (no refetc
   // Navigate away and back.
   await page.getByRole('link', { name: 'Início' }).click()
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(filmesHeading).toBeVisible()
   await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
   expect(vodCalls.length).toBe(firstLoadCalls) // no new requests — served from the in-memory cache
 
   // A full reload clears the in-memory cache, but should still hit sessionStorage instead of the network.
   await page.reload()
+  await expect(filmesHeading).toBeVisible()
   await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
   expect(vodCalls.length).toBe(firstLoadCalls)
 })

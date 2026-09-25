@@ -6,6 +6,9 @@ test('favorites and progress are separate per profile, on the same login', async
 
   // Favorite a movie on the default profile.
   await page.getByRole('link', { name: 'Filmes' }).click()
+  // Confirms Filmes has actually mounted before matching on title text — Home shows the same movie in
+  // its own rows, and the app's single top-level Suspense boundary can briefly render both trees.
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).click()
   await page.getByRole('button', { name: 'Minha lista' }).click()
   await expect(page.getByRole('button', { name: 'Na lista' })).toBeVisible()
@@ -23,6 +26,7 @@ test('favorites and progress are separate per profile, on the same login', async
 
   // The new profile sees no favorite for that movie.
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).click()
   await expect(page.getByRole('button', { name: 'Minha lista' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Na lista' })).toHaveCount(0)
@@ -32,6 +36,7 @@ test('favorites and progress are separate per profile, on the same login', async
   await page.getByRole('button', { name: 'Conta' }).click()
   await page.getByRole('button', { name: /Entrar como/ }).click() // back to the default profile
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).click()
   await expect(page.getByRole('button', { name: 'Na lista' })).toBeVisible()
 })
@@ -91,6 +96,7 @@ test('pre-profiles favorites/progress/watched data is preserved after the profil
   await login(page)
   await expect(page.getByRole('heading', { name: 'Continuar assistindo' })).toBeVisible()
   await page.getByRole('link', { name: 'Filmes' }).click()
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).click()
   await expect(page.getByRole('button', { name: 'Na lista' })).toBeVisible()
 })
