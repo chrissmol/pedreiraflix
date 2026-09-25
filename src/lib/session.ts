@@ -53,13 +53,27 @@ function migrateLegacyLibraryData(profileId: string) {
   })
 }
 
-/** Ensures the given account has at least one profile (creating a default named after the username the
- * first time), and folds in any pre-profiles data. Call whenever a session for this account becomes
- * active — on sign-in, and again at app launch for a session that was already open. */
+/** Ensures the given account has at least one profile (creating a default profile the first time — named
+ * after the custom label the account was saved under, if any, since that's the name the person actually
+ * chose, or the raw Xtream username otherwise), and folds in any pre-profiles data. Call whenever a
+ * session for this account becomes active — on sign-in, and again at app launch for a session that was
+ * already open. */
 export function ensureActiveProfile(creds: XtreamCredentials): void {
   const accId = accountId(creds)
-  const profileId = useProfilesStore.getState().ensureProfile(accId, creds.username)
+  const label = useAccountsStore.getState().accounts.find((a) => a.id === accId)?.label
+  const { ensureProfile, renameProfile } = useProfilesStore.getState()
+  const profileId = ensureProfile(accId, label || creds.username)
   migrateLegacyLibraryData(profileId)
+
+  // Someone who already had this account (profile auto-created and named after the raw Xtream username,
+  // before they ever set a custom label at login) gets the label applied here too, once — the avatar and
+  // "Gerenciar perfis" would otherwise disagree forever about what this account is called. Only touches
+  // it when the name still matches the raw username exactly, so a name someone deliberately picked in
+  // Gerenciar perfis (even one that happens to equal the label) is never silently reverted going forward.
+  if (label) {
+    const profile = useProfilesStore.getState().byAccount[accId]?.profiles.find((p) => p.id === profileId)
+    if (profile && profile.name === creds.username && profile.name !== label) renameProfile(accId, profileId, label)
+  }
 }
 
 /** Validates the credentials against the panel, starts the session and (optionally) remembers the account. */
