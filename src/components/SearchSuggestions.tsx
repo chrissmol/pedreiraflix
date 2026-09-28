@@ -58,7 +58,13 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
   if (results.length === 0 && !stillLoading) return null
 
   return (
-    <div className="glass-panel absolute left-0 right-0 top-full mt-2 max-h-96 overflow-y-auto rounded-xl text-sm shadow-2xl">
+    // `right-0` + an explicit width, not `left-0 right-0`: the search `<form>` this is anchored to is
+    // only as wide as the input itself (as little as 40px at rest, ~190px focused on a phone — see
+    // TopNav), so stretching the dropdown to match that box made it too narrow to hold a result row and
+    // forced it wider than its container, overflowing past the right edge of narrow phones entirely. A
+    // fixed width anchored to the input's right edge, capped to the viewport, stays on screen regardless
+    // of how wide the input itself currently is.
+    <div className="glass-panel absolute right-0 top-full mt-2 max-h-96 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl text-sm shadow-2xl">
       {results.map((r) => {
         const Icon = KIND_ICON[r.kind]
         return (

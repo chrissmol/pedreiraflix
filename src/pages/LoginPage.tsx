@@ -146,9 +146,16 @@ export default function LoginPage() {
                       <span className="block truncate text-sm font-semibold text-white">{accountLabel(account)}</span>
                       <span className="block truncate text-xs text-zinc-500">{accountSubtitle(account)}</span>
                     </span>
-                    <span className="shrink-0 text-xs font-semibold text-brand-300">
+                    {/* "Entrar" is purely decorative — the whole row is already the tap target — so it's
+                        the first thing to go on a narrow phone, where it was crowding the account name
+                        itself down to one truncated letter. "Conectando..." stays at every width: that's
+                        real loading feedback, not decoration. */}
+                    <span className="hidden shrink-0 text-xs font-semibold text-brand-300 sm:inline">
                       {busyId === account.id ? 'Conectando...' : 'Entrar'}
                     </span>
+                    {busyId === account.id && (
+                      <span className="shrink-0 text-xs font-semibold text-brand-300 sm:hidden">Conectando...</span>
+                    )}
                   </button>
                   <button
                     onClick={() => {
@@ -157,7 +164,7 @@ export default function LoginPage() {
                     }}
                     aria-label={`Renomear conta ${accountLabel(account)}`}
                     title="Renomear"
-                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white"
+                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-2.5 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white sm:px-3"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -165,7 +172,7 @@ export default function LoginPage() {
                     onClick={() => removeAccount(account.id)}
                     aria-label={`Esquecer conta ${accountLabel(account)}`}
                     title="Esquecer esta conta"
-                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400"
+                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-2.5 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 sm:px-3"
                   >
                     <Trash className="h-4 w-4" />
                   </button>

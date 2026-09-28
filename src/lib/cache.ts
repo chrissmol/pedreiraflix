@@ -88,3 +88,17 @@ export function clearCache() {
     // Storage inaccessible — nothing persisted to clear anyway.
   }
 }
+
+/** The "limpar cache" button's actual job: this catalog cache plus the service worker's own app-shell
+ * cache (sw.js's `pedreiraflix-v*` CacheStorage entries) — the same two places an iPhone's Ajustes >
+ * Safari > Limpar Histórico e Dados would touch for this app, done from inside it instead. Doesn't touch
+ * login/profiles/favorites/downloads (those are real user data, not cache) — a fresh reload right after
+ * is what actually makes the cleared state visible, since the page currently in memory still holds the
+ * old catalog until then. */
+export async function clearAllCaches(): Promise<void> {
+  clearCache()
+  if ('caches' in window) {
+    const keys = await caches.keys()
+    await Promise.all(keys.map((k) => caches.delete(k)))
+  }
+}

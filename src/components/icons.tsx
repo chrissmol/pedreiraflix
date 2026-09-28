@@ -28,6 +28,15 @@ export function AlertTriangle({ className }: IconProps) {
   )
 }
 
+export function RefreshCw({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path d="M21 12a9 9 0 0 1-15.3 6.4M3 12a9 9 0 0 1 15.3-6.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 3v6h-6M3 21v-6h6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function ChevronLeft({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={className}>

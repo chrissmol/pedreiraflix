@@ -150,9 +150,9 @@ export default function SeriesDetailPage() {
                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 font-bold text-brand-300">
                   {isWatched ? <Check className="h-5 w-5 text-brand-400" /> : ep.episodeNum}
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-white">{ep.title}</p>
+                    <p className="truncate font-medium text-white">{ep.title}</p>
                     {isWatched && <span className="text-[10px] font-semibold uppercase text-brand-400">Assistido</span>}
                   </div>
                   {ep.duration && <p className="text-xs text-zinc-500">{ep.duration}</p>}

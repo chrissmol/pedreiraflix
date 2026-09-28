@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
+import { clearAllCaches } from '../lib/cache'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import { useThemeStore } from '../store/theme'
-import { Download, Moon, Search, Sun, User } from './icons'
+import ConfirmDialog from './ConfirmDialog'
+import { Download, Moon, RefreshCw, Search, Sun, User } from './icons'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 
@@ -33,6 +35,8 @@ export default function TopNav() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const [pinTarget, setPinTarget] = useState<Profile | null>(null)
+  const [confirmClearCache, setConfirmClearCache] = useState(false)
+  const [clearingCache, setClearingCache] = useState(false)
 
   function switchTo(p: Profile) {
     if (p.pin) {
@@ -143,8 +147,12 @@ export default function TopNav() {
             // Idle width shrinks to just the icon on phones (like Netflix/YouTube's mobile search) —
             // at the old fixed w-32, a narrow phone had no room left for the account avatar next to it
             // (it got pushed off the edge entirely below ~340px, unreachable). Typing still expands the
-            // field via focus:w-48 same as before, it's only the resting state that got more compact.
-            className="brand-focus w-10 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-48 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            // field via focus expanding, it's only the resting state that got more compact. The focused
+            // width is `min(12rem, 60vw)`, not a flat `w-48` — on a genuinely narrow phone (~320px) the
+            // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
+            // header (and anything anchored to the search box, like its suggestions dropdown) past the
+            // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
+            className="brand-focus w-10 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -217,6 +225,15 @@ export default function TopNav() {
               Tema {theme === 'dark' ? 'claro' : 'escuro'}
             </button>
             <button
+              onClick={() => {
+                setMenuOpen(false)
+                setConfirmClearCache(true)
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+            >
+              <RefreshCw className="h-4 w-4 text-zinc-400" /> Limpar cache
+            </button>
+            <button
               onClick={logout}
               className="mt-1 w-full rounded-lg px-2 py-2.5 text-left text-rose-400 transition-colors hover:bg-rose-500/10 active:bg-rose-500/10"
             >
@@ -233,6 +250,23 @@ export default function TopNav() {
           onSuccess={() => {
             if (accId) setActiveProfile(accId, pinTarget.id)
             setPinTarget(null)
+          }}
+        />
+      )}
+
+      {confirmClearCache && (
+        <ConfirmDialog
+          message={
+            clearingCache
+              ? 'Limpando...'
+              : 'Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads — só o que pode ser rebaixado de novo do provedor. O app recarrega em seguida.'
+          }
+          confirmLabel="Limpar"
+          onCancel={() => setConfirmClearCache(false)}
+          onConfirm={async () => {
+            setClearingCache(true)
+            await clearAllCaches()
+            window.location.reload()
           }}
         />
       )}
