@@ -1,42 +1,77 @@
 const store = new Map<string, unknown>()
 const inFlight = new Map<string, Promise<unknown>>()
 
-// Persisted to localStorage — not sessionStorage, which was the original choice here but doesn't survive
-// closing the tab/app, and on a PWA/mobile install that's every single open. STALE_MS below is what keeps
-// data from going stale across days, not the storage's own lifetime, so there was never a correctness
-// reason to lose the cache on close; it was just needlessly repaying the full, heavily-throttled catalog
-// fetch on every app launch. Categories rarely change minute to minute, so a short TTL is enough to make
-// "Filmes"/"Séries"/"Ao vivo" feel instant on every visit after the first.
+// Persisted to IndexedDB — not localStorage, which was the previous choice here but is documented
+// elsewhere in this codebase (offlineStore.ts) as one of the storage kinds iOS evicts under pressure for
+// an installed home-screen PWA, without warning, once the app has been closed/killed for a while.
+// IndexedDB isn't immune to that same eviction risk on iOS either, but it's the storage the platform
+// actually intends for real persistence (localStorage was only ever a quick synchronous convenience), so
+// it's the next lever worth pulling for "the catalog always reloads from scratch after not using the app
+// for a bit" — a real, reported symptom that matches iOS killing a backgrounded PWA and, this codebase's
+// own case, then not honoring the localStorage `navigator.storage.persist()` request. STALE_MS below is
+// what keeps data from going stale across days, not the storage's own lifetime, so there's still no
+// correctness reason to lose the cache on close; the goal is the same as before, just on sturdier ground.
 const TTL_MS = 15 * 60 * 1000
 // A persisted entry past TTL_MS but still under this age is "stale but usable": returned immediately
 // while a fresh copy loads in the background (see `cached` below), instead of showing a spinner again
 // for data that's still probably fine. Past this age it's dropped entirely — old enough that showing it
 // even briefly would be more likely to confuse than help (e.g. a whole day-old catalog).
 const STALE_MS = 24 * 60 * 60 * 1000
-const STORAGE_PREFIX = 'iptv-cache:v1:'
 
-function readPersisted<T>(key: string): { value: T; isStale: boolean } | undefined {
+const DB_NAME = 'pedreiraflix-cache'
+const DB_VERSION = 1
+const OBJECT_STORE = 'entries'
+
+interface PersistedEntry<T> {
+  key: string
+  value: T
+  ts: number
+}
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(OBJECT_STORE)) req.result.createObjectStore(OBJECT_STORE, { keyPath: 'key' })
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function withStore<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(OBJECT_STORE, mode)
+    const request = fn(tx.objectStore(OBJECT_STORE))
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+    tx.oncomplete = () => db.close()
+  })
+}
+
+async function readPersisted<T>(key: string): Promise<{ value: T; isStale: boolean } | undefined> {
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + key)
-    if (!raw) return undefined
-    const { value, ts } = JSON.parse(raw) as { value: T; ts: number }
-    const age = Date.now() - ts
+    const entry = await withStore<PersistedEntry<T> | undefined>('readonly', (s) => s.get(key))
+    if (!entry) return undefined
+    const age = Date.now() - entry.ts
     if (age > STALE_MS) {
-      localStorage.removeItem(STORAGE_PREFIX + key)
+      withStore('readwrite', (s) => s.delete(key)).catch(() => {})
       return undefined
     }
-    return { value, isStale: age > TTL_MS }
+    return { value: entry.value, isStale: age > TTL_MS }
   } catch {
+    // IndexedDB unavailable (private browsing on some browsers, disabled, etc.) — the in-memory cache
+    // alone still works for the rest of this page's lifetime, it just won't survive a reload.
     return undefined
   }
 }
 
-function writePersisted<T>(key: string, value: T): void {
+async function writePersisted<T>(key: string, value: T): Promise<void> {
   try {
-    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify({ value, ts: Date.now() }))
+    await withStore('readwrite', (s) => s.put({ key, value, ts: Date.now() } satisfies PersistedEntry<T>))
   } catch {
-    // Private browsing, quota exceeded, or storage disabled — the in-memory cache alone still works
-    // for the rest of this page's lifetime, it just won't survive a reload.
+    // Same as above — degrade to in-memory only.
   }
 }
 
@@ -66,7 +101,7 @@ export async function cached<T>(key: string, loader: () => Promise<T>): Promise<
   if (store.has(key)) return store.get(key) as T
   if (inFlight.has(key)) return inFlight.get(key) as Promise<T>
 
-  const persisted = readPersisted<T>(key)
+  const persisted = await readPersisted<T>(key)
   if (persisted !== undefined) {
     store.set(key, persisted.value)
     if (persisted.isStale) refresh(key, loader).catch(() => {})
@@ -79,14 +114,7 @@ export async function cached<T>(key: string, loader: () => Promise<T>): Promise<
 export function clearCache() {
   store.clear()
   inFlight.clear()
-  try {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i)
-      if (k?.startsWith(STORAGE_PREFIX)) localStorage.removeItem(k)
-    }
-  } catch {
-    // Storage inaccessible — nothing persisted to clear anyway.
-  }
+  withStore('readwrite', (s) => s.clear()).catch(() => {})
 }
 
 /** The "limpar cache" button's actual job: this catalog cache plus the service worker's own app-shell
@@ -96,7 +124,9 @@ export function clearCache() {
  * is what actually makes the cleared state visible, since the page currently in memory still holds the
  * old catalog until then. */
 export async function clearAllCaches(): Promise<void> {
-  clearCache()
+  store.clear()
+  inFlight.clear()
+  await withStore('readwrite', (s) => s.clear()).catch(() => {})
   if ('caches' in window) {
     const keys = await caches.keys()
     await Promise.all(keys.map((k) => caches.delete(k)))

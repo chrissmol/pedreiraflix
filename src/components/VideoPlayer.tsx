@@ -132,6 +132,9 @@ export default function VideoPlayer({
   // this provider is known to be flaky, and a tight buffer stalls on it) — a per-session choice, not a
   // saved preference, since it's a "try it on this channel right now" toggle, not a standing setting.
   const [fastLive, setFastLive] = useState(false)
+  // Whether this playback actually went through hls.js (vs. Safari's native HLS/plain <video src>) —
+  // "Rápido" tunes hls.js's own buffer config, so it's hidden when there's no hls.js instance to tune.
+  const [usingHlsJs, setUsingHlsJs] = useState(false)
   const [levels, setLevels] = useState<QualityLevel[]>([])
   const [currentLevel, setCurrentLevel] = useState(-1)
   const [autoPickedHeight, setAutoPickedHeight] = useState<number | null>(null)
@@ -200,6 +203,7 @@ export default function VideoPlayer({
     setBuffering(true)
     setLevels([])
     setCurrentLevel(-1)
+    setUsingHlsJs(false)
     setAutoPickedHeight(null)
     setAudioTracks([])
     setCurrentAudioTrack(-1)
@@ -317,13 +321,30 @@ export default function VideoPlayer({
 
     async function setup() {
       if (!video) return
-      if (isHls) {
+      // Safari (iOS and macOS) plays HLS natively — video.src = the .m3u8 directly, same as any other
+      // <video>, no MediaSource involved. This has to be checked and preferred *before* even asking
+      // hls.js whether it thinks the browser is supported: hls.js's own isSupported() checks for
+      // MediaSource Extensions, which Safari also has, so that check alone can never tell Safari apart
+      // from everyone else — every browser that can run hls.js at all was taking this branch, including
+      // Safari, despite a comment below (now moved) claiming otherwise. The real, user-visible cost: HLS
+      // delivered through MediaSource can only AirPlay as audio on iOS, not mirror actual video — a
+      // documented WebKit/hls.js interaction, confirmed against a real Apple TV. Native playback doesn't
+      // have that limit. The trade-off (accepted): the audio-track/subtitle-track/manual-quality menus
+      // below are populated from hls.js's own events, so they stay empty here — Safari's native player
+      // doesn't hand those to JS the same way. Most IPTV sources only carry one audio track anyway.
+      // Strictly 'probably', not just non-empty: canPlayType can also return the noncommittal 'maybe'
+      // for a MIME type a browser doesn't actually support (confirmed against real Chromium, which
+      // answered 'maybe' here despite having no native HLS playback at all) — 'probably' is what Safari
+      // specifically answers for HLS, and the well-established way sites detect it.
+      const nativeHlsSupported = video.canPlayType('application/vnd.apple.mpegurl') === 'probably'
+      if (isHls && !nativeHlsSupported) {
         // hls.js (~250KB) is only needed for live channels; VOD plays as
         // plain mp4/webm, so keep it out of the main bundle.
         const { default: HlsCtor } = await import('hls.js')
         if (cancelled || !video) return
 
         if (HlsCtor.isSupported()) {
+          setUsingHlsJs(true)
           hls = new HlsCtor({
             enableWorker: true,
             lowLatencyMode: false,
@@ -409,10 +430,12 @@ export default function VideoPlayer({
             }
           })
         } else {
-          // Safari/iOS play HLS natively; no hls.js needed.
+          // hls.js itself says this browser can't do MSE-based HLS after all (rare) — last-resort
+          // fallback to a plain <video src>, same as the native-HLS and VOD paths below.
           video.src = src
         }
       } else {
+        // VOD, or a browser (Safari) with native HLS support — see the comment above `nativeHlsSupported`.
         video.src = src
       }
     }
@@ -1223,15 +1246,17 @@ export default function VideoPlayer({
             <div className="mb-2 flex items-center gap-2">
               <span className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
               <span className="text-xs font-bold tracking-wide text-white">AO VIVO</span>
-              <button
-                onClick={() => setFastLive((v) => !v)}
-                title="Menos delay, mais risco de travar em picos do provedor"
-                className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                  fastLive ? 'border-brand-400/60 bg-brand-500/20 text-brand-300' : 'border-white/15 text-zinc-400 hover:text-white'
-                }`}
-              >
-                <Zap className="h-3 w-3" /> Rápido
-              </button>
+              {usingHlsJs && (
+                <button
+                  onClick={() => setFastLive((v) => !v)}
+                  title="Menos delay, mais risco de travar em picos do provedor"
+                  className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    fastLive ? 'border-brand-400/60 bg-brand-500/20 text-brand-300' : 'border-white/15 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Zap className="h-3 w-3" /> Rápido
+                </button>
+              )}
             </div>
           ) : (
             <input
