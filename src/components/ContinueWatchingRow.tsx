@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConfirmDialog from './ConfirmDialog'
 import PosterCard from './PosterCard'
 import Row from './Row'
 import { progressFor, useLibraryStore } from '../store/library'
@@ -17,6 +18,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
   const profileId = useActiveProfileId()
   const progressRecord = useLibraryStore((s) => s.progress)
   const removeProgress = useLibraryStore((s) => s.removeProgress)
+  const [removeTarget, setRemoveTarget] = useState<{ key: string; name: string } | null>(null)
 
   const items = useMemo(
     () =>
@@ -48,7 +50,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
           <button
             onClick={(e) => {
               e.stopPropagation()
-              removeProgress(profileId, `${p.kind}-${p.id}`)
+              setRemoveTarget({ key: `${p.kind}-${p.id}`, name: p.name })
             }}
             className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black pointer-fine:hidden pointer-fine:group-hover:flex"
             title="Remover de continuar assistindo"
@@ -57,6 +59,18 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
           </button>
         </div>
       ))}
+
+      {removeTarget && (
+        <ConfirmDialog
+          message={`Remover "${removeTarget.name}" de continuar assistindo?`}
+          confirmLabel="Remover"
+          onCancel={() => setRemoveTarget(null)}
+          onConfirm={() => {
+            removeProgress(profileId, removeTarget.key)
+            setRemoveTarget(null)
+          }}
+        />
+      )}
     </Row>
   )
 }
