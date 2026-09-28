@@ -1,6 +1,6 @@
 import { cached } from './cache'
 import { normalizeText } from './search'
-import type { XtreamClient } from './xtream'
+import type { ProviderClient } from './provider'
 
 // Xtream panels have no standard "this category is adult content" flag — providers just name the
 // category something recognizable ("XXX", "Adultos +18", "Hot", ...). Matching on the category name is
@@ -18,7 +18,7 @@ export function isAdultCategoryName(categoryName: string): boolean {
  * catalog lists — checks the one category this item belongs to, using the same cached category lookups the
  * catalog pages already populate, so this is normally instant. */
 export async function isCategoryBlocked(
-  client: XtreamClient,
+  client: ProviderClient,
   kind: 'live' | 'movie' | 'series',
   categoryId: string | null | undefined,
 ): Promise<boolean> {

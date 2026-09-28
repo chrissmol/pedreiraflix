@@ -1,8 +1,9 @@
-import { accountId, useAccountsStore } from '../store/accounts'
+import { type M3uEntry, M3uClient, parseM3u } from './m3u'
+import { accountId, type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
 import { useLibraryStore } from '../store/library'
 import { useProfilesStore } from '../store/profiles'
-import type { UserInfo, XtreamCredentials } from '../types'
+import type { ProviderCredentials, UserInfo, XtreamCredentials } from '../types'
 import { clearCache } from './cache'
 import { XtreamClient } from './xtream'
 
@@ -11,6 +12,11 @@ export function normalizeCredentials(creds: XtreamCredentials): XtreamCredential
   // People often paste just "host:port"; panels are plain http far more often than https.
   if (baseUrl && !/^https?:\/\//i.test(baseUrl)) baseUrl = `http://${baseUrl}`
   return { baseUrl, username: creds.username.trim(), password: creds.password }
+}
+
+/** The name a fresh profile gets when the account provides no custom label. */
+function defaultProfileName(creds: ProviderCredentials): string {
+  return creds.type === 'xtream' ? creds.username : 'Playlist M3U'
 }
 
 export function accountWarning(user: UserInfo): string | null {
@@ -58,11 +64,12 @@ function migrateLegacyLibraryData(profileId: string) {
  * chose, or the raw Xtream username otherwise), and folds in any pre-profiles data. Call whenever a
  * session for this account becomes active — on sign-in, and again at app launch for a session that was
  * already open. */
-export function ensureActiveProfile(creds: XtreamCredentials): void {
+export function ensureActiveProfile(creds: ProviderCredentials): void {
   const accId = accountId(creds)
   const label = useAccountsStore.getState().accounts.find((a) => a.id === accId)?.label
+  const defaultName = defaultProfileName(creds)
   const { ensureProfile, renameProfile } = useProfilesStore.getState()
-  const profileId = ensureProfile(accId, label || creds.username)
+  const profileId = ensureProfile(accId, label || defaultName)
   migrateLegacyLibraryData(profileId)
 
   // Someone who already had this account (profile auto-created and named after the raw Xtream username,
@@ -72,26 +79,79 @@ export function ensureActiveProfile(creds: XtreamCredentials): void {
   // Gerenciar perfis (even one that happens to equal the label) is never silently reverted going forward.
   if (label) {
     const profile = useProfilesStore.getState().byAccount[accId]?.profiles.find((p) => p.id === profileId)
-    if (profile && profile.name === creds.username && profile.name !== label) renameProfile(accId, profileId, label)
+    if (profile && profile.name === defaultName && profile.name !== label) renameProfile(accId, profileId, label)
   }
+}
+
+function switchedAccount(previous: ProviderCredentials | null, next: ProviderCredentials): boolean {
+  return !previous || accountId(previous) !== accountId(next)
 }
 
 /** Validates the credentials against the panel, starts the session and (optionally) remembers the account. */
 export async function signIn(raw: XtreamCredentials, remember = true, label?: string): Promise<void> {
-  const creds = normalizeCredentials(raw)
+  const creds: ProviderCredentials = { type: 'xtream', ...normalizeCredentials(raw) }
   const { user, server } = await new XtreamClient(creds).login()
   const previous = useAuthStore.getState().credentials
   // Switching accounts: the in-memory catalog belongs to the old server.
-  if (previous && (previous.baseUrl !== creds.baseUrl || previous.username !== creds.username)) clearCache()
+  if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user))
   if (remember) useAccountsStore.getState().saveAccount(creds, label)
   ensureActiveProfile(creds)
 }
 
-/** Refreshes account info (status, expiry, connections) for an already-open session, without ever logging out on failure. */
+/** Same as `signIn`, but for an M3U playlist instead of an Xtream panel — the text is fetched (link) or
+ * read locally (file) once here, parsed, and the entries carried in the session/saved account from then
+ * on, so playback never depends on a second fetch. */
+export async function signInM3u(
+  source: { kind: 'url'; url: string } | { kind: 'file'; file: File },
+  remember = true,
+  label?: string,
+): Promise<void> {
+  const text =
+    source.kind === 'url'
+      ? await fetch(`/api/stream?raw=1&url=${encodeURIComponent(source.url)}`).then((r) => {
+          if (!r.ok) throw new Error(`Falha ao baixar a playlist: ${r.status}`)
+          return r.text()
+        })
+      : await source.file.text()
+
+  const entries: M3uEntry[] = parseM3u(text)
+  if (entries.length === 0) throw new Error('Nenhum canal encontrado nessa playlist M3U')
+
+  const creds: ProviderCredentials =
+    source.kind === 'url' ? { type: 'm3u', source: 'url', url: source.url } : { type: 'm3u', source: 'file', fileName: source.file.name }
+
+  const { user, server } = await new M3uClient(entries).login()
+  const previous = useAuthStore.getState().credentials
+  if (switchedAccount(previous, creds)) clearCache()
+  useAuthStore.getState().setSession(creds, user, server, accountWarning(user), entries)
+  if (remember) useAccountsStore.getState().saveAccount(creds, label, entries)
+  ensureActiveProfile(creds)
+}
+
+/** Re-enters a saved account. For Xtream this still validates against the panel (catches an expired/
+ * revoked login early); for M3U there's no panel to validate against, so it just restores the playlist
+ * that was parsed and saved at the original sign-in. */
+export async function signInSavedAccount(account: SavedAccount): Promise<void> {
+  if (account.credentials.type === 'xtream') {
+    await signIn(account.credentials, true, account.label)
+    return
+  }
+  if (!account.entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
+  const creds = account.credentials
+  const { user, server } = await new M3uClient(account.entries).login()
+  const previous = useAuthStore.getState().credentials
+  if (switchedAccount(previous, creds)) clearCache()
+  useAuthStore.getState().setSession(creds, user, server, accountWarning(user), account.entries)
+  useAccountsStore.getState().saveAccount(creds, account.label, account.entries)
+  ensureActiveProfile(creds)
+}
+
+/** Refreshes account info (status, expiry, connections) for an already-open Xtream session, without ever
+ * logging out on failure. M3U sessions have no server to refresh against — nothing to do. */
 export async function refreshSession(): Promise<void> {
   const { credentials, setSession } = useAuthStore.getState()
-  if (!credentials) return
+  if (!credentials || credentials.type !== 'xtream') return
   try {
     const { user, server } = await new XtreamClient(credentials).login()
     if (useAuthStore.getState().credentials !== credentials) return

@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, Lock, Play, Plus, Settings, Shield, Trash, Unlock } from '../components/icons'
+import ConfirmDialog from '../components/ConfirmDialog'
 import PinPrompt from '../components/PinPrompt'
 import { useAppLockStore } from '../store/appLock'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
@@ -141,6 +142,7 @@ export default function ProfilesPage() {
   const [renameValue, setRenameValue] = useState('')
   const [settingsId, setSettingsId] = useState<string | null>(null)
   const [pinTarget, setPinTarget] = useState<Profile | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null)
 
   if (!accId) return null
 
@@ -242,14 +244,7 @@ export default function ProfilesPage() {
                       <Settings className="h-3 w-3" /> Ajustes
                     </button>
                     {profiles.length > 1 && (
-                      <button
-                        onClick={() => {
-                          if (confirm(`Excluir o perfil "${p.name}"? A lista e o histórico dele serão perdidos.`)) {
-                            removeProfile(accId, p.id)
-                          }
-                        }}
-                        className="flex items-center gap-1 hover:text-rose-400"
-                      >
+                      <button onClick={() => setDeleteTarget(p)} className="flex items-center gap-1 hover:text-rose-400">
                         <Trash className="h-3 w-3" /> Excluir
                       </button>
                     )}
@@ -333,6 +328,17 @@ export default function ProfilesPage() {
             setActiveProfile(accId, pinTarget.id)
             setPinTarget(null)
             navigate('/')
+          }}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`Excluir o perfil "${deleteTarget.name}"? A lista e o histórico dele serão perdidos.`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            removeProfile(accId, deleteTarget.id)
+            setDeleteTarget(null)
           }}
         />
       )}

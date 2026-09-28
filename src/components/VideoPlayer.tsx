@@ -995,10 +995,14 @@ export default function VideoPlayer({
           )}
 
           {airPlaySupported && (
+            // No pointer-coarse:hidden here unlike PiP/Cast right below — those are mouse-desktop
+            // conveniences that are redundant on touch, but AirPlay only ever exists on Safari, and the
+            // iPhone/iPad it's most useful on are touch devices. Hiding it there (the bug, until now)
+            // meant the button never appeared on exactly the hardware AirPlay is for.
             <button
               onClick={showAirPlayPicker}
               aria-label="AirPlay"
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40 pointer-coarse:hidden"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
             >
               <AirPlay className="h-4 w-4" />
             </button>
@@ -1122,7 +1126,7 @@ export default function VideoPlayer({
 
       {buffering && !error && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400 shadow-[0_0_20px_rgba(15,123,255,0.4)]" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400" />
           {downloadedPct !== null && (
             <p className="rounded-lg bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm tabular-nums">
               {downloadedPct}%
@@ -1217,7 +1221,7 @@ export default function VideoPlayer({
         >
           {isLive ? (
             <div className="mb-2 flex items-center gap-2">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-brand-400 shadow-[0_0_8px_rgba(15,123,255,0.9)]" />
+              <span className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
               <span className="text-xs font-bold tracking-wide text-white">AO VIVO</span>
               <button
                 onClick={() => setFastLive((v) => !v)}

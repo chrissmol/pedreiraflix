@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogA11y } from '../hooks/useDialogA11y'
 import { Lock } from './icons'
 import type { Profile } from '../store/profiles'
 
@@ -13,6 +14,8 @@ interface PinPromptProps {
 export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptProps) {
   const [value, setValue] = useState('')
   const [wrong, setWrong] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(dialogRef, true, onCancel)
 
   function handleChange(next: string) {
     const digits = next.replace(/\D/g, '').slice(0, 4)
@@ -30,6 +33,10 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`PIN do perfil ${profile.name}`}
         onClick={(e) => e.stopPropagation()}
         className="glass-panel glow-border w-full max-w-xs rounded-2xl p-6 text-center"
       >

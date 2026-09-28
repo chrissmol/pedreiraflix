@@ -222,6 +222,7 @@ export default function HomePage() {
             loading={loading && items.length === 0}
             items={items}
             limit={25}
+            categoryId={category.categoryId}
           />
         ))}
 
@@ -234,6 +235,7 @@ export default function HomePage() {
             loading={loading && items.length === 0}
             items={items}
             limit={25}
+            categoryId={category.categoryId}
           />
         ))}
       </div>

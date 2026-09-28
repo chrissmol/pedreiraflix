@@ -13,6 +13,9 @@ interface CategoryRowProps {
    * inside the memoized component, rather than by `.slice()`-ing `items` before it gets here: `.slice()`
    * always returns a new array, which would defeat the reference-equality check below on every render. */
   limit?: number
+  /** Needed to build the "Ver tudo" link — only Home passes this (Filmes/Séries' own rows already show
+   * every item in the category, so there's nothing more to link to). */
+  categoryId?: string
 }
 
 // Memoized deliberately: Filmes/Séries/Início load categories progressively (one API call per
@@ -21,9 +24,13 @@ interface CategoryRowProps {
 // loading — visible as jank/flicker the more categories a provider has. React.memo's default shallow
 // prop comparison only skips that work if `items` is the *same array reference* when nothing about this
 // specific row changed, which is exactly what the callers below preserve (see their comments).
-function CategoryRow({ title, loading, items, kind, limit }: CategoryRowProps) {
+function CategoryRow({ title, loading, items, kind, limit, categoryId }: CategoryRowProps) {
   const navigate = useNavigate()
   const visible = limit != null ? items.slice(0, limit) : items
+  const seeAllHref =
+    categoryId && limit != null && items.length > limit
+      ? `/${kind === 'movie' ? 'movies' : 'series'}?category=${encodeURIComponent(categoryId)}`
+      : undefined
 
   // Dev-only render counter (statically stripped from the production bundle — `import.meta.env.DEV` is
   // replaced at build time and the branch is dead-code-eliminated) so e2e tests can assert the
@@ -34,7 +41,7 @@ function CategoryRow({ title, loading, items, kind, limit }: CategoryRowProps) {
     w.__categoryRowRenders[title] = (w.__categoryRowRenders[title] ?? 0) + 1
   }
   return (
-    <Row title={title} loading={loading}>
+    <Row title={title} loading={loading} seeAllHref={seeAllHref}>
       {visible.map((item) =>
         kind === 'movie' ? (
           <PosterCard

@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Download, Play, Trash } from '../components/icons'
+import ConfirmDialog from '../components/ConfirmDialog'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
 import { useDownloadsFor, useDownloadsStore } from '../store/downloads'
@@ -18,6 +19,7 @@ export default function DownloadsPage() {
   const downloads = useDownloadsFor(profileId)
   const refresh = useDownloadsStore((s) => s.refresh)
   const remove = useDownloadsStore((s) => s.remove)
+  const [deleteKey, setDeleteKey] = useState<string | null>(null)
 
   useEffect(() => {
     refresh(profileId)
@@ -53,7 +55,7 @@ export default function DownloadsPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (confirm(`Excluir "${d.name}" dos downloads? (${formatSize(d.sizeBytes)})`)) remove(profileId, d.key)
+                  setDeleteKey(d.key)
                 }}
                 aria-label={`Excluir download de ${d.name}`}
                 className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-500/80 pointer-fine:hidden pointer-fine:group-hover:flex"
@@ -74,6 +76,22 @@ export default function DownloadsPage() {
       >
         <Play className="h-4 w-4" /> Voltar ao início
       </button>
+
+      {deleteKey &&
+        (() => {
+          const d = downloads.find((x) => x.key === deleteKey)
+          if (!d) return null
+          return (
+            <ConfirmDialog
+              message={`Excluir "${d.name}" dos downloads? (${formatSize(d.sizeBytes)})`}
+              onCancel={() => setDeleteKey(null)}
+              onConfirm={() => {
+                remove(profileId, d.key)
+                setDeleteKey(null)
+              }}
+            />
+          )
+        })()}
     </div>
   )
 }

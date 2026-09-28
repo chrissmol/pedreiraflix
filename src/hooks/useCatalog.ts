@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cached } from '../lib/cache'
 import { isAdultCategoryName } from '../lib/parentalControl'
-import { XtreamApiError, type XtreamClient } from '../lib/xtream'
+import type { ProviderClient } from '../lib/provider'
+import { XtreamApiError } from '../lib/xtream'
 import { useActiveProfile } from '../store/profiles'
 import type { Category, LiveChannel, Movie, SeriesItem } from '../types'
 import { useXtream } from './useXtream'
@@ -39,6 +40,19 @@ async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number,
   await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker))
 }
 
+/** Turns a raw fetch/Xtream error ("Xtream request failed: 502", a TypeError from a dropped connection,
+ * ...) into something a non-technical user can act on, instead of showing HTTP jargon on screen. Falls
+ * back to a generic message rather than the raw one — the raw message is still in the console/error
+ * object for debugging, it's just not what gets rendered. */
+function friendlyCatalogError(err: unknown): string {
+  if (err instanceof XtreamApiError) {
+    if (err.status === 429) return 'O provedor está recebendo muitas requisições no momento. Tentando de novo...'
+    if (err.status && err.status >= 500) return 'O provedor está instável no momento. Tentando de novo...'
+    if (err.status === 401 || err.status === 403) return 'Sessão expirada ou sem permissão. Tente entrar de novo.'
+  }
+  return 'Não foi possível carregar. Verifique sua internet ou tente novamente em instantes.'
+}
+
 async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
   try {
     return await fn()
@@ -63,9 +77,9 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 // becomes available, the catalog gets stuck on "loading" forever.
 function useCategorizedCatalog<T>(
   kind: string,
-  client: XtreamClient | null,
-  loadCategories: (client: XtreamClient) => Promise<Category[]>,
-  loadItemsForCategory: (client: XtreamClient, categoryId: string) => Promise<T[]>,
+  client: ProviderClient | null,
+  loadCategories: (client: ProviderClient) => Promise<Category[]>,
+  loadItemsForCategory: (client: ProviderClient, categoryId: string) => Promise<T[]>,
   hideAdultCategories: boolean,
 ): CategorizedCatalogState<T> {
   const [state, setState] = useState<CategorizedCatalogState<T>>({
@@ -111,7 +125,7 @@ function useCategorizedCatalog<T>(
             }))
           } catch (err) {
             if (cancelled || myRequest !== requestId.current) return
-            const message = err instanceof Error ? err.message : 'Erro ao carregar categoria'
+            const message = friendlyCatalogError(err)
             setState((s) => ({
               ...s,
               groups: s.groups.map((g) =>
@@ -131,7 +145,7 @@ function useCategorizedCatalog<T>(
           categories: [],
           groups: [],
           loading: false,
-          error: err instanceof Error ? err.message : 'Erro ao carregar categorias',
+          error: friendlyCatalogError(err),
         })
       })
 
@@ -146,24 +160,24 @@ function useCategorizedCatalog<T>(
 export function useLiveCatalog() {
   const client = useXtream()
   const hideAdult = Boolean(useActiveProfile()?.isKids)
-  const loadCategories = useCallback((c: XtreamClient) => c.getLiveCategories(), [])
-  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getLiveStreams(categoryId), [])
+  const loadCategories = useCallback((c: ProviderClient) => c.getLiveCategories(), [])
+  const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getLiveStreams(categoryId), [])
   return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems, hideAdult)
 }
 
 export function useMovieCatalog() {
   const client = useXtream()
   const hideAdult = Boolean(useActiveProfile()?.isKids)
-  const loadCategories = useCallback((c: XtreamClient) => c.getVodCategories(), [])
-  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getVodStreams(categoryId), [])
+  const loadCategories = useCallback((c: ProviderClient) => c.getVodCategories(), [])
+  const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getVodStreams(categoryId), [])
   return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems, hideAdult)
 }
 
 export function useSeriesCatalog() {
   const client = useXtream()
   const hideAdult = Boolean(useActiveProfile()?.isKids)
-  const loadCategories = useCallback((c: XtreamClient) => c.getSeriesCategories(), [])
-  const loadItems = useCallback((c: XtreamClient, categoryId: string) => c.getSeries(categoryId), [])
+  const loadCategories = useCallback((c: ProviderClient) => c.getSeriesCategories(), [])
+  const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getSeries(categoryId), [])
   return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems, hideAdult)
 }
 

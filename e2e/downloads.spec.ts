@@ -43,8 +43,8 @@ test('download a movie, watch it fully offline, then delete it', async ({ page }
   // Delete it. The button only shows on hover (`group-hover:flex`), so hover the card first like a real user would.
   await page.goto('/downloads')
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).hover()
-  page.once('dialog', (d) => d.accept())
   await page.getByRole('button', { name: /Excluir download de/ }).click()
+  await page.getByRole('button', { name: 'Excluir', exact: true }).click()
   await expect(page.getByText('Nada baixado neste perfil ainda.')).toBeVisible()
 
   await page.goto('/movies/1')

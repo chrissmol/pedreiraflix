@@ -182,7 +182,10 @@ app.get('/api/stream', async (req, res) => {
     const contentType = upstream.headers.get('content-type') || ''
     // Mirrors worker/index.js: posters/logos get real caching, video/HLS is untouched.
     if (contentType.startsWith('image/')) res.setHeader('cache-control', 'public, max-age=604800')
-    if (contentType.includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
+    // raw=1 (used to fetch a catalog M3U playlist for parsing, not playback) skips the HLS
+    // rewrite below — that rewrite turns every line into a proxied URL, which would corrupt the
+    // channel list and double-wrap URLs the app later proxies again on its own.
+    if (req.query.raw !== '1' && (contentType.includes('mpegurl') || target.pathname.endsWith('.m3u8'))) {
       // Rewrite playlist entries to route back through this proxy. Resolve
       // against the final URL (panels usually redirect streams to a CDN), and
       // include URI="..." attributes (alternate audio, subtitles, keys).

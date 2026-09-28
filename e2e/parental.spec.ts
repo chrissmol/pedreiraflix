@@ -61,13 +61,15 @@ test('a PIN-protected profile cannot be entered without the correct PIN', async 
   await expect(card.getByText('PIN ativo')).toBeVisible()
   await card.getByRole('button', { name: 'Fechar' }).click()
 
-  // Wrong PIN doesn't switch.
+  // Wrong PIN doesn't switch. Scoped to the dialog: its own aria-label ("PIN do perfil Pai") also
+  // matches the loose getByLabel('PIN') substring search, ambiguous with the input inside it.
   await card.getByRole('button', { name: 'Entrar como Pai' }).click()
-  await page.getByLabel('PIN').fill('0000')
+  const pinDialog = page.getByRole('dialog')
+  await pinDialog.getByLabel('PIN', { exact: true }).fill('0000')
   await expect(page.getByText('PIN incorreto')).toBeVisible()
   await expect(page).toHaveURL(/\/profiles$/)
 
   // Correct PIN switches and lands on Home.
-  await page.getByLabel('PIN').fill('4321')
+  await pinDialog.getByLabel('PIN', { exact: true }).fill('4321')
   await expect(page).toHaveURL(/\/$/)
 })

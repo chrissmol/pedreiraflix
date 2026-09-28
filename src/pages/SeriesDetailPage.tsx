@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
 import DownloadButton from '../components/DownloadButton'
+import Select from '../components/Select'
 import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
@@ -109,17 +110,13 @@ export default function SeriesDetailPage() {
       <div className="mt-10 px-4 sm:px-10">
         <div className="mb-4 flex items-center gap-3">
           <h2 className="font-display text-xl font-bold text-white">Episódios</h2>
-          <select
-            value={activeSeason}
-            onChange={(e) => setActiveSeason(Number(e.target.value))}
-            className="brand-focus ml-auto rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white"
-          >
-            {series.seasons.map((s) => (
-              <option key={s.seasonNumber} value={s.seasonNumber}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <Select
+            label="Temporada"
+            className="ml-auto max-w-56"
+            value={String(activeSeason)}
+            onChange={(v) => setActiveSeason(Number(v))}
+            options={series.seasons.map((s) => ({ value: String(s.seasonNumber), label: s.name }))}
+          />
         </div>
 
         <div className="space-y-2">
@@ -148,7 +145,7 @@ export default function SeriesDetailPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click()
                 }}
-                className="group relative flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/70 p-3 text-left transition-all duration-200 hover:border-brand-400/40 hover:bg-zinc-800 hover:shadow-[0_0_0_1px_rgba(58,151,255,0.25),0_12px_28px_-12px_rgba(15,123,255,0.5)]"
+                className="group relative flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/70 p-3 text-left transition-all duration-200 hover:border-white/20 hover:bg-zinc-800 hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.6)]"
               >
                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 font-bold text-brand-300">
                   {isWatched ? <Check className="h-5 w-5 text-brand-400" /> : ep.episodeNum}

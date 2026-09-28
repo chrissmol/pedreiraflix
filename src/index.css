@@ -1,8 +1,15 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Sora', var(--font-sans);
+  /* Apple's own system-font stack, not a downloaded webfont — SF Pro isn't licensed for general web
+   * embedding, but -apple-system/BlinkMacSystemFont resolve to real San Francisco natively on every
+   * Apple device (Mac, iPhone, iPad), which is the actual "feels like Apple" win, for free and with zero
+   * network request. Everywhere else it falls back to that platform's own native font (Segoe UI on
+   * Windows, Roboto on Android/Chrome OS) — still native-feeling, just not Apple's specific typeface. One
+   * stack for both sans and display now (Apple doesn't use a separate display face either, just heavier
+   * weights of the same SF Pro) — replaces the two Google-hosted fonts (Manrope/Sora) this used before. */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* PedreiraFlix electric-blue brand scale */
   --color-brand-50: #eaf4ff;
@@ -19,8 +26,11 @@
 
 :root {
   color-scheme: dark;
-  --glow-soft: 0 0 0 1px rgba(15, 123, 255, 0.16), 0 0 24px -4px rgba(15, 123, 255, 0.35);
-  --glow-strong: 0 0 0 1px rgba(58, 151, 255, 0.35), 0 0 40px -6px rgba(15, 123, 255, 0.65);
+  /* Apple-style elevation: a soft, mostly-neutral drop shadow and a hairline border, instead of a
+   * colored halo around every glowing element. The brand blue still shows up (buttons, badges, focus
+   * rings), just as a normal accent color, not as ambient light bleeding off of everything it touches. */
+  --glow-soft: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
+  --glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 28px -8px rgba(0, 0, 0, 0.55);
   --app-bg: #06070c;
   --app-fg: #f1f5fb;
 }
@@ -59,10 +69,20 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
+/* Decorative glow blurs (hero, login, cards) are deliberately positioned past the edge of their
+ * container for the bleed effect, and rows scroll horizontally within themselves — neither should ever
+ * make the whole page pan sideways. Netflix/YouTube-style streaming sites never do; this is the one place
+ * that guarantees it regardless of which element on which page is the one bleeding past the viewport. */
+html,
 body {
+  overflow-x: hidden;
+}
+
+body {
+  /* Much fainter than before — a bare hint of tint instead of an obvious blue wash across the page. */
   background-image:
-    radial-gradient(60rem 30rem at 15% -10%, rgba(15, 123, 255, 0.14), transparent 60%),
-    radial-gradient(50rem 26rem at 100% 0%, rgba(58, 151, 255, 0.08), transparent 55%);
+    radial-gradient(60rem 30rem at 15% -10%, rgba(15, 123, 255, 0.05), transparent 60%),
+    radial-gradient(50rem 26rem at 100% 0%, rgba(58, 151, 255, 0.03), transparent 55%);
   background-attachment: fixed;
 }
 
@@ -103,7 +123,9 @@ body {
   background: linear-gradient(180deg, rgba(20, 24, 34, 0.85), rgba(10, 12, 18, 0.9));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(58, 151, 255, 0.14);
+  /* Neutral hairline instead of a blue-tinted one — closer to Apple's own frosted-glass/vibrancy
+   * material, which never tints its edge with the accent color. */
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 :root[data-theme='light'] .glass-panel {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 245, 0.95));
@@ -117,10 +139,10 @@ body {
   box-shadow: var(--glow-strong);
 }
 
+/* No glow anymore — Apple's own wordmarks/headlines are just crisp, high-contrast type, not lit up. Kept
+ * as a class (rather than removed from callers) so it's still one place to reintroduce a treatment later. */
 .neon-text {
-  text-shadow:
-    0 0 18px rgba(15, 123, 255, 0.55),
-    0 0 2px rgba(255, 255, 255, 0.25);
+  text-shadow: none;
 }
 
 .brand-focus:focus-visible {

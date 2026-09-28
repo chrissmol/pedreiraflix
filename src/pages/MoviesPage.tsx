@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
+import PosterGrid from '../components/PosterGrid'
+import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
+import Select from '../components/Select'
 import { useMovieCatalog } from '../hooks/useCatalog'
 import type { Movie } from '../types'
 
@@ -19,46 +23,61 @@ function sortMovies(items: Movie[], sort: SortKey): Movie[] {
 
 export default function MoviesPage() {
   const { groups, loading, error } = useMovieCatalog()
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [searchParams] = useSearchParams()
+  // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
+  const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
+  const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState<SortKey>('default')
 
   // Kept as separate (category, items, loading) tuples rather than one spread `{...g, items: sorted}`
   // object per group: with the default sort, `sortMovies` returns `g.items` completely untouched, so a
   // category whose data hasn't changed keeps the exact same `items` array reference across re-renders —
   // which is what lets CategoryRow's memoization actually skip re-rendering it.
+  //
+  // No genre/year filter here on purpose: Xtream only gives those on a per-title detail call, not the
+  // base catalog listing, so filtering by them would mean fetching details for every movie — the same
+  // provider-hammering cost the catalog's caching/pacing was built to avoid. Category already works as a
+  // free genre proxy (providers commonly name categories like "Filmes - Terror").
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
+      .map((g) => ({
+        category: g.category,
+        loading: g.loading,
+        items: sortMovies(
+          minRating > 0 ? g.items.filter((m) => Number(m.rating) >= minRating) : g.items,
+          sort,
+        ),
+      }))
       .filter((g) => g.items.length > 0 || g.loading)
-      .map((g) => ({ category: g.category, loading: g.loading, items: sortMovies(g.items, sort) }))
-  }, [groups, activeCategory, sort])
+  }, [groups, activeCategory, minRating, sort])
 
   return (
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-2xl font-bold text-white">Filmes</h1>
-        <select
+        <Select
+          label="Ordenar"
           value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="brand-focus rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white"
-        >
-          <option value="default">Ordem padrão</option>
-          <option value="name">Nome (A-Z)</option>
-          <option value="recent">Adicionados recentemente</option>
-          <option value="rating">Melhor avaliados</option>
-        </select>
-        <select
+          onChange={(v) => setSort(v as SortKey)}
+          options={[
+            { value: 'default', label: 'Ordem padrão' },
+            { value: 'name', label: 'Nome (A-Z)' },
+            { value: 'recent', label: 'Adicionados recentemente' },
+            { value: 'rating', label: 'Melhor avaliados' },
+          ]}
+        />
+        <RatingFilter value={minRating} onChange={setMinRating} />
+        <Select
+          label="Categoria"
+          className="ml-auto max-w-56"
           value={activeCategory ?? ''}
-          onChange={(e) => setActiveCategory(e.target.value || null)}
-          className="brand-focus ml-auto rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white"
-        >
-          <option value="">Todas as categorias</option>
-          {groups.map((g) => (
-            <option key={g.category.categoryId} value={g.category.categoryId}>
-              {g.category.categoryName}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setActiveCategory(v || null)}
+          options={[
+            { value: '', label: 'Todas as categorias' },
+            ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
+          ]}
+        />
       </div>
 
       <ContinueWatchingRow kind="movie" />
@@ -67,15 +86,22 @@ export default function MoviesPage() {
       <CatalogProgress groups={groups} label="Carregando filmes" />
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 
-      {visibleGroups.map(({ category, items, loading: groupLoading }) => (
-        <CategoryRow
-          key={category.categoryId}
-          kind="movie"
-          title={category.categoryName}
-          loading={groupLoading && items.length === 0}
-          items={items}
-        />
-      ))}
+      {activeCategory ? (
+        // A single category picked (category filter, or the "Ver tudo" deep link) — a grid to browse
+        // the whole thing beats a horizontal-scroll row, which only made sense as a compact preview
+        // sitting among a stack of other categories.
+        <PosterGrid kind="movie" items={visibleGroups[0]?.items ?? []} loading={visibleGroups[0]?.loading} />
+      ) : (
+        visibleGroups.map(({ category, items, loading: groupLoading }) => (
+          <CategoryRow
+            key={category.categoryId}
+            kind="movie"
+            title={category.categoryName}
+            loading={groupLoading && items.length === 0}
+            items={items}
+          />
+        ))
+      )}
     </div>
   )
 }

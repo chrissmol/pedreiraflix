@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { deleteDownload, type DownloadMeta, getDownload, listDownloadMeta, putDownload } from '../lib/offlineStore'
-import type { XtreamClient } from '../lib/xtream'
+import type { ProviderClient } from '../lib/provider'
 
 interface DownloadsState {
   // Metadata mirror of IndexedDB, per profile — the Blobs themselves never touch this store (or
@@ -12,7 +12,7 @@ interface DownloadsState {
   refresh: (profileId: string) => Promise<void>
   remove: (profileId: string, key: string) => Promise<void>
   start: (
-    client: XtreamClient,
+    client: ProviderClient,
     profileId: string,
     kind: 'movie' | 'series',
     id: string,

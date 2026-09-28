@@ -1,24 +1,39 @@
-import { type FormEvent, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Pencil, Trash, User } from '../components/icons'
-import { signIn } from '../lib/session'
+import { signIn, signInM3u, signInSavedAccount } from '../lib/session'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
 
 function accountLabel(account: SavedAccount): string {
-  return account.label || account.username
+  if (account.label) return account.label
+  return account.credentials.type === 'xtream' ? account.credentials.username : 'Playlist M3U'
+}
+
+function accountSubtitle(account: SavedAccount): string {
+  const creds = account.credentials
+  if (creds.type === 'xtream') return `${account.label ? `${creds.username} · ` : ''}${hostLabel(creds.baseUrl)}`
+  return creds.source === 'url' ? hostLabel(creds.url) : creds.fileName
 }
 
 const inputClass =
   'brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors focus:border-brand-500/60'
 
-function hostLabel(baseUrl: string): string {
+function hostLabel(url: string): string {
   try {
-    return new URL(baseUrl).host
+    return new URL(url).host
   } catch {
-    return baseUrl
+    return url
   }
 }
+
+type LoginMethod = 'xtream' | 'm3u-url' | 'm3u-file'
+
+const methods: { id: LoginMethod; label: string }[] = [
+  { id: 'm3u-url', label: 'Link M3U' },
+  { id: 'm3u-file', label: 'Arquivo M3U' },
+  { id: 'xtream', label: 'Usuário/senha' },
+]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -27,14 +42,18 @@ export default function LoginPage() {
   const removeAccount = useAccountsStore((s) => s.removeAccount)
   const renameAccount = useAccountsStore((s) => s.renameAccount)
   const last = accounts[0]
+  const lastXtream = last?.credentials.type === 'xtream' ? last.credentials : undefined
   // Prefilled with the last account, so even the "type it again" path is just one tap on Entrar.
-  const [baseUrl, setBaseUrl] = useState(last?.baseUrl ?? '')
-  const [username, setUsername] = useState(last?.username ?? '')
-  const [password, setPassword] = useState(last?.password ?? '')
+  const [baseUrl, setBaseUrl] = useState(lastXtream?.baseUrl ?? '')
+  const [username, setUsername] = useState(lastXtream?.username ?? '')
+  const [password, setPassword] = useState(lastXtream?.password ?? '')
+  const [m3uUrl, setM3uUrl] = useState('')
+  const [m3uFile, setM3uFile] = useState<File | null>(null)
   const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [showForm, setShowForm] = useState(accounts.length === 0)
+  const [method, setMethod] = useState<LoginMethod>('xtream')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -56,11 +75,17 @@ export default function LoginPage() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    run('form', () => signIn({ baseUrl, username, password }, remember, name))
+    if (method === 'xtream') {
+      run('form', () => signIn({ baseUrl, username, password }, remember, name))
+    } else if (method === 'm3u-url') {
+      run('form', () => signInM3u({ kind: 'url', url: m3uUrl }, remember, name))
+    } else if (m3uFile) {
+      run('form', () => signInM3u({ kind: 'file', file: m3uFile }, remember, name))
+    }
   }
 
   function enterSaved(account: SavedAccount) {
-    run(account.id, () => signIn(account, true, account.label))
+    run(account.id, () => signInSavedAccount(account))
   }
 
   function saveRename(id: string) {
@@ -70,8 +95,8 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#06070c] px-4 py-10">
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[32rem] w-[32rem] animate-[pulse_9s_ease-in-out_infinite] rounded-full bg-brand-600/25 blur-[110px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-32 h-[28rem] w-[28rem] animate-[pulse_11s_ease-in-out_infinite] rounded-full bg-brand-400/20 blur-[110px]" />
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[32rem] w-[32rem] animate-[pulse_9s_ease-in-out_infinite] rounded-full bg-brand-600/12 blur-[110px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-32 h-[28rem] w-[28rem] animate-[pulse_11s_ease-in-out_infinite] rounded-full bg-brand-400/10 blur-[110px]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]" />
 
       <div className="glass-panel glow-border relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl sm:p-8">
@@ -102,7 +127,7 @@ export default function LoginPage() {
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onBlur={() => saveRename(account.id)}
-                    placeholder={account.username}
+                    placeholder={accountLabel(account)}
                     maxLength={30}
                     className="brand-focus min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-sm text-white"
                   />
@@ -119,10 +144,7 @@ export default function LoginPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-white">{accountLabel(account)}</span>
-                      <span className="block truncate text-xs text-zinc-500">
-                        {account.label ? `${account.username} · ` : ''}
-                        {hostLabel(account.baseUrl)}
-                      </span>
+                      <span className="block truncate text-xs text-zinc-500">{accountSubtitle(account)}</span>
                     </span>
                     <span className="shrink-0 text-xs font-semibold text-brand-300">
                       {busyId === account.id ? 'Conectando...' : 'Entrar'}
@@ -155,6 +177,8 @@ export default function LoginPage() {
                 setBaseUrl('')
                 setUsername('')
                 setPassword('')
+                setM3uUrl('')
+                setM3uFile(null)
                 setName('')
                 setShowForm(true)
               }}
@@ -168,27 +192,129 @@ export default function LoginPage() {
         {showForm && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
+            <div className="mb-4 grid grid-cols-3 gap-1 rounded-xl border border-zinc-800 bg-zinc-900/70 p-1">
+              {methods.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMethod(m.id)}
+                  className={`rounded-lg px-2 py-2 text-xs font-semibold transition-colors ${
+                    method === m.id ? 'bg-brand-600 text-white' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
             <div className="space-y-4">
-              <div>
-                <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Endereço do servidor
-                </label>
-                <input
-                  id="server"
-                  name="server"
-                  type="text"
-                  inputMode="url"
-                  autoComplete="url"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  required
-                  placeholder="http://seuservidor.com:8080"
-                  value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
+              {method === 'xtream' && (
+                <>
+                  <div>
+                    <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      Endereço do servidor
+                    </label>
+                    <input
+                      id="server"
+                      name="server"
+                      type="text"
+                      inputMode="url"
+                      autoComplete="url"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      required
+                      placeholder="http://seuservidor.com:8080"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      Usuário
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      required
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      Senha
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={`${inputClass} pr-11`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {method === 'm3u-url' && (
+                <div>
+                  <label htmlFor="m3u-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Link da playlist M3U
+                  </label>
+                  <input
+                    id="m3u-url"
+                    name="m3u-url"
+                    type="text"
+                    inputMode="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    required
+                    placeholder="http://seuprovedor.com/playlist.m3u"
+                    value={m3uUrl}
+                    onChange={(e) => setM3uUrl(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {method === 'm3u-file' && (
+                <div>
+                  <label htmlFor="m3u-file" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Arquivo M3U do aparelho
+                  </label>
+                  <input
+                    id="m3u-file"
+                    name="m3u-file"
+                    type="file"
+                    accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl"
+                    required
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setM3uFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3.5 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-500"
+                  />
+                </div>
+              )}
+
               <div>
                 <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Nome (opcional)
@@ -205,49 +331,7 @@ export default function LoginPage() {
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Usuário
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Senha
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`${inputClass} pr-11`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
-                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 hover:text-white"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+
               <label className="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-300">
                 <input
                   type="checkbox"
@@ -255,7 +339,7 @@ export default function LoginPage() {
                   onChange={(e) => setRemember(e.target.checked)}
                   className="h-4 w-4 accent-brand-500"
                 />
-                Lembrar servidor, usuário e senha neste aparelho
+                Lembrar esses dados neste aparelho
               </label>
             </div>
 

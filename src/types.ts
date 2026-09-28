@@ -4,6 +4,13 @@ export interface XtreamCredentials {
   password: string
 }
 
+/** Discriminated union of every login method the app accepts. A saved/persisted credentials object
+ * without a `type` field predates this union and is always Xtream (see `normalizeProviderCredentials`). */
+export type ProviderCredentials =
+  | ({ type: 'xtream' } & XtreamCredentials)
+  | { type: 'm3u'; source: 'url'; url: string }
+  | { type: 'm3u'; source: 'file'; fileName: string }
+
 export interface UserInfo {
   username: string
   status: string

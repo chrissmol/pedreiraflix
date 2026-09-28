@@ -1,3 +1,4 @@
+import type { ProviderClient } from './provider'
 import { xtreamQueue } from './requestQueue'
 import type {
   Category,
@@ -33,7 +34,7 @@ function toStringArray(value: unknown): string[] {
 // ERR_CERT_COMMON_NAME_INVALID — and unlike video, there's no player error state to recover from; the
 // poster is just permanently broken. Routing through our own proxy (already used for video/EPG) sidesteps
 // both: the browser only ever talks to our own HTTPS origin, and the proxy fetches the original URL as-is.
-function proxyImage(url: string | null | undefined): string | null {
+export function proxyImage(url: string | null | undefined): string | null {
   if (!url) return null
   if (!/^https?:\/\//i.test(url)) return url // data:/blob:/relative — nothing to proxy
   return `/api/stream?url=${encodeURIComponent(url)}`
@@ -47,7 +48,7 @@ export class XtreamApiError extends Error {
   }
 }
 
-export class XtreamClient {
+export class XtreamClient implements ProviderClient {
   private creds: XtreamCredentials
 
   constructor(creds: XtreamCredentials) {

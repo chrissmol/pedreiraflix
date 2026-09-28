@@ -52,7 +52,7 @@ test('unchecking "lembrar" does not keep the account after logout', async ({ pag
   await page.getByLabel('Endereço do servidor').fill('localhost:8790') // no scheme: http:// is assumed
   await page.getByLabel('Usuário', { exact: true }).fill(MOCK.username)
   await page.getByLabel('Senha', { exact: true }).fill(MOCK.password)
-  await page.getByLabel(/Lembrar servidor/).uncheck()
+  await page.getByLabel(/Lembrar esses dados/).uncheck()
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await page.getByRole('button', { name: 'Conta' }).click()

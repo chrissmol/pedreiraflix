@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useDialogA11y } from '../hooks/useDialogA11y'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import { useThemeStore } from '../store/theme'
@@ -20,6 +21,7 @@ export default function TopNav() {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuPanelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLFormElement>(null)
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
@@ -41,6 +43,8 @@ export default function TopNav() {
     if (accId) setActiveProfile(accId, p.id)
     setMenuOpen(false)
   }
+
+  useDialogA11y(menuPanelRef, menuOpen, () => setMenuOpen(false))
 
   // Tap outside closes the account menu (there is no hover on touch screens).
   useEffect(() => {
@@ -83,7 +87,7 @@ export default function TopNav() {
       // (search box, account avatar) rendered right under the status bar. Plain addition avoids that.
       className={`fixed inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
         scrolled
-          ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(15,123,255,0.35)]'
+          ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
           : 'bg-transparent'
       }`}
     >
@@ -121,7 +125,12 @@ export default function TopNav() {
             }}
             onFocus={() => setSuggestionsOpen(query.trim().length >= 2)}
             placeholder="Buscar..."
-            className="brand-focus w-32 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-56 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            aria-label="Buscar"
+            // Idle width shrinks to just the icon on phones (like Netflix/YouTube's mobile search) —
+            // at the old fixed w-32, a narrow phone had no room left for the account avatar next to it
+            // (it got pushed off the edge entirely below ~340px, unreachable). Typing still expands the
+            // field via focus:w-48 same as before, it's only the resting state that got more compact.
+            className="brand-focus w-10 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-48 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -137,7 +146,13 @@ export default function TopNav() {
           {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
         </button>
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl">
+          <div
+            ref={menuPanelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu da conta"
+            className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
+          >
             <p className="truncate px-2 py-1.5 text-zinc-400">
               {activeProfile?.name} <span className="text-zinc-600">· {user?.username}</span>
             </p>

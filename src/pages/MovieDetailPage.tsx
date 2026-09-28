@@ -80,7 +80,7 @@ export default function MovieDetailPage() {
                   )}&image=${encodeURIComponent(movie.streamIcon || '')}`,
                 )
               }
-              className="flex items-center gap-2 rounded-lg bg-white px-6 py-2.5 font-bold text-black shadow-[0_10px_30px_-10px_rgba(15,123,255,0.6)] transition-all hover:scale-[1.03]"
+              className="flex items-center gap-2 rounded-lg bg-white px-6 py-2.5 font-bold text-black shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)] transition-all hover:scale-[1.03]"
             >
               <Play className="h-5 w-5" /> Assistir
             </button>

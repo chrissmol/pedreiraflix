@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
+import PosterGrid from '../components/PosterGrid'
+import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
+import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import type { SeriesItem } from '../types'
 
@@ -32,13 +36,34 @@ function extractGenres(items: SeriesItem[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
+function yearOf(item: SeriesItem): number | null {
+  const y = item.releaseDate ? Number(item.releaseDate.slice(0, 4)) : NaN
+  return Number.isFinite(y) && y > 1900 ? y : null
+}
+
+// Also free — releaseDate is on the base get_series listing already (see extractGenres above for why
+// that matters: it's the opposite of movies, where this would cost a detail call per title).
+function extractYears(items: SeriesItem[]): number[] {
+  const set = new Set<number>()
+  for (const item of items) {
+    const y = yearOf(item)
+    if (y) set.add(y)
+  }
+  return [...set].sort((a, b) => b - a)
+}
+
 export default function SeriesPage() {
   const { groups, loading, error } = useSeriesCatalog()
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [searchParams] = useSearchParams()
+  // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
+  const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
   const [activeGenre, setActiveGenre] = useState<string | null>(null)
+  const [activeYear, setActiveYear] = useState<number | null>(null)
+  const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState<SortKey>('default')
 
   const allGenres = useMemo(() => extractGenres(groups.flatMap((g) => g.items)), [groups])
+  const allYears = useMemo(() => extractYears(groups.flatMap((g) => g.items)), [groups])
 
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
@@ -47,38 +72,51 @@ export default function SeriesPage() {
         category: g.category,
         loading: g.loading,
         items: sortSeries(
-          activeGenre ? g.items.filter((it) => it.genre?.split(/[,/]/).some((g2) => g2.trim() === activeGenre)) : g.items,
+          g.items.filter(
+            (it) =>
+              (!activeGenre || it.genre?.split(/[,/]/).some((g2) => g2.trim() === activeGenre)) &&
+              (!activeYear || yearOf(it) === activeYear) &&
+              (minRating === 0 || Number(it.rating) >= minRating),
+          ),
           sort,
         ),
       }))
       .filter((g) => g.items.length > 0 || g.loading)
-  }, [groups, activeCategory, activeGenre, sort])
+  }, [groups, activeCategory, activeGenre, activeYear, minRating, sort])
 
   return (
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-2xl font-bold text-white">Séries</h1>
-        <select
+        <Select
+          label="Ordenar"
           value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="brand-focus rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white"
-        >
-          <option value="default">Ordem padrão</option>
-          <option value="name">Nome (A-Z)</option>
-          <option value="rating">Melhor avaliados</option>
-        </select>
-        <select
+          onChange={(v) => setSort(v as SortKey)}
+          options={[
+            { value: 'default', label: 'Ordem padrão' },
+            { value: 'name', label: 'Nome (A-Z)' },
+            { value: 'rating', label: 'Melhor avaliados' },
+          ]}
+        />
+        <RatingFilter value={minRating} onChange={setMinRating} />
+        {allYears.length > 0 && (
+          <Select
+            label="Ano"
+            value={activeYear != null ? String(activeYear) : ''}
+            onChange={(v) => setActiveYear(v ? Number(v) : null)}
+            options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+          />
+        )}
+        <Select
+          label="Categoria"
+          className="ml-auto max-w-56"
           value={activeCategory ?? ''}
-          onChange={(e) => setActiveCategory(e.target.value || null)}
-          className="brand-focus ml-auto rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white"
-        >
-          <option value="">Todas as categorias</option>
-          {groups.map((g) => (
-            <option key={g.category.categoryId} value={g.category.categoryId}>
-              {g.category.categoryName}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setActiveCategory(v || null)}
+          options={[
+            { value: '', label: 'Todas as categorias' },
+            ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
+          ]}
+        />
       </div>
 
       {allGenres.length > 0 && (
@@ -115,15 +153,19 @@ export default function SeriesPage() {
       <CatalogProgress groups={groups} label="Carregando séries" />
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 
-      {visibleGroups.map(({ category, items, loading: groupLoading }) => (
-        <CategoryRow
-          key={category.categoryId}
-          kind="series"
-          title={category.categoryName}
-          loading={groupLoading && items.length === 0}
-          items={items}
-        />
-      ))}
+      {activeCategory ? (
+        <PosterGrid kind="series" items={visibleGroups[0]?.items ?? []} loading={visibleGroups[0]?.loading} />
+      ) : (
+        visibleGroups.map(({ category, items, loading: groupLoading }) => (
+          <CategoryRow
+            key={category.categoryId}
+            kind="series"
+            title={category.categoryName}
+            loading={groupLoading && items.length === 0}
+            items={items}
+          />
+        ))
+      )}
     </div>
   )
 }

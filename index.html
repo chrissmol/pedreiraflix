@@ -16,12 +16,10 @@
     <meta name="msapplication-TileColor" content="#06070c" />
     <meta name="msapplication-TileImage" content="/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- No Google Fonts anymore: the app uses each platform's native system font (real San Francisco on
+         Apple devices) instead of a downloaded webfont — see the --font-sans/--font-display comment in
+         index.css. One less network request on every load, and Apple doesn't license SF Pro for general
+         web embedding anyway. -->
     <title>PedreiraFlix</title>
   </head>
   <body>

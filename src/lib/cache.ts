@@ -1,10 +1,12 @@
 const store = new Map<string, unknown>()
 const inFlight = new Map<string, Promise<unknown>>()
 
-// Persisted to sessionStorage (not localStorage: cleared when the tab/app closes, so it can never go
-// stale across days) so that navigating between pages — or just reloading — doesn't repay the full,
-// heavily-throttled catalog fetch every single time. Categories rarely change minute to minute, so a
-// short TTL is enough to make "Filmes"/"Séries"/"Ao vivo" feel instant on every visit after the first.
+// Persisted to localStorage — not sessionStorage, which was the original choice here but doesn't survive
+// closing the tab/app, and on a PWA/mobile install that's every single open. STALE_MS below is what keeps
+// data from going stale across days, not the storage's own lifetime, so there was never a correctness
+// reason to lose the cache on close; it was just needlessly repaying the full, heavily-throttled catalog
+// fetch on every app launch. Categories rarely change minute to minute, so a short TTL is enough to make
+// "Filmes"/"Séries"/"Ao vivo" feel instant on every visit after the first.
 const TTL_MS = 15 * 60 * 1000
 // A persisted entry past TTL_MS but still under this age is "stale but usable": returned immediately
 // while a fresh copy loads in the background (see `cached` below), instead of showing a spinner again
@@ -15,12 +17,12 @@ const STORAGE_PREFIX = 'iptv-cache:v1:'
 
 function readPersisted<T>(key: string): { value: T; isStale: boolean } | undefined {
   try {
-    const raw = sessionStorage.getItem(STORAGE_PREFIX + key)
+    const raw = localStorage.getItem(STORAGE_PREFIX + key)
     if (!raw) return undefined
     const { value, ts } = JSON.parse(raw) as { value: T; ts: number }
     const age = Date.now() - ts
     if (age > STALE_MS) {
-      sessionStorage.removeItem(STORAGE_PREFIX + key)
+      localStorage.removeItem(STORAGE_PREFIX + key)
       return undefined
     }
     return { value, isStale: age > TTL_MS }
@@ -31,7 +33,7 @@ function readPersisted<T>(key: string): { value: T; isStale: boolean } | undefin
 
 function writePersisted<T>(key: string, value: T): void {
   try {
-    sessionStorage.setItem(STORAGE_PREFIX + key, JSON.stringify({ value, ts: Date.now() }))
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify({ value, ts: Date.now() }))
   } catch {
     // Private browsing, quota exceeded, or storage disabled — the in-memory cache alone still works
     // for the rest of this page's lifetime, it just won't survive a reload.
@@ -78,9 +80,9 @@ export function clearCache() {
   store.clear()
   inFlight.clear()
   try {
-    for (let i = sessionStorage.length - 1; i >= 0; i--) {
-      const k = sessionStorage.key(i)
-      if (k?.startsWith(STORAGE_PREFIX)) sessionStorage.removeItem(k)
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (k?.startsWith(STORAGE_PREFIX)) localStorage.removeItem(k)
     }
   } catch {
     // Storage inaccessible — nothing persisted to clear anyway.

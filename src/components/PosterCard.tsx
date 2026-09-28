@@ -9,13 +9,21 @@ interface PosterCardProps {
   /** 0–100. Renders a thin progress bar across the bottom of the poster, always visible (not just on
    * hover) — the same at-a-glance "how far in am I" cue Netflix shows in Continue Watching rows. */
   progressPct?: number | null
+  /** True inside a CSS grid (PosterGrid), where the grid track itself sizes the card — the fixed
+   * w-32/sm:w-40/md:w-44 used everywhere else is for a horizontal scroll row (Row.tsx), which has no
+   * track to size against. */
+  fill?: boolean
 }
 
-export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct }: PosterCardProps) {
+export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
   return (
     <button
       onClick={onClick}
-      className="brand-focus group relative aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900 text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-brand-400/50 hover:shadow-[0_0_0_1px_rgba(58,151,255,0.35),0_20px_45px_-12px_rgba(15,123,255,0.55)] focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.08] sm:w-40"
+      // Apple-style hover: the card itself lifts and deepens its own (neutral) shadow — no colored
+      // border/glow lighting up around it, unlike before.
+      className={`brand-focus group relative aspect-2/3 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900 text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-white/20 hover:shadow-[0_20px_45px_-12px_rgba(0,0,0,0.7)] focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.08] ${
+        fill ? 'w-full' : 'w-32 shrink-0 sm:w-40 md:w-44'
+      }`}
     >
       {image ? (
         <img
@@ -32,7 +40,7 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, pro
       {/* Touch has no hover to reveal this on, so it's shown unconditionally there — mouse/keyboard still
           get the hover/focus reveal instead of a permanent overlay sitting on every poster. */}
       <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/20 to-transparent p-2.5 opacity-100 transition-opacity duration-300 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-visible:opacity-100">
-        <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 shadow-[0_0_16px_rgba(15,123,255,0.7)]">
+        <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)]">
           <Play className="h-3.5 w-3.5 text-white" />
         </div>
         <p className="line-clamp-2 text-xs font-semibold text-white">{title}</p>
