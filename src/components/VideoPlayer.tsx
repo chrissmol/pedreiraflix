@@ -915,7 +915,7 @@ export default function VideoPlayer({
                     </button>
                   ))}
                   <div className="border-t border-white/10 px-3 py-2">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Tamanho</p>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Tamanho</p>
                     <div className="flex gap-1.5">
                       {(['small', 'medium', 'large'] as const).map((size) => (
                         <button
@@ -930,7 +930,7 @@ export default function VideoPlayer({
                         </button>
                       ))}
                     </div>
-                    <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Fundo</p>
+                    <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Fundo</p>
                     <div className="flex gap-1.5">
                       {([
                         ['none', 'Nenhum'],

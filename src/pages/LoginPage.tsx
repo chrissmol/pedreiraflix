@@ -144,7 +144,7 @@ export default function LoginPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-white">{accountLabel(account)}</span>
-                      <span className="block truncate text-xs text-zinc-500">{accountSubtitle(account)}</span>
+                      <span className="block truncate text-xs text-zinc-400">{accountSubtitle(account)}</span>
                     </span>
                     {/* "Entrar" is purely decorative — the whole row is already the tap target — so it's
                         the first thing to go on a narrow phone, where it was crowding the account name
@@ -218,7 +218,7 @@ export default function LoginPage() {
               {method === 'xtream' && (
                 <>
                   <div>
-                    <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                       Endereço do servidor
                     </label>
                     <input
@@ -238,7 +238,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                       Usuário
                     </label>
                     <input
@@ -256,7 +256,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                       Senha
                     </label>
                     <div className="relative">
@@ -285,7 +285,7 @@ export default function LoginPage() {
 
               {method === 'm3u-url' && (
                 <div>
-                  <label htmlFor="m3u-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  <label htmlFor="m3u-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                     Link da playlist M3U
                   </label>
                   <input
@@ -307,7 +307,7 @@ export default function LoginPage() {
 
               {method === 'm3u-file' && (
                 <div>
-                  <label htmlFor="m3u-file" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  <label htmlFor="m3u-file" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                     Arquivo M3U do aparelho
                   </label>
                   <input
@@ -323,7 +323,7 @@ export default function LoginPage() {
               )}
 
               <div>
-                <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
                   Nome (opcional)
                 </label>
                 <input

@@ -93,13 +93,13 @@ export default function SeriesDetailPage() {
           <div className="mt-6 space-y-1 text-sm text-zinc-400">
             {series.cast && (
               <p>
-                <span className="text-zinc-500">Elenco: </span>
+                <span className="text-zinc-400">Elenco: </span>
                 {series.cast}
               </p>
             )}
             {series.director && (
               <p>
-                <span className="text-zinc-500">Direção: </span>
+                <span className="text-zinc-400">Direção: </span>
                 {series.director}
               </p>
             )}
@@ -155,7 +155,7 @@ export default function SeriesDetailPage() {
                     <p className="truncate font-medium text-white">{ep.title}</p>
                     {isWatched && <span className="text-[10px] font-semibold uppercase text-brand-400">Assistido</span>}
                   </div>
-                  {ep.duration && <p className="text-xs text-zinc-500">{ep.duration}</p>}
+                  {ep.duration && <p className="text-xs text-zinc-400">{ep.duration}</p>}
                   {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ep.plot}</p>}
                 </div>
                 <span onClick={(e) => e.stopPropagation()} className="mt-0.5 shrink-0">

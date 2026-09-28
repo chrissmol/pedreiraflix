@@ -176,7 +176,7 @@ export default function TopNav() {
             className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
           >
             <p className="truncate px-2 py-1.5 text-zinc-400">
-              {activeProfile?.name} <span className="text-zinc-600">· {user?.username}</span>
+              {activeProfile?.name} <span className="text-zinc-400">· {user?.username}</span>
             </p>
             {profiles.length > 1 && (
               <div className="my-1 space-y-0.5">

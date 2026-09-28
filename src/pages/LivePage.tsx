@@ -159,7 +159,7 @@ export default function LivePage() {
         </div>
 
         {!loading && allChannels.length === 0 && (
-          <p className="mt-8 text-center text-zinc-500">Nenhum canal encontrado.</p>
+          <p className="mt-8 text-center text-zinc-400">Nenhum canal encontrado.</p>
         )}
 
         {visibleCount < allChannels.length && <div ref={sentinelRef} className="h-10" />}

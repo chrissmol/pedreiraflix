@@ -121,13 +121,13 @@ export default function MovieDetailPage() {
           <div className="mt-6 space-y-1 text-sm text-zinc-400">
             {movie.cast && (
               <p>
-                <span className="text-zinc-500">Elenco: </span>
+                <span className="text-zinc-400">Elenco: </span>
                 {movie.cast}
               </p>
             )}
             {movie.director && (
               <p>
-                <span className="text-zinc-500">Direção: </span>
+                <span className="text-zinc-400">Direção: </span>
                 {movie.director}
               </p>
             )}

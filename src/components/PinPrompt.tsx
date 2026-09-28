@@ -47,7 +47,7 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
           {profile.name[0]?.toUpperCase()}
         </span>
         <p className="mb-1 text-sm font-semibold text-white">{profile.name}</p>
-        <p className="mb-4 flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+        <p className="mb-4 flex items-center justify-center gap-1.5 text-xs text-zinc-400">
           <Lock className="h-3.5 w-3.5" /> Digite o PIN de 4 dígitos
         </p>
         <input
@@ -62,7 +62,7 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
           }`}
         />
         {wrong && <p className="mt-2 text-xs text-rose-400">PIN incorreto</p>}
-        <button onClick={onCancel} className="mt-4 text-xs text-zinc-500 hover:text-white">
+        <button onClick={onCancel} className="mt-4 text-xs text-zinc-400 hover:text-white">
           Cancelar
         </button>
       </div>

@@ -27,7 +27,7 @@ function AppPinSettings() {
           </button>
         )}
       </div>
-      <p className="mt-1 text-[11px] leading-snug text-zinc-600">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
+      <p className="mt-1 text-[11px] leading-snug text-zinc-400">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
       {!pin && (
         <form
           onSubmit={(e) => {
@@ -77,7 +77,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           className="h-4 w-4 accent-brand-500"
         />
       </label>
-      <p className="mb-3 text-[11px] leading-snug text-zinc-600">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+      <p className="mb-3 text-[11px] leading-snug text-zinc-400">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
 
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-zinc-300">
@@ -118,7 +118,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
         </form>
       )}
 
-      <button onClick={onClose} className="mt-3 w-full text-center text-zinc-500 hover:text-white">
+      <button onClick={onClose} className="mt-3 w-full text-center text-zinc-400 hover:text-white">
         Fechar
       </button>
     </div>
@@ -230,7 +230,7 @@ export default function ProfilesPage() {
                   </form>
                 ) : (
                   // Always visible on touch (no hover to reveal them there); fades in on mouse hover otherwise.
-                  <div className="flex gap-3 text-xs text-zinc-500 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
+                  <div className="flex gap-3 text-xs text-zinc-400 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
                     <button
                       onClick={() => {
                         setRenamingId(p.id)
@@ -303,7 +303,7 @@ export default function ProfilesPage() {
                 setColor(COLORS[profiles.length % COLORS.length])
                 setAdding(true)
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 p-4 text-zinc-500 transition-colors hover:border-brand-500/50 hover:text-white"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 p-4 text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-white"
             >
               <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-zinc-700">
                 <Plus className="h-7 w-7" />

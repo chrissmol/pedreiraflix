@@ -84,11 +84,11 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
               )}
             </span>
             <span className="min-w-0 flex-1 truncate text-white">{r.name}</span>
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{KIND_LABEL[r.kind]}</span>
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KIND_LABEL[r.kind]}</span>
           </button>
         )
       })}
-      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-zinc-500">Buscando...</p>}
+      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-zinc-400">Buscando...</p>}
     </div>
   )
 }

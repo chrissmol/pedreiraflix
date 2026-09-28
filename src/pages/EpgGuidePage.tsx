@@ -94,9 +94,9 @@ export default function EpgGuidePage() {
       </div>
 
       {loading && channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-500 sm:px-8">Carregando canais...</p>
+        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Carregando canais...</p>
       ) : channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-500 sm:px-8">Nenhum canal nesta categoria.</p>
+        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Nenhum canal nesta categoria.</p>
       ) : (
         <div className="overflow-x-auto">
           <div style={{ width: totalWidth + 140 }}>
@@ -105,7 +105,7 @@ export default function EpgGuidePage() {
               <div className="w-[140px] shrink-0" />
               <div className="relative h-8 flex-1">
                 {hourMarks.map((m) => (
-                  <span key={m.x} className="absolute top-0 border-l border-white/10 pl-1.5 text-[11px] text-zinc-500" style={{ left: m.x }}>
+                  <span key={m.x} className="absolute top-0 border-l border-white/10 pl-1.5 text-[11px] text-zinc-400" style={{ left: m.x }}>
                     {m.label}
                   </span>
                 ))}

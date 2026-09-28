@@ -40,7 +40,7 @@ export default function DownloadsPage() {
       </p>
 
       {downloads.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-zinc-400">
           Toque em "Baixar para ver offline" na página de um filme ou episódio pra ele aparecer aqui.
         </p>
       ) : (
