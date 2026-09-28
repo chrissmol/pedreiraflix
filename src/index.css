@@ -118,17 +118,43 @@ body {
   scrollbar-width: none;
 }
 
-/* Reusable neon-glass primitives */
+/* Apple "Liquid Glass" approximation (the material introduced across iOS/macOS in 2025): a translucent
+ * surface that saturates whatever's behind it and catches light along its own edge, rather than a flat
+ * tinted blur. `backdrop-filter` blur+saturate does the glass itself, a second `background` gradient
+ * layer (stacked on top of the tint gradient — `background` supports multiple comma-separated layers)
+ * gives the diagonal specular sheen real glass catches near its top edge, and a layered `box-shadow`
+ * gives the inner rim light + soft outer lift.
+ *
+ * Deliberately NOT a `::before` pseudo-element (the first version of this): that needs the panel to be
+ * `position: relative` to anchor an `absolute` overlay, and `.glass-panel` sits on elements that are
+ * already `fixed` or `absolute` via a Tailwind utility class (the floating mobile nav, dropdown menus,
+ * modals) — `position: relative` here has the same CSS specificity as those utilities, so whichever rule
+ * happened to come later in the stylesheet silently overrode the other, breaking `position: fixed`
+ * entirely on the mobile nav (it stopped floating/showing at all). Doing the sheen as a background layer
+ * needs no `position` at all, so it can never fight an element's own positioning again.
+ *
+ * No SVG displacement/refraction here — that's the one part of the real material this skips, for
+ * cost/cross-browser reasons, not by accident. */
 .glass-panel {
-  background: linear-gradient(180deg, rgba(20, 24, 34, 0.85), rgba(10, 12, 18, 0.9));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  /* Neutral hairline instead of a blue-tinted one — closer to Apple's own frosted-glass/vibrancy
-   * material, which never tints its edge with the accent color. */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.16) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, 0.06) 100%),
+    linear-gradient(180deg, rgba(28, 32, 44, 0.7), rgba(12, 14, 20, 0.75));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 8px 30px -10px rgba(0, 0, 0, 0.5);
 }
 :root[data-theme='light'] .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 245, 0.95));
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, 0.15) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(244, 244, 245, 0.8));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 8px 30px -10px rgba(0, 0, 0, 0.18);
 }
 
 .glow-border {

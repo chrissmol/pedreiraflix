@@ -15,7 +15,7 @@ export default function Layout() {
   }, [pathname])
 
   return (
-    <div className="min-h-screen pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
       {/* Off-screen until focused (Tab from the very top of the page) — lets keyboard users jump past
           the header/nav straight to the page content instead of tabbing through every nav link first. */}
       <a

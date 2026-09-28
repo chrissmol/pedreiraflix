@@ -9,21 +9,27 @@ const links: { to: string; label: string; Icon: ComponentType<{ className?: stri
   { to: '/series', label: 'Séries', Icon: Layers },
 ]
 
+// Floating pill (Netflix-style) instead of an edge-to-edge bar pinned with `bottom-0`. Christian hit the
+// same bug in a previous project: a bar glued to the physical screen edge is exactly what iOS/Android PWA
+// chrome (home-indicator area, on-screen keyboard, browser UI showing/hiding) tends to misplace or clip.
+// Floating it — inset from every edge, its own rounded shape — takes it out of that edge case entirely.
 export default function MobileNav() {
   return (
-    <nav className="glass-panel fixed inset-x-0 bottom-0 z-50 flex justify-around border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] sm:hidden">
+    <nav
+      className="glass-panel glow-border fixed inset-x-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
+    >
       {links.map(({ to, label, Icon }) => (
         <NavLink
           key={to}
           to={to}
           end={to === '/'}
           className={({ isActive }) =>
-            `flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors active:bg-white/5 ${
-              isActive ? 'text-brand-300' : 'text-zinc-500'
+            `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[10px] font-medium transition-colors ${
+              isActive ? 'bg-white/10 text-white' : 'text-zinc-500 active:bg-white/5'
             }`
           }
         >
-          <Icon className="h-6 w-6" />
+          <Icon className="h-5 w-5" />
           {label}
         </NavLink>
       ))}
