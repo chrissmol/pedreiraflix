@@ -46,6 +46,17 @@ app.use('/api/stream', (req, res, next) => {
   next()
 })
 
+// Dev-only mirror of the Worker's /api/log-error (see worker/index.js for the full rationale) — just
+// logs to this terminal instead of console.error-into-wrangler-tail, so client crashes show up locally
+// too instead of silently 404ing against this dev proxy.
+app.post('/api/log-error', express.json({ limit: '8kb' }), (req, res) => {
+  if (isRateLimited(req.ip, 'log-error', 20, 10_000)) return res.status(429).end()
+  const { kind, message, stack, url: pageUrl, userAgent } = req.body || {}
+  if (typeof message !== 'string' || !message) return res.status(400).send('missing message')
+  console.error('[client error]', JSON.stringify({ kind, message, stack, url: pageUrl, userAgent, ts: new Date().toISOString() }, null, 2))
+  res.status(204).end()
+})
+
 const PORT = process.env.PORT || 8787
 
 function sanitizeBaseUrl(raw) {

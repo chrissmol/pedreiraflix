@@ -2,9 +2,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import ErrorBoundary from './components/ErrorBoundary.tsx'
+import { installErrorReporting } from './lib/errorReporting'
 import { ensureActiveProfile, refreshSession } from './lib/session'
 import { useAccountsStore } from './store/accounts'
 import { useAuthStore } from './store/auth'
+
+// No Sentry/analytics account exists for this project — this is the whole observability floor: uncaught
+// errors/rejections get POSTed to /api/log-error and show up in `wrangler tail`, instead of a real user's
+// crash being invisible until they happen to describe it. See lib/errorReporting.ts.
+installErrorReporting()
 
 // Sessions from before saved accounts existed: remember them too, so a later logout doesn't lose the password.
 const { credentials } = useAuthStore.getState()
@@ -32,6 +39,8 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -199,12 +199,52 @@ async function stream(request, url) {
   return new Response(up.body, { status: up.status, headers })
 }
 
+// Client-side error reporting: no Sentry/analytics account exists for this project, so instead of
+// silently losing every crash a real user hits (the only way to learn about one used to be Christian
+// noticing and describing it), the frontend POSTs uncaught errors/rejections/render crashes here (see
+// src/lib/errorReporting.ts) and this just logs them with `console.error` — visible live with
+// `wrangler tail` (or in the dashboard's Logs tab) without needing a third-party account or API key. It's
+// not a real observability stack (no retention, no alerting, no dashboards), but it's a genuine step up
+// from "no signal at all", and swapping in a real error-tracking service later only means changing this
+// one function, not the frontend's reporting call site.
+async function logError(request) {
+  let body
+  try {
+    // Hard cap so a malicious/broken client can't use this as a free storage/log-flooding endpoint.
+    const text = await request.text()
+    if (text.length > 8_000) return new Response('payload too large', { status: 413 })
+    body = JSON.parse(text)
+  } catch {
+    return new Response('invalid json', { status: 400 })
+  }
+  const { kind, message, stack, url: pageUrl, userAgent } = body || {}
+  if (typeof message !== 'string' || !message) return new Response('missing message', { status: 400 })
+  console.error(
+    JSON.stringify({
+      source: 'client',
+      kind: typeof kind === 'string' ? kind.slice(0, 40) : 'error',
+      message: message.slice(0, 500),
+      stack: typeof stack === 'string' ? stack.slice(0, 2000) : undefined,
+      url: typeof pageUrl === 'string' ? pageUrl.slice(0, 300) : undefined,
+      userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 200) : undefined,
+      ts: new Date().toISOString(),
+    }),
+  )
+  return new Response(null, { status: 204 })
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     // CF-Connecting-IP is set by Cloudflare's edge itself, not forwardable by a client — safe to trust.
     const ip = request.headers.get('cf-connecting-ip') || 'unknown'
 
+    if (url.pathname === '/api/log-error' && request.method === 'POST') {
+      // Errors can legitimately come in bursts (one crash often triggers several related ones) — capped
+      // low enough to still block someone trying to use this as a flood/spam vector.
+      if (isRateLimited(ip, 'log-error', 20, 10_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await logError(request))
+    }
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
       if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
