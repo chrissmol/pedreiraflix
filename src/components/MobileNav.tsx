@@ -13,10 +13,16 @@ const links: { to: string; label: string; Icon: ComponentType<{ className?: stri
 // same bug in a previous project: a bar glued to the physical screen edge is exactly what iOS/Android PWA
 // chrome (home-indicator area, on-screen keyboard, browser UI showing/hiding) tends to misplace or clip.
 // Floating it — inset from every edge, its own rounded shape — takes it out of that edge case entirely.
+//
+// `absolute`, not `fixed`: on an iOS home-screen-installed PWA, `position: fixed` + `bottom` can be
+// computed against a taller-than-real `dvh` viewport (a separate, still-open WebKit bug), landing this
+// pill visibly above the real bottom of the screen. `Layout.tsx`'s shell is already correctly sized to
+// the real screen (`h-dvh`) and `position: relative`, so anchoring against that with `absolute` instead
+// needs only ordinary box layout — no viewport-unit computation for iOS to get wrong.
 export default function MobileNav() {
   return (
     <nav
-      className="glass-panel glow-border fixed inset-x-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
+      className="glass-panel glow-border absolute inset-x-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
     >
       {links.map(({ to, label, Icon }) => (
         <NavLink

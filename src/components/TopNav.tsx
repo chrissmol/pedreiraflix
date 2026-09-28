@@ -87,11 +87,19 @@ export default function TopNav() {
 
   return (
     <header
-      // `max(0.75rem, env(...))` was the previous approach, but iOS Safari has a known history of not
+      // `max(0.75rem, env(...))` was an earlier approach, but iOS Safari has a known history of not
       // recalculating `env()` inside `max()`/`min()` reliably — it can get stuck at the plain 0.75rem
       // fallback and never pick up the real notch/Dynamic Island inset, leaving the header's own content
       // (search box, account avatar) rendered right under the status bar. Plain addition avoids that.
-      className={`fixed inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
+      //
+      // `absolute`, not `fixed`: iOS has a separate, still-open WebKit bug where `position: fixed`
+      // combined with `dvh`/viewport units in a home-screen-installed (`display: standalone`) PWA can be
+      // positioned against a taller-than-real viewport height, landing noticeably above where it should
+      // — which is exactly the bug Christian hit here. `Layout.tsx`'s shell is already sized correctly to
+      // the real screen via `h-dvh` and is `position: relative`, so anchoring against that shell with
+      // `absolute` sidesteps the whole fixed-vs-viewport-unit computation this bug lives in — it only
+      // needs ordinary box layout, which iOS gets right.
+      className={`absolute inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
         scrolled
           ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
           : 'bg-transparent'
