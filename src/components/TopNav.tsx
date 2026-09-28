@@ -65,10 +65,16 @@ export default function TopNav() {
     return () => document.removeEventListener('pointerdown', close)
   }, [suggestionsOpen])
 
+  // `window` never scrolls anymore — `Layout.tsx`'s `<main id="main-content">` is the actual scrollable
+  // element (see the index.css comment on `html, body { overflow: hidden }`). This runs on every route
+  // change too, not just mount: WatchPage/LoginPage render outside `Layout` and have no such element, and
+  // React Router remounts this listener fresh whenever TopNav itself (re)mounts inside Layout.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    const scrollEl = document.getElementById('main-content')
+    if (!scrollEl) return
+    const onScroll = () => setScrolled(scrollEl.scrollTop > 10)
+    scrollEl.addEventListener('scroll', onScroll)
+    return () => scrollEl.removeEventListener('scroll', onScroll)
   }, [])
 
   function handleSearch(e: React.FormEvent) {

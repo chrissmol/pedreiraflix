@@ -69,13 +69,18 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
-/* Decorative glow blurs (hero, login, cards) are deliberately positioned past the edge of their
- * container for the bleed effect, and rows scroll horizontally within themselves — neither should ever
- * make the whole page pan sideways. Netflix/YouTube-style streaming sites never do; this is the one place
- * that guarantees it regardless of which element on which page is the one bleeding past the viewport. */
+/* `body` never scrolls — `Layout.tsx`'s own `<main>` is the one scrollable element on every logged-in
+ * page (LoginPage/WatchPage manage their own full-screen layout and don't use Layout at all). This is
+ * the actual fix for a longstanding iOS bug Christian has hit before in another PWA: in `display:
+ * standalone` (added to the home screen), WebKit can compute `position: fixed` children against a stale/
+ * wrong containing block once `body` itself is the element that scrolls, especially on a page whose
+ * height keeps changing early on (the catalog loading in row by row) — the floating header/nav visibly
+ * "detach" from the real bottom/top of the screen. Giving `body` a fixed, non-scrolling frame and moving
+ * all scrolling to a plain `div` inside it removes the one condition (fixed position + scrolling body)
+ * that bug needs. Also still where the horizontal-bleed guard from decorative glow blurs/rows lives. */
 html,
 body {
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 body {

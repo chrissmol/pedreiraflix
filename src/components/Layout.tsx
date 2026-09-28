@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import MobileNav from './MobileNav'
@@ -8,14 +8,20 @@ export default function Layout() {
   const sessionWarning = useAuthStore((s) => s.sessionWarning)
   const dismissWarning = useAuthStore((s) => s.dismissWarning)
   const { pathname } = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
 
-  // The router keeps the old scroll offset, so a new page would open halfway down.
+  // The router keeps the old scroll offset, so a new page would open halfway down. `body` itself never
+  // scrolls (see index.css) — `<main>` below is the actual scrollable element now, so that's what gets
+  // reset, not `window`.
   useEffect(() => {
-    window.scrollTo(0, 0)
+    mainRef.current?.scrollTo(0, 0)
   }, [pathname])
 
   return (
-    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
+    // `h-dvh` (dynamic viewport height), not `min-h-screen`/`100vh`: this outer frame is fixed to the
+    // real visible viewport and never scrolls itself — `<main>` is the one scrollable element on the
+    // page (see the index.css comment on `html, body { overflow: hidden }` for why).
+    <div className="relative h-dvh overflow-hidden">
       {/* Off-screen until focused (Tab from the very top of the page) — lets keyboard users jump past
           the header/nav straight to the page content instead of tabbing through every nav link first. */}
       <a
@@ -33,7 +39,11 @@ export default function Layout() {
           </button>
         </div>
       )}
-      <main id="main-content">
+      <main
+        id="main-content"
+        ref={mainRef}
+        className="h-full overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0"
+      >
         <Outlet />
       </main>
       <MobileNav />
