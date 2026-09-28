@@ -35,10 +35,13 @@ jobs:
       - name: E2E tests
         run: npm run test:e2e
 
-      - name: Upload Playwright report on failure
+      - name: Upload failure traces
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: playwright-traces
+          # The reporter is `list` only (playwright.config.ts) — there's no playwright-report/ HTML
+          # report to upload. test-results/ is what actually exists on a failing run: a per-test trace
+          # (`npx playwright show-trace <file>.zip`) and screenshot for whatever failed.
+          path: test-results/
           retention-days: 14

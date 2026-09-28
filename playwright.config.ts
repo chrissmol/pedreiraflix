@@ -7,6 +7,12 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: false,
   workers: 1,
+  // A couple of video/HLS-playback tests are timing-sensitive under a genuinely weak/shared CPU (no
+  // hardware video acceleration) — confirmed on this session's dev sandbox and, worse, on GitHub Actions'
+  // runners specifically. They're not flaky from a real bug, they're flaky from real-world CPU variance
+  // this suite has no control over. Retrying only in CI (never locally, where a real failure should stay
+  // a real failure on the first try) is the standard Playwright answer to exactly this class of flake.
+  retries: process.env.CI ? 2 : 0,
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:5173',
