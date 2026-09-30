@@ -25,6 +25,14 @@ import {
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
+import {
+  CUE_BG_BY_SUBTITLE_BACKGROUND,
+  CUE_SIZE_EM_BY_SUBTITLE_SIZE,
+  NEXT_UP_LEAD,
+  PLAYBACK_RATES,
+  estimateInitialBandwidthBps,
+  formatTime,
+} from './videoPlayerUtils'
 
 interface NextEpisode {
   label: string
@@ -64,31 +72,6 @@ interface AudioTrack {
 interface SubtitleTrack {
   id: number
   name: string
-}
-
-const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
-// Auto-advance countdown, in seconds before the episode ends.
-const NEXT_UP_LEAD = 12
-
-// Chrome/Edge expose a rough downlink estimate (Mbps) via the Network
-// Information API. When present, seed hls.js's bandwidth estimator with it
-// so a connection that's already fast starts at a high quality level
-// immediately instead of ramping up from a conservative default guess.
-function estimateInitialBandwidthBps(): number | undefined {
-  const nav = navigator as Navigator & { connection?: { downlink?: number } }
-  const downlinkMbps = nav.connection?.downlink
-  if (!downlinkMbps || downlinkMbps <= 0) return undefined
-  return Math.round(downlinkMbps * 1_000_000 * 0.8)
-}
-
-function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const mm = h > 0 ? String(m).padStart(2, '0') : String(m)
-  const ss = String(s).padStart(2, '0')
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
 export default function VideoPlayer({
@@ -812,12 +795,8 @@ export default function VideoPlayer({
     next?.onPlay()
   }
 
-  const CUE_SIZE_EM = { small: 0.9, medium: 1.3, large: 1.8 }[subtitleSize]
-  const CUE_BG = {
-    none: 'transparent',
-    semi: 'rgba(0, 0, 0, 0.65)',
-    solid: 'rgba(0, 0, 0, 0.95)',
-  }[subtitleBackground]
+  const CUE_SIZE_EM = CUE_SIZE_EM_BY_SUBTITLE_SIZE[subtitleSize]
+  const CUE_BG = CUE_BG_BY_SUBTITLE_BACKGROUND[subtitleBackground]
 
   return (
     <div
