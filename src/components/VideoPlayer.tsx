@@ -12,7 +12,6 @@ import {
   Pause,
   PictureInPicture,
   Play,
-  Settings,
   SkipBack,
   SkipForward,
   SkipNext,
@@ -23,6 +22,7 @@ import {
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
+import { VideoPlayerQualityMenu, type QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerSpeedMenu } from './VideoPlayerSpeedMenu'
 import { VideoPlayerSubtitleMenu } from './VideoPlayerSubtitleMenu'
 import {
@@ -55,12 +55,6 @@ interface VideoPlayerProps {
   /** Live only: zapping to the previous/next channel — arrow keys, on-screen buttons, and a vertical swipe on touch. */
   onChannelUp?: () => void
   onChannelDown?: () => void
-}
-
-interface QualityLevel {
-  index: number
-  height: number
-  bitrate: number
 }
 
 interface AudioTrack {
@@ -943,40 +937,14 @@ export default function VideoPlayer({
           )}
 
           {levels.length > 1 && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'quality' ? null : 'quality'))}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-              >
-                <Settings className="h-4 w-4" />
-                {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
-              </button>
-              {openMenu === 'quality' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-sm">
-                  <button
-                    onClick={() => selectLevel(-1)}
-                    className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                      currentLevel === -1 ? 'text-brand-300' : 'text-white'
-                    }`}
-                  >
-                    Automático
-                  </button>
-                  {[...levels]
-                    .sort((a, b) => b.height - a.height)
-                    .map((lvl) => (
-                      <button
-                        key={lvl.index}
-                        onClick={() => selectLevel(lvl.index)}
-                        className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                          currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
-                        }`}
-                      >
-                        {lvl.height}p
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
+            <VideoPlayerQualityMenu
+              open={openMenu === 'quality'}
+              levels={levels}
+              currentLevel={currentLevel}
+              autoPickedHeight={autoPickedHeight}
+              onToggle={() => setOpenMenu((m) => (m === 'quality' ? null : 'quality'))}
+              onSelect={selectLevel}
+            />
           )}
         </div>
       </div>
