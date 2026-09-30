@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PosterCard from './PosterCard'
 import Row from './Row'
@@ -35,11 +35,12 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
   // Dev-only render counter (statically stripped from the production bundle — `import.meta.env.DEV` is
   // replaced at build time and the branch is dead-code-eliminated) so e2e tests can assert the
   // memoization above is actually doing its job, not just that the page still renders correctly.
-  if (import.meta.env.DEV) {
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
     const w = window as unknown as { __categoryRowRenders?: Record<string, number> }
     w.__categoryRowRenders ??= {}
     w.__categoryRowRenders[title] = (w.__categoryRowRenders[title] ?? 0) + 1
-  }
+  })
   return (
     <Row title={title} loading={loading} seeAllHref={seeAllHref}>
       {visible.map((item) =>

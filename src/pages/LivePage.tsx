@@ -43,6 +43,7 @@ export default function LivePage() {
   const channels = allChannels.slice(0, visibleCount)
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- filter/category changes must restart infinite scroll.
     setVisibleCount(PAGE_SIZE)
   }, [activeCategory, filter, onlyArchive])
 

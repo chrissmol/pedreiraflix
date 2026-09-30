@@ -95,6 +95,7 @@ function useCategorizedCatalog<T>(
 
     let cancelled = false
     const myRequest = ++requestId.current
+    // oxlint-disable-next-line react/set-state-in-effect -- this effect starts a new provider/catalog request.
     setState({ categories: [], groups: [], loading: true, error: null })
 
     cached(`${kind}:categories`, () => withRetry(() => loadCategories(client)))

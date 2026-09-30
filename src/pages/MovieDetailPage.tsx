@@ -26,16 +26,26 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (!client || !id) return
+    let cancelled = false
+    // oxlint-disable-next-line react/set-state-in-effect -- route/profile changes start a new detail request.
     setLoading(true)
     setBlocked(false)
     cached(`movie-info:${id}`, () => client.getVodInfo(Number(id)))
       .then((data) => {
+        if (cancelled) return
         setMovie(data)
         // A direct link/bookmark bypasses the already-filtered catalog lists, so this is checked again here.
-        if (isKids) isCategoryBlocked(client, 'movie', data.categoryId).then(setBlocked)
+        if (isKids) isCategoryBlocked(client, 'movie', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar filme'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar filme')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
