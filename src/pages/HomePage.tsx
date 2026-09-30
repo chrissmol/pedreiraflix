@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
@@ -53,23 +53,24 @@ export default function HomePage() {
   // per catalog load, from the complete data, not a moving target.
   const catalogSettled =
     !movies.loading && !series.loading && movies.groups.every((g) => !g.loading) && series.groups.every((g) => !g.loading)
-  const featuredRef = useRef<FeaturedCandidate[]>([])
-  const featured = useMemo<FeaturedCandidate[]>(() => {
-    if (!catalogSettled) return featuredRef.current
+  const [featured, setFeatured] = useState<FeaturedCandidate[]>([])
+  useEffect(() => {
+    if (!catalogSettled) return
     const flatMovies = flattenGroups(movies.groups)
     const flatSeries = flattenGroups(series.groups)
-    const next = pickFeatured(flatMovies, flatSeries).map((it) => {
-      const isSeries = 'seriesId' in it
-      return {
-        key: isSeries ? `series-${it.seriesId}` : `movie-${it.streamId}`,
-        title: it.name,
-        description: 'plot' in it ? it.plot : null,
-        image: isSeries ? it.cover : it.streamIcon,
-        onPlay: () => navigate(isSeries ? `/series/${it.seriesId}` : `/movies/${it.streamId}`),
-      }
-    })
-    featuredRef.current = next
-    return next
+    // oxlint-disable-next-line react/set-state-in-effect -- freezes the hero until the catalog settles, not derivable during render.
+    setFeatured(
+      pickFeatured(flatMovies, flatSeries).map((it) => {
+        const isSeries = 'seriesId' in it
+        return {
+          key: isSeries ? `series-${it.seriesId}` : `movie-${it.streamId}`,
+          title: it.name,
+          description: 'plot' in it ? it.plot : null,
+          image: isSeries ? it.cover : it.streamIcon,
+          onPlay: () => navigate(isSeries ? `/series/${it.seriesId}` : `/movies/${it.streamId}`),
+        }
+      }),
+    )
   }, [catalogSettled, movies.groups, series.groups, navigate])
 
   const visibleMovieGroups = useMemo(
