@@ -7,10 +7,7 @@ export function useShortEpg(streamId: number | null) {
   const [programs, setPrograms] = useState<EpgProgram[]>([])
 
   useEffect(() => {
-    if (!client || !streamId) {
-      setPrograms([])
-      return
-    }
+    if (!client || !streamId) return
     let cancelled = false
     client
       .getShortEpg(streamId, 2)
@@ -26,8 +23,8 @@ export function useShortEpg(streamId: number | null) {
   }, [client, streamId])
 
   return {
-    current: programs[0] ?? null,
-    next: programs[1] ?? null,
+    current: client && streamId ? programs[0] ?? null : null,
+    next: client && streamId ? programs[1] ?? null : null,
   }
 }
 

@@ -95,7 +95,10 @@ function useCategorizedCatalog<T>(
 
     let cancelled = false
     const myRequest = ++requestId.current
-    setState({ categories: [], groups: [], loading: true, error: null })
+    Promise.resolve().then(() => {
+      if (cancelled || myRequest !== requestId.current) return
+      setState({ categories: [], groups: [], loading: true, error: null })
+    })
 
     cached(`${kind}:categories`, () => withRetry(() => loadCategories(client)))
       .then((allCategories) => {

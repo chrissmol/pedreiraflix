@@ -30,8 +30,12 @@ export default function SeriesDetailPage() {
 
   useEffect(() => {
     if (!client || !id) return
-    setLoading(true)
-    setBlocked(false)
+    let cancelled = false
+    Promise.resolve().then(() => {
+      if (cancelled) return
+      setLoading(true)
+      setBlocked(false)
+    })
     cached(`series-info:${id}`, () => client.getSeriesInfo(Number(id)))
       .then((data) => {
         setSeries(data)
@@ -40,6 +44,9 @@ export default function SeriesDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar série'))
       .finally(() => setLoading(false))
+    return () => {
+      cancelled = true
+    }
   }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>

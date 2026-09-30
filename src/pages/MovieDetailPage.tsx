@@ -26,8 +26,12 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (!client || !id) return
-    setLoading(true)
-    setBlocked(false)
+    let cancelled = false
+    Promise.resolve().then(() => {
+      if (cancelled) return
+      setLoading(true)
+      setBlocked(false)
+    })
     cached(`movie-info:${id}`, () => client.getVodInfo(Number(id)))
       .then((data) => {
         setMovie(data)
@@ -36,6 +40,9 @@ export default function MovieDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar filme'))
       .finally(() => setLoading(false))
+    return () => {
+      cancelled = true
+    }
   }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>

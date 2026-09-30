@@ -42,9 +42,12 @@ export default function LivePage() {
 
   const channels = allChannels.slice(0, visibleCount)
 
-  useEffect(() => {
+  const filterKey = `${activeCategory ?? ''}|${filter}|${onlyArchive}`
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey)
     setVisibleCount(PAGE_SIZE)
-  }, [activeCategory, filter, onlyArchive])
+  }
 
   useEffect(() => {
     const sentinel = sentinelRef.current
