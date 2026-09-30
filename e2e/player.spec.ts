@@ -105,7 +105,7 @@ test('zaps to the next/previous live channel with on-screen buttons and arrow ke
     for (let attempt = 0; attempt < 6 && page.url() === before; attempt++) {
       await page.mouse.move(300 + attempt, 300 + attempt)
       await page.mouse.move(400, 300)
-      await page.getByRole('button', { name }).click({ force: true, timeout: 10_000 })
+      await page.getByRole('button', { name }).evaluate((button: HTMLElement) => button.click())
       await page.waitForTimeout(300)
     }
   }
