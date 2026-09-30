@@ -60,6 +60,8 @@ Instalação como tarefa agendada escondida no Windows:
 
 Regras do worker:
 
+- sempre inicia o prompt enviado ao Claude Code com `/ponytail full`;
+- pede uso mínimo de tokens e mudança mínima correta;
 - só inicia na `main` limpa e sincronizada com `origin/main`;
 - processa exatamente uma issue `pedreira:claude-ready` por vez;
 - move labels para `pedreira:claude-running`, `pedreira:review-ready` ou `pedreira:claude-failed`;

@@ -70,6 +70,8 @@ test('full run moves labels, commits Claude changes and opens a PR', async () =>
       sh,
       exec: async (_cmd, _args, options) => {
         assert.match(options?.input ?? '', /não faça merge/)
+        assert.match(options?.input ?? '', /^\/ponytail full/)
+        assert.match(options?.input ?? '', /mínimo de tokens/)
         return ok('feito')
       },
       repo: 'owner/repo',

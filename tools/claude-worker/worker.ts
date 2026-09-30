@@ -108,6 +108,8 @@ async function setState(ctx: WorkerCtx, issue: number, next: string): Promise<vo
 
 function promptFor(issue: Issue): string {
   return [
+    '/ponytail full',
+    '',
     `Trabalhe no repositório PedreiraFlix somente para a issue #${issue.number}: ${issue.title}.`,
     '',
     'Antes de alterar:',
@@ -120,9 +122,11 @@ function promptFor(issue: Issue): string {
     '- não faça deploy/publicação;',
     '- não exponha segredos;',
     '- não altere tarefas fora desta issue;',
+    '- gaste o mínimo de tokens possível: investigue só os arquivos necessários e evite relatórios longos;',
+    '- prefira a menor mudança correta; nada de abstração “para depois”;',
     '- rode validação relevante (lint/build/e2e direcionado quando aplicável).',
     '',
-    'Ao terminar, deixe commits locais prontos para push e explique os testes executados.',
+    'Ao terminar, deixe commits locais prontos para push e responda curto: mudança feita, testes executados e riscos.',
     '',
     'Issue:',
     issue.body.trim(),
