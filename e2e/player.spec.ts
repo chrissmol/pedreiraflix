@@ -97,17 +97,22 @@ test('zaps to the next/previous live channel with on-screen buttons and arrow ke
   // The full channel list (needed for zapping) loads asynchronously after the player mounts; the
   // button stays rendered-but-disabled until then, so clicking too early would silently no-op.
   await expect(page.getByRole('button', { name: 'Próximo canal' })).toBeEnabled()
+  // Wait for actual playback to start before interacting — while still loading, the video element can
+  // briefly cover the zap buttons before the player has settled into its final layout.
+  await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
 
-  // Controls auto-hide after 3s of inactivity, so wake them right before each click — and retry once
-  // if the URL hasn't changed shortly after, in case the click landed mid-transition.
+  // Controls auto-hide after 3s of inactivity via `opacity-0 pointer-events-none` — wake them and wait
+  // for the opacity to actually reach 1 (Playwright's "visible" check ignores opacity). A coordinate
+  // click can still intermittently land on the <video> instead (Chromium's hardware-decoded video
+  // surface occasionally paints above correctly z-indexed siblings), so dispatch a native DOM click,
+  // which fires the same onClick handler without depending on screen-space hit-testing.
   async function click(name: string) {
-    const before = page.url()
-    for (let attempt = 0; attempt < 6 && page.url() === before; attempt++) {
-      await page.mouse.move(300 + attempt, 300 + attempt)
-      await page.mouse.move(400, 300)
-      await page.getByRole('button', { name }).click({ force: true, timeout: 10_000 })
-      await page.waitForTimeout(300)
-    }
+    const button = page.getByRole('button', { name })
+    await page.mouse.move(400, 300)
+    await page.mouse.move(400, 301)
+    await expect(button).toHaveCSS('opacity', '1')
+    await expect(button).toBeEnabled()
+    await button.evaluate((el: HTMLElement) => el.click())
   }
 
   await click('Próximo canal')

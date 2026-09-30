@@ -17,7 +17,12 @@ test('live channels offer a "Rápido" low-latency toggle, and VOD does not', asy
   await page.mouse.move(400, 300)
   const fastButton = page.getByRole('button', { name: /Rápido/ })
   await expect(fastButton).toBeVisible()
-  await fastButton.click({ force: true })
+  // The control overlay hides via `opacity-0 pointer-events-none`, which Playwright's "visible" check
+  // doesn't account for (it ignores opacity) — wait for the opacity to actually reach 1. Dispatch a
+  // native DOM click rather than a coordinate click: Chromium's hardware-decoded video surface can
+  // intermittently paint above correctly z-indexed siblings and swallow a screen-space click.
+  await expect(fastButton).toHaveCSS('opacity', '1')
+  await fastButton.evaluate((el: HTMLElement) => el.click())
   // Toggling reloads the source with a tighter hls.js buffer — the video keeps playing, not erroring out.
   await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.readyState)).toBeGreaterThanOrEqual(1)
 
