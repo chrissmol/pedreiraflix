@@ -242,6 +242,15 @@ app.get(['/movie/:u/:p/:file', '/series/:u/:p/:file'], (req, res) => {
   res.sendFile(path.join(FIX, 'video.mp4'))
 })
 
+// M3U login: one live channel, one movie, one series episode (covers all three classification branches).
+const M3U_PLAYLIST = [
+  '#EXTM3U',
+  '#EXTINF:-1 group-title="Noticias",Canal M3U Teste', 'http://localhost:8790/live/demo/demo123/1.m3u8',
+  '#EXTINF:-1 group-title="Filmes Acao",Filme M3U Teste', 'http://localhost:8790/movie/demo/demo123/1.mp4',
+  '#EXTINF:-1 group-title="Series Drama",Serie M3U Teste S01E01', 'http://localhost:8790/series/demo/demo123/1.mp4',
+].join('\n')
+app.get('/playlist.m3u', (_req, res) => res.type('audio/x-mpegurl').send(M3U_PLAYLIST))
+
 app.use('/fixtures', express.static(FIX))
 
 app.listen(PORT, () => console.log(`mock xtream on http://localhost:${PORT} (user ${USER} / ${PASS})`))
