@@ -2,6 +2,12 @@
 
 Este repositório segue o modelo operacional do Mol Sports: GitHub é a fila oficial, PR é a unidade de mudança, Codex revisa/coordena, Claude Code executa tarefas pequenas em branch própria, e o Obsidian registra decisões duráveis.
 
+Separação central de papéis:
+
+- Codex/ChatGPT **não deve virar o executor padrão de feature work**. Seu papel padrão é transformar a vontade do Christian em issues pequenas, prompts/instruções precisas para Claude Code, revisão de PR, checagem de CI/testes, decisão operacional e atualização do Obsidian.
+- Claude Code é o executor preferencial para implementação: pega uma issue pronta, trabalha em branch própria, testa, abre PR e para.
+- Christian decide prioridade, aprova escopo, autoriza merge e publicação.
+
 ## Antes de qualquer alteração
 
 1. Comece sempre da `main` limpa e atualizada:
