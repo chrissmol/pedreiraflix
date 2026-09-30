@@ -42,12 +42,10 @@ export default function LivePage() {
 
   const channels = allChannels.slice(0, visibleCount)
 
-  const filterKey = `${activeCategory ?? ''}|${filter}|${onlyArchive}`
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
-  if (filterKey !== prevFilterKey) {
-    setPrevFilterKey(filterKey)
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- filter/category changes must restart infinite scroll.
     setVisibleCount(PAGE_SIZE)
-  }
+  }, [activeCategory, filter, onlyArchive])
 
   useEffect(() => {
     const sentinel = sentinelRef.current

@@ -4,7 +4,7 @@ import { useXtream } from './useXtream'
 
 export function useShortEpg(streamId: number | null) {
   const client = useXtream()
-  const [programs, setPrograms] = useState<EpgProgram[]>([])
+  const [epg, setEpg] = useState<{ streamId: number; programs: EpgProgram[] } | null>(null)
 
   useEffect(() => {
     if (!client || !streamId) return
@@ -12,19 +12,20 @@ export function useShortEpg(streamId: number | null) {
     client
       .getShortEpg(streamId, 2)
       .then((data) => {
-        if (!cancelled) setPrograms(data)
+        if (!cancelled) setEpg({ streamId, programs: data })
       })
       .catch(() => {
-        if (!cancelled) setPrograms([])
+        if (!cancelled) setEpg({ streamId, programs: [] })
       })
     return () => {
       cancelled = true
     }
   }, [client, streamId])
 
+  const programs = client && streamId && epg?.streamId === streamId ? epg.programs : []
   return {
-    current: client && streamId ? programs[0] ?? null : null,
-    next: client && streamId ? programs[1] ?? null : null,
+    current: programs[0] ?? null,
+    next: programs[1] ?? null,
   }
 }
 
