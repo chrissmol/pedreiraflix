@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronUp,
-  Gauge,
   Languages,
   Maximize,
   Minimize,
@@ -25,11 +24,11 @@ import {
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
+import { VideoPlayerSpeedMenu } from './VideoPlayerSpeedMenu'
 import {
   CUE_BG_BY_SUBTITLE_BACKGROUND,
   CUE_SIZE_EM_BY_SUBTITLE_SIZE,
   NEXT_UP_LEAD,
-  PLAYBACK_RATES,
   estimateInitialBandwidthBps,
   formatTime,
 } from './videoPlayerUtils'
@@ -957,31 +956,12 @@ export default function VideoPlayer({
           )}
 
           {!isLive && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
-                aria-label="Velocidade"
-                className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-              >
-                <Gauge className="h-4 w-4" />
-                {playbackRate !== 1 && <span className="tabular-nums">{playbackRate}x</span>}
-              </button>
-              {openMenu === 'speed' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-28 overflow-hidden rounded-lg text-sm">
-                  {PLAYBACK_RATES.map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => setSpeed(rate)}
-                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                        playbackRate === rate ? 'text-brand-300' : 'text-white'
-                      }`}
-                    >
-                      {rate === 1 ? 'Normal' : `${rate}x`}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <VideoPlayerSpeedMenu
+              open={openMenu === 'speed'}
+              playbackRate={playbackRate}
+              onToggle={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
+              onSelect={setSpeed}
+            />
           )}
 
           {pipSupported && (
