@@ -102,10 +102,15 @@ test('zaps to the next/previous live channel with on-screen buttons and arrow ke
   // if the URL hasn't changed shortly after, in case the click landed mid-transition.
   async function click(name: string) {
     const before = page.url()
+    const button = page.getByRole('button', { name })
+    // A disabled button silently swallows a forced click (no handler fires) — the channel list
+    // reloads asynchronously after each navigation, so wait for it once before the retry loop
+    // instead of racing it on every attempt below.
+    await expect(button).toBeEnabled({ timeout: 10_000 })
     for (let attempt = 0; attempt < 6 && page.url() === before; attempt++) {
       await page.mouse.move(300 + attempt, 300 + attempt)
       await page.mouse.move(400, 300)
-      await page.getByRole('button', { name }).click({ force: true, timeout: 10_000 })
+      await button.click({ force: true, timeout: 10_000 })
       await page.waitForTimeout(300)
     }
   }
