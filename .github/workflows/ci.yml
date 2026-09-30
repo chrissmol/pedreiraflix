@@ -5,6 +5,7 @@ name: CI
 # deploy` run by hand). This workflow doesn't deploy anything itself; see deploy.yml for that, which only
 # runs after this one is green.
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
