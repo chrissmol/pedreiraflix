@@ -40,6 +40,41 @@ Separação central de papéis:
 - `pedreira:claude-failed`: falha segura, precisa intervenção.
 - `pedreira:governance`: processo, automação, CI/CD e documentação operacional.
 
+## Worker local do Claude Code
+
+O worker local (`tools/claude-worker/worker.ts`) é a ponte que evita copiar e colar entre chats: Codex cria/especifica a issue, o worker chama Claude Code, Claude implementa em branch própria, abre PR e para.
+
+Uso manual:
+
+```powershell
+npm run claude-worker -- --dry
+npm run claude-worker -- --issue 123 --dry
+npm run claude-worker
+```
+
+Instalação como tarefa agendada escondida no Windows:
+
+```powershell
+.\scripts\install-claude-worker-task.ps1
+```
+
+Regras do worker:
+
+- só inicia na `main` limpa e sincronizada com `origin/main`;
+- processa exatamente uma issue `pedreira:claude-ready` por vez;
+- move labels para `pedreira:claude-running`, `pedreira:review-ready` ou `pedreira:claude-failed`;
+- cria branch `codex/claude-<issue>-<slug>`;
+- executa Claude Code com permissões limitadas;
+- nunca faz merge;
+- nunca faz deploy;
+- grava logs locais em `.pedreira/claude-worker/`.
+
+Validação do worker:
+
+```powershell
+npm run test:worker
+```
+
 ## Validação padrão
 
 Escolha o menor conjunto que prova a mudança, mas use estes comandos como base:
