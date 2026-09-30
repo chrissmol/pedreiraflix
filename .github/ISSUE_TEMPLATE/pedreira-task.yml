@@ -1,0 +1,53 @@
+name: Tarefa PedreiraFlix
+description: Pequena tarefa rastreável no fluxo Issue -> branch -> PR -> revisão.
+title: "[PedreiraFlix] "
+labels:
+  - pedreira:claude-ready
+body:
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: O que precisa mudar, em uma frase clara.
+      placeholder: "Ex.: adicionar botão de voltar ao canal anterior no player ao vivo."
+    validations:
+      required: true
+  - type: textarea
+    id: escopo
+    attributes:
+      label: Escopo
+      description: O que está dentro desta tarefa.
+      placeholder: |
+        - Alterar apenas o player ao vivo.
+        - Guardar o último canal visitado só em memória da sessão.
+    validations:
+      required: true
+  - type: textarea
+    id: fora_de_escopo
+    attributes:
+      label: Fora de escopo
+      description: O que não deve ser feito nesta tarefa.
+      placeholder: |
+        - Não mexer em catálogo.
+        - Não alterar login ou perfis.
+    validations:
+      required: true
+  - type: textarea
+    id: validacao
+    attributes:
+      label: Validação esperada
+      description: Checks locais, e2e, build ou verificação manual necessária.
+      placeholder: |
+        - npm run lint
+        - npm run build
+        - Playwright: e2e/player.spec.ts
+    validations:
+      required: true
+  - type: textarea
+    id: riscos
+    attributes:
+      label: Riscos / observações
+      description: O que pode quebrar ou precisa de atenção.
+      placeholder: "Ex.: testar no iPhone real porque Chromium não simula Dynamic Island."
+    validations:
+      required: false
