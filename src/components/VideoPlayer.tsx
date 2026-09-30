@@ -1249,6 +1249,7 @@ export default function VideoPlayer({
               {usingHlsJs && (
                 <button
                   onClick={() => setFastLive((v) => !v)}
+                  aria-pressed={fastLive}
                   title="Menos delay, mais risco de travar em picos do provedor"
                   className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
                     fastLive ? 'border-brand-400/60 bg-brand-500/20 text-brand-300' : 'border-white/15 text-zinc-400 hover:text-white'
