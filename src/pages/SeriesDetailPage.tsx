@@ -30,16 +30,26 @@ export default function SeriesDetailPage() {
 
   useEffect(() => {
     if (!client || !id) return
+    let cancelled = false
+    // oxlint-disable-next-line react/set-state-in-effect -- route/profile changes start a new detail request.
     setLoading(true)
     setBlocked(false)
     cached(`series-info:${id}`, () => client.getSeriesInfo(Number(id)))
       .then((data) => {
+        if (cancelled) return
         setSeries(data)
         setActiveSeason(data.seasons[0]?.seasonNumber ?? 1)
-        if (isKids) isCategoryBlocked(client, 'series', data.categoryId).then(setBlocked)
+        if (isKids) isCategoryBlocked(client, 'series', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar série'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar série')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [client, id, isKids])
 
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>

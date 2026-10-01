@@ -1,30 +1,19 @@
 import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState } from 'react'
-import {
-  AirPlay,
-  Cast,
-  ChevronDown,
-  ChevronLeft,
-  ChevronUp,
-  Gauge,
-  Languages,
-  Maximize,
-  Minimize,
-  Pause,
-  PictureInPicture,
-  Play,
-  Settings,
-  SkipBack,
-  SkipForward,
-  SkipNext,
-  Subtitles,
-  VolumeHigh,
-  VolumeMute,
-  Zap,
-} from './icons'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
+import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
+import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
+import { VideoPlayerHeader } from './VideoPlayerHeader'
+import type { QualityLevel } from './VideoPlayerQualityMenu'
+import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
+import {
+  CUE_BG_BY_SUBTITLE_BACKGROUND,
+  CUE_SIZE_EM_BY_SUBTITLE_SIZE,
+  NEXT_UP_LEAD,
+  estimateInitialBandwidthBps,
+} from './videoPlayerUtils'
 
 interface NextEpisode {
   label: string
@@ -50,12 +39,6 @@ interface VideoPlayerProps {
   onChannelDown?: () => void
 }
 
-interface QualityLevel {
-  index: number
-  height: number
-  bitrate: number
-}
-
 interface AudioTrack {
   id: number
   name: string
@@ -64,31 +47,6 @@ interface AudioTrack {
 interface SubtitleTrack {
   id: number
   name: string
-}
-
-const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
-// Auto-advance countdown, in seconds before the episode ends.
-const NEXT_UP_LEAD = 12
-
-// Chrome/Edge expose a rough downlink estimate (Mbps) via the Network
-// Information API. When present, seed hls.js's bandwidth estimator with it
-// so a connection that's already fast starts at a high quality level
-// immediately instead of ramping up from a conservative default guess.
-function estimateInitialBandwidthBps(): number | undefined {
-  const nav = navigator as Navigator & { connection?: { downlink?: number } }
-  const downlinkMbps = nav.connection?.downlink
-  if (!downlinkMbps || downlinkMbps <= 0) return undefined
-  return Math.round(downlinkMbps * 1_000_000 * 0.8)
-}
-
-function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const mm = h > 0 ? String(m).padStart(2, '0') : String(m)
-  const ss = String(s).padStart(2, '0')
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
 export default function VideoPlayer({
@@ -812,12 +770,8 @@ export default function VideoPlayer({
     next?.onPlay()
   }
 
-  const CUE_SIZE_EM = { small: 0.9, medium: 1.3, large: 1.8 }[subtitleSize]
-  const CUE_BG = {
-    none: 'transparent',
-    semi: 'rgba(0, 0, 0, 0.65)',
-    solid: 'rgba(0, 0, 0, 0.95)',
-  }[subtitleBackground]
+  const CUE_SIZE_EM = CUE_SIZE_EM_BY_SUBTITLE_SIZE[subtitleSize]
+  const CUE_BG = CUE_BG_BY_SUBTITLE_BACKGROUND[subtitleBackground]
 
   return (
     <div
@@ -856,478 +810,97 @@ export default function VideoPlayer({
       <style>{`#${playerId} video::cue { font-size: ${CUE_SIZE_EM}em; background: ${CUE_BG}; }`}</style>
       <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
 
-      <div
-        data-controls
-        className={`absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
-          controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-      >
-        {onBack && (
-          <button
-            onClick={onBack}
-            aria-label="Voltar"
-            className="shrink-0 rounded-full p-2 text-white transition-colors hover:bg-white/10 active:bg-white/20"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-        )}
-        <div className="min-w-0 flex-1 pt-1.5">
-          {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
-          {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {audioTracks.length > 1 && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'audio' ? null : 'audio'))}
-                aria-label="Áudio"
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-              >
-                <Languages className="h-4 w-4" />
-              </button>
-              {openMenu === 'audio' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-40 overflow-hidden rounded-lg text-sm">
-                  {audioTracks.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => selectAudioTrack(t.id)}
-                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                        currentAudioTrack === t.id ? 'text-brand-300' : 'text-white'
-                      }`}
-                    >
-                      {t.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+      <VideoPlayerHeader
+        title={title}
+        subtitle={subtitle}
+        onBack={onBack}
+        controlsVisible={controlsVisible}
+        openMenu={openMenu}
+        onToggleMenu={(menu) => setOpenMenu((m) => (m === menu ? null : menu))}
+        audioTracks={audioTracks}
+        currentAudioTrack={currentAudioTrack}
+        onSelectAudioTrack={selectAudioTrack}
+        subtitleTracks={subtitleTracks}
+        currentSubtitleTrack={currentSubtitleTrack}
+        subtitleSize={subtitleSize}
+        subtitleBackground={subtitleBackground}
+        onSelectSubtitleTrack={selectSubtitleTrack}
+        onSelectSubtitleSize={setSubtitleSize}
+        onSelectSubtitleBackground={setSubtitleBackground}
+        isLive={isLive}
+        playbackRate={playbackRate}
+        onSelectSpeed={setSpeed}
+        pipSupported={pipSupported}
+        isPip={isPip}
+        onTogglePip={togglePip}
+        airPlaySupported={airPlaySupported}
+        onShowAirPlayPicker={showAirPlayPicker}
+        castSupported={castSupported}
+        casting={casting}
+        onCast={handleCast}
+        levels={levels}
+        currentLevel={currentLevel}
+        autoPickedHeight={autoPickedHeight}
+        onSelectLevel={selectLevel}
+      />
 
-          {subtitleTracks.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'subtitles' ? null : 'subtitles'))}
-                aria-label="Legendas"
-                className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors ${
-                  currentSubtitleTrack !== -1
-                    ? 'border-brand-400/50 bg-brand-500/20 text-brand-200'
-                    : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
-                }`}
-              >
-                <Subtitles className="h-4 w-4" />
-              </button>
-              {openMenu === 'subtitles' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-40 overflow-hidden rounded-lg text-sm">
-                  <button
-                    onClick={() => selectSubtitleTrack(-1)}
-                    className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                      currentSubtitleTrack === -1 ? 'text-brand-300' : 'text-white'
-                    }`}
-                  >
-                    Desativadas
-                  </button>
-                  {subtitleTracks.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => selectSubtitleTrack(t.id)}
-                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                        currentSubtitleTrack === t.id ? 'text-brand-300' : 'text-white'
-                      }`}
-                    >
-                      {t.name}
-                    </button>
-                  ))}
-                  <div className="border-t border-white/10 px-3 py-2">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Tamanho</p>
-                    <div className="flex gap-1.5">
-                      {(['small', 'medium', 'large'] as const).map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setSubtitleSize(size)}
-                          aria-label={`Legenda tamanho ${size}`}
-                          className={`flex-1 rounded-md border py-1 text-xs transition-colors ${
-                            subtitleSize === size ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
-                          }`}
-                        >
-                          {size === 'small' ? 'P' : size === 'medium' ? 'M' : 'G'}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Fundo</p>
-                    <div className="flex gap-1.5">
-                      {([
-                        ['none', 'Nenhum'],
-                        ['semi', 'Leve'],
-                        ['solid', 'Sólido'],
-                      ] as const).map(([bg, label]) => (
-                        <button
-                          key={bg}
-                          onClick={() => setSubtitleBackground(bg)}
-                          className={`flex-1 rounded-md border py-1 text-[11px] transition-colors ${
-                            subtitleBackground === bg ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      <VideoPlayerZappingControls
+        isLive={isLive}
+        controlsVisible={controlsVisible}
+        error={error}
+        onChannelUp={onChannelUp}
+        onChannelDown={onChannelDown}
+      />
 
-          {!isLive && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
-                aria-label="Velocidade"
-                className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-              >
-                <Gauge className="h-4 w-4" />
-                {playbackRate !== 1 && <span className="tabular-nums">{playbackRate}x</span>}
-              </button>
-              {openMenu === 'speed' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-28 overflow-hidden rounded-lg text-sm">
-                  {PLAYBACK_RATES.map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => setSpeed(rate)}
-                      className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                        playbackRate === rate ? 'text-brand-300' : 'text-white'
-                      }`}
-                    >
-                      {rate === 1 ? 'Normal' : `${rate}x`}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {pipSupported && (
-            <button
-              onClick={togglePip}
-              aria-label="Picture-in-Picture"
-              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-                isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
-              }`}
-            >
-              <PictureInPicture className="h-4 w-4" />
-            </button>
-          )}
-
-          {airPlaySupported && (
-            // No pointer-coarse:hidden here unlike PiP/Cast right below — those are mouse-desktop
-            // conveniences that are redundant on touch, but AirPlay only ever exists on Safari, and the
-            // iPhone/iPad it's most useful on are touch devices. Hiding it there (the bug, until now)
-            // meant the button never appeared on exactly the hardware AirPlay is for.
-            <button
-              onClick={showAirPlayPicker}
-              aria-label="AirPlay"
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-            >
-              <AirPlay className="h-4 w-4" />
-            </button>
-          )}
-
-          {castSupported && (
-            <button
-              onClick={handleCast}
-              aria-label="Transmitir (Chromecast)"
-              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-                casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
-              }`}
-            >
-              <Cast className="h-4 w-4" />
-            </button>
-          )}
-
-          {levels.length > 1 && (
-            <div className="relative">
-              <button
-                onClick={() => setOpenMenu((m) => (m === 'quality' ? null : 'quality'))}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-              >
-                <Settings className="h-4 w-4" />
-                {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
-              </button>
-              {openMenu === 'quality' && (
-                <div className="glass-panel absolute right-0 mt-1.5 w-36 overflow-hidden rounded-lg text-sm">
-                  <button
-                    onClick={() => selectLevel(-1)}
-                    className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                      currentLevel === -1 ? 'text-brand-300' : 'text-white'
-                    }`}
-                  >
-                    Automático
-                  </button>
-                  {[...levels]
-                    .sort((a, b) => b.height - a.height)
-                    .map((lvl) => (
-                      <button
-                        key={lvl.index}
-                        onClick={() => selectLevel(lvl.index)}
-                        className={`block w-full px-3 py-3 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                          currentLevel === lvl.index ? 'text-brand-300' : 'text-white'
-                        }`}
-                      >
-                        {lvl.height}p
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {nextUpVisible && next && !error && (
-        <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">
-          <div className="glass-panel glow-border flex w-64 flex-col gap-2 rounded-xl p-3">
-            <p className="text-xs text-zinc-400">A seguir</p>
-            <p className="truncate text-sm font-semibold text-white">{next.label}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={playNext}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 py-2 text-xs font-bold text-white hover:brightness-110"
-              >
-                <SkipNext className="h-4 w-4" /> Reproduzir
-              </button>
-              <button
-                onClick={() => {
-                  setNextUpVisible(false)
-                  setNextUpDismissed(true)
-                }}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {seekFlash && (
-        <div
-          key={seekFlash.key}
-          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-sm font-bold text-white ${
-            seekFlash.side === -1 ? 'left-0 rounded-r-[100%]' : 'right-0 rounded-l-[100%]'
-          }`}
-        >
-          {seekFlash.side === -1 ? '−10s' : '+10s'}
-        </div>
-      )}
-
-      {isLive && (onChannelUp || onChannelDown) && !error && (
-        <div
-          data-controls
-          className={`absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 transition-opacity duration-200 sm:right-4 ${
-            controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-          }`}
-        >
-          <button
-            onClick={onChannelUp}
-            disabled={!onChannelUp}
-            aria-label="Próximo canal"
-            title="Próximo canal (↑)"
-            className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
-          >
-            <ChevronUp className="h-5 w-5" />
-          </button>
-          <button
-            onClick={onChannelDown}
-            disabled={!onChannelDown}
-            aria-label="Canal anterior"
-            title="Canal anterior (↓)"
-            className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
-          >
-            <ChevronDown className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-
-      {buffering && !error && (
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400" />
-          {downloadedPct !== null && (
-            <p className="rounded-lg bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm tabular-nums">
-              {downloadedPct}%
-            </p>
-          )}
-          {showSlowHint && (
-            <p className="rounded-lg bg-black/60 px-3 py-1.5 text-xs text-zinc-300 backdrop-blur-sm">
-              Conexão lenta com o servidor — ainda carregando...
-            </p>
-          )}
-        </div>
-      )}
-
-      {needsUnmutePrompt && !error && (
-        <button
-          data-controls
-          onClick={unmute}
-          className="glass-panel absolute left-3 top-20 z-20 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-brand-400/40"
-        >
-          <VolumeMute className="h-4 w-4" /> Ativar som
-        </button>
-      )}
-
-      {/* Mouse: just an icon while paused (click anywhere toggles). */}
-      {!buffering && !isPlaying && !error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center pointer-coarse:hidden">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
-            <Play className="ml-1 h-8 w-8 text-white" />
-          </div>
-        </div>
-      )}
-
-      {/* Touch: big tappable play/pause with ±10s, shown together with the controls. */}
-      {!buffering && !error && (
-        <div
-          className={`pointer-events-none absolute inset-0 z-10 hidden items-center justify-center gap-10 transition-opacity duration-200 pointer-coarse:flex ${
-            controlsVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {!isLive && (
-            <button
-              data-controls
-              onClick={() => skip(-10)}
-              aria-label="Voltar 10s"
-              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
-            >
-              <SkipBack className="h-6 w-6" />
-            </button>
-          )}
-          <button
-            data-controls
-            onClick={togglePlay}
-            aria-label="Play/Pause"
-            className={`rounded-full bg-black/40 p-5 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
-          >
-            {isPlaying ? <Pause className="h-9 w-9" /> : <Play className="ml-0.5 h-9 w-9" />}
-          </button>
-          {!isLive && (
-            <button
-              data-controls
-              onClick={() => skip(10)}
-              aria-label="Avançar 10s"
-              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
-            >
-              <SkipForward className="h-6 w-6" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/90 text-center text-sm text-rose-300">
-          <p className="max-w-xs">{error}</p>
-          <button
-            onClick={() => {
-              setError(null)
-              setRetryToken((t) => t + 1)
-            }}
-            className="glow-border rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      )}
+      <VideoPlayerCenterOverlays
+        error={error}
+        nextUpVisible={nextUpVisible}
+        next={next}
+        onPlayNext={playNext}
+        onDismissNextUp={() => {
+          setNextUpVisible(false)
+          setNextUpDismissed(true)
+        }}
+        seekFlash={seekFlash}
+        buffering={buffering}
+        downloadedPct={downloadedPct}
+        showSlowHint={showSlowHint}
+        needsUnmutePrompt={needsUnmutePrompt}
+        onUnmute={unmute}
+        isPlaying={isPlaying}
+        isLive={isLive}
+        controlsVisible={controlsVisible}
+        onTogglePlay={togglePlay}
+        onSkip={skip}
+        onRetry={() => {
+          setError(null)
+          setRetryToken((t) => t + 1)
+        }}
+      />
 
       {!error && (
-        <div
-          data-controls
-          className={`absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-8 transition-opacity duration-200 ${
-            controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-          }`}
-        >
-          {isLive ? (
-            <div className="mb-2 flex items-center gap-2">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
-              <span className="text-xs font-bold tracking-wide text-white">AO VIVO</span>
-              {usingHlsJs && (
-                <button
-                  onClick={() => setFastLive((v) => !v)}
-                  title="Menos delay, mais risco de travar em picos do provedor"
-                  className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                    fastLive ? 'border-brand-400/60 bg-brand-500/20 text-brand-300' : 'border-white/15 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Zap className="h-3 w-3" /> Rápido
-                </button>
-              )}
-            </div>
-          ) : (
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              value={currentTime}
-              onChange={handleSeek}
-              aria-label="Progresso"
-              className="mb-1 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-brand-500 pointer-coarse:h-2"
-            />
-          )}
-
-          {/* Touch hides the buttons the center cluster already has, and the volume (phones use the hardware keys). */}
-          <div className="flex items-center gap-2">
-            <button onClick={togglePlay} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Play/Pause">
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-            </button>
-
-            {!isLive && (
-              <>
-                <button onClick={() => skip(-10)} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Voltar 10s">
-                  <SkipBack className="h-5 w-5" />
-                </button>
-                <button onClick={() => skip(10)} className="rounded-full p-1.5 text-white transition-transform hover:scale-110 pointer-coarse:hidden" aria-label="Avançar 10s">
-                  <SkipForward className="h-5 w-5" />
-                </button>
-              </>
-            )}
-
-            <div className="flex items-center gap-2 pointer-coarse:hidden">
-              <button onClick={toggleMute} className="rounded-full p-1.5 text-white transition-transform hover:scale-110" aria-label="Mudo">
-                {isMuted || volume === 0 ? <VolumeMute className="h-5 w-5" /> : <VolumeHigh className="h-5 w-5" />}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={isMuted ? 0 : volume}
-                onChange={handleVolume}
-                aria-label="Volume"
-                className="h-1 w-16 shrink-0 cursor-pointer appearance-none rounded-full bg-white/25 accent-brand-500 sm:w-20"
-              />
-            </div>
-
-            {!isLive && (
-              <span className="text-xs tabular-nums text-zinc-300">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-            )}
-
-            <div className="ml-auto flex items-center gap-1">
-              {next && !isLive && (
-                <button
-                  onClick={playNext}
-                  aria-label="Próximo episódio"
-                  title="Próximo episódio"
-                  className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20 pointer-coarse:hidden"
-                >
-                  <SkipNext className="h-5 w-5" />
-                </button>
-              )}
-              {fsSupported && (
-                <button onClick={toggleFullscreen} className="rounded-full p-2 text-white transition-transform hover:scale-110 active:bg-white/20" aria-label="Tela cheia">
-                  {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <VideoPlayerBottomControls
+          controlsVisible={controlsVisible}
+          isLive={isLive}
+          usingHlsJs={usingHlsJs}
+          fastLive={fastLive}
+          onToggleFastLive={() => setFastLive((v) => !v)}
+          duration={duration}
+          currentTime={currentTime}
+          onSeek={handleSeek}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+          onSkip={skip}
+          isMuted={isMuted}
+          volume={volume}
+          onToggleMute={toggleMute}
+          onVolumeChange={handleVolume}
+          hasNext={Boolean(next)}
+          onPlayNext={playNext}
+          fsSupported={fsSupported}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+        />
       )}
     </div>
   )
