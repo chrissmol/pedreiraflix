@@ -1,15 +1,11 @@
 import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState } from 'react'
 import {
-  AirPlay,
-  Cast,
   ChevronDown,
-  ChevronLeft,
   ChevronUp,
   Maximize,
   Minimize,
   Pause,
-  PictureInPicture,
   Play,
   SkipBack,
   SkipForward,
@@ -21,10 +17,8 @@ import {
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { usePlayerPrefs } from '../store/playerPrefs'
-import { VideoPlayerAudioMenu } from './VideoPlayerAudioMenu'
-import { VideoPlayerQualityMenu, type QualityLevel } from './VideoPlayerQualityMenu'
-import { VideoPlayerSpeedMenu } from './VideoPlayerSpeedMenu'
-import { VideoPlayerSubtitleMenu } from './VideoPlayerSubtitleMenu'
+import { VideoPlayerHeader } from './VideoPlayerHeader'
+import type { QualityLevel } from './VideoPlayerQualityMenu'
 import {
   CUE_BG_BY_SUBTITLE_BACKGROUND,
   CUE_SIZE_EM_BY_SUBTITLE_SIZE,
@@ -828,109 +822,39 @@ export default function VideoPlayer({
       <style>{`#${playerId} video::cue { font-size: ${CUE_SIZE_EM}em; background: ${CUE_BG}; }`}</style>
       <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
 
-      <div
-        data-controls
-        className={`absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
-          controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-      >
-        {onBack && (
-          <button
-            onClick={onBack}
-            aria-label="Voltar"
-            className="shrink-0 rounded-full p-2 text-white transition-colors hover:bg-white/10 active:bg-white/20"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-        )}
-        <div className="min-w-0 flex-1 pt-1.5">
-          {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
-          {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {audioTracks.length > 1 && (
-            <VideoPlayerAudioMenu
-              open={openMenu === 'audio'}
-              tracks={audioTracks}
-              currentTrack={currentAudioTrack}
-              onToggle={() => setOpenMenu((m) => (m === 'audio' ? null : 'audio'))}
-              onSelectTrack={selectAudioTrack}
-            />
-          )}
-
-          {subtitleTracks.length > 0 && (
-            <VideoPlayerSubtitleMenu
-              open={openMenu === 'subtitles'}
-              tracks={subtitleTracks}
-              currentTrack={currentSubtitleTrack}
-              subtitleSize={subtitleSize}
-              subtitleBackground={subtitleBackground}
-              onToggle={() => setOpenMenu((m) => (m === 'subtitles' ? null : 'subtitles'))}
-              onSelectTrack={selectSubtitleTrack}
-              onSelectSize={setSubtitleSize}
-              onSelectBackground={setSubtitleBackground}
-            />
-          )}
-
-          {!isLive && (
-            <VideoPlayerSpeedMenu
-              open={openMenu === 'speed'}
-              playbackRate={playbackRate}
-              onToggle={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
-              onSelect={setSpeed}
-            />
-          )}
-
-          {pipSupported && (
-            <button
-              onClick={togglePip}
-              aria-label="Picture-in-Picture"
-              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-                isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
-              }`}
-            >
-              <PictureInPicture className="h-4 w-4" />
-            </button>
-          )}
-
-          {airPlaySupported && (
-            // No pointer-coarse:hidden here unlike PiP/Cast right below — those are mouse-desktop
-            // conveniences that are redundant on touch, but AirPlay only ever exists on Safari, and the
-            // iPhone/iPad it's most useful on are touch devices. Hiding it there (the bug, until now)
-            // meant the button never appeared on exactly the hardware AirPlay is for.
-            <button
-              onClick={showAirPlayPicker}
-              aria-label="AirPlay"
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
-            >
-              <AirPlay className="h-4 w-4" />
-            </button>
-          )}
-
-          {castSupported && (
-            <button
-              onClick={handleCast}
-              aria-label="Transmitir (Chromecast)"
-              className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-                casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
-              }`}
-            >
-              <Cast className="h-4 w-4" />
-            </button>
-          )}
-
-          {levels.length > 1 && (
-            <VideoPlayerQualityMenu
-              open={openMenu === 'quality'}
-              levels={levels}
-              currentLevel={currentLevel}
-              autoPickedHeight={autoPickedHeight}
-              onToggle={() => setOpenMenu((m) => (m === 'quality' ? null : 'quality'))}
-              onSelect={selectLevel}
-            />
-          )}
-        </div>
-      </div>
+      <VideoPlayerHeader
+        title={title}
+        subtitle={subtitle}
+        onBack={onBack}
+        controlsVisible={controlsVisible}
+        openMenu={openMenu}
+        onToggleMenu={(menu) => setOpenMenu((m) => (m === menu ? null : menu))}
+        audioTracks={audioTracks}
+        currentAudioTrack={currentAudioTrack}
+        onSelectAudioTrack={selectAudioTrack}
+        subtitleTracks={subtitleTracks}
+        currentSubtitleTrack={currentSubtitleTrack}
+        subtitleSize={subtitleSize}
+        subtitleBackground={subtitleBackground}
+        onSelectSubtitleTrack={selectSubtitleTrack}
+        onSelectSubtitleSize={setSubtitleSize}
+        onSelectSubtitleBackground={setSubtitleBackground}
+        isLive={isLive}
+        playbackRate={playbackRate}
+        onSelectSpeed={setSpeed}
+        pipSupported={pipSupported}
+        isPip={isPip}
+        onTogglePip={togglePip}
+        airPlaySupported={airPlaySupported}
+        onShowAirPlayPicker={showAirPlayPicker}
+        castSupported={castSupported}
+        casting={casting}
+        onCast={handleCast}
+        levels={levels}
+        currentLevel={currentLevel}
+        autoPickedHeight={autoPickedHeight}
+        onSelectLevel={selectLevel}
+      />
 
       {nextUpVisible && next && !error && (
         <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">

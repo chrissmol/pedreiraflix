@@ -1,0 +1,192 @@
+import { AirPlay, Cast, ChevronLeft, PictureInPicture } from './icons'
+import type { SubtitleBackground, SubtitleSize } from '../store/playerPrefs'
+import { VideoPlayerAudioMenu } from './VideoPlayerAudioMenu'
+import { VideoPlayerQualityMenu, type QualityLevel } from './VideoPlayerQualityMenu'
+import { VideoPlayerSpeedMenu } from './VideoPlayerSpeedMenu'
+import { VideoPlayerSubtitleMenu } from './VideoPlayerSubtitleMenu'
+
+interface AudioTrack {
+  id: number
+  name: string
+}
+
+interface SubtitleTrack {
+  id: number
+  name: string
+}
+
+type MenuKey = 'quality' | 'audio' | 'subtitles' | 'speed' | null
+
+interface VideoPlayerHeaderProps {
+  title?: string
+  subtitle?: string
+  onBack?: () => void
+  controlsVisible: boolean
+  openMenu: MenuKey
+  onToggleMenu: (menu: Exclude<MenuKey, null>) => void
+  audioTracks: AudioTrack[]
+  currentAudioTrack: number
+  onSelectAudioTrack: (id: number) => void
+  subtitleTracks: SubtitleTrack[]
+  currentSubtitleTrack: number
+  subtitleSize: SubtitleSize
+  subtitleBackground: SubtitleBackground
+  onSelectSubtitleTrack: (id: number) => void
+  onSelectSubtitleSize: (size: SubtitleSize) => void
+  onSelectSubtitleBackground: (background: SubtitleBackground) => void
+  isLive: boolean
+  playbackRate: number
+  onSelectSpeed: (rate: number) => void
+  pipSupported: boolean
+  isPip: boolean
+  onTogglePip: () => void
+  airPlaySupported: boolean
+  onShowAirPlayPicker: () => void
+  castSupported: boolean
+  casting: boolean
+  onCast: () => void
+  levels: QualityLevel[]
+  currentLevel: number
+  autoPickedHeight: number | null
+  onSelectLevel: (level: number) => void
+}
+
+export function VideoPlayerHeader({
+  title,
+  subtitle,
+  onBack,
+  controlsVisible,
+  openMenu,
+  onToggleMenu,
+  audioTracks,
+  currentAudioTrack,
+  onSelectAudioTrack,
+  subtitleTracks,
+  currentSubtitleTrack,
+  subtitleSize,
+  subtitleBackground,
+  onSelectSubtitleTrack,
+  onSelectSubtitleSize,
+  onSelectSubtitleBackground,
+  isLive,
+  playbackRate,
+  onSelectSpeed,
+  pipSupported,
+  isPip,
+  onTogglePip,
+  airPlaySupported,
+  onShowAirPlayPicker,
+  castSupported,
+  casting,
+  onCast,
+  levels,
+  currentLevel,
+  autoPickedHeight,
+  onSelectLevel,
+}: VideoPlayerHeaderProps) {
+  return (
+    <div
+      data-controls
+      className={`absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
+        controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
+      {onBack && (
+        <button
+          onClick={onBack}
+          aria-label="Voltar"
+          className="shrink-0 rounded-full p-2 text-white transition-colors hover:bg-white/10 active:bg-white/20"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+      )}
+      <div className="min-w-0 flex-1 pt-1.5">
+        {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
+        {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        {audioTracks.length > 1 && (
+          <VideoPlayerAudioMenu
+            open={openMenu === 'audio'}
+            tracks={audioTracks}
+            currentTrack={currentAudioTrack}
+            onToggle={() => onToggleMenu('audio')}
+            onSelectTrack={onSelectAudioTrack}
+          />
+        )}
+
+        {subtitleTracks.length > 0 && (
+          <VideoPlayerSubtitleMenu
+            open={openMenu === 'subtitles'}
+            tracks={subtitleTracks}
+            currentTrack={currentSubtitleTrack}
+            subtitleSize={subtitleSize}
+            subtitleBackground={subtitleBackground}
+            onToggle={() => onToggleMenu('subtitles')}
+            onSelectTrack={onSelectSubtitleTrack}
+            onSelectSize={onSelectSubtitleSize}
+            onSelectBackground={onSelectSubtitleBackground}
+          />
+        )}
+
+        {!isLive && (
+          <VideoPlayerSpeedMenu
+            open={openMenu === 'speed'}
+            playbackRate={playbackRate}
+            onToggle={() => onToggleMenu('speed')}
+            onSelect={onSelectSpeed}
+          />
+        )}
+
+        {pipSupported && (
+          <button
+            onClick={onTogglePip}
+            aria-label="Picture-in-Picture"
+            className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
+              isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+            }`}
+          >
+            <PictureInPicture className="h-4 w-4" />
+          </button>
+        )}
+
+        {airPlaySupported && (
+          // No pointer-coarse:hidden here unlike PiP/Cast right below — those are mouse-desktop
+          // conveniences that are redundant on touch, but AirPlay only ever exists on Safari, and the
+          // iPhone/iPad it's most useful on are touch devices. Hiding it there (the bug, until now)
+          // meant the button never appeared on exactly the hardware AirPlay is for.
+          <button
+            onClick={onShowAirPlayPicker}
+            aria-label="AirPlay"
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+          >
+            <AirPlay className="h-4 w-4" />
+          </button>
+        )}
+
+        {castSupported && (
+          <button
+            onClick={onCast}
+            aria-label="Transmitir (Chromecast)"
+            className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
+              casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+            }`}
+          >
+            <Cast className="h-4 w-4" />
+          </button>
+        )}
+
+        {levels.length > 1 && (
+          <VideoPlayerQualityMenu
+            open={openMenu === 'quality'}
+            levels={levels}
+            currentLevel={currentLevel}
+            autoPickedHeight={autoPickedHeight}
+            onToggle={() => onToggleMenu('quality')}
+            onSelect={onSelectLevel}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
