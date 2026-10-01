@@ -183,6 +183,25 @@ body {
     0 0 0 4px rgba(58, 151, 255, 0.55);
 }
 
+.pf-video-player.pf-cue-size-small video::cue {
+  font-size: 0.9em;
+}
+.pf-video-player.pf-cue-size-medium video::cue {
+  font-size: 1.3em;
+}
+.pf-video-player.pf-cue-size-large video::cue {
+  font-size: 1.8em;
+}
+.pf-video-player.pf-cue-bg-none video::cue {
+  background: transparent;
+}
+.pf-video-player.pf-cue-bg-semi video::cue {
+  background: rgba(0, 0, 0, 0.65);
+}
+.pf-video-player.pf-cue-bg-solid video::cue {
+  background: rgba(0, 0, 0, 0.95);
+}
+
 /* Touch: no 300ms tap delay / double-tap zoom, no grey tap flash, and 16px form text (smaller makes iOS zoom the page on focus). */
 html {
   -webkit-text-size-adjust: 100%;

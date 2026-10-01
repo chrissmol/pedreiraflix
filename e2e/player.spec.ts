@@ -178,14 +178,15 @@ test('subtitle size and background are adjustable and persist across reload', as
   await page.getByRole('button', { name: 'Legenda tamanho large' }).click()
   await page.getByRole('button', { name: 'Sólido' }).click()
 
-  const cueRule = () => page.locator('style').evaluateAll((els) => els.map((e) => e.textContent).find((t) => t?.includes('::cue')))
-  await expect.poll(cueRule).toContain('1.8em')
-  await expect.poll(cueRule).toContain('rgba(0, 0, 0, 0.95)')
+  const player = page.locator('.pf-video-player')
+  await expect(player).toHaveClass(/pf-cue-size-large/)
+  await expect(player).toHaveClass(/pf-cue-bg-solid/)
 
   // Preferences are global (not per-title), so they should survive a reload/new playback too.
   await page.reload()
   await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
-  await expect.poll(cueRule).toContain('1.8em')
+  await expect(player).toHaveClass(/pf-cue-size-large/)
+  await expect(player).toHaveClass(/pf-cue-bg-solid/)
 })
 
 test('proxied poster images are served with long-lived cache headers', async ({ request }) => {

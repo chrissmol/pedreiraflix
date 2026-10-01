@@ -9,8 +9,6 @@ import { VideoPlayerHeader } from './VideoPlayerHeader'
 import type { QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import {
-  CUE_BG_BY_SUBTITLE_BACKGROUND,
-  CUE_SIZE_EM_BY_SUBTITLE_SIZE,
   NEXT_UP_LEAD,
   estimateInitialBandwidthBps,
 } from './videoPlayerUtils'
@@ -130,8 +128,6 @@ export default function VideoPlayer({
   const subtitleBackground = usePlayerPrefs((s) => s.subtitleBackground)
   const setSubtitleSize = usePlayerPrefs((s) => s.setSubtitleSize)
   const setSubtitleBackground = usePlayerPrefs((s) => s.setSubtitleBackground)
-  // Scopes the ::cue rule below to this player instance — a plain className won't do, ::cue only
-  // accepts a simple selector chain (no descendant combinators into it) so it has to be `#id video::cue`.
   const playerId = useId().replace(/:/g, '')
   const [volume, setVolume] = useState(savedVolume)
   const [isMuted, setIsMuted] = useState(savedMuted)
@@ -770,14 +766,11 @@ export default function VideoPlayer({
     next?.onPlay()
   }
 
-  const CUE_SIZE_EM = CUE_SIZE_EM_BY_SUBTITLE_SIZE[subtitleSize]
-  const CUE_BG = CUE_BG_BY_SUBTITLE_BACKGROUND[subtitleBackground]
-
   return (
     <div
       ref={containerRef}
       id={playerId}
-      className={`group/player relative h-full w-full touch-manipulation select-none bg-black ${controlsVisible ? '' : 'cursor-none'}`}
+      className={`pf-video-player pf-cue-size-${subtitleSize} pf-cue-bg-${subtitleBackground} group/player relative h-full w-full touch-manipulation select-none bg-black ${controlsVisible ? '' : 'cursor-none'}`}
       // Runs before the emulated mouse events, so the handlers below know what kind of pointer this is.
       onPointerDown={(e) => {
         lastPointerType.current = e.pointerType
@@ -805,9 +798,6 @@ export default function VideoPlayer({
         toggleFullscreen()
       }}
     >
-      {/* Styles the browser's native WebVTT rendering (hls.js attaches real <track> elements by default) —
-          ::cue only accepts a bare selector, so this scopes to just this player via its own id. */}
-      <style>{`#${playerId} video::cue { font-size: ${CUE_SIZE_EM}em; background: ${CUE_BG}; }`}</style>
       <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
 
       <VideoPlayerHeader
