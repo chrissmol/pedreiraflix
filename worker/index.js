@@ -244,12 +244,18 @@ async function tmdb(url, env) {
   const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
   if (!title) return none('no-title')
   if (!env.TMDB_TOKEN) return none('no-token')
-  const headers = { authorization: `Bearer ${env.TMDB_TOKEN}`, accept: 'application/json' }
+  // A v4 read token is a JWT: exactly 3 dot-separated parts, no whitespace. Reporting only that shape (never
+  // the value, not even its length) is what tells a 401 caused by a bad paste — a doubled paste shows 5
+  // parts, a copied line break shows ws=1 — apart from a genuinely wrong/revoked token.
+  const raw = String(env.TMDB_TOKEN)
+  const token = raw.trim()
+  const shape = `parts=${token.split('.').length},ws=${Number(raw !== token || /\s/.test(token))}`
+  const headers = { authorization: `Bearer ${token}`, accept: 'application/json' }
   const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
 
   const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
   const hit = search.ok ? (await search.json()).results?.[0] : null
-  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status}`)
+  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status} ${shape}`)
   const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
   if (!details.ok) return none(`details-${details.status}`)
   const d = await details.json()
