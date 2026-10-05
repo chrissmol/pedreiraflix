@@ -240,15 +240,18 @@ async function logError(request) {
 async function tmdb(url, env) {
   const title = (url.searchParams.get('title') || '').slice(0, 200)
   const year = url.searchParams.get('year') || ''
-  if (!env.TMDB_TOKEN || !title) return new Response(null, { status: 204 })
+  // x-tmdb says why there's no data (never the token), so a silent 204 in production is diagnosable with curl.
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  if (!title) return none('no-title')
+  if (!env.TMDB_TOKEN) return none('no-token')
   const headers = { authorization: `Bearer ${env.TMDB_TOKEN}`, accept: 'application/json' }
   const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
 
   const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
   const hit = search.ok ? (await search.json()).results?.[0] : null
-  if (!hit) return new Response(null, { status: 204 })
+  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status}`)
   const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
-  if (!details.ok) return new Response(null, { status: 204 })
+  if (!details.ok) return none(`details-${details.status}`)
   const d = await details.json()
   return Response.json(
     {
