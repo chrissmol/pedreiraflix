@@ -8,6 +8,9 @@ test('going back restores the list scroll position', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
 
   const main = page.locator('#main-content')
+  // Categories stream in one at a time, so scrolling before the page is tall enough silently clamps to 0
+  // — under a loaded machine that happened often enough to make this test flaky.
+  await expect.poll(() => main.evaluate((el) => el.scrollHeight - el.clientHeight), { timeout: 15000 }).toBeGreaterThan(400)
   await main.evaluate((el) => el.scrollTo(0, 400))
   await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(300)
 

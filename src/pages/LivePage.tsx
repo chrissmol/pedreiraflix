@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import FilterBar from '../components/FilterBar'
 import { Calendar } from '../components/icons'
+import LiveChannelCard from '../components/LiveChannelCard'
 import Select from '../components/Select'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { matchesQuery } from '../lib/search'
+import { favoritesFor, useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 
 const PAGE_SIZE = 60
 
@@ -19,6 +23,16 @@ export default function LivePage() {
   const navigate = useNavigate()
 
   const visibleCategories = useMemo(() => groups.filter((g) => g.items.length > 0), [groups])
+
+  // Zapping is a handful of channels, not the whole lineup — favourites come first so getting to them
+  // never means scrolling (or remembering which category they're filed under).
+  const profileId = useActiveProfileId()
+  const favoritesRecord = useLibraryStore((s) => s.favorites)
+  const favoriteChannels = useMemo(() => {
+    const ids = new Set(favoritesFor(favoritesRecord, profileId).filter((f) => f.kind === 'live').map((f) => f.id))
+    if (ids.size === 0) return []
+    return groups.flatMap((g) => g.items).filter((c) => ids.has(c.streamId))
+  }, [favoritesRecord, profileId, groups])
 
   const allChannels = useMemo(() => {
     const scopedGroups = activeCategory
@@ -101,61 +115,70 @@ export default function LivePage() {
               onChange={(e) => setFilter(e.target.value)}
               className="brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white transition-colors focus:border-brand-500/60 sm:w-64"
             />
-            <label className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs font-medium text-zinc-300">
-              <input
-                type="checkbox"
-                checked={onlyArchive}
-                onChange={(e) => setOnlyArchive(e.target.checked)}
-                className="h-3.5 w-3.5 accent-brand-500"
-              />
-              Com catch-up
-            </label>
             <button
               onClick={() => navigate(`/guide${activeCategory ? `?category=${activeCategory}` : ''}`)}
               className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
             >
               <Calendar className="h-4 w-4" /> Guia
             </button>
+            {/* Category lives in the sidebar from sm up; on a phone it joins the collapsible filters
+                instead of standing alone above the list. */}
+            <FilterBar active={[onlyArchive, activeCategory != null].filter(Boolean).length}>
+              <button
+                onClick={() => setOnlyArchive((v) => !v)}
+                aria-pressed={onlyArchive}
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  onlyArchive
+                    ? 'border-brand-400/50 bg-brand-500/15 text-brand-200'
+                    : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
+                }`}
+              >
+                Com catch-up
+              </button>
+              <Select
+                label="Categoria"
+                className="sm:hidden"
+                value={activeCategory ?? ''}
+                onChange={(v) => setActiveCategory(v || null)}
+                options={[
+                  { value: '', label: 'Todos os canais' },
+                  ...visibleCategories.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
+                ]}
+              />
+            </FilterBar>
           </div>
         </div>
 
-        <Select
-          label="Categoria"
-          className="mb-4 sm:hidden"
-          value={activeCategory ?? ''}
-          onChange={(v) => setActiveCategory(v || null)}
-          options={[
-            { value: '', label: 'Todos os canais' },
-            ...visibleCategories.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
-          ]}
-        />
+        {favoriteChannels.length > 0 && !filter.trim() && !activeCategory && !onlyArchive && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold text-zinc-400">Seus canais</h2>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {favoriteChannels.map((ch) => (
+                <LiveChannelCard
+                  key={`fav-${ch.streamId}`}
+                  channel={ch}
+                  onOpen={() => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {error && <p className="text-rose-400">{error}</p>}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
+        {/* A list, not a grid of logo tiles: a live channel's useful information is what's on right now,
+            which needs a line of text and a progress bar — the shape every TV app uses for a lineup. */}
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {loading && groups.length === 0
-            ? Array.from({ length: 30 }).map((_, i) => (
-                <div key={i} className="skeleton h-24 rounded-xl border border-white/5 bg-zinc-900" />
+            ? Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="skeleton h-[72px] rounded-xl border border-white/5 bg-zinc-900" />
               ))
             : channels.map((ch) => (
-                <button
+                <LiveChannelCard
                   key={ch.streamId}
-                  onClick={() => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`)}
-                  className="flex h-24 flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-zinc-900/80 p-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-zinc-800 hover:shadow-[0_12px_28px_-10px_rgba(0,0,0,0.6)]"
-                >
-                  {ch.streamIcon ? (
-                    <img
-                      src={ch.streamIcon}
-                      alt={ch.name}
-                      loading="lazy"
-                      className="h-10 max-w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  ) : null}
-                  <span className="line-clamp-1 text-xs text-zinc-300">{ch.name}</span>
-                </button>
+                  channel={ch}
+                  onOpen={() => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`)}
+                />
               ))}
         </div>
 
