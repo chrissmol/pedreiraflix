@@ -13,6 +13,18 @@ export function estimateInitialBandwidthBps(): number | undefined {
   return Math.round(downlinkMbps * 1_000_000 * 0.8)
 }
 
+/** "01:32:00" (what Xtream sends as a movie's length) -> "1h 32min"; "00:20:00" -> "20min". Anything that
+ * isn't a clock string is handed back as-is, since some panels put free text in this field. */
+export function formatRuntime(raw: string | null): string | null {
+  if (!raw) return null
+  const parts = raw.trim().split(':').map(Number)
+  if (parts.length < 2 || parts.length > 3 || parts.some((n) => !Number.isFinite(n) || n < 0)) return raw
+  const [h, m] = parts.length === 3 ? parts : [0, parts[0]]
+  const total = h * 60 + m
+  if (total <= 0) return null
+  return total >= 60 ? `${Math.floor(total / 60)}h ${total % 60 > 0 ? `${total % 60}min` : ''}`.trim() : `${total}min`
+}
+
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const h = Math.floor(seconds / 3600)

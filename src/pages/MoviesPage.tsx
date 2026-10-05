@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
+import FilterBar from '../components/FilterBar'
 import PosterGrid from '../components/PosterGrid'
 import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
@@ -56,6 +57,7 @@ export default function MoviesPage() {
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-2xl font-bold text-white">Filmes</h1>
+        <FilterBar active={[sort !== 'default', minRating > 0, activeCategory != null].filter(Boolean).length}>
         <Select
           label="Ordenar"
           value={sort}
@@ -78,6 +80,7 @@ export default function MoviesPage() {
             ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
           ]}
         />
+        </FilterBar>
       </div>
 
       <ContinueWatchingRow kind="movie" />

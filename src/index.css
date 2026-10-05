@@ -143,9 +143,12 @@ body {
 .glass-panel {
   background:
     linear-gradient(115deg, rgba(255, 255, 255, 0.16) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, 0.06) 100%),
-    linear-gradient(180deg, rgba(28, 32, 44, 0.7), rgba(12, 14, 20, 0.75));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+    /* Firmer than the original 0.70/0.75: the floating nav and the header sit over posters, and a bright
+     * one showed straight through, leaving the labels hard to read exactly where the app is most used
+     * (phone, where the pill overlaps a row). Still clearly translucent, just no longer see-through. */
+    linear-gradient(180deg, rgba(24, 28, 39, 0.88), rgba(10, 12, 18, 0.92));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
@@ -155,7 +158,7 @@ body {
 :root[data-theme='light'] .glass-panel {
   background:
     linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, 0.15) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(244, 244, 245, 0.8));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 245, 0.93));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     inset 0 -1px 0 rgba(0, 0, 0, 0.04),
@@ -212,6 +215,26 @@ a,
 summary,
 [role='button'] {
   touch-action: manipulation;
+}
+
+/* App-like feel: no pull-to-refresh/rubber-band at the edges (on Android standalone, pulling down reloads the
+ * whole app and kills the playing video), and no iOS long-press menu or text selection on UI chrome.
+ * Synopsis/cast text and inputs stay selectable. */
+html,
+body,
+#main-content {
+  overscroll-behavior: none;
+}
+img,
+a {
+  -webkit-touch-callout: none;
+}
+button,
+nav,
+[role='button'],
+img {
+  -webkit-user-select: none;
+  user-select: none;
 }
 @media (pointer: coarse) {
   input,

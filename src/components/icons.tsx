@@ -457,3 +457,28 @@ export function Shuffle({ className }: IconProps) {
     </Stroke>
   )
 }
+
+export function Sliders({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+      <circle cx="9" cy="6" r="2" />
+      <circle cx="15" cy="12" r="2" />
+      <circle cx="8" cy="18" r="2" />
+    </Stroke>
+  )
+}
+
+/** Save-to-device (arrow leaving the app), distinct from Download's save-into-the-app tray. */
+export function FileArrowDown({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M12 11v6" />
+      <path d="m9 14 3 3 3-3" />
+    </Stroke>
+  )
+}
