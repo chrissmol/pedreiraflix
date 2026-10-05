@@ -213,6 +213,26 @@ summary,
 [role='button'] {
   touch-action: manipulation;
 }
+
+/* App-like feel: no pull-to-refresh/rubber-band at the edges (on Android standalone, pulling down reloads the
+ * whole app and kills the playing video), and no iOS long-press menu or text selection on UI chrome.
+ * Synopsis/cast text and inputs stay selectable. */
+html,
+body,
+#main-content {
+  overscroll-behavior: none;
+}
+img,
+a {
+  -webkit-touch-callout: none;
+}
+button,
+nav,
+[role='button'],
+img {
+  -webkit-user-select: none;
+  user-select: none;
+}
 @media (pointer: coarse) {
   input,
   select,
