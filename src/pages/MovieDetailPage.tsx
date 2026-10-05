@@ -155,6 +155,7 @@ export default function MovieDetailPage() {
                 {movie.director}
               </p>
             )}
+            {tmdb && <p className="pt-2 text-xs">Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.</p>}
           </div>
         </div>
       </div>

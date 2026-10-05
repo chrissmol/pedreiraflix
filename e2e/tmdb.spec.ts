@@ -20,6 +20,7 @@ test('movie detail fills missing genre, year, rating and plot from /api/tmdb', a
   await expect(page.getByText('2014')).toBeVisible()
   await expect(page.getByText('★ 7.4')).toBeVisible()
   await expect(page.getByText('Sinopse vinda do TMDB.')).toBeVisible()
+  await expect(page.getByText(/Dados complementares do TMDB/)).toBeVisible()
 })
 
 test('movie detail still renders when /api/tmdb has no data', async ({ page }) => {
