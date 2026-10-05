@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
+import FilterBar from '../components/FilterBar'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import PosterGrid from '../components/PosterGrid'
@@ -88,6 +89,9 @@ export default function SeriesPage() {
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-2xl font-bold text-white">Séries</h1>
+        <FilterBar
+          active={[sort !== 'default', minRating > 0, activeYear != null, activeCategory != null].filter(Boolean).length}
+        >
         <Select
           label="Ordenar"
           value={sort}
@@ -117,6 +121,7 @@ export default function SeriesPage() {
             ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
           ]}
         />
+        </FilterBar>
       </div>
 
       {allGenres.length > 0 && (

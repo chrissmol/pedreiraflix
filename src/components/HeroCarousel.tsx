@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Info, Play } from './icons'
 
 export interface FeaturedCandidate {
@@ -16,6 +16,8 @@ interface HeroCarouselProps {
    * a timer that starts over on every reload — reopening the app mid-window shows the same title it
    * would've shown if you'd left the tab open the whole time. */
   slotMs?: number
+  /** Rendered as a third button beside Assistir/Detalhes (see HomePage's "Surpreenda-me"). */
+  action?: ReactNode
 }
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
@@ -33,7 +35,7 @@ function resolveSlotMs(fallback: number): number {
  * No manual dot navigation on purpose — it's meant to just show one pick at a time, not advertise how
  * many titles qualify. If a poster image actually fails to load (dead URL, blocked host, broken provider)
  * it's excluded and the slot recomputes over what's left, instead of just sitting there broken. */
-export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS }: HeroCarouselProps) {
+export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: HeroCarouselProps) {
   slotMs = resolveSlotMs(slotMs)
   const [now, setNow] = useState(() => Date.now())
   const [broken, setBroken] = useState<Set<string>>(new Set())
@@ -58,15 +60,18 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS }: HeroCarou
   // own search box/avatar, on every screen size.
   if (!current) {
     return (
-      <div className="relative h-[60vw] max-h-[680px] min-h-[420px] w-full overflow-hidden">
+      <div className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
         <div className="skeleton absolute inset-0" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/50 to-transparent" />
       </div>
     )
   }
 
+  // Capped shorter than the old 680px so the first row always peeks above the fold on a desktop/laptop
+  // screen — the cue every streaming home page uses to say "there's more below", which a hero that
+  // exactly filled the viewport was swallowing.
   return (
-    <div className="relative h-[60vw] max-h-[680px] min-h-[420px] w-full overflow-hidden">
+    <div className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
       {current.image && (
         <img
           key={current.key}
@@ -101,6 +106,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS }: HeroCarou
           >
             <Info className="h-5 w-5" /> Detalhes
           </button>
+          {action}
         </div>
       </div>
     </div>

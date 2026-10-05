@@ -159,18 +159,24 @@ export default function HomePage() {
 
   return (
     <div>
-      <HeroCarousel items={featured} />
-
-      <div className="relative z-10 pt-8 sm:pt-10">
-        <div className="mb-6 flex justify-end px-4 sm:px-10">
+      {/* "Surpreenda-me" lives in the hero's own button row rather than floating alone above the first
+          row, where it read as a stray control. Label hidden on phones so three buttons still fit. */}
+      <HeroCarousel
+        items={featured}
+        action={
           <button
             onClick={surpreendaMe}
-            className="glass-panel flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-brand-400/40 hover:bg-white/10"
+            aria-label="Surpreenda-me"
+            title="Surpreenda-me"
+            className="glass-panel flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
           >
-            <Shuffle className="h-4 w-4" /> Surpreenda-me
+            <Shuffle className="h-5 w-5" />
+            <span className="hidden sm:inline">Surpreenda-me</span>
           </button>
-        </div>
+        }
+      />
 
+      <div className="relative z-10 pt-8 sm:pt-10">
         <ContinueWatchingRow />
 
         {recentMovies.length > 0 && (

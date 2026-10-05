@@ -44,11 +44,11 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
     return (
       <span
         className={`flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 font-medium text-emerald-300 ${
-          compact ? 'p-2.5' : 'px-4 py-2.5'
+          compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'
         }`}
       >
         <Check className="h-5 w-5" />
-        {!compact && 'Baixado'}
+        {!compact && <span className="hidden sm:inline">Baixado</span>}
       </span>
     )
   }
@@ -57,11 +57,11 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
     return (
       <span
         className={`flex items-center gap-2 rounded-lg border border-brand-400/30 bg-brand-500/10 font-medium text-brand-200 tabular-nums ${
-          compact ? 'p-2.5' : 'px-4 py-2.5'
+          compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'
         }`}
       >
         <Download className="h-5 w-5 animate-pulse motion-reduce:animate-none" />
-        {!compact && `Baixando... ${progress}%`}
+        {!compact && <span className="hidden sm:inline">Baixando... {progress}%</span>}
         {compact && `${progress}%`}
       </span>
     )
@@ -76,10 +76,10 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
         failed
           ? 'border-rose-500/40 bg-rose-950/30 text-rose-300 hover:bg-rose-950/50'
           : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
-      } ${compact ? 'p-2.5' : 'px-4 py-2.5'}`}
+      } ${compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'}`}
     >
       <Download className="h-5 w-5" />
-      {!compact && (failed ? 'Tentar de novo' : 'Baixar para ver offline')}
+      {!compact && <span className="hidden sm:inline">{failed ? 'Tentar de novo' : 'Baixar para ver offline'}</span>}
     </button>
   )
 }
