@@ -1,0 +1,43 @@
+import { expect, test } from '@playwright/test'
+import { login } from './helpers'
+
+// The lineup used to be logo tiles with no information: knowing what was on meant leaving for the guide.
+test('the channel list shows what is on now, with a progress bar', async ({ page }) => {
+  await login(page)
+  await page.goto('/live')
+
+  // stream_id 101 ("Canal Notícias 24h") in the mock catalog — see e2e/mock-xtream.mjs.
+  const card = page.getByTestId('live-card-101')
+  await expect(card.getByText('Canal Notícias 24h')).toBeVisible()
+  // The mock names programs after the current half-hour slot, so match the shape, not a fixed time.
+  await expect(card.getByText(/Programa \d{1,2}h\d{2}/)).toBeVisible({ timeout: 10000 })
+  await expect(card.getByText(/até \d{2}:\d{2}/)).toBeVisible()
+})
+
+test('favoriting a channel lifts it into "Seus canais"', async ({ page }) => {
+  await login(page)
+  await page.goto('/live')
+  await expect(page.getByText('Canal Clima')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Favoritar Canal Clima' }).click()
+  const section = page.locator('section', { hasText: 'Seus canais' })
+  await expect(section).toBeVisible()
+  await expect(section.getByText('Canal Clima')).toBeVisible()
+
+  // And it leaves again when unfavorited, instead of sticking around until a reload.
+  await section.getByRole('button', { name: 'Remover Canal Clima dos favoritos' }).click()
+  await expect(page.locator('section', { hasText: 'Seus canais' })).toHaveCount(0)
+})
+
+test('on a phone the catch-up filter sits behind "Filtrar"', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await login(page)
+  await page.goto('/live')
+
+  const catchUp = page.getByRole('button', { name: 'Com catch-up' })
+  await expect(catchUp).toBeHidden()
+  await page.getByRole('button', { name: 'Filtrar' }).click()
+  await expect(catchUp).toBeVisible()
+  await catchUp.click()
+  await expect(catchUp).toHaveAttribute('aria-pressed', 'true')
+})
