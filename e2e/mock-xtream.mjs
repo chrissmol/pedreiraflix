@@ -244,12 +244,35 @@ app.get(['/movie/:u/:p/:file', '/series/:u/:p/:file'], (req, res) => {
 
 // M3U login: one live channel, one movie, one series episode (covers all three classification branches).
 const M3U_PLAYLIST = [
-  '#EXTM3U',
-  '#EXTINF:-1 group-title="Noticias",Canal M3U Teste', 'http://localhost:8790/live/demo/demo123/1.m3u8',
+  // url-tvg on the header is how a playlist declares its XMLTV guide; tvg-id is what links a channel to it.
+  `#EXTM3U url-tvg="http://localhost:${PORT}/guide.xml"`,
+  '#EXTINF:-1 tvg-id="canal.teste" group-title="Noticias",Canal M3U Teste', 'http://localhost:8790/live/demo/demo123/1.m3u8',
   '#EXTINF:-1 group-title="Filmes Acao",Filme M3U Teste', 'http://localhost:8790/movie/demo/demo123/1.mp4',
   '#EXTINF:-1 group-title="Series Drama",Serie M3U Teste S01E01', 'http://localhost:8790/series/demo/demo123/1.mp4',
 ].join('\n')
 app.get('/playlist.m3u', (_req, res) => res.type('audio/x-mpegurl').send(M3U_PLAYLIST))
+
+// XMLTV guide for the playlist above. Times are built around "now" so the current/next program is always
+// well-defined no matter when the suite runs; the offset-less format is the one most providers emit.
+app.get('/guide.xml', (_req, res) => {
+  const stamp = (offsetMinutes) => {
+    const d = new Date(Date.now() + offsetMinutes * 60_000)
+    const p = (n) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+  }
+  res.type('application/xml').send(
+    [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<tv>',
+      '<channel id="canal.teste"><display-name>Canal M3U Teste</display-name></channel>',
+      `<programme start="${stamp(-30)}" stop="${stamp(30)}" channel="canal.teste">`,
+      '<title>Jornal do Mock</title><desc>Programa que esta no ar agora.</desc></programme>',
+      `<programme start="${stamp(30)}" stop="${stamp(90)}" channel="canal.teste">`,
+      '<title>Documentario do Mock</title><desc>Programa seguinte.</desc></programme>',
+      '</tv>',
+    ].join('\n'),
+  )
+})
 
 app.use('/fixtures', express.static(FIX))
 

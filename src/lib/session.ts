@@ -1,4 +1,4 @@
-import { type M3uEntry, M3uClient, parseM3u } from './m3u'
+import { type M3uEntry, M3uClient, parseM3u, parseM3uEpgUrl } from './m3u'
 import { accountId, type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
 import { useLibraryStore } from '../store/library'
@@ -118,10 +118,13 @@ export async function signInM3u(
   const entries: M3uEntry[] = parseM3u(text)
   if (entries.length === 0) throw new Error('Nenhum canal encontrado nessa playlist M3U')
 
+  const epgUrl = parseM3uEpgUrl(text) ?? undefined
   const creds: ProviderCredentials =
-    source.kind === 'url' ? { type: 'm3u', source: 'url', url: source.url } : { type: 'm3u', source: 'file', fileName: source.file.name }
+    source.kind === 'url'
+      ? { type: 'm3u', source: 'url', url: source.url, epgUrl }
+      : { type: 'm3u', source: 'file', fileName: source.file.name, epgUrl }
 
-  const { user, server } = await new M3uClient(entries).login()
+  const { user, server } = await new M3uClient(entries, epgUrl).login()
   const previous = useAuthStore.getState().credentials
   if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user), entries)
@@ -139,7 +142,7 @@ export async function signInSavedAccount(account: SavedAccount): Promise<void> {
   }
   if (!account.entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
   const creds = account.credentials
-  const { user, server } = await new M3uClient(account.entries).login()
+  const { user, server } = await new M3uClient(account.entries, creds.epgUrl).login()
   const previous = useAuthStore.getState().credentials
   if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user), account.entries)

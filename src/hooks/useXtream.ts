@@ -12,6 +12,6 @@ export function useXtream(): ProviderClient | null {
   return useMemo(() => {
     if (!credentials) return null
     if (credentials.type === 'xtream') return new XtreamClient(credentials)
-    return entries ? new M3uClient(entries) : null
+    return entries ? new M3uClient(entries, credentials.epgUrl) : null
   }, [credentials, entries])
 }
