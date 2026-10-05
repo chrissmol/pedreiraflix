@@ -6,6 +6,7 @@ import { Check, Download, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
+import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
@@ -48,11 +49,26 @@ export default function MovieDetailPage() {
     }
   }, [client, id, isKids])
 
+  const [tmdb, setTmdb] = useState<TmdbInfo | null>(null)
+  useEffect(() => {
+    if (!movie) return
+    let cancelled = false
+    getTmdbInfo(movie.name, movie.releaseDate).then((info) => !cancelled && setTmdb(info))
+    return () => {
+      cancelled = true
+    }
+  }, [movie])
+
   if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
   if (blocked) return <BlockedByProfile />
   if (error || !movie) return <div className="pt-32 text-center text-rose-400">{error || 'Filme não encontrado'}</div>
 
   const backdrop = movie.backdropPath[0] || movie.streamIcon
+  // The provider's own data wins; TMDB only fills what it left empty.
+  const year = movie.releaseDate?.slice(0, 4) || tmdb?.year
+  const rating = Number(movie.rating) > 0 ? Number(movie.rating) : tmdb?.rating
+  const genre = movie.genre || tmdb?.genres.join(', ')
+  const plot = movie.plot || tmdb?.overview
 
   return (
     <div className="min-h-screen pb-16">
@@ -73,12 +89,10 @@ export default function MovieDetailPage() {
         <div className="flex-1">
           <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{movie.name}</h1>
           <div className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-400">
-            {movie.releaseDate && <span>{movie.releaseDate.slice(0, 4)}</span>}
+            {year && <span>{year}</span>}
             {movie.duration && <span>{movie.duration}</span>}
-            {movie.rating && Number(movie.rating) > 0 && (
-              <span className="text-brand-300">★ {Number(movie.rating).toFixed(1)}</span>
-            )}
-            {movie.genre && <span>{movie.genre}</span>}
+            {rating ? <span className="text-brand-300">★ {rating.toFixed(1)}</span> : null}
+            {genre && <span>{genre}</span>}
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -126,7 +140,7 @@ export default function MovieDetailPage() {
             )}
           </div>
 
-          {movie.plot && <p className="mt-6 max-w-2xl text-zinc-300">{movie.plot}</p>}
+          {plot && <p className="mt-6 max-w-2xl text-zinc-300">{plot}</p>}
 
           <div className="mt-6 space-y-1 text-sm text-zinc-400">
             {movie.cast && (
@@ -141,6 +155,7 @@ export default function MovieDetailPage() {
                 {movie.director}
               </p>
             )}
+            {tmdb && <p className="pt-2 text-xs">Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.</p>}
           </div>
         </div>
       </div>

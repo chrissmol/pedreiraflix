@@ -234,6 +234,33 @@ async function logError(request) {
   return new Response(null, { status: 204 })
 }
 
+// Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
+// Needs the TMDB_TOKEN secret (v4 "API Read Access Token"); without it, or with no match, answers 204 and
+// the app just shows what the provider sent. The token stays server-side — never reaches the browser.
+async function tmdb(url, env) {
+  const title = (url.searchParams.get('title') || '').slice(0, 200)
+  const year = url.searchParams.get('year') || ''
+  if (!env.TMDB_TOKEN || !title) return new Response(null, { status: 204 })
+  const headers = { authorization: `Bearer ${env.TMDB_TOKEN}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+
+  const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
+  const hit = search.ok ? (await search.json()).results?.[0] : null
+  if (!hit) return new Response(null, { status: 204 })
+  const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
+  if (!details.ok) return new Response(null, { status: 204 })
+  const d = await details.json()
+  return Response.json(
+    {
+      genres: (d.genres || []).map((g) => g.name),
+      year: d.release_date ? d.release_date.slice(0, 4) : null,
+      rating: d.vote_average || null,
+      overview: d.overview || null,
+    },
+    { headers: { 'cache-control': 'public, max-age=86400' } },
+  )
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -250,6 +277,10 @@ export default {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
       if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await xtream(url))
+    }
+    if (url.pathname === '/api/tmdb') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await tmdb(url, env))
     }
     if (url.pathname === '/api/stream') {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
