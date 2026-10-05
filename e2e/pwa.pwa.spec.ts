@@ -18,6 +18,10 @@ test('manifest and icons are reachable and well-formed', async ({ page, request 
   expect(manifest.icons.some((i: { sizes: string }) => i.sizes === '192x192')).toBe(true)
   expect(manifest.icons.some((i: { sizes: string }) => i.sizes === '512x512')).toBe(true)
 
+  // Without a maskable icon Android crops the artwork into its own shape or pads it with a white plate;
+  // this app's PNGs are full-bleed with the mark inside the safe zone, so they serve both purposes.
+  expect(manifest.icons.some((i: { purpose?: string }) => i.purpose?.includes('maskable'))).toBe(true)
+
   for (const icon of manifest.icons) {
     const res = await request.get(icon.src)
     expect(res.ok(), `${icon.src} should load`).toBe(true)

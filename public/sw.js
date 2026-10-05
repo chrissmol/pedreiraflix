@@ -9,8 +9,11 @@
 const VERSION = 'v1'
 const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 
-self.addEventListener('install', () => {
-  self.skipWaiting()
+// No skipWaiting() on install, on purpose: a new worker waits until the page asks it to take over, so an
+// update can never swap the app out from under someone who is in the middle of watching something. The
+// prompt that asks is UpdatePrompt.tsx — without it, an installed PWA could sit on an old build for days.
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
