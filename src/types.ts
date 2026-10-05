@@ -8,8 +8,10 @@ export interface XtreamCredentials {
  * without a `type` field predates this union and is always Xtream (see `normalizeProviderCredentials`). */
 export type ProviderCredentials =
   | ({ type: 'xtream' } & XtreamCredentials)
-  | { type: 'm3u'; source: 'url'; url: string }
-  | { type: 'm3u'; source: 'file'; fileName: string }
+  // `epgUrl` is the XMLTV guide the playlist declared on its own #EXTM3U header. Optional, and absent on
+  // sessions saved before it was read, which simply means no guide until the next sign-in.
+  | { type: 'm3u'; source: 'url'; url: string; epgUrl?: string }
+  | { type: 'm3u'; source: 'file'; fileName: string; epgUrl?: string }
 
 export interface UserInfo {
   username: string

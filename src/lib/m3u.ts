@@ -11,6 +11,7 @@ import type {
 } from '../types'
 import type { ProviderClient } from './provider'
 import { proxyImage } from './xtream'
+import { loadXmltv } from './xmltv'
 
 // ponytail: name/group-title heuristic, not a real catalog API. It won't classify every provider's
 // naming convention correctly; upgrade path is a manual "mudar categoria" override in the UI if this
@@ -28,6 +29,8 @@ export interface M3uEntry {
   episode?: number
   /** Series name with the SxxExx suffix stripped, used to group episodes together. */
   seriesName?: string
+  /** `tvg-id`: the key that matches this channel to an XMLTV `<programme channel="...">`. */
+  tvgId?: string
 }
 
 const EPISODE_RE = /s(\d{1,2})\s?e(\d{1,3})/i
@@ -81,10 +84,32 @@ export function parseM3u(text: string): M3uEntry[] {
       kind = 'live'
     }
 
-    entries.push({ id: id++, name, logo, group: group || 'Sem categoria', url, kind, season, episode, seriesName })
+    entries.push({
+      id: id++,
+      name,
+      logo,
+      group: group || 'Sem categoria',
+      url,
+      kind,
+      season,
+      episode,
+      seriesName,
+      tvgId: attr(line, 'tvg-id') || undefined,
+    })
   }
 
   return entries
+}
+
+/** The EPG address a playlist declares on its own `#EXTM3U` header. Providers spell the attribute three
+ * different ways and some list several URLs separated by commas — the first one is taken. Returning null
+ * simply means this playlist ships no guide, which is the common case. */
+export function parseM3uEpgUrl(text: string): string | null {
+  const header = text.split(/\r?\n/).find((l) => l.trim().startsWith('#EXTM3U'))
+  if (!header) return null
+  const match = header.match(/\b(?:url-tvg|x-tvg-url|tvg-url)="([^"]*)"/i)
+  const first = match?.[1]?.split(',')[0]?.trim()
+  return first && /^https?:\/\//i.test(first) ? first : null
 }
 
 function categoriesFor(entries: M3uEntry[], kind: M3uEntry['kind']): Category[] {
@@ -98,10 +123,12 @@ function categoriesFor(entries: M3uEntry[], kind: M3uEntry['kind']): Category[] 
 export class M3uClient implements ProviderClient {
   private entries: M3uEntry[]
   private byId: Map<number, M3uEntry>
+  private epgUrl?: string
 
-  constructor(entries: M3uEntry[]) {
+  constructor(entries: M3uEntry[], epgUrl?: string) {
     this.entries = entries
     this.byId = new Map(entries.map((e) => [e.id, e]))
+    this.epgUrl = epgUrl
   }
 
   async login(): Promise<{ user: UserInfo; server: ServerInfo }> {
@@ -132,7 +159,7 @@ export class M3uClient implements ProviderClient {
         name: e.name,
         streamIcon: proxyImage(e.logo),
         categoryId: e.group,
-        epgChannelId: null,
+        epgChannelId: e.tvgId ?? null,
         hasArchive: false,
         archiveDurationHours: 0,
       }))
@@ -250,13 +277,26 @@ export class M3uClient implements ProviderClient {
     }
   }
 
-  // M3U carries no EPG — the guide/catch-up UI already treats an empty list as "not available".
-  async getShortEpg(): Promise<EpgProgram[]> {
-    return []
+  /** Programs for one channel, matched by its `tvg-id`. Empty whenever the playlist declares no guide,
+   * the channel has no `tvg-id`, or the XMLTV has nothing for it — all of which the guide UI already
+   * renders as "sem programação". */
+  private async programsFor(streamId: number): Promise<EpgProgram[]> {
+    const tvgId = this.byId.get(streamId)?.tvgId
+    if (!tvgId || !this.epgUrl) return []
+    const guide = await loadXmltv(this.epgUrl)
+    return guide.get(tvgId) ?? []
   }
 
-  async getFullEpg(): Promise<EpgProgram[]> {
-    return []
+  async getShortEpg(streamId: number, limit = 2): Promise<EpgProgram[]> {
+    const programs = await this.programsFor(streamId)
+    // Xtream's own short EPG starts at what's on now; the grid gets the whole day from getFullEpg.
+    const now = Math.floor(Date.now() / 1000)
+    const currentIndex = programs.findIndex((p) => (p.endTimestamp ?? 0) > now)
+    return currentIndex === -1 ? [] : programs.slice(currentIndex, currentIndex + limit)
+  }
+
+  async getFullEpg(streamId: number): Promise<EpgProgram[]> {
+    return this.programsFor(streamId)
   }
 
   streamUrl(_kind: 'live' | 'movie' | 'series', id: number | string): string {
