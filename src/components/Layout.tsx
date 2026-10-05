@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import MobileNav from './MobileNav'
 import TopNav from './TopNav'
+import UpdatePrompt from './UpdatePrompt'
 
 // Per-history-entry scroll offsets. Deliberately module scope, not a store: this is throwaway UI state
 // for the current page session (a reload starts a fresh history anyway), not something to persist.
@@ -97,6 +98,9 @@ export default function Layout() {
         <Outlet />
       </main>
       <MobileNav />
+      {/* In Layout, not App: it anchors against this shell like the header and nav do, and the watch
+          screen (outside Layout) deliberately stays free of chrome while something is playing. */}
+      <UpdatePrompt />
     </div>
   )
 }
