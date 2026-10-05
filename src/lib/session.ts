@@ -103,7 +103,7 @@ export async function signIn(raw: XtreamCredentials, remember = true, label?: st
  * read locally (file) once here, parsed, and the entries carried in the session/saved account from then
  * on, so playback never depends on a second fetch. */
 export async function signInM3u(
-  source: { kind: 'url'; url: string } | { kind: 'file'; file: File },
+  source: ({ kind: 'url'; url: string } | { kind: 'file'; file: File }) & { epgUrl?: string },
   remember = true,
   label?: string,
 ): Promise<void> {
@@ -118,7 +118,10 @@ export async function signInM3u(
   const entries: M3uEntry[] = parseM3u(text)
   if (entries.length === 0) throw new Error('Nenhum canal encontrado nessa playlist M3U')
 
-  const epgUrl = parseM3uEpgUrl(text) ?? undefined
+  // The playlist's own url-tvg wins; the typed one is the fallback for the many playlists that ship
+  // tvg-id on every channel but declare no guide at all.
+  const typed = source.epgUrl?.trim()
+  const epgUrl = parseM3uEpgUrl(text) ?? (typed && /^https?:\/\//i.test(typed) ? typed : undefined)
   const creds: ProviderCredentials =
     source.kind === 'url'
       ? { type: 'm3u', source: 'url', url: source.url, epgUrl }

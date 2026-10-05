@@ -49,6 +49,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState(lastXtream?.password ?? '')
   const [m3uUrl, setM3uUrl] = useState('')
   const [m3uFile, setM3uFile] = useState<File | null>(null)
+  const [epgUrl, setEpgUrl] = useState('')
   const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
@@ -78,9 +79,9 @@ export default function LoginPage() {
     if (method === 'xtream') {
       run('form', () => signIn({ baseUrl, username, password }, remember, name))
     } else if (method === 'm3u-url') {
-      run('form', () => signInM3u({ kind: 'url', url: m3uUrl }, remember, name))
+      run('form', () => signInM3u({ kind: 'url', url: m3uUrl, epgUrl }, remember, name))
     } else if (m3uFile) {
-      run('form', () => signInM3u({ kind: 'file', file: m3uFile }, remember, name))
+      run('form', () => signInM3u({ kind: 'file', file: m3uFile, epgUrl }, remember, name))
     }
   }
 
@@ -319,6 +320,33 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setM3uFile(e.target.files?.[0] ?? null)}
                     className="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3.5 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-500"
                   />
+                </div>
+              )}
+
+              {/* Most playlists carry tvg-id on every channel but declare no url-tvg on the header, so the
+                  guide has to come from somewhere. Blank is the normal case: the playlist's own url-tvg
+                  wins when it has one. */}
+              {method !== 'xtream' && (
+                <div>
+                  <label htmlFor="epg-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    Link do guia (EPG) <span className="font-normal normal-case tracking-normal text-zinc-500">— opcional</span>
+                  </label>
+                  <input
+                    id="epg-url"
+                    name="epg-url"
+                    type="text"
+                    inputMode="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="http://seuprovedor.com/guia.xml"
+                    value={epgUrl}
+                    onChange={(e) => setEpgUrl(e.target.value)}
+                    className={inputClass}
+                  />
+                  <p className="mt-1.5 text-xs text-zinc-500">
+                    Arquivo XMLTV (.xml ou .xml.gz). Deixe em branco se a playlist já trouxer o guia.
+                  </p>
                 </div>
               )}
 
