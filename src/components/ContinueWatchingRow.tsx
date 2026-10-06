@@ -11,6 +11,12 @@ interface ContinueWatchingRowProps {
   kind?: 'movie' | 'series'
 }
 
+function restante(posicao: number, duracao: number): string {
+  const faltam = Math.max(0, Math.round((duracao - posicao) / 60))
+  if (!duracao || faltam === 0) return 'Quase no fim'
+  return faltam >= 60 ? `Faltam ${Math.floor(faltam / 60)}h ${faltam % 60}min` : `Faltam ${faltam} min`
+}
+
 /** Purely local data (localStorage), so it renders instantly regardless of how long the catalog
  * itself takes to load from the provider — it's deliberately the first thing on screen. */
 export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) {
@@ -44,7 +50,8 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
                 )}&image=${encodeURIComponent(p.image || '')}${p.seriesId ? `&seriesId=${p.seriesId}` : ''}`,
               )
             }
-            subtitle={`${Math.round((p.positionSeconds / (p.durationSeconds || 1)) * 100)}% assistido`}
+            // "Faltam 18 min" diz mais do que "68% assistido" na hora de escolher o que ver agora.
+            subtitle={restante(p.positionSeconds, p.durationSeconds)}
             progressPct={(p.positionSeconds / (p.durationSeconds || 1)) * 100}
           />
           <button

@@ -87,7 +87,7 @@ test('poster shows a visual progress bar in "continuar assistindo"', async ({ pa
     )
   })
   await page.reload()
-  const card = page.getByRole('button', { name: 'Filme Explosivo 50% assistido' })
+  const card = page.getByRole('button', { name: /^Filme Explosivo (Faltam|Quase)/ })
   await expect(card).toBeVisible()
   const bar = card.locator('div.bg-gradient-to-r')
   await expect(bar).toHaveCSS('width', /.+/)

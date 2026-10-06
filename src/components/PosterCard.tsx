@@ -9,13 +9,15 @@ interface PosterCardProps {
   /** 0–100. Renders a thin progress bar across the bottom of the poster, always visible (not just on
    * hover) — the same at-a-glance "how far in am I" cue Netflix shows in Continue Watching rows. */
   progressPct?: number | null
+  /** Nota do provedor (0-10). Vira o selo com estrela no canto, como o brand book pede. */
+  rating?: number | null
   /** True inside a CSS grid (PosterGrid), where the grid track itself sizes the card — the fixed
    * w-32/sm:w-40/md:w-44 used everywhere else is for a horizontal scroll row (Row.tsx), which has no
    * track to size against. */
   fill?: boolean
 }
 
-export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
+export default function PosterCard({ title, image, onClick, badge, subtitle, rating, progressPct, fill }: PosterCardProps) {
   return (
     <button
       data-spatial
@@ -38,15 +40,21 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, pro
         />
       ) : null}
 
-      {/* Touch has no hover to reveal this on, so it's shown unconditionally there — mouse/keyboard still
-          get the hover/focus reveal instead of a permanent overlay sitting on every poster. */}
-      <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/20 to-transparent p-2.5 opacity-100 transition-opacity duration-300 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-visible:opacity-100">
-        <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)]">
+      {/* O titulo fica SEMPRE visivel, como o brand book mostra: so o botao de play e revelado no hover.
+          Esconder informacao atras de hover ja foi corrigido tres vezes neste projeto. */}
+      <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/25 to-transparent p-2.5">
+        <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 opacity-0 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
           <Play className="h-3.5 w-3.5 text-white" />
         </div>
-        <p className="line-clamp-2 text-xs font-semibold text-white">{title}</p>
-        {subtitle && <p className="text-[10px] text-brand-200/90">{subtitle}</p>}
+        <p className="line-clamp-2 text-label-badge font-semibold text-white">{title}</p>
+        {subtitle && <p className="text-label-badge text-on-surface-variant">{subtitle}</p>}
       </div>
+
+      {rating != null && rating > 0 && (
+        <span className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
+          ★ {rating.toFixed(1)}
+        </span>
+      )}
 
       {badge && (
         <span className="absolute left-1.5 top-1.5 rounded-md border border-brand-400/30 bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-brand-200 backdrop-blur-sm">
