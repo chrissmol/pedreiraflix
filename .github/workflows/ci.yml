@@ -30,6 +30,10 @@ jobs:
       - name: Typecheck + build
         run: npm run build
 
+      # O Worker serve todo o video (proxy de API e stream) e nao tinha teste automatico nenhum.
+      - name: Proxy tests
+        run: npm run test:proxy
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
