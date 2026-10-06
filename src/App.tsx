@@ -34,6 +34,11 @@ export default function App() {
   const theme = useThemeStore((s) => s.theme)
   useEffect(() => {
     document.documentElement.dataset.theme = theme
+    // theme-color pinta a barra de status do Android no app instalado e a barra de titulo do PWA no
+    // Windows. Era fixa no tom escuro, entao no tema claro a moldura do sistema destoava do app inteiro.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'light' ? '#f7f8fb' : '#06070c')
   }, [theme])
 
   return (

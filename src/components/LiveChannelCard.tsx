@@ -127,13 +127,16 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
         </span>
       </button>
 
+      {/* Sempre visivel, tambem no mouse: esconder acao atras de hover ja foi corrigido tres vezes neste
+          projeto, e a preferencia registrada e nao precisar passar o mouse em cima para ver o que da para
+          fazer. */}
       <button
         onClick={() =>
           toggleFavorite(profileId, { kind: 'live', id: channel.streamId, name: channel.name, image: channel.streamIcon })
         }
         aria-label={isFavorite ? `Remover ${channel.name} dos favoritos` : `Favoritar ${channel.name}`}
         className={`shrink-0 rounded-lg p-2 transition-colors ${
-          isFavorite ? 'text-brand-300' : 'text-zinc-600 hover:text-white pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100'
+          isFavorite ? 'text-brand-300' : 'text-zinc-600 hover:text-white'
         }`}
       >
         {isFavorite ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
