@@ -22,7 +22,7 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, pro
       onClick={onClick}
       // Apple-style hover: the card itself lifts and deepens its own (neutral) shadow — no colored
       // border/glow lighting up around it, unlike before.
-      className={`brand-focus group relative aspect-2/3 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900 text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-white/20 hover:shadow-[0_20px_45px_-12px_rgba(0,0,0,0.7)] focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.08] ${
+      className={`brand-focus group relative aspect-2/3 overflow-hidden rounded-xl border border-outline-soft bg-surface-container text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-outline-strong hover:shadow-[0_20px_45px_-12px_rgba(0,0,0,0.7)] focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.08] ${
         fill ? 'w-full' : 'w-32 shrink-0 sm:w-40 md:w-44'
       }`}
     >

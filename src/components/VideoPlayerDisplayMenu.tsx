@@ -35,7 +35,7 @@ export function VideoPlayerDisplayMenu({
       <button
         onClick={onToggle}
         aria-label="Ajustes de exibição"
-        className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+        className="flex items-center gap-1 rounded-lg border border-outline-soft bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
       >
         <Sliders className="h-4 w-4" />
         {sleepRemaining != null && <span className="tabular-nums">{sleepRemaining}min</span>}
@@ -56,7 +56,7 @@ export function VideoPlayerDisplayMenu({
             </button>
           ))}
 
-          <p className="border-t border-white/10 px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+          <p className="border-t border-outline-soft px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
             Desligar em
           </p>
           <div className="flex flex-wrap gap-1.5 p-3 pt-2">
@@ -67,7 +67,7 @@ export function VideoPlayerDisplayMenu({
                 className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                   (minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes)
                     ? 'border-brand-400/50 bg-brand-500/15 text-brand-200'
-                    : 'border-zinc-700 text-zinc-300 hover:border-brand-500/40 hover:text-white'
+                    : 'border-outline-strong text-zinc-300 hover:border-brand-500/40 hover:text-white'
                 }`}
               >
                 {minutes === 0 ? 'Nunca' : `${minutes}min`}

@@ -19,7 +19,7 @@ export default function PosterGrid({ items, kind, loading }: PosterGridProps) {
     return (
       <div className="grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 sm:px-10 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
         {Array.from({ length: 18 }).map((_, i) => (
-          <div key={i} className="skeleton aspect-2/3 rounded-xl border border-white/5 bg-zinc-900" />
+          <div key={i} className="skeleton aspect-2/3 rounded-xl border border-white/5 bg-surface-container" />
         ))}
       </div>
     )

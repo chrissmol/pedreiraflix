@@ -82,7 +82,7 @@ export default function EpgGuidePage() {
 
   return (
     <div className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))]">
-      <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-8">
+      <div className="flex items-center gap-3 border-b border-outline-soft px-4 py-3 sm:px-8">
         <button
           onClick={() => navigate('/live')}
           aria-label="Voltar para Ao Vivo"
@@ -101,11 +101,11 @@ export default function EpgGuidePage() {
         <div className="overflow-x-auto">
           <div style={{ width: totalWidth + 140 }}>
             {/* Hour ruler */}
-            <div className="sticky top-16 z-10 flex border-b border-white/[0.06] bg-[#06070c]/95 backdrop-blur-sm">
+            <div className="sticky top-16 z-10 flex border-b border-outline-soft bg-[#06070c]/95 backdrop-blur-sm">
               <div className="w-[140px] shrink-0" />
               <div className="relative h-8 flex-1">
                 {hourMarks.map((m) => (
-                  <span key={m.x} className="absolute top-0 border-l border-white/10 pl-1.5 text-[11px] text-zinc-400" style={{ left: m.x }}>
+                  <span key={m.x} className="absolute top-0 border-l border-outline-soft pl-1.5 text-[11px] text-zinc-400" style={{ left: m.x }}>
                     {m.label}
                   </span>
                 ))}
@@ -118,7 +118,7 @@ export default function EpgGuidePage() {
                 <div key={ch.streamId} data-testid={`epg-row-${ch.streamId}`} className="flex border-b border-white/[0.04]">
                   <button
                     onClick={() => navigate(watchUrl(ch))}
-                    className="flex w-[140px] shrink-0 items-center gap-2 border-r border-white/[0.06] bg-[#06070c] px-2.5 py-3 text-left transition-colors hover:bg-white/5"
+                    className="flex w-[140px] shrink-0 items-center gap-2 border-r border-outline-soft bg-[#06070c] px-2.5 py-3 text-left transition-colors hover:bg-white/5"
                   >
                     {ch.streamIcon && <img src={ch.streamIcon} alt="" className="h-6 w-6 shrink-0 object-contain" />}
                     <span className="line-clamp-2 text-xs text-zinc-300">{ch.name}</span>
@@ -154,9 +154,9 @@ export default function EpgGuidePage() {
                                   ? 'border-brand-400/60 bg-brand-500/20 text-white hover:bg-brand-500/30'
                                   : isPast
                                     ? playable
-                                      ? 'border-white/10 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
-                                      : 'cursor-default border-white/5 bg-zinc-900/40 text-zinc-600'
-                                    : 'cursor-default border-white/5 bg-zinc-900/60 text-zinc-400'
+                                      ? 'border-outline-soft bg-surface-container text-zinc-300 hover:bg-surface-high'
+                                      : 'cursor-default border-white/5 bg-surface-container/40 text-zinc-600'
+                                    : 'cursor-default border-white/5 bg-surface-container text-zinc-400'
                               }`}
                               style={{ left, width }}
                             >

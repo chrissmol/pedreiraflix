@@ -14,7 +14,7 @@ export function VideoPlayerSpeedMenu({ open, playbackRate, onToggle, onSelect }:
       <button
         onClick={onToggle}
         aria-label="Velocidade"
-        className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+        className="flex items-center gap-1 rounded-lg border border-outline-soft bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
       >
         <Gauge className="h-4 w-4" />
         {playbackRate !== 1 && <span className="tabular-nums">{playbackRate}x</span>}

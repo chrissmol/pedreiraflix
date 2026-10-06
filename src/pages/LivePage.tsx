@@ -78,7 +78,7 @@ export default function LivePage() {
 
   return (
     <div className="flex min-h-screen pt-[calc(4rem+env(safe-area-inset-top))]">
-      <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-white/[0.06] px-2 py-4 sm:block">
+      <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-outline-soft px-2 py-4 sm:block">
         <button
           onClick={() => setActiveCategory(null)}
           className={`mb-1 w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
@@ -113,11 +113,11 @@ export default function LivePage() {
               placeholder="Filtrar canais..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white transition-colors focus:border-brand-500/60 sm:w-64"
+              className="brand-focus w-full rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2 text-sm text-white transition-colors focus:border-brand-500/60 sm:w-64"
             />
             <button
               onClick={() => navigate(`/guide${activeCategory ? `?category=${activeCategory}` : ''}`)}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-surface-high"
             >
               <Calendar className="h-4 w-4" /> Guia
             </button>
@@ -130,7 +130,7 @@ export default function LivePage() {
                 className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors ${
                   onlyArchive
                     ? 'border-brand-400/50 bg-brand-500/15 text-brand-200'
-                    : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
+                    : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
                 }`}
               >
                 Com catch-up
@@ -171,7 +171,7 @@ export default function LivePage() {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-2">
           {loading && groups.length === 0
             ? Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="skeleton h-[72px] rounded-xl border border-white/5 bg-zinc-900" />
+                <div key={i} className="skeleton h-[72px] rounded-xl border border-white/5 bg-surface-container" />
               ))
             : channels.map((ch) => (
                 <LiveChannelCard

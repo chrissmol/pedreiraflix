@@ -15,7 +15,7 @@ function AppPinSettings() {
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="mb-8 max-w-sm rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs">
+    <div className="mb-8 max-w-sm rounded-lg border border-outline-soft bg-surface-lowest/60 p-3 text-xs">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-zinc-300">
           {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
@@ -44,7 +44,7 @@ function AppPinSettings() {
             placeholder="0000"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus w-16 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-center tracking-widest text-white"
+            className="brand-focus w-16 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center tracking-widest text-white"
           />
           <button
             type="submit"
@@ -65,7 +65,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="w-full rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-left text-xs">
+    <div className="w-full rounded-lg border border-outline-soft bg-surface-lowest/60 p-3 text-left text-xs">
       <label className="mb-3 flex cursor-pointer items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-zinc-300">
           <Shield className="h-3.5 w-3.5" /> Perfil infantil
@@ -106,7 +106,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
             placeholder="0000"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus w-16 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-center tracking-widest text-white"
+            className="brand-focus w-16 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center tracking-widest text-white"
           />
           <button
             type="submit"
@@ -183,7 +183,7 @@ export default function ProfilesPage() {
             key={p.id}
             data-testid={`profile-card-${p.id}`}
             className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors ${
-              p.id === activeProfile?.id ? 'border-brand-400/50 bg-brand-500/10' : 'border-white/[0.06] bg-zinc-900/60'
+              p.id === activeProfile?.id ? 'border-brand-400/50 bg-brand-500/10' : 'border-outline-soft bg-surface-container'
             }`}
           >
             {settingsId === p.id ? (
@@ -199,12 +199,12 @@ export default function ProfilesPage() {
                       {p.id === activeProfile?.id ? <Check className="h-7 w-7" /> : p.name[0]?.toUpperCase()}
                     </span>
                     {p.isKids && (
-                      <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-emerald-400 ring-2 ring-zinc-900" title="Perfil infantil">
+                      <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-emerald-400 ring-2 ring-zinc-900" title="Perfil infantil">
                         <Shield className="h-3 w-3" />
                       </span>
                     )}
                     {p.pin && (
-                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-zinc-400 ring-2 ring-zinc-900" title="Perfil com PIN">
+                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-zinc-400 ring-2 ring-zinc-900" title="Perfil com PIN">
                         <Lock className="h-3 w-3" />
                       </span>
                     )}
@@ -225,7 +225,7 @@ export default function ProfilesPage() {
                       value={renameValue}
                       onChange={(e) => setRenameValue(e.target.value)}
                       onBlur={() => handleRename(p.id)}
-                      className="brand-focus w-full min-w-0 rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 py-1 text-center text-sm text-white"
+                      className="brand-focus w-full min-w-0 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center text-sm text-white"
                     />
                   </form>
                 ) : (
@@ -259,7 +259,7 @@ export default function ProfilesPage() {
           (adding ? (
             <form
               onSubmit={handleAdd}
-              className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 p-4"
+              className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-outline-strong p-4"
             >
               <div className="flex flex-wrap justify-center gap-1.5">
                 {COLORS.map((c) => (
@@ -279,7 +279,7 @@ export default function ProfilesPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nome do perfil"
                 maxLength={20}
-                className="brand-focus w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 py-1.5 text-center text-sm text-white"
+                className="brand-focus w-full rounded-lg border border-outline-soft bg-surface-container px-2 py-1.5 text-center text-sm text-white"
               />
               <div className="flex gap-2">
                 <button
@@ -291,7 +291,7 @@ export default function ProfilesPage() {
                 <button
                   type="button"
                   onClick={() => setAdding(false)}
-                  className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-white"
+                  className="rounded-lg border border-outline-soft px-3 py-1.5 text-xs text-zinc-400 hover:text-white"
                 >
                   Cancelar
                 </button>
@@ -303,9 +303,9 @@ export default function ProfilesPage() {
                 setColor(COLORS[profiles.length % COLORS.length])
                 setAdding(true)
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 p-4 text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-white"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-strong p-4 text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-white"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-zinc-700">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-outline-strong">
                 <Plus className="h-7 w-7" />
               </span>
               Adicionar perfil
@@ -315,7 +315,7 @@ export default function ProfilesPage() {
 
       <button
         onClick={() => navigate('/')}
-        className="mt-10 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+        className="mt-10 flex items-center gap-2 rounded-lg border border-outline-soft bg-surface-container px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-surface-high"
       >
         <Play className="h-4 w-4" /> Voltar
       </button>

@@ -33,7 +33,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Excluir', onCon
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/70 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
+            className="flex-1 rounded-lg border border-outline-soft bg-surface-container py-2.5 text-sm font-medium text-white transition-colors hover:bg-surface-high"
           >
             Cancelar
           </button>

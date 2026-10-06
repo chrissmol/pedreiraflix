@@ -75,7 +75,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
       className={`flex items-center gap-2 rounded-lg border font-medium transition-all disabled:opacity-50 ${
         failed
           ? 'border-rose-500/40 bg-rose-950/30 text-rose-300 hover:bg-rose-950/50'
-          : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
+          : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
       } ${compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'}`}
     >
       <Download className="h-5 w-5" />

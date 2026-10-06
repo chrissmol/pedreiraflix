@@ -15,7 +15,7 @@ export default function CatalogProgress({ groups, label }: CatalogProgressProps)
   const pct = Math.round((loaded / total) * 100)
 
   return (
-    <div className="mx-4 mb-6 flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-400 sm:mx-10">
+    <div className="mx-4 mb-6 flex items-center gap-3 rounded-lg border border-outline-soft bg-surface-container px-3 py-2 text-xs text-zinc-400 sm:mx-10">
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-all duration-300"

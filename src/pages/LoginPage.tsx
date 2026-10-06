@@ -17,7 +17,7 @@ function accountSubtitle(account: SavedAccount): string {
 }
 
 const inputClass =
-  'brand-focus w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors focus:border-brand-500/60'
+  'brand-focus w-full rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors focus:border-brand-500/60'
 
 function hostLabel(url: string): string {
   try {
@@ -118,7 +118,7 @@ export default function LoginPage() {
                     e.preventDefault()
                     saveRename(account.id)
                   }}
-                  className="flex items-center gap-2 rounded-xl border border-brand-500/40 bg-zinc-900/70 px-3.5 py-2"
+                  className="flex items-center gap-2 rounded-xl border border-brand-500/40 bg-surface-container px-3.5 py-2"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-white">
                     <User className="h-5 w-5" />
@@ -130,7 +130,7 @@ export default function LoginPage() {
                     onBlur={() => saveRename(account.id)}
                     placeholder={accountLabel(account)}
                     maxLength={30}
-                    className="brand-focus min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-sm text-white"
+                    className="brand-focus min-w-0 flex-1 rounded-lg border border-outline-soft bg-surface-container px-2.5 py-1.5 text-sm text-white"
                   />
                 </form>
               ) : (
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   <button
                     onClick={() => enterSaved(account)}
                     disabled={busyId !== null}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-3 text-left transition-colors hover:border-brand-500/50 hover:bg-zinc-800 active:bg-zinc-800 disabled:opacity-60"
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-outline-soft bg-surface-container px-3.5 py-3 text-left transition-colors hover:border-brand-500/50 hover:bg-surface-high active:bg-surface-high disabled:opacity-60"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-white">
                       <User className="h-5 w-5" />
@@ -165,7 +165,7 @@ export default function LoginPage() {
                     }}
                     aria-label={`Renomear conta ${accountLabel(account)}`}
                     title="Renomear"
-                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-2.5 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white sm:px-3"
+                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white sm:px-3"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                     onClick={() => removeAccount(account.id)}
                     aria-label={`Esquecer conta ${accountLabel(account)}`}
                     title="Esquecer esta conta"
-                    className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-900/70 px-2.5 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 sm:px-3"
+                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 sm:px-3"
                   >
                     <Trash className="h-4 w-4" />
                   </button>
@@ -190,7 +190,7 @@ export default function LoginPage() {
                 setName('')
                 setShowForm(true)
               }}
-              className="mt-2 w-full rounded-xl border border-dashed border-zinc-700 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-brand-500/50 hover:text-white"
+              className="mt-2 w-full rounded-xl border border-dashed border-outline-strong py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-brand-500/50 hover:text-white"
             >
               + Usar outra conta
             </button>
@@ -200,7 +200,7 @@ export default function LoginPage() {
         {showForm && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
-            <div className="mb-4 grid grid-cols-3 gap-1 rounded-xl border border-zinc-800 bg-zinc-900/70 p-1">
+            <div className="mb-4 grid grid-cols-3 gap-1 rounded-xl border border-outline-soft bg-surface-container p-1">
               {methods.map((m) => (
                 <button
                   key={m.id}

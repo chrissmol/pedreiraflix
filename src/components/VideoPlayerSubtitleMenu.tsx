@@ -42,7 +42,7 @@ export function VideoPlayerSubtitleMenu({
         className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors ${
           currentTrack !== -1
             ? 'border-brand-400/50 bg-brand-500/20 text-brand-200'
-            : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+            : 'border-outline-soft bg-black/60 text-white hover:border-brand-400/40'
         }`}
       >
         <Subtitles className="h-4 w-4" />
@@ -68,7 +68,7 @@ export function VideoPlayerSubtitleMenu({
               {t.name}
             </button>
           ))}
-          <div className="border-t border-white/10 px-3 py-2">
+          <div className="border-t border-outline-soft px-3 py-2">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Tamanho</p>
             <div className="flex gap-1.5">
               {(['small', 'medium', 'large'] as const).map((size) => (
@@ -77,7 +77,7 @@ export function VideoPlayerSubtitleMenu({
                   onClick={() => onSelectSize(size)}
                   aria-label={`Legenda tamanho ${size}`}
                   className={`flex-1 rounded-md border py-1 text-xs transition-colors ${
-                    subtitleSize === size ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
+                    subtitleSize === size ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft text-zinc-300 hover:bg-white/10'
                   }`}
                 >
                   {size === 'small' ? 'P' : size === 'medium' ? 'M' : 'G'}
@@ -95,7 +95,7 @@ export function VideoPlayerSubtitleMenu({
                   key={bg}
                   onClick={() => onSelectBackground(bg)}
                   className={`flex-1 rounded-md border py-1 text-[11px] transition-colors ${
-                    subtitleBackground === bg ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 text-zinc-300 hover:bg-white/10'
+                    subtitleBackground === bg ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft text-zinc-300 hover:bg-white/10'
                   }`}
                 >
                   {label}
@@ -110,7 +110,7 @@ export function VideoPlayerSubtitleMenu({
               <button
                 onClick={() => onChangeOffset(Math.round((offset - 0.5) * 10) / 10)}
                 aria-label="Adiantar legenda 0,5s"
-                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
+                className="rounded-lg border border-outline-strong px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
               >
                 -0,5s
               </button>
@@ -120,7 +120,7 @@ export function VideoPlayerSubtitleMenu({
               <button
                 onClick={() => onChangeOffset(Math.round((offset + 0.5) * 10) / 10)}
                 aria-label="Atrasar legenda 0,5s"
-                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
+                className="rounded-lg border border-outline-strong px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
               >
                 +0,5s
               </button>

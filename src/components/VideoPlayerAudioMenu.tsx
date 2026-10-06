@@ -19,7 +19,7 @@ export function VideoPlayerAudioMenu({ open, tracks, currentTrack, onToggle, onS
       <button
         onClick={onToggle}
         aria-label="Áudio"
-        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+        className="flex items-center gap-1.5 rounded-lg border border-outline-soft bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
       >
         <Languages className="h-4 w-4" />
       </button>

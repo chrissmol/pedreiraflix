@@ -167,7 +167,7 @@ export function VideoPlayerHeader({
             onClick={onTogglePip}
             aria-label="Picture-in-Picture"
             className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-              isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+              isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft bg-black/60 text-white hover:border-brand-400/40'
             }`}
           >
             <PictureInPicture className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function VideoPlayerHeader({
           <button
             onClick={onShowAirPlayPicker}
             aria-label="AirPlay"
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+            className="flex items-center gap-1.5 rounded-lg border border-outline-soft bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
           >
             <AirPlay className="h-4 w-4" />
           </button>
@@ -193,7 +193,7 @@ export function VideoPlayerHeader({
             onClick={onCast}
             aria-label="Transmitir (Chromecast)"
             className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-              casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-white/10 bg-black/60 text-white hover:border-brand-400/40'
+              casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft bg-black/60 text-white hover:border-brand-400/40'
             }`}
           >
             <Cast className="h-4 w-4" />

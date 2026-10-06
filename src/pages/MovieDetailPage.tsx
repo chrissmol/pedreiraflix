@@ -124,7 +124,7 @@ export default function MovieDetailPage() {
               className={`flex items-center gap-2 rounded-lg border p-2.5 font-medium transition-all sm:px-4 sm:py-2.5 ${
                 isFavorite
                   ? 'border-brand-400/40 bg-brand-500/15 text-brand-200'
-                  : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
+                  : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
               }`}
             >
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
@@ -143,7 +143,7 @@ export default function MovieDetailPage() {
                 download
                 title="Baixar o arquivo original (fora do app)"
                 aria-label="Baixar arquivo"
-                className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 font-medium text-white transition-all hover:border-brand-500/40 hover:bg-zinc-800 sm:px-4 sm:py-2.5"
+                className="flex items-center gap-2 rounded-lg border border-outline-soft bg-surface-container p-2.5 font-medium text-white transition-all hover:border-brand-500/40 hover:bg-surface-high sm:px-4 sm:py-2.5"
               >
                 {/* Not the same glyph as the offline download beside it: with labels hidden on phones, two
                     identical arrows gave no way to tell "save into the app" from "save to the device". */}

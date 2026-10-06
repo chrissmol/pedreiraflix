@@ -67,7 +67,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="skeleton aspect-2/3 w-32 shrink-0 rounded-xl border border-white/5 bg-zinc-900 sm:w-40 md:w-44"
+                  className="skeleton aspect-2/3 w-32 shrink-0 rounded-xl border border-white/5 bg-surface-container sm:w-40 md:w-44"
                 />
               ))
             : children}

@@ -60,7 +60,7 @@ export function VideoPlayerCenterOverlays({
               </button>
               <button
                 onClick={onDismissNextUp}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10"
+                className="rounded-lg border border-outline-soft px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10"
               >
                 Cancelar
               </button>
@@ -82,7 +82,7 @@ export function VideoPlayerCenterOverlays({
 
       {buffering && !error && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-outline-strong border-t-brand-400" />
           {downloadedPct !== null && (
             <p className="rounded-lg bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm tabular-nums">
               {downloadedPct}%

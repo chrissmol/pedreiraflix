@@ -57,8 +57,8 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
           onChange={(e) => handleChange(e.target.value)}
           maxLength={4}
           aria-label="PIN"
-          className={`brand-focus w-full rounded-xl border bg-zinc-900/70 px-3 py-3 text-center text-2xl tracking-[0.5em] text-white ${
-            wrong ? 'border-rose-500/60' : 'border-zinc-800'
+          className={`brand-focus w-full rounded-xl border bg-surface-container px-3 py-3 text-center text-2xl tracking-[0.5em] text-white ${
+            wrong ? 'border-rose-500/60' : 'border-outline-soft'
           }`}
         />
         {wrong && <p className="mt-2 text-xs text-rose-400">PIN incorreto</p>}

@@ -99,7 +99,7 @@ export default function SeriesDetailPage() {
               className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-all ${
                 isFavorite
                   ? 'border-brand-400/40 bg-brand-500/15 text-brand-200'
-                  : 'border-zinc-800 bg-zinc-900/70 text-white hover:border-brand-500/40 hover:bg-zinc-800'
+                  : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
               }`}
             >
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
@@ -164,7 +164,7 @@ export default function SeriesDetailPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click()
                 }}
-                className="group relative flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/70 p-3 text-left transition-all duration-200 hover:border-white/20 hover:bg-zinc-800 hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.6)]"
+                className="group relative flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-xl border border-outline-soft bg-surface-container p-3 text-left transition-all duration-200 hover:border-outline-strong hover:bg-surface-high hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.6)]"
               >
                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 font-bold text-brand-300">
                   {isWatched ? <Check className="h-5 w-5 text-brand-400" /> : ep.episodeNum}

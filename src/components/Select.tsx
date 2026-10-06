@@ -39,7 +39,7 @@ export default function Select({ value, onChange, options, label, className }: S
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
-        className="brand-focus flex w-full items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-2 text-sm text-white transition-colors hover:border-brand-500/40"
+        className="brand-focus flex w-full items-center justify-between gap-2 rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2 text-sm text-white transition-colors hover:border-brand-500/40"
       >
         <span className="truncate">{current?.label ?? label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} />

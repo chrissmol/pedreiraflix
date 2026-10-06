@@ -149,7 +149,7 @@ export default function TopNav() {
             // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
             // header (and anything anchored to the search box, like its suggestions dropdown) past the
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            className="brand-focus w-10 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            className="brand-focus w-10 rounded-full border border-outline-soft bg-surface-container py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -170,7 +170,7 @@ export default function TopNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu da conta"
-            className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
+            className="absolute right-0 mt-2 w-56 rounded-xl border border-outline-soft bg-surface-container/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
           >
             <p className="truncate px-2 py-1.5 text-zinc-400">
               {activeProfile?.name} <span className="text-zinc-400">· {user?.username}</span>

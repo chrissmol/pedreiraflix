@@ -27,7 +27,7 @@ export function VideoPlayerQualityMenu({
     <div className="relative">
       <button
         onClick={onToggle}
-        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+        className="flex items-center gap-1.5 rounded-lg border border-outline-soft bg-black/60 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
       >
         <Settings className="h-4 w-4" />
         {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}

@@ -14,7 +14,7 @@ export default function BlockedByProfile() {
       </p>
       <button
         onClick={() => navigate('/')}
-        className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+        className="mt-2 rounded-lg border border-outline-soft bg-surface-container px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-surface-high"
       >
         Voltar ao início
       </button>

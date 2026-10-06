@@ -76,7 +76,7 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
             }}
             className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white/10 active:bg-white/10"
           >
-            <span className="flex h-10 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-zinc-800">
+            <span className="flex h-10 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-surface-high">
               {r.image ? (
                 <img src={r.image} alt="" className="h-full w-full object-cover" />
               ) : (
