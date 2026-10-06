@@ -10,6 +10,7 @@ import type { QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import {
   NEXT_UP_LEAD,
+  SCREEN_LIMIT_MESSAGE,
   estimateInitialBandwidthBps,
 } from './videoPlayerUtils'
 
@@ -199,8 +200,16 @@ export default function VideoPlayer({
       setBuffering(false)
       attemptAutoplay()
     }
+    // O <video> nao expoe o status HTTP, entao quando ele falha (MP4, ou HLS nativo do Safari/AirPlay —
+    // o hls.js trata os proprios erros) um pedido de 1 byte descobre se foi o provedor recusando.
     function onVideoError() {
-      if (!isHls) setError('Não foi possível reproduzir este arquivo. Formato pode não ser suportado pelo navegador.')
+      if (hls || !video) return
+      const fallback = isHls
+        ? 'Erro ao carregar o stream. Verifique a conexão ou o canal.'
+        : 'Não foi possível reproduzir este arquivo. Formato pode não ser suportado pelo navegador.'
+      fetch(video.currentSrc || src, { headers: { Range: 'bytes=0-0' } })
+        .then((res) => !cancelled && setError(res.status === 403 ? SCREEN_LIMIT_MESSAGE : fallback))
+        .catch(() => !cancelled && setError(fallback))
     }
     async function attemptAutoplay() {
       if (!autoPlay || !video || !video.paused) return
@@ -380,6 +389,12 @@ export default function VideoPlayer({
             if (!data.fatal) return
             switch (data.type) {
               case HlsCtor.ErrorTypes.NETWORK_ERROR:
+                // Recusa do provedor nao melhora tentando de novo — so gastaria as 4 tentativas.
+                if (data.response?.code === 403) {
+                  setError(SCREEN_LIMIT_MESSAGE)
+                  hls?.destroy()
+                  break
+                }
                 networkRetries += 1
                 if (networkRetries <= MAX_NETWORK_RETRIES) {
                   setBuffering(true)
