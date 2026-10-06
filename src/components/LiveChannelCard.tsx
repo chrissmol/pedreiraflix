@@ -83,22 +83,22 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
     <div
       ref={ref}
       data-testid={`live-card-${channel.streamId}`}
-      className="group relative flex items-center gap-3 rounded-card border border-outline-soft bg-surface-container p-3 transition-all duration-200 hover:border-outline-strong hover:bg-surface-high"
+      className="group relative flex items-center gap-3 rounded-2xl border border-outline-soft bg-surface-low p-3 transition-all duration-200 hover:border-outline-strong hover:bg-surface-container"
     >
       <button data-spatial onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black/40">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-surface-high">
           {channel.streamIcon ? (
             <img
               src={channel.streamIcon}
               alt=""
               loading="lazy"
-              className="max-h-10 max-w-10 object-contain"
+              className="max-h-11 max-w-11 object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
               }}
             />
           ) : (
-            <span className="text-xs font-bold text-on-surface-muted">{channel.name.slice(0, 2).toUpperCase()}</span>
+            <span className="text-label-md font-bold text-on-surface-variant">{channel.name.slice(0, 2).toUpperCase()}</span>
           )}
         </span>
 
@@ -106,23 +106,23 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
           <span className="flex items-center gap-2">
             <span className="truncate text-label-md text-white">{channel.name}</span>
             {channel.hasArchive && (
-              <span className="shrink-0 rounded border border-outline-strong px-1 text-[10px] font-semibold text-on-surface-variant">REVER</span>
+              <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300">REVER</span>
             )}
           </span>
           {program ? (
             <>
               <span className="mt-0.5 flex items-baseline gap-1.5">
-                <span className="truncate text-body-sm text-on-surface-variant">{program.title}</span>
-                {endsAt && <span className="shrink-0 text-[11px] text-on-surface-muted">até {endsAt}</span>}
+                <span className="truncate text-body-sm text-white/85">{program.title}</span>
+                {endsAt && <span className="shrink-0 text-label-badge text-on-surface-muted">até {endsAt}</span>}
               </span>
               {progress != null && (
-                <span className="mt-1.5 block h-0.5 w-full overflow-hidden rounded-full bg-white/10">
+                <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/10">
                   <span className="block h-full rounded-full bg-brand-500" style={{ width: `${progress}%` }} />
                 </span>
               )}
             </>
           ) : (
-            <span className="mt-0.5 block text-xs text-zinc-600">Sem programação</span>
+            <span className="mt-0.5 block text-body-sm text-on-surface-muted">Sem programação</span>
           )}
         </span>
       </button>
@@ -135,8 +135,8 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
           toggleFavorite(profileId, { kind: 'live', id: channel.streamId, name: channel.name, image: channel.streamIcon })
         }
         aria-label={isFavorite ? `Remover ${channel.name} dos favoritos` : `Favoritar ${channel.name}`}
-        className={`shrink-0 rounded-lg p-2 transition-colors ${
-          isFavorite ? 'text-brand-300' : 'text-zinc-600 hover:text-white'
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+          isFavorite ? 'bg-brand-500/15 text-brand-300' : 'text-on-surface-muted hover:bg-surface-high hover:text-white'
         }`}
       >
         {isFavorite ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
