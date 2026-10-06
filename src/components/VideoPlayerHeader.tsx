@@ -108,14 +108,14 @@ export function VideoPlayerHeader({
         <button
           onClick={onBack}
           aria-label="Voltar"
-          className="shrink-0 rounded-full p-2 text-white transition-colors hover:bg-white/10 active:bg-white/20"
+          className="player-btn h-11 w-11 shrink-0"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
       )}
-      <div className="min-w-0 flex-1 pt-1.5">
-        {title && <h1 className="font-display truncate text-sm font-semibold text-white sm:text-base">{title}</h1>}
-        {subtitle && <p className="truncate text-xs text-zinc-300">{subtitle}</p>}
+      <div className="min-w-0 flex-1 pt-1">
+        {title && <h1 className="font-display truncate text-label-md text-white sm:text-headline-sm">{title}</h1>}
+        {subtitle && <p className="truncate text-body-sm text-on-surface-variant">{subtitle}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {audioTracks.length > 1 && (
@@ -166,9 +166,7 @@ export function VideoPlayerHeader({
           <button
             onClick={onTogglePip}
             aria-label="Picture-in-Picture"
-            className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-              isPip ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft bg-black/60 text-white hover:border-brand-400/40'
-            }`}
+            className={`player-btn pointer-coarse:hidden ${isPip ? 'player-btn-active' : ''}`}
           >
             <PictureInPicture className="h-4 w-4" />
           </button>
@@ -182,7 +180,7 @@ export function VideoPlayerHeader({
           <button
             onClick={onShowAirPlayPicker}
             aria-label="AirPlay"
-            className="flex items-center gap-1.5 rounded-lg border border-outline-soft bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+            className="player-btn"
           >
             <AirPlay className="h-4 w-4" />
           </button>
@@ -192,9 +190,7 @@ export function VideoPlayerHeader({
           <button
             onClick={onCast}
             aria-label="Transmitir (Chromecast)"
-            className={`flex items-center gap-1.5 rounded-lg border p-2 backdrop-blur-sm transition-colors pointer-coarse:hidden ${
-              casting ? 'border-brand-400/50 bg-brand-500/20 text-brand-200' : 'border-outline-soft bg-black/60 text-white hover:border-brand-400/40'
-            }`}
+            className={`player-btn pointer-coarse:hidden ${casting ? 'player-btn-active' : ''}`}
           >
             <Cast className="h-4 w-4" />
           </button>
