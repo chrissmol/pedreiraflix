@@ -120,9 +120,11 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
           </button>
           <button
             onClick={current.onPlay}
-            className="glass-panel flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
+            aria-label="Detalhes"
+            title="Detalhes"
+            className="glass-panel flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
           >
-            <Info className="h-5 w-5" /> Detalhes
+            <Info className="h-5 w-5" /> <span className="hidden sm:inline">Detalhes</span>
           </button>
           <button
             onClick={() => toggleFavorite(profileId, { kind: current.kind, id: current.id, name: current.title, image: current.image })}
