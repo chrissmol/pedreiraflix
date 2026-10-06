@@ -99,7 +99,7 @@ export default function VideoPlayer({
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([])
   const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState(-1)
   const [playbackRate, setPlaybackRate] = useState(1)
-  const [openMenu, setOpenMenu] = useState<'quality' | 'audio' | 'subtitles' | 'speed' | null>(null)
+  const [openMenu, setOpenMenu] = useState<'quality' | 'audio' | 'subtitles' | 'speed' | 'display' | null>(null)
   const [pipSupported, setPipSupported] = useState(false)
   const [isPip, setIsPip] = useState(false)
   const [nextUpVisible, setNextUpVisible] = useState(false)
@@ -121,6 +121,10 @@ export default function VideoPlayer({
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const videoFit = usePlayerPrefs((s) => s.videoFit)
+  const setVideoFit = usePlayerPrefs((s) => s.setVideoFit)
+  const subtitleOffset = usePlayerPrefs((s) => s.subtitleOffset)
+  const setSubtitleOffset = usePlayerPrefs((s) => s.setSubtitleOffset)
   const savedVolume = usePlayerPrefs((s) => s.volume)
   const savedMuted = usePlayerPrefs((s) => s.muted)
   const setVolumePrefs = usePlayerPrefs((s) => s.setVolumePrefs)
@@ -428,6 +432,39 @@ export default function VideoPlayer({
     return () => document.removeEventListener('fullscreenchange', onFsChange)
   }, [])
 
+  // --- Sincronia da legenda: desloca as cues quando o provedor manda a legenda adiantada/atrasada. ---
+  // Mexer em `startTime`/`endTime` das cues e o unico jeito no navegador; e feito sobre o delta desde a
+  // ultima aplicacao para o ajuste ser cumulativo sem recarregar a faixa. O audio NAO tem equivalente:
+  // nao existe API para deslocar o audio de um <video> sem reencaminhar pelo Web Audio, o que quebraria
+  // AirPlay/Chromecast — por isso so a legenda e ajustavel aqui.
+  const appliedSubtitleOffset = useRef(0)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const delta = subtitleOffset - appliedSubtitleOffset.current
+    if (delta === 0) return
+    for (const track of Array.from(video.textTracks)) {
+      for (const cue of Array.from(track.cues ?? [])) {
+        cue.startTime = Math.max(0, cue.startTime + delta)
+        cue.endTime = Math.max(0, cue.endTime + delta)
+      }
+    }
+    appliedSubtitleOffset.current = subtitleOffset
+  }, [subtitleOffset, currentSubtitleTrack])
+
+  // --- Sleep timer: pausa sozinho depois de N minutos, para dormir assistindo. ---
+  // Pausa em vez de fechar a tela: quem acordar no meio continua de onde parou, e o progresso ja foi
+  // salvo pelo fluxo normal de reproducao.
+  const [sleepMinutes, setSleepMinutes] = useState<number | null>(null)
+  useEffect(() => {
+    if (sleepMinutes == null) return
+    const timer = setTimeout(() => {
+      videoRef.current?.pause()
+      setSleepMinutes(null)
+    }, sleepMinutes * 60_000)
+    return () => clearTimeout(timer)
+  }, [sleepMinutes])
+
   // --- Auto-hide controls after inactivity while playing ---
   function wakeControls() {
     setControlsVisible(true)
@@ -464,16 +501,23 @@ export default function VideoPlayer({
           if (!isLive) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10)
           wakeControls()
           break
+        // No ao vivo as setas verticais zapeiam (o que todo app de IPTV faz); fora dele nao havia o que
+        // zapear e elas nao faziam nada, entao assumem o volume, como YouTube e Netflix.
         case 'ArrowUp':
-          if (isLive && onChannelUp) {
-            e.preventDefault()
-            onChannelUp()
+          e.preventDefault()
+          if (isLive && onChannelUp) onChannelUp()
+          else {
+            video.muted = false
+            video.volume = Math.min(1, Math.round((video.volume + 0.05) * 100) / 100)
+            wakeControls()
           }
           break
         case 'ArrowDown':
-          if (isLive && onChannelDown) {
-            e.preventDefault()
-            onChannelDown()
+          e.preventDefault()
+          if (isLive && onChannelDown) onChannelDown()
+          else {
+            video.volume = Math.max(0, Math.round((video.volume - 0.05) * 100) / 100)
+            wakeControls()
           }
           break
         case 'm':
@@ -798,7 +842,7 @@ export default function VideoPlayer({
         toggleFullscreen()
       }}
     >
-      <video ref={videoRef} className="h-full w-full" playsInline poster={poster ?? undefined} />
+      <video ref={videoRef} className="h-full w-full" style={{ objectFit: videoFit }} playsInline poster={poster ?? undefined} />
 
       <VideoPlayerHeader
         title={title}
@@ -807,6 +851,15 @@ export default function VideoPlayer({
         controlsVisible={controlsVisible}
         openMenu={openMenu}
         onToggleMenu={(menu) => setOpenMenu((m) => (m === menu ? null : menu))}
+        videoFit={videoFit}
+        onSelectFit={(fit) => {
+          setVideoFit(fit)
+          setOpenMenu(null)
+        }}
+        sleepRemaining={sleepMinutes}
+        onSelectSleep={(minutes) => setSleepMinutes(minutes === 0 ? null : minutes)}
+        subtitleOffset={subtitleOffset}
+        onChangeSubtitleOffset={setSubtitleOffset}
         audioTracks={audioTracks}
         currentAudioTrack={currentAudioTrack}
         onSelectAudioTrack={selectAudioTrack}

@@ -21,5 +21,9 @@ test('going back restores the list scroll position', async ({ page }) => {
 
   await page.goBack()
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
-  await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(300)
+  // Duas esperas distintas de proposito: primeiro a pagina voltar a ter altura (carregamento do
+  // catalogo, que sob carga leva segundos e nao e o que se testa aqui), e so entao a posicao restaurada.
+  // Juntar as duas numa assercao so fazia o teste falhar por lentidao do mock, nao por regressao.
+  await expect.poll(() => main.evaluate((el) => el.scrollHeight - el.clientHeight), { timeout: 20000 }).toBeGreaterThan(400)
+  await expect.poll(() => main.evaluate((el) => el.scrollTop), { timeout: 10000 }).toBeGreaterThan(300)
 })

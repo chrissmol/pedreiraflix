@@ -16,6 +16,9 @@ interface VideoPlayerSubtitleMenuProps {
   onSelectTrack: (id: number) => void
   onSelectSize: (size: SubtitleSize) => void
   onSelectBackground: (bg: SubtitleBackground) => void
+  /** Segundos somados as cues: positivo atrasa a legenda, negativo adianta. */
+  offset: number
+  onChangeOffset: (seconds: number) => void
 }
 
 export function VideoPlayerSubtitleMenu({
@@ -28,6 +31,8 @@ export function VideoPlayerSubtitleMenu({
   onSelectTrack,
   onSelectSize,
   onSelectBackground,
+  offset,
+  onChangeOffset,
 }: VideoPlayerSubtitleMenuProps) {
   return (
     <div className="relative">
@@ -96,6 +101,29 @@ export function VideoPlayerSubtitleMenu({
                   {label}
                 </button>
               ))}
+            </div>
+
+            {/* So a legenda da para sincronizar: nao existe API no navegador para deslocar o audio de um
+                <video>, e fazer isso pelo Web Audio quebraria AirPlay e Chromecast. */}
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">Sincronia</p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <button
+                onClick={() => onChangeOffset(Math.round((offset - 0.5) * 10) / 10)}
+                aria-label="Adiantar legenda 0,5s"
+                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
+              >
+                -0,5s
+              </button>
+              <span className="flex-1 text-center text-xs tabular-nums text-white">
+                {offset === 0 ? 'Em sincronia' : `${offset > 0 ? '+' : ''}${offset.toFixed(1)}s`}
+              </span>
+              <button
+                onClick={() => onChangeOffset(Math.round((offset + 0.5) * 10) / 10)}
+                aria-label="Atrasar legenda 0,5s"
+                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-500/40 hover:text-white"
+              >
+                +0,5s
+              </button>
             </div>
           </div>
         </div>

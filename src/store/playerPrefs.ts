@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware'
 
 export type SubtitleSize = 'small' | 'medium' | 'large'
 export type SubtitleBackground = 'none' | 'semi' | 'solid'
+/** Como a imagem preenche a tela: a mesma trinca que todo player de IPTV oferece. */
+export type VideoFit = 'contain' | 'cover' | 'fill'
 
 interface PlayerPrefsState {
   volume: number
@@ -12,6 +14,11 @@ interface PlayerPrefsState {
   subtitleBackground: SubtitleBackground
   setSubtitleSize: (size: SubtitleSize) => void
   setSubtitleBackground: (bg: SubtitleBackground) => void
+  videoFit: VideoFit
+  setVideoFit: (fit: VideoFit) => void
+  /** Segundos a somar nas legendas quando o provedor as manda fora de sincronia. */
+  subtitleOffset: number
+  setSubtitleOffset: (seconds: number) => void
 }
 
 export const usePlayerPrefs = create<PlayerPrefsState>()(
@@ -24,6 +31,10 @@ export const usePlayerPrefs = create<PlayerPrefsState>()(
       subtitleBackground: 'semi',
       setSubtitleSize: (subtitleSize) => set({ subtitleSize }),
       setSubtitleBackground: (subtitleBackground) => set({ subtitleBackground }),
+      videoFit: 'contain',
+      setVideoFit: (videoFit) => set({ videoFit }),
+      subtitleOffset: 0,
+      setSubtitleOffset: (subtitleOffset) => set({ subtitleOffset }),
     }),
     { name: 'iptv-player-prefs' },
   ),

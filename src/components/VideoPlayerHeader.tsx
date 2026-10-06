@@ -1,6 +1,7 @@
 import { AirPlay, Cast, ChevronLeft, PictureInPicture } from './icons'
-import type { SubtitleBackground, SubtitleSize } from '../store/playerPrefs'
+import type { SubtitleBackground, SubtitleSize, VideoFit } from '../store/playerPrefs'
 import { VideoPlayerAudioMenu } from './VideoPlayerAudioMenu'
+import { VideoPlayerDisplayMenu } from './VideoPlayerDisplayMenu'
 import { VideoPlayerQualityMenu, type QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerSpeedMenu } from './VideoPlayerSpeedMenu'
 import { VideoPlayerSubtitleMenu } from './VideoPlayerSubtitleMenu'
@@ -15,7 +16,7 @@ interface SubtitleTrack {
   name: string
 }
 
-type MenuKey = 'quality' | 'audio' | 'subtitles' | 'speed' | null
+type MenuKey = 'quality' | 'audio' | 'subtitles' | 'speed' | 'display' | null
 
 interface VideoPlayerHeaderProps {
   title?: string
@@ -49,6 +50,12 @@ interface VideoPlayerHeaderProps {
   currentLevel: number
   autoPickedHeight: number | null
   onSelectLevel: (level: number) => void
+  videoFit: VideoFit
+  onSelectFit: (fit: VideoFit) => void
+  sleepRemaining: number | null
+  onSelectSleep: (minutes: number) => void
+  subtitleOffset: number
+  onChangeSubtitleOffset: (seconds: number) => void
 }
 
 export function VideoPlayerHeader({
@@ -83,6 +90,12 @@ export function VideoPlayerHeader({
   currentLevel,
   autoPickedHeight,
   onSelectLevel,
+  videoFit,
+  onSelectFit,
+  sleepRemaining,
+  onSelectSleep,
+  subtitleOffset,
+  onChangeSubtitleOffset,
 }: VideoPlayerHeaderProps) {
   return (
     <div
@@ -117,6 +130,8 @@ export function VideoPlayerHeader({
 
         {subtitleTracks.length > 0 && (
           <VideoPlayerSubtitleMenu
+            offset={subtitleOffset}
+            onChangeOffset={onChangeSubtitleOffset}
             open={openMenu === 'subtitles'}
             tracks={subtitleTracks}
             currentTrack={currentSubtitleTrack}
@@ -137,6 +152,15 @@ export function VideoPlayerHeader({
             onSelect={onSelectSpeed}
           />
         )}
+
+        <VideoPlayerDisplayMenu
+          open={openMenu === 'display'}
+          onToggle={() => onToggleMenu('display')}
+          fit={videoFit}
+          onSelectFit={onSelectFit}
+          sleepRemaining={sleepRemaining}
+          onSelectSleep={onSelectSleep}
+        />
 
         {pipSupported && (
           <button
