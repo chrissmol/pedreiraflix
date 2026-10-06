@@ -31,21 +31,40 @@ export default function Layout() {
     main.scrollTo(0, target)
 
     // The page we came back to re-renders from scratch and its rows arrive one category at a time, so at
-    // this point it's usually still too short to scroll that far and the line above silently clamps to 0.
-    // Re-apply while it grows, and stop at the first real user scroll so this never fights the person.
-    let observer: ResizeObserver | undefined
+    // this point it is usually still too short to scroll that far and the line above silently clamps to 0.
+    // Re-applied every frame until it sticks, with a deadline, and stopped at the first real user scroll
+    // so it never fights the person.
+    //
+    // Deliberately not a ResizeObserver: `<main>` itself never changes size, and the only other thing to
+    // observe is whatever child exists right now — which, while the route's chunk is still loading, is
+    // the Suspense fallback. React swaps that node out for the real page, leaving the observer watching a
+    // detached element that will never resize again. That is exactly what made this fail on CI (slow
+    // enough to render the fallback first) while passing locally.
+    // Enquanto a restauracao rola a pagina, o que se grava NAO pode ser a posicao intermediaria: o
+    // proprio scrollTo dispara `scroll`, e gravar ali substituia a posicao guardada (400) pelo valor
+    // ainda baixo do meio do caminho (0). Qualquer re-execucao do efeito depois disso — StrictMode em
+    // dev, ou uma troca de chave — lia esse 0 e a lista voltava ao topo.
+    let restoring = false
+    let frame = 0
     if (target > 0 && main.scrollTop < target) {
+      // Generoso de proposito: o catalogo chega categoria a categoria e numa maquina carregada a pagina
+      // demora alguns segundos para voltar a ter altura. Ainda assim limitado, e qualquer rolagem do
+      // usuario encerra antes.
+      const deadline = Date.now() + 10_000
       const stop = () => {
-        observer?.disconnect()
+        cancelAnimationFrame(frame)
+        frame = 0
+        restoring = false
         main.removeEventListener('wheel', stop)
         main.removeEventListener('touchstart', stop)
       }
-      observer = new ResizeObserver(() => {
-        if (main.scrollTop >= target) stop()
-        else main.scrollTo(0, target)
-      })
-      observer.observe(main)
-      if (main.firstElementChild) observer.observe(main.firstElementChild)
+      const tick = () => {
+        if (main.scrollTop >= target || Date.now() > deadline) return stop()
+        main.scrollTo(0, target)
+        frame = requestAnimationFrame(tick)
+      }
+      restoring = true
+      frame = requestAnimationFrame(tick)
       main.addEventListener('wheel', stop, { passive: true, once: true })
       main.addEventListener('touchstart', stop, { passive: true, once: true })
     }
@@ -54,13 +73,25 @@ export default function Layout() {
     // navigating to a lazy route unmounts this whole subtree first — by cleanup time `<main>` is already
     // detached from the document and every detached element reports scrollTop 0.
     const remember = () => {
+      if (restoring) return
+      // Nem todo `scroll` e do usuario. Ao sair desta rota, o Suspense troca o conteudo pelo fallback
+      // antes do desmonte: a area encolhe, o navegador grampeia scrollTop para o novo maximo e dispara
+      // `scroll`. Gravar isso substituia a posicao real (400) por 0, e era exatamente o que fazia a lista
+      // voltar ao topo. Um grampeamento assim se reconhece por estar no fim de uma area que encolheu
+      // abaixo do que ja estava guardado; rolar ate o topo de proposito nao casa com isso.
+      const max = main.scrollHeight - main.clientHeight
+      if (main.scrollTop === max && max < (scrollOffsets.get(key) ?? 0)) return
       scrollOffsets.set(key, main.scrollTop)
     }
     main.addEventListener('scroll', remember, { passive: true })
 
     return () => {
-      observer?.disconnect()
+      if (frame) cancelAnimationFrame(frame)
       main.removeEventListener('scroll', remember)
+      // Belt and braces: a `scroll` event can still be pending when a click navigates away, so the
+      // listener above may never have run for the last position. Reading here covers that, and is
+      // skipped when the element is already detached (every detached element reports scrollTop 0).
+      if (main.isConnected && main.scrollTop > 0) remember()
     }
   }, [pathname, navigationType, key])
 
