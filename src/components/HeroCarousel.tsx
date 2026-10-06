@@ -87,11 +87,11 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
       <div className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-[100px]" />
 
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
-        <h1 className="font-display max-w-xl text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-5xl">
+        <h1 className="font-display max-w-xl text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
           {current.title}
         </h1>
         {current.description && (
-          <p className="line-clamp-3 max-w-lg text-sm text-zinc-300 drop-shadow sm:text-base">{current.description}</p>
+          <p className="line-clamp-3 max-w-lg text-body-md text-on-surface-variant drop-shadow sm:text-body-lg">{current.description}</p>
         )}
         <div className="flex items-center gap-3">
           <button

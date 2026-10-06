@@ -83,7 +83,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
     <div
       ref={ref}
       data-testid={`live-card-${channel.streamId}`}
-      className="group relative flex items-center gap-3 rounded-xl border border-white/[0.06] bg-zinc-900/80 p-3 transition-all duration-200 hover:border-white/20 hover:bg-zinc-800"
+      className="group relative flex items-center gap-3 rounded-card border border-outline-soft bg-surface-container p-3 transition-all duration-200 hover:border-outline-strong hover:bg-surface-high"
     >
       <button data-spatial onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black/40">
@@ -104,7 +104,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
 
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium text-white">{channel.name}</span>
+            <span className="truncate text-label-md text-white">{channel.name}</span>
             {channel.hasArchive && (
               <span className="shrink-0 rounded border border-zinc-700 px-1 text-[10px] font-semibold text-zinc-400">REVER</span>
             )}
@@ -112,7 +112,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
           {program ? (
             <>
               <span className="mt-0.5 flex items-baseline gap-1.5">
-                <span className="truncate text-xs text-zinc-400">{program.title}</span>
+                <span className="truncate text-body-sm text-on-surface-variant">{program.title}</span>
                 {endsAt && <span className="shrink-0 text-[11px] text-zinc-500">até {endsAt}</span>}
               </span>
               {progress != null && (

@@ -37,7 +37,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
 
   return (
     <section className="mb-12">
-      <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-lg font-bold text-white sm:px-10">
+      <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-headline-sm text-white sm:px-10">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-400 to-brand-600 shadow-none" />
         {title}
         {seeAllHref && (
