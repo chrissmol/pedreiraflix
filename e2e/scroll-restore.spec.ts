@@ -21,5 +21,7 @@ test('going back restores the list scroll position', async ({ page }) => {
 
   await page.goBack()
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
-  await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(300)
+  // A restauracao so acontece quando as fileiras voltam a dar altura a pagina, e com a suite inteira
+  // disputando a maquina isso passava dos 10s padrao do poll.
+  await expect.poll(() => main.evaluate((el) => el.scrollTop), { timeout: 20000 }).toBeGreaterThan(300)
 })
