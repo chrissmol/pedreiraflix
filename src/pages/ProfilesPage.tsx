@@ -27,7 +27,7 @@ function AppPinSettings() {
           </button>
         )}
       </div>
-      <p className="mt-1 text-[11px] leading-snug text-zinc-400">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
+      <p className="mt-1 text-[11px] leading-snug text-on-surface-variant">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
       {!pin && (
         <form
           onSubmit={(e) => {
@@ -77,7 +77,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           className="h-4 w-4 accent-brand-500"
         />
       </label>
-      <p className="mb-3 text-[11px] leading-snug text-zinc-400">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+      <p className="mb-3 text-[11px] leading-snug text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
 
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-zinc-300">
@@ -118,7 +118,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
         </form>
       )}
 
-      <button onClick={onClose} className="mt-3 w-full text-center text-zinc-400 hover:text-white">
+      <button onClick={onClose} className="mt-3 w-full text-center text-on-surface-variant hover:text-white">
         Fechar
       </button>
     </div>
@@ -171,7 +171,7 @@ export default function ProfilesPage() {
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display mb-1 text-2xl font-bold text-white">Perfis</h1>
-      <p className="mb-8 max-w-lg text-sm text-zinc-400">
+      <p className="mb-8 max-w-lg text-sm text-on-surface-variant">
         Cada perfil tem sua própria lista, continuar assistindo e histórico — todos usam a mesma assinatura.
       </p>
 
@@ -204,7 +204,7 @@ export default function ProfilesPage() {
                       </span>
                     )}
                     {p.pin && (
-                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-zinc-400 ring-2 ring-zinc-900" title="Perfil com PIN">
+                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-on-surface-variant ring-2 ring-zinc-900" title="Perfil com PIN">
                         <Lock className="h-3 w-3" />
                       </span>
                     )}
@@ -230,7 +230,7 @@ export default function ProfilesPage() {
                   </form>
                 ) : (
                   // Always visible on touch (no hover to reveal them there); fades in on mouse hover otherwise.
-                  <div className="flex gap-3 text-xs text-zinc-400 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
+                  <div className="flex gap-3 text-xs text-on-surface-variant opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
                     <button
                       onClick={() => {
                         setRenamingId(p.id)
@@ -291,7 +291,7 @@ export default function ProfilesPage() {
                 <button
                   type="button"
                   onClick={() => setAdding(false)}
-                  className="rounded-lg border border-outline-soft px-3 py-1.5 text-xs text-zinc-400 hover:text-white"
+                  className="rounded-lg border border-outline-soft px-3 py-1.5 text-xs text-on-surface-variant hover:text-white"
                 >
                   Cancelar
                 </button>
@@ -303,7 +303,7 @@ export default function ProfilesPage() {
                 setColor(COLORS[profiles.length % COLORS.length])
                 setAdding(true)
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-strong p-4 text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-white"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-strong p-4 text-on-surface-variant transition-colors hover:border-brand-500/50 hover:text-white"
             >
               <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-outline-strong">
                 <Plus className="h-7 w-7" />

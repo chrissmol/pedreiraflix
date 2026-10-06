@@ -7,9 +7,9 @@ export default function BlockedByProfile() {
   const navigate = useNavigate()
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
-      <Shield className="h-12 w-12 text-zinc-500" />
+      <Shield className="h-12 w-12 text-on-surface-muted" />
       <p className="text-lg font-semibold text-white">Conteúdo bloqueado para este perfil</p>
-      <p className="max-w-sm text-sm text-zinc-400">
+      <p className="max-w-sm text-sm text-on-surface-variant">
         Esse título está numa categoria oculta para perfis infantis. Troque de perfil para assistir.
       </p>
       <button

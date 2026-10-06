@@ -33,14 +33,14 @@ export default function DownloadsPage() {
         <Download className="h-6 w-6 text-brand-400" />
         <h1 className="font-display text-2xl font-bold text-white">Downloads</h1>
       </div>
-      <p className="mb-8 text-sm text-zinc-400">
+      <p className="mb-8 text-sm text-on-surface-variant">
         {downloads.length === 0
           ? 'Nada baixado neste perfil ainda.'
           : `${downloads.length} título${downloads.length > 1 ? 's' : ''} · ${formatSize(totalBytes)} usados neste aparelho`}
       </p>
 
       {downloads.length === 0 ? (
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-on-surface-variant">
           Toque em "Baixar para ver offline" na página de um filme ou episódio pra ele aparecer aqui.
         </p>
       ) : (

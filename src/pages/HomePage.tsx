@@ -67,6 +67,10 @@ export default function HomePage() {
           title: it.name,
           description: 'plot' in it ? it.plot : null,
           image: isSeries ? it.cover : it.streamIcon,
+          kind: isSeries ? ('series' as const) : ('movie' as const),
+          id: isSeries ? it.seriesId : it.streamId,
+          rating: Number(it.rating) || 0,
+          meta: isSeries ? [it.releaseDate?.slice(0, 4), it.genre?.split(/[,/]/)[0]?.trim()].filter((m): m is string => !!m) : [],
           onPlay: () => navigate(isSeries ? `/series/${it.seriesId}` : `/movies/${it.streamId}`),
         }
       }),
@@ -182,7 +186,7 @@ export default function HomePage() {
         {recentMovies.length > 0 && (
           <Row title="Adicionados recentemente">
             {recentMovies.map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} onClick={() => navigate(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => navigate(`/movies/${m.streamId}`)} />
             ))}
           </Row>
         )}
@@ -194,6 +198,7 @@ export default function HomePage() {
                 key={`${r.kind}-${r.id}`}
                 title={r.name}
                 image={r.image}
+                badge={r.rating > 0 ? `★ ${r.rating.toFixed(1)}` : null}
                 onClick={() => navigate(r.kind === 'movie' ? `/movies/${r.id}` : `/series/${r.id}`)}
               />
             ))}

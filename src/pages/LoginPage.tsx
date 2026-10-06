@@ -104,7 +104,7 @@ export default function LoginPage() {
         <h1 className="font-display neon-text mb-1 bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
           PedreiraFlix
         </h1>
-        <p className="mb-6 text-sm text-zinc-400">
+        <p className="mb-6 text-sm text-on-surface-variant">
           {accounts.length > 0 && !showForm ? 'Escolha uma conta salva' : 'Entre com os dados do seu servidor IPTV'}
         </p>
 
@@ -145,7 +145,7 @@ export default function LoginPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-white">{accountLabel(account)}</span>
-                      <span className="block truncate text-xs text-zinc-400">{accountSubtitle(account)}</span>
+                      <span className="block truncate text-xs text-on-surface-variant">{accountSubtitle(account)}</span>
                     </span>
                     {/* "Entrar" is purely decorative — the whole row is already the tap target — so it's
                         the first thing to go on a narrow phone, where it was crowding the account name
@@ -165,7 +165,7 @@ export default function LoginPage() {
                     }}
                     aria-label={`Renomear conta ${accountLabel(account)}`}
                     title="Renomear"
-                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-zinc-500 transition-colors hover:border-brand-500/40 hover:text-white sm:px-3"
+                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-on-surface-muted transition-colors hover:border-brand-500/40 hover:text-white sm:px-3"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                     onClick={() => removeAccount(account.id)}
                     aria-label={`Esquecer conta ${accountLabel(account)}`}
                     title="Esquecer esta conta"
-                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 sm:px-3"
+                    className="shrink-0 rounded-xl border border-outline-soft bg-surface-container px-2.5 text-on-surface-muted transition-colors hover:border-rose-500/40 hover:text-rose-400 sm:px-3"
                   >
                     <Trash className="h-4 w-4" />
                   </button>
@@ -207,7 +207,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setMethod(m.id)}
                   className={`rounded-lg px-2 py-2 text-xs font-semibold transition-colors ${
-                    method === m.id ? 'bg-brand-600 text-white' : 'text-zinc-400 hover:text-white'
+                    method === m.id ? 'bg-brand-600 text-white' : 'text-on-surface-variant hover:text-white'
                   }`}
                 >
                   {m.label}
@@ -219,7 +219,7 @@ export default function LoginPage() {
               {method === 'xtream' && (
                 <>
                   <div>
-                    <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <label htmlFor="server" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                       Endereço do servidor
                     </label>
                     <input
@@ -239,7 +239,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <label htmlFor="username" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                       Usuário
                     </label>
                     <input
@@ -257,7 +257,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                       Senha
                     </label>
                     <div className="relative">
@@ -275,7 +275,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
-                        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 hover:text-white"
+                        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-on-surface-muted hover:text-white"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -286,7 +286,7 @@ export default function LoginPage() {
 
               {method === 'm3u-url' && (
                 <div>
-                  <label htmlFor="m3u-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                  <label htmlFor="m3u-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                     Link da playlist M3U
                   </label>
                   <input
@@ -308,7 +308,7 @@ export default function LoginPage() {
 
               {method === 'm3u-file' && (
                 <div>
-                  <label htmlFor="m3u-file" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                  <label htmlFor="m3u-file" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                     Arquivo M3U do aparelho
                   </label>
                   <input
@@ -328,8 +328,8 @@ export default function LoginPage() {
                   wins when it has one. */}
               {method !== 'xtream' && (
                 <div>
-                  <label htmlFor="epg-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                    Link do guia (EPG) <span className="font-normal normal-case tracking-normal text-zinc-500">— opcional</span>
+                  <label htmlFor="epg-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+                    Link do guia (EPG) <span className="font-normal normal-case tracking-normal text-on-surface-muted">— opcional</span>
                   </label>
                   <input
                     id="epg-url"
@@ -344,14 +344,14 @@ export default function LoginPage() {
                     onChange={(e) => setEpgUrl(e.target.value)}
                     className={inputClass}
                   />
-                  <p className="mt-1.5 text-xs text-zinc-500">
+                  <p className="mt-1.5 text-xs text-on-surface-muted">
                     Arquivo XMLTV (.xml ou .xml.gz). Deixe em branco se a playlist já trouxer o guia.
                   </p>
                 </div>
               )}
 
               <div>
-                <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                <label htmlFor="account-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                   Nome (opcional)
                 </label>
                 <input
@@ -389,7 +389,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="mt-3 w-full py-2 text-sm text-zinc-400 hover:text-white"
+                className="mt-3 w-full py-2 text-sm text-on-surface-variant hover:text-white"
               >
                 Voltar às contas salvas
               </button>

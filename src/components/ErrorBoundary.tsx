@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#06070c] px-4 text-center">
         <p className="text-lg font-semibold text-white">Algo deu errado</p>
-        <p className="max-w-sm text-sm text-zinc-400">
+        <p className="max-w-sm text-sm text-on-surface-variant">
           O app encontrou um erro inesperado. Recarregar a página costuma resolver.
         </p>
         <button

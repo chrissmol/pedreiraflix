@@ -48,7 +48,6 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
           <PosterCard
             key={(item as Movie).streamId}
             title={item.name}
-            rating={Number(item.rating) || null}
             image={(item as Movie).streamIcon}
             badge={item.rating && Number(item.rating) > 0 ? `★ ${Number(item.rating).toFixed(1)}` : null}
             onClick={() => navigate(`/movies/${(item as Movie).streamId}`)}

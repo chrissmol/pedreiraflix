@@ -69,7 +69,7 @@ export function VideoPlayerSubtitleMenu({
             </button>
           ))}
           <div className="border-t border-outline-soft px-3 py-2">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Tamanho</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">Tamanho</p>
             <div className="flex gap-1.5">
               {(['small', 'medium', 'large'] as const).map((size) => (
                 <button
@@ -84,7 +84,7 @@ export function VideoPlayerSubtitleMenu({
                 </button>
               ))}
             </div>
-            <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Fundo</p>
+            <p className="mb-1.5 mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">Fundo</p>
             <div className="flex gap-1.5">
               {([
                 ['none', 'Nenhum'],
@@ -105,7 +105,7 @@ export function VideoPlayerSubtitleMenu({
 
             {/* So a legenda da para sincronizar: nao existe API no navegador para deslocar o audio de um
                 <video>, e fazer isso pelo Web Audio quebraria AirPlay e Chromecast. */}
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">Sincronia</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Sincronia</p>
             <div className="mt-1.5 flex items-center gap-2">
               <button
                 onClick={() => onChangeOffset(Math.round((offset - 0.5) * 10) / 10)}

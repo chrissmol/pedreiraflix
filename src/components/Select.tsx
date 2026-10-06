@@ -42,7 +42,7 @@ export default function Select({ value, onChange, options, label, className }: S
         className="brand-focus flex w-full items-center justify-between gap-2 rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2 text-sm text-white transition-colors hover:border-brand-500/40"
       >
         <span className="truncate">{current?.label ?? label}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-on-surface-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div

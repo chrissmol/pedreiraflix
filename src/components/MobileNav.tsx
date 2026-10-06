@@ -31,7 +31,7 @@ export default function MobileNav() {
           end={to === '/'}
           className={({ isActive }) =>
             `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[10px] font-medium transition-colors ${
-              isActive ? 'bg-white/10 text-white' : 'text-zinc-400 active:bg-white/5'
+              isActive ? 'bg-white/10 text-white' : 'text-on-surface-variant active:bg-white/5'
             }`
           }
         >

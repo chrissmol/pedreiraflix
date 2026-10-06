@@ -60,7 +60,7 @@ export default function MovieDetailPage() {
     }
   }, [movie])
 
-  if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
+  if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
   if (blocked) return <BlockedByProfile />
   if (error || !movie) return <div className="pt-32 text-center text-rose-400">{error || 'Filme não encontrado'}</div>
 
@@ -78,7 +78,7 @@ export default function MovieDetailPage() {
     <div className="min-h-screen pb-16">
       <div className="relative h-[46vw] max-h-[520px] min-h-[280px] w-full">
         {backdrop && <img src={backdrop} alt={movie.name} className="h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
         <div className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-brand-500/15 blur-[100px]" />
       </div>
 
@@ -92,8 +92,8 @@ export default function MovieDetailPage() {
         )}
         <div className="flex-1">
           <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{movie.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-400">
-            {rating ? <span className="font-semibold text-brand-300">★ {rating.toFixed(1)}</span> : null}
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-on-surface-variant">
+            {rating ? <span className="font-semibold text-rating">★ {rating.toFixed(1)}</span> : null}
             {meta.map((item, i) => (
               <span key={item}>
                 {(i > 0 || rating) && <span className="pr-2 text-zinc-600">·</span>}
@@ -154,16 +154,16 @@ export default function MovieDetailPage() {
 
           {plot && <p className="mt-6 max-w-2xl text-zinc-300">{plot}</p>}
 
-          <div className="mt-6 space-y-1 text-sm text-zinc-400">
+          <div className="mt-6 space-y-1 text-sm text-on-surface-variant">
             {movie.cast && (
               <p>
-                <span className="text-zinc-400">Elenco: </span>
+                <span className="text-on-surface-variant">Elenco: </span>
                 {movie.cast}
               </p>
             )}
             {movie.director && (
               <p>
-                <span className="text-zinc-400">Direção: </span>
+                <span className="text-on-surface-variant">Direção: </span>
                 {movie.director}
               </p>
             )}

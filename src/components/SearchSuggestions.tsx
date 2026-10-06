@@ -80,15 +80,15 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
               {r.image ? (
                 <img src={r.image} alt="" className="h-full w-full object-cover" />
               ) : (
-                <Icon className="h-4 w-4 text-zinc-500" />
+                <Icon className="h-4 w-4 text-on-surface-muted" />
               )}
             </span>
             <span className="min-w-0 flex-1 truncate text-white">{r.name}</span>
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KIND_LABEL[r.kind]}</span>
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{KIND_LABEL[r.kind]}</span>
           </button>
         )
       })}
-      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-zinc-400">Buscando...</p>}
+      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-on-surface-variant">Buscando...</p>}
     </div>
   )
 }

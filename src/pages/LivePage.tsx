@@ -84,7 +84,7 @@ export default function LivePage() {
           className={`mb-1 w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
             activeCategory === null
               ? 'glow-border bg-gradient-to-r from-brand-500/90 to-brand-700/90 text-white'
-              : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+              : 'text-on-surface-variant hover:bg-white/5 hover:text-white'
           }`}
         >
           Todos os canais
@@ -96,7 +96,7 @@ export default function LivePage() {
             className={`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm transition-colors ${
               activeCategory === g.category.categoryId
                 ? 'glow-border bg-gradient-to-r from-brand-500/90 to-brand-700/90 text-white'
-                : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                : 'text-on-surface-variant hover:bg-white/5 hover:text-white'
             }`}
           >
             {g.category.categoryName}
@@ -151,7 +151,7 @@ export default function LivePage() {
 
         {favoriteChannels.length > 0 && !filter.trim() && !activeCategory && !onlyArchive && (
           <section className="mb-6">
-            <h2 className="mb-2 text-sm font-semibold text-zinc-400">Seus canais</h2>
+            <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">Seus canais</h2>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-2">
               {favoriteChannels.map((ch) => (
                 <LiveChannelCard
@@ -183,7 +183,7 @@ export default function LivePage() {
         </div>
 
         {!loading && allChannels.length === 0 && (
-          <p className="mt-8 text-center text-zinc-400">Nenhum canal encontrado.</p>
+          <p className="mt-8 text-center text-on-surface-variant">Nenhum canal encontrado.</p>
         )}
 
         {visibleCount < allChannels.length && <div ref={sentinelRef} className="h-10" />}

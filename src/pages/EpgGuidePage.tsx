@@ -86,7 +86,7 @@ export default function EpgGuidePage() {
         <button
           onClick={() => navigate('/live')}
           aria-label="Voltar para Ao Vivo"
-          className="rounded-full p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+          className="rounded-full p-1.5 text-on-surface-variant transition-colors hover:bg-white/10 hover:text-white"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -94,9 +94,9 @@ export default function EpgGuidePage() {
       </div>
 
       {loading && channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Carregando canais...</p>
+        <p className="px-4 py-8 text-center text-on-surface-variant sm:px-8">Carregando canais...</p>
       ) : channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Nenhum canal nesta categoria.</p>
+        <p className="px-4 py-8 text-center text-on-surface-variant sm:px-8">Nenhum canal nesta categoria.</p>
       ) : (
         <div className="overflow-x-auto">
           <div style={{ width: totalWidth + 140 }}>
@@ -105,7 +105,7 @@ export default function EpgGuidePage() {
               <div className="w-[140px] shrink-0" />
               <div className="relative h-8 flex-1">
                 {hourMarks.map((m) => (
-                  <span key={m.x} className="absolute top-0 border-l border-outline-soft pl-1.5 text-[11px] text-zinc-400" style={{ left: m.x }}>
+                  <span key={m.x} className="absolute top-0 border-l border-outline-soft pl-1.5 text-[11px] text-on-surface-variant" style={{ left: m.x }}>
                     {m.label}
                   </span>
                 ))}
@@ -156,7 +156,7 @@ export default function EpgGuidePage() {
                                     ? playable
                                       ? 'border-outline-soft bg-surface-container text-zinc-300 hover:bg-surface-high'
                                       : 'cursor-default border-white/5 bg-surface-container/40 text-zinc-600'
-                                    : 'cursor-default border-white/5 bg-surface-container text-zinc-400'
+                                    : 'cursor-default border-white/5 bg-surface-container text-on-surface-variant'
                               }`}
                               style={{ left, width }}
                             >

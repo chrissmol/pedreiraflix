@@ -53,7 +53,7 @@ export default function SeriesDetailPage() {
     }
   }, [client, id, isKids])
 
-  if (loading) return <div className="pt-32 text-center text-zinc-400">Carregando...</div>
+  if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
   if (blocked) return <BlockedByProfile />
   if (error || !series) return <div className="pt-32 text-center text-rose-400">{error || 'Série não encontrada'}</div>
 
@@ -71,7 +71,7 @@ export default function SeriesDetailPage() {
     <div className="min-h-screen pb-16">
       <div className="relative h-[46vw] max-h-[520px] min-h-[280px] w-full">
         {backdrop && <img src={backdrop} alt={series.name} className="h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
         <div className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-brand-500/15 blur-[100px]" />
       </div>
 
@@ -81,8 +81,8 @@ export default function SeriesDetailPage() {
         )}
         <div className="flex-1">
           <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{series.name}</h1>
-          <div className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-400">
-            {rating ? <span className="font-semibold text-brand-300">★ {rating.toFixed(1)}</span> : null}
+          <div className="mt-2 flex flex-wrap gap-3 text-sm text-on-surface-variant">
+            {rating ? <span className="font-semibold text-rating">★ {rating.toFixed(1)}</span> : null}
             {meta.map((item, i) => (
               <span key={item}>
                 {(i > 0 || rating) && <span className="pr-2 text-zinc-600">·</span>}
@@ -109,16 +109,16 @@ export default function SeriesDetailPage() {
 
           {series.plot && <p className="mt-6 max-w-2xl text-zinc-300">{series.plot}</p>}
 
-          <div className="mt-6 space-y-1 text-sm text-zinc-400">
+          <div className="mt-6 space-y-1 text-sm text-on-surface-variant">
             {series.cast && (
               <p>
-                <span className="text-zinc-400">Elenco: </span>
+                <span className="text-on-surface-variant">Elenco: </span>
                 {series.cast}
               </p>
             )}
             {series.director && (
               <p>
-                <span className="text-zinc-400">Direção: </span>
+                <span className="text-on-surface-variant">Direção: </span>
                 {series.director}
               </p>
             )}
@@ -174,8 +174,8 @@ export default function SeriesDetailPage() {
                     <p className="truncate font-medium text-white">{ep.title}</p>
                     {isWatched && <span className="text-[10px] font-semibold uppercase text-brand-400">Assistido</span>}
                   </div>
-                  {formatRuntime(ep.duration) && <p className="text-xs text-zinc-400">{formatRuntime(ep.duration)}</p>}
-                  {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ep.plot}</p>}
+                  {formatRuntime(ep.duration) && <p className="text-xs text-on-surface-variant">{formatRuntime(ep.duration)}</p>}
+                  {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-on-surface-variant">{ep.plot}</p>}
                 </div>
                 <span onClick={(e) => e.stopPropagation()} className="mt-0.5 shrink-0">
                   <DownloadButton
@@ -193,7 +193,7 @@ export default function SeriesDetailPage() {
                     href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
                     download
                     onClick={(e) => e.stopPropagation()}
-                    className="mt-0.5 shrink-0 rounded-lg p-2.5 text-zinc-500 transition-colors hover:bg-white/10 hover:text-brand-300"
+                    className="mt-0.5 shrink-0 rounded-lg p-2.5 text-on-surface-muted transition-colors hover:bg-white/10 hover:text-brand-300"
                     title="Baixar arquivo original (fora do app)"
                   >
                     {/* Glifo diferente do download para ver offline: sem rotulo, duas setas iguais nao
@@ -201,12 +201,12 @@ export default function SeriesDetailPage() {
                     <FileArrowDown className="h-5 w-5" />
                   </a>
                 )}
-                <Play className="mt-2 h-5 w-5 shrink-0 text-zinc-500" />
+                <Play className="mt-2 h-5 w-5 shrink-0 text-on-surface-muted" />
 
                 {watchedPct > 0 && (
                   <div className="absolute inset-x-0 bottom-0 h-1 bg-white/10">
                     <div
-                      className={`h-full ${isWatched ? 'bg-zinc-500' : 'bg-gradient-to-r from-brand-500 to-brand-400'}`}
+                      className={`h-full ${isWatched ? 'bg-on-surface-muted' : 'bg-gradient-to-r from-brand-500 to-brand-400'}`}
                       style={{ width: `${watchedPct}%` }}
                     />
                   </div>

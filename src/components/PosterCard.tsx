@@ -9,15 +9,13 @@ interface PosterCardProps {
   /** 0–100. Renders a thin progress bar across the bottom of the poster, always visible (not just on
    * hover) — the same at-a-glance "how far in am I" cue Netflix shows in Continue Watching rows. */
   progressPct?: number | null
-  /** Nota do provedor (0-10). Vira o selo com estrela no canto, como o brand book pede. */
-  rating?: number | null
   /** True inside a CSS grid (PosterGrid), where the grid track itself sizes the card — the fixed
    * w-32/sm:w-40/md:w-44 used everywhere else is for a horizontal scroll row (Row.tsx), which has no
    * track to size against. */
   fill?: boolean
 }
 
-export default function PosterCard({ title, image, onClick, badge, subtitle, rating, progressPct, fill }: PosterCardProps) {
+export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
   return (
     <button
       data-spatial
@@ -50,20 +48,15 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, rat
         {subtitle && <p className="text-label-badge text-on-surface-variant">{subtitle}</p>}
       </div>
 
-      {rating != null && rating > 0 && (
-        <span className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
-          ★ {rating.toFixed(1)}
-        </span>
-      )}
 
       {badge && (
-        <span className="absolute left-1.5 top-1.5 rounded-md border border-brand-400/30 bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-brand-200 backdrop-blur-sm">
+        <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
           {badge}
         </span>
       )}
 
       {!image && (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 p-2 text-center text-xs font-medium text-zinc-400">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-surface-high to-surface-container p-2 text-center text-xs font-medium text-on-surface-variant">
           {title}
         </div>
       )}

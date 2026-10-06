@@ -110,7 +110,7 @@ export default function TopNav() {
         PedreiraFlix
       </span>
 
-      <nav className="hidden gap-1 text-sm font-medium text-zinc-400 sm:flex">
+      <nav className="hidden gap-1 text-sm font-medium text-on-surface-variant sm:flex">
         {links.map((l) => (
           <NavLink
             key={l.to}
@@ -129,7 +129,7 @@ export default function TopNav() {
 
       <form ref={searchRef} onSubmit={handleSearch} className="group relative ml-auto flex items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-brand-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
             type="search"
             enterKeyHint="search"
@@ -149,7 +149,7 @@ export default function TopNav() {
             // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
             // header (and anything anchored to the search box, like its suggestions dropdown) past the
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            className="brand-focus w-10 rounded-full border border-outline-soft bg-surface-container py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            className="brand-focus w-10 rounded-full border border-outline-soft bg-surface-container py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-on-surface-muted focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -172,8 +172,8 @@ export default function TopNav() {
             aria-label="Menu da conta"
             className="absolute right-0 mt-2 w-56 rounded-xl border border-outline-soft bg-surface-container/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
           >
-            <p className="truncate px-2 py-1.5 text-zinc-400">
-              {activeProfile?.name} <span className="text-zinc-400">· {user?.username}</span>
+            <p className="truncate px-2 py-1.5 text-on-surface-variant">
+              {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
             </p>
             {profiles.length > 1 && (
               <div className="my-1 space-y-0.5">
@@ -203,7 +203,7 @@ export default function TopNav() {
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
             >
-              <User className="h-4 w-4 text-zinc-400" /> Gerenciar perfis
+              <User className="h-4 w-4 text-on-surface-variant" /> Gerenciar perfis
             </button>
             <button
               onClick={() => {
@@ -212,7 +212,7 @@ export default function TopNav() {
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
             >
-              <Download className="h-4 w-4 text-zinc-400" /> Downloads
+              <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
             </button>
             <button
               onClick={() => {
@@ -221,7 +221,7 @@ export default function TopNav() {
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
             >
-              <RefreshCw className="h-4 w-4 text-zinc-400" /> Limpar cache
+              <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
             </button>
             <button
               onClick={logout}

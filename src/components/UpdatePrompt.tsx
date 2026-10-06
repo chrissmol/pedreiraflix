@@ -68,7 +68,7 @@ export default function UpdatePrompt() {
       <button
         onClick={() => setWaiting(null)}
         aria-label="Agora não"
-        className="shrink-0 rounded-lg px-2 py-1.5 text-sm text-zinc-400 hover:text-white"
+        className="shrink-0 rounded-lg px-2 py-1.5 text-sm text-on-surface-variant hover:text-white"
       >
         ✕
       </button>

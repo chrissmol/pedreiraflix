@@ -42,7 +42,7 @@ export function VideoPlayerDisplayMenu({
       </button>
       {open && (
         <div className="glass-panel absolute right-0 mt-1.5 w-60 overflow-hidden rounded-lg text-sm">
-          <p className="px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">Proporção</p>
+          <p className="px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Proporção</p>
           {FITS.map((option) => (
             <button
               key={option.value}
@@ -52,11 +52,11 @@ export function VideoPlayerDisplayMenu({
               }`}
             >
               {option.label}
-              <span className="block text-xs text-zinc-400">{option.hint}</span>
+              <span className="block text-xs text-on-surface-variant">{option.hint}</span>
             </button>
           ))}
 
-          <p className="border-t border-outline-soft px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+          <p className="border-t border-outline-soft px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
             Desligar em
           </p>
           <div className="flex flex-wrap gap-1.5 p-3 pt-2">

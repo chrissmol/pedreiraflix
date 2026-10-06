@@ -49,7 +49,7 @@ export function VideoPlayerCenterOverlays({
       {nextUpVisible && next && !error && (
         <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">
           <div className="glass-panel glow-border flex w-64 flex-col gap-2 rounded-xl p-3">
-            <p className="text-xs text-zinc-400">A seguir</p>
+            <p className="text-xs text-on-surface-variant">A seguir</p>
             <p className="truncate text-sm font-semibold text-white">{next.label}</p>
             <div className="flex gap-2">
               <button

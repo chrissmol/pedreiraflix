@@ -98,7 +98,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
               }}
             />
           ) : (
-            <span className="text-xs font-bold text-zinc-500">{channel.name.slice(0, 2).toUpperCase()}</span>
+            <span className="text-xs font-bold text-on-surface-muted">{channel.name.slice(0, 2).toUpperCase()}</span>
           )}
         </span>
 
@@ -106,14 +106,14 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
           <span className="flex items-center gap-2">
             <span className="truncate text-label-md text-white">{channel.name}</span>
             {channel.hasArchive && (
-              <span className="shrink-0 rounded border border-outline-strong px-1 text-[10px] font-semibold text-zinc-400">REVER</span>
+              <span className="shrink-0 rounded border border-outline-strong px-1 text-[10px] font-semibold text-on-surface-variant">REVER</span>
             )}
           </span>
           {program ? (
             <>
               <span className="mt-0.5 flex items-baseline gap-1.5">
                 <span className="truncate text-body-sm text-on-surface-variant">{program.title}</span>
-                {endsAt && <span className="shrink-0 text-[11px] text-zinc-500">até {endsAt}</span>}
+                {endsAt && <span className="shrink-0 text-[11px] text-on-surface-muted">até {endsAt}</span>}
               </span>
               {progress != null && (
                 <span className="mt-1.5 block h-0.5 w-full overflow-hidden rounded-full bg-white/10">

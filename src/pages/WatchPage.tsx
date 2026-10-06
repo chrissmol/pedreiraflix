@@ -213,7 +213,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     if (nextEpisode) goToEpisode(nextEpisode)
   }
 
-  if (!src || checkingProfile) return <div className="pt-32 text-center text-zinc-400">Carregando player...</div>
+  if (!src || checkingProfile) return <div className="pt-32 text-center text-on-surface-variant">Carregando player...</div>
   if (blocked) return <BlockedByProfile />
 
   const subtitle = isCatchup

@@ -131,7 +131,7 @@ export default function SeriesPage() {
             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               activeGenre === null
                 ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
-                : 'border-outline-soft bg-surface-container text-zinc-400 hover:border-brand-500/40 hover:text-white'
+                : 'border-outline-soft bg-surface-container text-on-surface-variant hover:border-brand-500/40 hover:text-white'
             }`}
           >
             Todos os gêneros
@@ -143,7 +143,7 @@ export default function SeriesPage() {
               className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeGenre === g
                   ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
-                  : 'border-outline-soft bg-surface-container text-zinc-400 hover:border-brand-500/40 hover:text-white'
+                  : 'border-outline-soft bg-surface-container text-on-surface-variant hover:border-brand-500/40 hover:text-white'
               }`}
             >
               {g}

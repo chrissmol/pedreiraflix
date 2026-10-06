@@ -47,8 +47,8 @@ export default function SearchPage() {
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-white">Resultados para "{query}"</h1>
 
-      {loading && <p className="text-zinc-400">Carregando catálogo...</p>}
-      {!loading && total === 0 && <p className="text-zinc-400">Nenhum resultado encontrado.</p>}
+      {loading && <p className="text-on-surface-variant">Carregando catálogo...</p>}
+      {!loading && total === 0 && <p className="text-on-surface-variant">Nenhum resultado encontrado.</p>}
 
       {results.movies.length > 0 && (
         <section className="mb-8">

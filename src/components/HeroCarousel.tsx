@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Info, Play } from './icons'
+import { Check, Info, Play, Plus } from './icons'
+import { useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
 
 export interface FeaturedCandidate {
   key: string
@@ -7,6 +9,11 @@ export interface FeaturedCandidate {
   description: string | null
   image: string | null
   onPlay: () => void
+  kind: 'movie' | 'series'
+  id: number
+  rating: number
+  /** Ano e genero quando o provedor manda na listagem (series sim, filmes nao). */
+  meta: string[]
 }
 
 interface HeroCarouselProps {
@@ -52,6 +59,9 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
   const timeSlot = playable.length > 0 ? Math.floor(now / slotMs) % playable.length : 0
   const index = timeSlot % Math.max(1, playable.length)
   const current = playable[index]
+  const profileId = useActiveProfileId()
+  const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
+  const isFavorite = useLibraryStore((s) => (current ? s.isFavorite(profileId, current.kind, current.id) : false))
 
   // Reserves the same footprint even with nothing to show yet (catalog still loading, or every
   // candidate's image just broke) instead of collapsing to zero height — the fixed, transparent TopNav
@@ -62,7 +72,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
     return (
       <div className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
         <div className="skeleton absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
       </div>
     )
   }
@@ -81,8 +91,8 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
           onError={() => setBroken((prev) => new Set(prev).add(current.key))}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/50 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#06070c]/90 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-surface/90 via-transparent to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
       <div className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-[100px]" />
 
@@ -90,6 +100,14 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
         <h1 className="font-display max-w-xl text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
           {current.title}
         </h1>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">
+          {current.rating > 0 && <span className="font-semibold text-rating">★ {current.rating.toFixed(1)}</span>}
+          {[current.kind === 'movie' ? 'Filme' : 'Série', ...current.meta].map((m) => (
+            <span key={m} className="before:pr-2 before:text-on-surface-muted before:content-['·'] first:before:content-none">
+              {m}
+            </span>
+          ))}
+        </div>
         {current.description && (
           <p className="line-clamp-3 max-w-lg text-body-md text-on-surface-variant drop-shadow sm:text-body-lg">{current.description}</p>
         )}
@@ -105,6 +123,14 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
             className="glass-panel flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
           >
             <Info className="h-5 w-5" /> Detalhes
+          </button>
+          <button
+            onClick={() => toggleFavorite(profileId, { kind: current.kind, id: current.id, name: current.title, image: current.image })}
+            aria-label={isFavorite ? 'Remover da Minha lista' : 'Adicionar à Minha lista'}
+            title={isFavorite ? 'Na lista' : 'Minha lista'}
+            className="glass-panel flex items-center rounded-lg p-2.5 text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10"
+          >
+            {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
           </button>
           {action}
         </div>
