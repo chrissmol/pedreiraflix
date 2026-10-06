@@ -84,7 +84,7 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
               )}
             </span>
             <span className="min-w-0 flex-1 truncate text-white">{r.name}</span>
-            <span className="shrink-0 rounded bg-surface-high px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{KIND_LABEL[r.kind]}</span>
+            <span className="shrink-0 rounded bg-surface-high px-1.5 py-0.5 text-label-badge font-semibold uppercase tracking-wide text-on-surface-variant">{KIND_LABEL[r.kind]}</span>
           </button>
         )
       })}

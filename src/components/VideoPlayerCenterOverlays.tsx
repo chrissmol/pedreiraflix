@@ -72,7 +72,7 @@ export function VideoPlayerCenterOverlays({
       {seekFlash && (
         <div
           key={seekFlash.key}
-          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-sm font-bold text-white ${
+          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-headline-sm text-white ${
             seekFlash.side === -1 ? 'left-0 rounded-r-[100%]' : 'right-0 rounded-l-[100%]'
           }`}
         >

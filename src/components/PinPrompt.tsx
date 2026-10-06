@@ -41,7 +41,7 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
         className="card-panel w-full max-w-xs p-6 text-center sm:p-8"
       >
         <span
-          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white"
+          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-headline-md text-white"
           style={{ background: profile.color }}
         >
           {profile.name[0]?.toUpperCase()}

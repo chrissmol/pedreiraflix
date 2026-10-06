@@ -53,7 +53,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
               e.stopPropagation()
               setRemoveTarget({ key: `${p.kind}-${p.id}`, name: p.name })
             }}
-            className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black pointer-fine:hidden pointer-fine:group-hover:flex"
+            className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-label-badge text-white backdrop-blur-sm hover:bg-live"
             title="Remover de continuar assistindo"
           >
             ✕

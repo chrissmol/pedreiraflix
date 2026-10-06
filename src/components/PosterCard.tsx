@@ -56,7 +56,7 @@ export default function PosterCard({ title, image, onClick, badge, subtitle, pro
       )}
 
       {!image && (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-surface-high to-surface-container p-2 text-center text-xs font-medium text-on-surface-variant">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-surface-high to-surface-container p-2 text-center text-label-badge text-on-surface-variant">
           {title}
         </div>
       )}

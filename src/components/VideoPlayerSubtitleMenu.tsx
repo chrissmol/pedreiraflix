@@ -102,7 +102,7 @@ export function VideoPlayerSubtitleMenu({
               >
                 -0,5s
               </button>
-              <span className="flex-1 text-center text-xs tabular-nums text-white">
+              <span className="flex-1 text-center text-body-sm tabular-nums text-white">
                 {offset === 0 ? 'Em sincronia' : `${offset > 0 ? '+' : ''}${offset.toFixed(1)}s`}
               </span>
               <button

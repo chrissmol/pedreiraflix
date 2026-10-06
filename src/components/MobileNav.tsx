@@ -30,7 +30,7 @@ export default function MobileNav() {
           to={to}
           end={to === '/'}
           className={({ isActive }) =>
-            `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[10px] font-medium transition-colors ${
+            `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-label-badge transition-colors ${
               isActive ? 'bg-brand-500/15 text-brand-300' : 'text-on-surface-variant active:bg-surface-high'
             }`
           }

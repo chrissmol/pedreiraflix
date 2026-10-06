@@ -186,7 +186,7 @@ export default function TopNav() {
                       className="menu-option"
                     >
                       <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-label-badge font-bold text-white"
                         style={{ background: p.color }}
                       >
                         {p.name[0]?.toUpperCase()}

@@ -106,7 +106,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
           <span className="flex items-center gap-2">
             <span className="truncate text-label-md text-white">{channel.name}</span>
             {channel.hasArchive && (
-              <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300">REVER</span>
+              <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-0.5 text-label-badge font-bold text-brand-300">REVER</span>
             )}
           </span>
           {program ? (
