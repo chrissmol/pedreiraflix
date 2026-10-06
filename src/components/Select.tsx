@@ -39,7 +39,7 @@ export default function Select({ value, onChange, options, label, className }: S
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
-        className="brand-focus flex w-full items-center justify-between gap-2 rounded-xl border border-outline-soft bg-surface-container px-3.5 py-2 text-sm text-white transition-colors hover:border-brand-500/40"
+        className="brand-focus flex h-11 w-full items-center justify-between gap-2 rounded-full border border-outline-soft bg-surface-container px-4 text-label-md text-white transition-colors hover:border-outline-strong hover:bg-surface-high"
       >
         <span className="truncate">{current?.label ?? label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-on-surface-muted transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -49,7 +49,7 @@ export default function Select({ value, onChange, options, label, className }: S
           ref={panelRef}
           role="listbox"
           aria-label={label}
-          className="glass-panel absolute right-0 z-30 mt-1.5 max-h-72 w-full min-w-[10rem] overflow-y-auto rounded-xl p-1 text-sm shadow-2xl"
+          className="menu-panel absolute right-0 z-30 mt-2 max-h-72 w-full min-w-[12rem] overflow-y-auto"
         >
           {options.map((o) => (
             <button
@@ -61,9 +61,7 @@ export default function Select({ value, onChange, options, label, className }: S
                 onChange(o.value)
                 setOpen(false)
               }}
-              className={`block w-full rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/10 ${
-                o.value === value ? 'text-brand-300' : 'text-white'
-              }`}
+              className={`menu-option ${o.value === value ? 'menu-option-active' : ''}`}
             >
               {o.label}
             </button>

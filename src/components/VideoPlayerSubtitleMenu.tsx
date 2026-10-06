@@ -44,10 +44,10 @@ export function VideoPlayerSubtitleMenu({
         <Subtitles className="h-4 w-4" />
       </button>
       {open && (
-        <div className="player-panel absolute right-0 mt-2 w-56">
+        <div className="menu-panel absolute right-0 mt-2 w-56">
           <button
             onClick={() => onSelectTrack(-1)}
-            className={`player-option ${currentTrack === -1 ? 'player-option-active' : ''}`}
+            className={`menu-option ${currentTrack === -1 ? 'menu-option-active' : ''}`}
           >
             Desativadas
           </button>
@@ -55,7 +55,7 @@ export function VideoPlayerSubtitleMenu({
             <button
               key={t.id}
               onClick={() => onSelectTrack(t.id)}
-              className={`player-option ${currentTrack === t.id ? 'player-option-active' : ''}`}
+              className={`menu-option ${currentTrack === t.id ? 'menu-option-active' : ''}`}
             >
               {t.name}
             </button>
@@ -68,7 +68,7 @@ export function VideoPlayerSubtitleMenu({
                   key={size}
                   onClick={() => onSelectSize(size)}
                   aria-label={`Legenda tamanho ${size}`}
-                  className={`player-chip flex-1 ${subtitleSize === size ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                  className={`chip flex-1 ${subtitleSize === size ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
                 >
                   {size === 'small' ? 'P' : size === 'medium' ? 'M' : 'G'}
                 </button>
@@ -84,7 +84,7 @@ export function VideoPlayerSubtitleMenu({
                 <button
                   key={bg}
                   onClick={() => onSelectBackground(bg)}
-                  className={`player-chip flex-1 ${subtitleBackground === bg ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                  className={`chip flex-1 ${subtitleBackground === bg ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
                 >
                   {label}
                 </button>
@@ -98,7 +98,7 @@ export function VideoPlayerSubtitleMenu({
               <button
                 onClick={() => onChangeOffset(Math.round((offset - 0.5) * 10) / 10)}
                 aria-label="Adiantar legenda 0,5s"
-                className="player-chip"
+                className="chip"
               >
                 -0,5s
               </button>
@@ -108,7 +108,7 @@ export function VideoPlayerSubtitleMenu({
               <button
                 onClick={() => onChangeOffset(Math.round((offset + 0.5) * 10) / 10)}
                 aria-label="Atrasar legenda 0,5s"
-                className="player-chip"
+                className="chip"
               >
                 +0,5s
               </button>

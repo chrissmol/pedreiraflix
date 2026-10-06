@@ -53,22 +53,22 @@ export default function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="glass-panel absolute inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] flex items-center gap-3 rounded-xl px-4 py-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-80"
+      className="card-panel absolute inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] flex items-center gap-3 rounded-2xl px-4 py-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-80"
     >
-      <span className="flex-1 text-sm text-white">Nova versão disponível</span>
+      <span className="flex-1 text-label-md text-white">Nova versão disponível</span>
       <button
         onClick={() => {
           accepted.current = true
           waiting.postMessage({ type: 'SKIP_WAITING' })
         }}
-        className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-bold text-black transition-transform hover:scale-[1.03]"
+        className="btn-primary h-10 px-4 sm:px-4"
       >
         <RefreshCw className="h-4 w-4" /> Atualizar
       </button>
       <button
         onClick={() => setWaiting(null)}
         aria-label="Agora não"
-        className="shrink-0 rounded-lg px-2 py-1.5 text-sm text-on-surface-variant hover:text-white"
+        className="shrink-0 rounded-full px-3 py-2 text-label-md text-on-surface-variant hover:bg-surface-high hover:text-white"
       >
         ✕
       </button>

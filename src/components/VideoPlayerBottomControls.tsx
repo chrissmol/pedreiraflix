@@ -64,7 +64,7 @@ export function VideoPlayerBottomControls({
               onClick={onToggleFastLive}
               aria-pressed={fastLive}
               title="Menos delay, mais risco de travar em picos do provedor"
-              className={`player-chip flex items-center gap-1 py-1 ${fastLive ? 'bg-brand-500/25 text-brand-300' : ''}`}
+              className={`chip flex items-center gap-1 py-1 ${fastLive ? 'bg-brand-500/25 text-brand-300' : ''}`}
             >
               <Zap className="h-3 w-3" /> Rápido
             </button>

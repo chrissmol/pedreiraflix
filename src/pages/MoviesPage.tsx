@@ -56,7 +56,7 @@ export default function MoviesPage() {
   return (
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
-        <h1 className="font-display text-2xl font-bold text-white">Filmes</h1>
+        <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Filmes</h1>
         <FilterBar active={[sort !== 'default', minRating > 0, activeCategory != null].filter(Boolean).length}>
         <Select
           label="Ordenar"
@@ -85,7 +85,7 @@ export default function MoviesPage() {
 
       <ContinueWatchingRow kind="movie" />
 
-      {error && <p className="px-4 text-rose-400 sm:px-10">{error}</p>}
+      {error && <p className="px-4 text-live sm:px-10">{error}</p>}
       <CatalogProgress groups={groups} label="Carregando filmes" />
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 

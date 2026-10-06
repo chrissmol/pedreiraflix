@@ -17,29 +17,29 @@ export default function ConfirmDialog({ message, confirmLabel = 'Excluir', onCon
   useDialogA11y(dialogRef, true, onCancel)
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={onCancel}>
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Confirmar"
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel glow-border w-full max-w-sm rounded-2xl p-6 text-center"
+        className="card-panel w-full max-w-sm p-6 text-center sm:p-8"
       >
-        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/15 text-rose-400">
+        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-live/15 text-live">
           <AlertTriangle className="h-6 w-6" />
         </span>
-        <p className="mb-5 text-sm text-zinc-200">{message}</p>
+        <p className="mb-6 text-body-lg text-white">{message}</p>
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-lg border border-outline-soft bg-surface-container py-2.5 text-sm font-medium text-white transition-colors hover:bg-surface-high"
+            className="btn-secondary flex-1"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-500"
+            className="btn-primary flex-1 bg-live shadow-none hover:bg-live/85 sm:px-6"
           >
             {confirmLabel}
           </button>

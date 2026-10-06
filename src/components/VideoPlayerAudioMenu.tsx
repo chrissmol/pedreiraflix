@@ -24,12 +24,12 @@ export function VideoPlayerAudioMenu({ open, tracks, currentTrack, onToggle, onS
         <Languages className="h-4 w-4" />
       </button>
       {open && (
-        <div className="player-panel absolute right-0 mt-2 w-56">
+        <div className="menu-panel absolute right-0 mt-2 w-56">
           {tracks.map((t) => (
             <button
               key={t.id}
               onClick={() => onSelectTrack(t.id)}
-              className={`player-option ${currentTrack === t.id ? 'player-option-active' : ''}`}
+              className={`menu-option ${currentTrack === t.id ? 'menu-option-active' : ''}`}
             >
               {t.name}
             </button>

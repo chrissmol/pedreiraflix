@@ -63,7 +63,7 @@ export default function MovieDetailPage() {
 
   if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
   if (blocked) return <BlockedByProfile />
-  if (error || !movie) return <div className="pt-32 text-center text-rose-400">{error || 'Filme não encontrado'}</div>
+  if (error || !movie) return <div className="pt-32 text-center text-live">{error || 'Filme não encontrado'}</div>
 
   const backdrop = movie.backdropPath[0] || movie.streamIcon
   // The provider's own data wins; TMDB only fills what it left empty.

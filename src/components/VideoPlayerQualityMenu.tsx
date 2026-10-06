@@ -33,10 +33,10 @@ export function VideoPlayerQualityMenu({
         {currentLevel === -1 ? `Auto${autoPickedHeight ? ` (${autoPickedHeight}p)` : ''}` : `${levels.find((l) => l.index === currentLevel)?.height}p`}
       </button>
       {open && (
-        <div className="player-panel absolute right-0 mt-2 w-44">
+        <div className="menu-panel absolute right-0 mt-2 w-44">
           <button
             onClick={() => onSelect(-1)}
-            className={`player-option ${currentLevel === -1 ? 'player-option-active' : ''}`}
+            className={`menu-option ${currentLevel === -1 ? 'menu-option-active' : ''}`}
           >
             Automático
           </button>
@@ -46,7 +46,7 @@ export function VideoPlayerQualityMenu({
               <button
                 key={lvl.index}
                 onClick={() => onSelect(lvl.index)}
-                className={`player-option ${currentLevel === lvl.index ? 'player-option-active' : ''}`}
+                className={`menu-option ${currentLevel === lvl.index ? 'menu-option-active' : ''}`}
               >
                 {lvl.height}p
               </button>

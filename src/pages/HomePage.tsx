@@ -225,7 +225,7 @@ export default function HomePage() {
         )}
 
         <CatalogProgress groups={[...movies.groups, ...series.groups]} label="Carregando catálogo" />
-        {movies.error && <p className="px-4 text-sm text-rose-400 sm:px-10">{movies.error}</p>}
+        {movies.error && <p className="px-4 text-body-sm text-live sm:px-10">{movies.error}</p>}
         {visibleMovieGroups.map(({ category, items, loading }) => (
           <CategoryRow
             key={category.categoryId}
@@ -238,7 +238,7 @@ export default function HomePage() {
           />
         ))}
 
-        {series.error && <p className="px-4 text-sm text-rose-400 sm:px-10">{series.error}</p>}
+        {series.error && <p className="px-4 text-body-sm text-live sm:px-10">{series.error}</p>}
         {visibleSeriesGroups.map(({ category, items, loading }) => (
           <CategoryRow
             key={category.categoryId}

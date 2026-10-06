@@ -81,11 +81,6 @@
 
 :root {
   color-scheme: dark;
-  /* Apple-style elevation: a soft, mostly-neutral drop shadow and a hairline border, instead of a
-   * colored halo around every glowing element. The brand blue still shows up (buttons, badges, focus
-   * rings), just as a normal accent color, not as ambient light bleeding off of everything it touches. */
-  --glow-soft: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
-  --glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 28px -8px rgba(0, 0, 0, 0.55);
   --app-bg: #06070c;
   --app-fg: #f1f5fb;
 }
@@ -197,14 +192,6 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -1px 0 rgba(0, 0, 0, 0.2),
     0 8px 30px -10px rgba(0, 0, 0, 0.5);
-}
-
-.glow-border {
-  box-shadow: var(--glow-soft);
-}
-
-.glow-border-strong {
-  box-shadow: var(--glow-strong);
 }
 
 /* No glow anymore — Apple's own wordmarks/headlines are just crisp, high-contrast type, not lit up. Kept
@@ -332,27 +319,27 @@ img {
   @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-high/70 text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95;
 }
 
-/* Player no padrao do Stitch: botoes redondos translucidos, paineis escuros arredondados e opcoes com
-   a selecionada em azul e um check. Um lugar so, para os oito menus do player ficarem iguais. */
+/* Padrao do Stitch para player e menus: botoes redondos translucidos, paineis escuros arredondados e opcoes com
+   a selecionada em azul e um check. Um lugar so, para todos os menus e selects do app ficarem iguais. */
 @utility player-btn {
   @apply inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-black/45 px-2.5 text-label-md text-white backdrop-blur-md transition-colors hover:bg-white/15 active:bg-white/20;
 }
 @utility player-btn-active {
   @apply bg-brand-500/25 text-brand-300 hover:bg-brand-500/35;
 }
-@utility player-panel {
+@utility menu-panel {
   @apply overflow-hidden rounded-2xl border border-outline-soft bg-surface-lowest/95 p-1.5 text-body-md shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl;
 }
-@utility player-option {
+@utility menu-option {
   @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-white transition-colors hover:bg-surface-high active:bg-surface-high;
 }
-@utility player-option-active {
+@utility menu-option-active {
   @apply bg-brand-500/15 font-semibold text-brand-300 after:ml-auto after:content-['✓'];
 }
-@utility player-label {
+@utility menu-label {
   @apply px-3 pt-3 pb-1 text-label-badge uppercase tracking-wider text-on-surface-muted;
 }
-@utility player-chip {
+@utility chip {
   @apply rounded-full bg-surface-high px-3 py-1.5 text-body-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white;
 }
 
@@ -385,4 +372,10 @@ img {
   .player-range {
     height: 8px;
   }
+}
+
+/* Cartao de dialogo/aviso do Stitch (o mesmo do login): fundo mais baixo que a pagina, borda suave,
+   cantos grandes. Usado em confirmacoes, PIN, trava do app e aviso de atualizacao. */
+@utility card-panel {
+  @apply rounded-3xl border border-outline-soft bg-surface-lowest shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)];
 }

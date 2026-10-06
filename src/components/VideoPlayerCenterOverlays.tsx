@@ -48,7 +48,7 @@ export function VideoPlayerCenterOverlays({
     <>
       {nextUpVisible && next && !error && (
         <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">
-          <div className="player-panel flex w-72 flex-col gap-2 p-4">
+          <div className="menu-panel flex w-72 flex-col gap-2 p-4">
             <p className="text-label-badge uppercase tracking-wider text-brand-400">A seguir</p>
             <p className="truncate text-label-md text-white">{next.label}</p>
             <div className="flex gap-2">

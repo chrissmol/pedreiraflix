@@ -110,15 +110,15 @@ export default function TopNav() {
         PedreiraFlix
       </span>
 
-      <nav className="hidden gap-1 text-sm font-medium text-on-surface-variant sm:flex">
+      <nav className="hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md sm:flex">
         {links.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
             end={l.to === '/'}
             className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 transition-colors ${
-                isActive ? 'bg-brand-500/12 text-white' : 'hover:text-white'
+              `rounded-full px-4 py-1.5 transition-colors ${
+                isActive ? 'bg-surface-high text-white shadow-[0_0_24px_-2px_rgba(15,123,255,0.35)]' : 'hover:text-white'
               }`
             }
           >
@@ -149,7 +149,7 @@ export default function TopNav() {
             // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
             // header (and anything anchored to the search box, like its suggestions dropdown) past the
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            className="brand-focus w-10 rounded-full border border-outline-soft bg-surface-container py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-on-surface-muted focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            className="brand-focus h-10 w-10 rounded-full border border-outline-soft bg-surface-container pl-8 pr-3 text-body-md text-white transition-all duration-300 placeholder:text-on-surface-muted focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -160,7 +160,7 @@ export default function TopNav() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
           style={activeProfile ? { background: activeProfile.color } : undefined}
-          className="glow-border flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white transition-transform hover:scale-105"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105"
         >
           {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
         </button>
@@ -170,9 +170,9 @@ export default function TopNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu da conta"
-            className="absolute right-0 mt-2 w-56 rounded-xl border border-outline-soft bg-surface-container/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
+            className="menu-panel absolute right-0 mt-2 w-64"
           >
-            <p className="truncate px-2 py-1.5 text-on-surface-variant">
+            <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
             </p>
             {profiles.length > 1 && (
@@ -183,7 +183,7 @@ export default function TopNav() {
                     <button
                       key={p.id}
                       onClick={() => switchTo(p)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+                      className="menu-option"
                     >
                       <span
                         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -201,7 +201,7 @@ export default function TopNav() {
                 setMenuOpen(false)
                 navigate('/profiles')
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
               <User className="h-4 w-4 text-on-surface-variant" /> Gerenciar perfis
             </button>
@@ -210,7 +210,7 @@ export default function TopNav() {
                 setMenuOpen(false)
                 navigate('/downloads')
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
               <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
             </button>
@@ -219,13 +219,13 @@ export default function TopNav() {
                 setMenuOpen(false)
                 setConfirmClearCache(true)
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
               <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
             </button>
             <button
               onClick={logout}
-              className="mt-1 w-full rounded-lg px-2 py-2.5 text-left text-rose-400 transition-colors hover:bg-rose-500/10 active:bg-rose-500/10"
+              className="menu-option mt-1 text-live hover:bg-live/10 active:bg-live/10"
             >
               Sair
             </button>

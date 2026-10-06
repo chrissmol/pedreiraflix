@@ -22,7 +22,7 @@ const links: { to: string; label: string; Icon: ComponentType<{ className?: stri
 export default function MobileNav() {
   return (
     <nav
-      className="glass-panel glow-border absolute inset-x-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
+      className="absolute inset-x-4 border border-outline-soft bg-surface-low/90 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
     >
       {links.map(({ to, label, Icon }) => (
         <NavLink
@@ -31,7 +31,7 @@ export default function MobileNav() {
           end={to === '/'}
           className={({ isActive }) =>
             `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[10px] font-medium transition-colors ${
-              isActive ? 'bg-white/10 text-white' : 'text-on-surface-variant active:bg-white/5'
+              isActive ? 'bg-brand-500/15 text-brand-300' : 'text-on-surface-variant active:bg-surface-high'
             }`
           }
         >

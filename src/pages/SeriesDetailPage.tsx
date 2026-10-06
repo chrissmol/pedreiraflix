@@ -55,7 +55,7 @@ export default function SeriesDetailPage() {
 
   if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
   if (blocked) return <BlockedByProfile />
-  if (error || !series) return <div className="pt-32 text-center text-rose-400">{error || 'Série não encontrada'}</div>
+  if (error || !series) return <div className="pt-32 text-center text-live">{error || 'Série não encontrada'}</div>
 
   const backdrop = series.backdropPath[0] || series.cover
   const rating = Number(series.rating) > 0 ? Number(series.rating) : null

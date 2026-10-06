@@ -41,13 +41,13 @@ export function VideoPlayerDisplayMenu({
         {sleepRemaining != null && <span className="tabular-nums">{sleepRemaining}min</span>}
       </button>
       {open && (
-        <div className="player-panel absolute right-0 mt-2 w-72">
-          <p className="player-label">Proporção</p>
+        <div className="menu-panel absolute right-0 mt-2 w-72">
+          <p className="menu-label">Proporção</p>
           {FITS.map((option) => (
             <button
               key={option.value}
               onClick={() => onSelectFit(option.value)}
-              className={`player-option ${fit === option.value ? 'player-option-active' : ''}`}
+              className={`menu-option ${fit === option.value ? 'menu-option-active' : ''}`}
             >
               <span>
                 {option.label}
@@ -56,7 +56,7 @@ export function VideoPlayerDisplayMenu({
             </button>
           ))}
 
-          <p className="player-label mt-1 border-t border-outline-soft">
+          <p className="menu-label mt-1 border-t border-outline-soft">
             Desligar em
           </p>
           <div className="flex flex-wrap gap-1.5 p-3 pt-2">
@@ -64,7 +64,7 @@ export function VideoPlayerDisplayMenu({
               <button
                 key={minutes}
                 onClick={() => onSelectSleep(minutes)}
-                className={`player-chip ${(minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes) ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                className={`chip ${(minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes) ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
               >
                 {minutes === 0 ? 'Nunca' : `${minutes}min`}
               </button>

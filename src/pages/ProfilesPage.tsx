@@ -15,19 +15,19 @@ function AppPinSettings() {
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="mb-8 max-w-sm rounded-lg border border-outline-soft bg-surface-lowest/60 p-3 text-xs">
+    <div className="mb-8 max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-body-sm">
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-zinc-300">
+        <span className="flex items-center gap-2 text-label-md text-white">
           {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
           PIN do app {pin ? 'ativo' : 'desativado'}
         </span>
         {pin && (
-          <button onClick={() => setPin(null)} className="text-rose-400 hover:text-rose-300">
+          <button onClick={() => setPin(null)} className="rounded-full px-2 py-1 text-live hover:bg-live/10">
             Remover
           </button>
         )}
       </div>
-      <p className="mt-1 text-[11px] leading-snug text-on-surface-variant">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
+      <p className="mt-1 text-body-sm text-on-surface-variant">Pede um PIN de 4 dígitos toda vez que o app é aberto, antes de escolher o perfil.</p>
       {!pin && (
         <form
           onSubmit={(e) => {
@@ -37,19 +37,19 @@ function AppPinSettings() {
               setPinInput('')
             }
           }}
-          className="mt-2 flex gap-1.5"
+          className="mt-3 flex gap-2"
         >
           <input
             inputMode="numeric"
             placeholder="0000"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus w-16 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center tracking-widest text-white"
+            className="brand-focus h-10 w-20 rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
           />
           <button
             type="submit"
             disabled={pinInput.length !== 4}
-            className="rounded-lg bg-brand-600 px-2.5 py-1 font-semibold text-white disabled:opacity-40"
+            className="btn-primary h-10 px-4 text-body-sm sm:px-4"
           >
             Definir
           </button>
@@ -65,9 +65,9 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="w-full rounded-lg border border-outline-soft bg-surface-lowest/60 p-3 text-left text-xs">
+    <div className="w-full rounded-2xl border border-outline-soft bg-surface-lowest p-3 text-left text-body-sm">
       <label className="mb-3 flex cursor-pointer items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-zinc-300">
+        <span className="flex items-center gap-1.5 text-label-md text-white">
           <Shield className="h-3.5 w-3.5" /> Perfil infantil
         </span>
         <input
@@ -77,15 +77,15 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           className="h-4 w-4 accent-brand-500"
         />
       </label>
-      <p className="mb-3 text-[11px] leading-snug text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+      <p className="mb-3 text-body-sm text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
 
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-zinc-300">
+        <span className="flex items-center gap-1.5 text-label-md text-white">
           {profile.pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
           {profile.pin ? 'PIN ativo' : 'Sem PIN'}
         </span>
         {profile.pin && (
-          <button onClick={() => setPin(accId, profile.id, null)} className="text-rose-400 hover:text-rose-300">
+          <button onClick={() => setPin(accId, profile.id, null)} className="rounded-full px-2 py-1 text-live hover:bg-live/10">
             Remover
           </button>
         )}
@@ -99,26 +99,26 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
               setPinInput('')
             }
           }}
-          className="mt-2 flex gap-1.5"
+          className="mt-3 flex gap-2"
         >
           <input
             inputMode="numeric"
             placeholder="0000"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus w-16 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center tracking-widest text-white"
+            className="brand-focus h-10 w-20 rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
           />
           <button
             type="submit"
             disabled={pinInput.length !== 4}
-            className="rounded-lg bg-brand-600 px-2.5 py-1 font-semibold text-white disabled:opacity-40"
+            className="btn-primary h-10 px-4 text-body-sm sm:px-4"
           >
             Definir
           </button>
         </form>
       )}
 
-      <button onClick={onClose} className="mt-3 w-full text-center text-on-surface-variant hover:text-white">
+      <button onClick={onClose} className="mt-3 w-full rounded-full py-2 text-center text-label-md text-on-surface-variant hover:bg-surface-high hover:text-white">
         Fechar
       </button>
     </div>
@@ -170,8 +170,8 @@ export default function ProfilesPage() {
 
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
-      <h1 className="font-display mb-1 text-2xl font-bold text-white">Perfis</h1>
-      <p className="mb-8 max-w-lg text-sm text-on-surface-variant">
+      <h1 className="font-display mb-1 text-headline-md text-white sm:text-headline-lg">Perfis</h1>
+      <p className="mb-8 max-w-lg text-body-md text-on-surface-variant">
         Cada perfil tem sua própria lista, continuar assistindo e histórico — todos usam a mesma assinatura.
       </p>
 
@@ -182,8 +182,10 @@ export default function ProfilesPage() {
           <div
             key={p.id}
             data-testid={`profile-card-${p.id}`}
-            className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors ${
-              p.id === activeProfile?.id ? 'border-brand-400/50 bg-brand-500/10' : 'border-outline-soft bg-surface-container'
+            className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-5 transition-colors ${
+              p.id === activeProfile?.id
+                ? 'border-brand-500/50 bg-surface-container shadow-[0_0_30px_-12px_rgba(15,123,255,0.5)]'
+                : 'border-outline-soft bg-surface-low hover:border-outline-strong hover:bg-surface-container'
             }`}
           >
             {settingsId === p.id ? (
@@ -193,23 +195,23 @@ export default function ProfilesPage() {
                 <button onClick={() => enterProfile(p)} className="flex flex-col items-center gap-2" aria-label={`Entrar como ${p.name}`}>
                   <span className="relative">
                     <span
-                      className="glow-border flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold text-white"
+                      className="flex h-20 w-20 items-center justify-center rounded-full text-headline-lg text-white shadow-[0_12px_28px_-10px_rgba(0,0,0,0.8)]"
                       style={{ background: p.color }}
                     >
                       {p.id === activeProfile?.id ? <Check className="h-7 w-7" /> : p.name[0]?.toUpperCase()}
                     </span>
                     {p.isKids && (
-                      <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-emerald-400 ring-2 ring-zinc-900" title="Perfil infantil">
+                      <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-done ring-2 ring-surface" title="Perfil infantil">
                         <Shield className="h-3 w-3" />
                       </span>
                     )}
                     {p.pin && (
-                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-on-surface-variant ring-2 ring-zinc-900" title="Perfil com PIN">
+                      <span className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container text-on-surface-variant ring-2 ring-surface" title="Perfil com PIN">
                         <Lock className="h-3 w-3" />
                       </span>
                     )}
                   </span>
-                  {renamingId === p.id ? null : <span className="max-w-full truncate text-sm font-medium text-white">{p.name}</span>}
+                  {renamingId === p.id ? null : <span className="max-w-full truncate text-label-md text-white">{p.name}</span>}
                 </button>
 
                 {renamingId === p.id ? (
@@ -225,26 +227,26 @@ export default function ProfilesPage() {
                       value={renameValue}
                       onChange={(e) => setRenameValue(e.target.value)}
                       onBlur={() => handleRename(p.id)}
-                      className="brand-focus w-full min-w-0 rounded-lg border border-outline-soft bg-surface-container px-2 py-1 text-center text-sm text-white"
+                      className="brand-focus h-10 w-full min-w-0 rounded-full border border-outline-soft bg-surface-container px-3 text-center text-body-md text-white"
                     />
                   </form>
                 ) : (
                   // Always visible on touch (no hover to reveal them there); fades in on mouse hover otherwise.
-                  <div className="flex gap-3 text-xs text-on-surface-variant opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100">
+                  <div className="flex gap-1 text-body-sm text-on-surface-variant">
                     <button
                       onClick={() => {
                         setRenamingId(p.id)
                         setRenameValue(p.name)
                       }}
-                      className="hover:text-white"
+                      className="rounded-full px-2 py-1 hover:bg-surface-high hover:text-white"
                     >
                       Renomear
                     </button>
-                    <button onClick={() => setSettingsId(p.id)} className="flex items-center gap-1 hover:text-white">
+                    <button onClick={() => setSettingsId(p.id)} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-surface-high hover:text-white">
                       <Settings className="h-3 w-3" /> Ajustes
                     </button>
                     {profiles.length > 1 && (
-                      <button onClick={() => setDeleteTarget(p)} className="flex items-center gap-1 hover:text-rose-400">
+                      <button onClick={() => setDeleteTarget(p)} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-live/10 hover:text-live">
                         <Trash className="h-3 w-3" /> Excluir
                       </button>
                     )}
@@ -259,7 +261,7 @@ export default function ProfilesPage() {
           (adding ? (
             <form
               onSubmit={handleAdd}
-              className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-outline-strong p-4"
+              className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-strong bg-surface-low p-5"
             >
               <div className="flex flex-wrap justify-center gap-1.5">
                 {COLORS.map((c) => (
@@ -279,19 +281,19 @@ export default function ProfilesPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nome do perfil"
                 maxLength={20}
-                className="brand-focus w-full rounded-lg border border-outline-soft bg-surface-container px-2 py-1.5 text-center text-sm text-white"
+                className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center text-body-md text-white"
               />
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 px-3 py-1.5 text-xs font-bold text-white"
+                  className="btn-primary h-10 px-4 text-body-sm sm:px-4"
                 >
                   Criar
                 </button>
                 <button
                   type="button"
                   onClick={() => setAdding(false)}
-                  className="rounded-lg border border-outline-soft px-3 py-1.5 text-xs text-on-surface-variant hover:text-white"
+                  className="btn-secondary h-10 px-4 text-body-sm sm:px-4"
                 >
                   Cancelar
                 </button>
@@ -303,9 +305,9 @@ export default function ProfilesPage() {
                 setColor(COLORS[profiles.length % COLORS.length])
                 setAdding(true)
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-strong p-4 text-on-surface-variant transition-colors hover:border-brand-500/50 hover:text-white"
+              className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-outline-strong p-5 text-label-md text-on-surface-variant transition-colors hover:border-brand-500/50 hover:bg-surface-low hover:text-white"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-outline-strong">
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-outline-strong">
                 <Plus className="h-7 w-7" />
               </span>
               Adicionar perfil
@@ -315,7 +317,7 @@ export default function ProfilesPage() {
 
       <button
         onClick={() => navigate('/')}
-        className="mt-10 flex items-center gap-2 rounded-lg border border-outline-soft bg-surface-container px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-surface-high"
+        className="btn-secondary mt-10"
       >
         <Play className="h-4 w-4" /> Voltar
       </button>

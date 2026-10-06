@@ -56,7 +56,7 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
         <p className="text-on-surface-variant">Este download não foi encontrado neste aparelho.</p>
-        <button onClick={() => navigate('/downloads')} className="text-sm text-brand-300 hover:underline">
+        <button onClick={() => navigate('/downloads')} className="btn-secondary">
           Ver downloads
         </button>
       </div>
