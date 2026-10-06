@@ -48,3 +48,9 @@ export const CUE_BG_BY_SUBTITLE_BACKGROUND = {
   semi: 'rgba(0, 0, 0, 0.65)',
   solid: 'rgba(0, 0, 0, 0.95)',
 }
+
+// O Xtream responde 403 quando a conta ja esta tocando no limite de telas (confirmado pelo Christian: outro
+// aparelho com o mesmo login). Sem isso o player dizia "formato nao suportado", que manda procurar o
+// problema no lugar errado.
+export const SCREEN_LIMIT_MESSAGE =
+  'O provedor recusou: sua conta já está tocando em outro aparelho. Feche lá (ou espere alguns minutos) e tente de novo.'
