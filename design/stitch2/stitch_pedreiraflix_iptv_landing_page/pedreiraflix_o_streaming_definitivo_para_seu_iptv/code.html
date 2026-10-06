@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface": "#e3e1ea", "primary-container": "#4c8eff", "surface-variant": "#33343b", "on-error": "#690005", "on-secondary-fixed": "#001c3b", "inverse-primary": "#005ac1", "background": "#121319", "on-tertiary": "#571e00", "surface-container": "#1e1f25", "on-error-container": "#ffdad6", "primary": "#adc6ff", "surface-dim": "#121319", "outline-variant": "#414754", "primary-fixed-dim": "#adc6ff", "surface-tint": "#adc6ff", "surface-bright": "#38393f", "surface-container-high": "#292a30", "on-surface-variant": "#c1c6d7", "secondary-fixed": "#d5e3ff", "on-secondary-fixed-variant": "#004787", "on-tertiary-container": "#4c1a00", "inverse-on-surface": "#2f3036", "on-tertiary-fixed": "#351000", "surface": "#121319", "tertiary-fixed-dim": "#ffb595", "on-secondary-container": "#002a54", "on-primary-fixed-variant": "#004494", "on-primary-fixed": "#001a41", "on-secondary": "#003060", "secondary-container": "#3491fc", "error-container": "#93000a", "tertiary": "#ffb595", "tertiary-fixed": "#ffdbcc", "on-background": "#e3e1ea", "surface-container-highest": "#33343b", "secondary": "#a7c8ff", "outline": "#8b90a0", "error": "#ffb4ab", "inverse-surface": "#e3e1ea", "on-tertiary-fixed-variant": "#7c2e00", "tertiary-container": "#ef671a", "surface-container-low": "#1a1b21", "surface-container-lowest": "#0d0e13", "primary-fixed": "#d8e2ff", "on-primary": "#002e69", "on-primary-container": "#00285c", "secondary-fixed-dim": "#a7c8ff" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "gutter": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin-mobile": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter-mobile": "0.75rem", "margin": "3rem" }, "fontFamily": { "display-hero": [ "Inter" ], "body-sm": [ "Inter" ], "body-md": [ "Inter" ], "headline-lg-mobile": [ "Inter" ], "label-md": [ "Inter" ], "headline-lg": [ "Inter" ], "headline-md": [ "Inter" ], "label-badge": [ "Inter" ], "display-hero-mobile": [ "Inter" ], "body-lg": [ "Inter" ], "headline-sm": [ "Inter" ] }, "fontSize": { "display-hero": [ "56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "body-sm": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-md": [ "15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "label-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "label-badge": [ "11px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "600" } ], "display-hero-mobile": [ "36px", { "lineHeight": "42px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_12px_32px_-4px_rgba(0,0,0,0.7)]"><div class="h-20 max-w-[1280px] mx-auto px-margin-mobile md:px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><img alt="PedreiraFlix Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-embedded-content/AB668-wW-p_l7lqY1R_Zl36x-Kqf2jQ8c2J1Vb_N8w=s200"/><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-bold">PedreiraFlix</span></div><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-on-surface font-semibold"><a aria-current="page" class="transition-colors text-on-surface font-semibold" data-path="home" href="#">Recursos</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="como-funciona" href="#">Como Funciona</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="dispositivos" href="#">Dispositivos</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacidade" href="#">Privacidade</a></nav><div class="flex items-center gap-space-sm sm:gap-space-md"><a class="hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-surface-variant/40 hover:bg-surface-variant hover:text-on-surface text-on-surface-variant transition-all font-label-md text-label-md" data-path="instalar-pwa" href="#"><span class="material-symbols-outlined text-[18px]">download</span><span>Instalar PWA</span></a><a class="inline-flex items-center justify-center px-space-lg py-space-sm rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container font-label-md text-label-md shadow-[0_0_20px_rgba(76,142,255,0.35)] transition-all" data-path="entrar" href="#">Entrar</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-20rem)]"><div class="flex flex-col w-full">
+<!-- AMBIENT BACKDROP LIGHTS -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-primary-container/10 blur-[140px] pointer-events-none rounded-full"></div>
+<div class="absolute top-[800px] -left-48 w-[500px] h-[500px] bg-secondary-container/5 blur-[160px] pointer-events-none rounded-full"></div>
+<div class="absolute top-[1800px] -right-48 w-[600px] h-[600px] bg-primary/5 blur-[160px] pointer-events-none rounded-full"></div>
+<!-- 1. HERO SECTION -->
+<section class="relative max-w-[1280px] mx-auto px-margin-mobile md:px-margin pt-space-lg md:pt-space-xl pb-space-xl flex flex-col items-center text-center">
+<!-- Live Pill Badge -->
+<div class="inline-flex items-center gap-space-sm px-space-md py-1.5 rounded-full bg-surface-container-high/90 shadow-sm backdrop-blur-md">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+</span>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-on-surface">Player PWA Privado • Suporta Xtream Codes &amp; Listas M3U</span>
+</div>
+<!-- Hero Headline -->
+<h1 class="mt-space-md max-w-4xl font-display-hero text-display-hero text-on-surface tracking-tight">
+        Sua lista IPTV com a experiência que você <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary-container">sempre quis</span>.
+      </h1>
+<!-- Hero Subtitle -->
+<p class="mt-space-md max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
+        O PedreiraFlix transforma suas credenciais de TV e listas pessoais em uma interface cinematográfica estilo streaming premium. Sem anúncios abusivos, ultra-rápido no navegador ou instalado no celular.
+      </p>
+<!-- Action Buttons -->
+<div class="mt-space-lg flex flex-wrap items-center justify-center gap-space-md">
+<a class="inline-flex items-center gap-space-xs px-space-xl py-space-sm rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container font-label-md text-label-md transition-all shadow-[0_0_28px_rgba(76,142,255,0.4)] hover:shadow-[0_0_36px_rgba(76,142,255,0.6)]" href="#conectar">
+<span>Entrar com meu provedor</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+<a class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" href="#recursos">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+<span>Ver recursos</span>
+</a>
+</div>
+<!-- Trust Meta Badges -->
+<div class="mt-space-lg flex flex-wrap items-center justify-center gap-y-2 gap-x-4 text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">verified_user</span>Sem hospedagem de arquivos</span>
+<span class="text-outline-variant">•</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">terminal</span>100% no seu navegador</span>
+<span class="text-outline-variant">•</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">cloud_off</span>Modo Offline Seguro</span>
+<span class="text-outline-variant">•</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">install_mobile</span>Suporte Nativo a PWA</span>
+</div>
+<!-- Hero Dashboard Visual Showcase -->
+<div class="mt-space-xl w-full rounded-lg bg-surface-container-low shadow-2xl p-2 md:p-3 relative overflow-hidden group">
+<div class="w-full rounded-md bg-surface-container-lowest overflow-hidden flex flex-col">
+<!-- Glass Top Header of Mockup -->
+<div class="h-12 bg-surface-container-high/60 backdrop-blur-xl px-4 flex items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error/80 inline-block"></span>
+<span class="w-3 h-3 rounded-full bg-tertiary-container/80 inline-block"></span>
+<span class="w-3 h-3 rounded-full bg-primary/80 inline-block"></span>
+<span class="ml-3 font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider hidden sm:inline">PedreiraFlix v3.4 • Xtream Hub</span>
+</div>
+<!-- Mock Tabs -->
+<div class="flex items-center gap-1 bg-surface-container-lowest/80 px-2 py-1 rounded-full text-on-surface-variant font-label-badge text-label-badge">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-semibold">Início</span>
+<span class="px-2.5 py-0.5 hover:text-on-surface cursor-pointer hidden md:inline">Canais Ao Vivo</span>
+<span class="px-2.5 py-0.5 hover:text-on-surface cursor-pointer hidden md:inline">Filmes</span>
+<span class="px-2.5 py-0.5 hover:text-on-surface cursor-pointer hidden md:inline">Séries</span>
+</div>
+<!-- Mock Status -->
+<div class="flex items-center gap-2">
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded bg-primary-container/20 text-primary font-mono hidden sm:inline">60 FPS • HLS</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">wifi</span>
+</div>
+</div>
+<!-- Mock Hero Billboard within the Player -->
+<div class="relative w-full h-[320px] md:h-[460px] overflow-hidden flex items-end p-6 md:p-10">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A grand cinematic 4K science fiction visual showcasing a sleek spacecraft drifting near a luminescent nebula with neon violet and electric blue lighting reflections, establishing high production value streaming aesthetics." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAR7hv9Ug_cBJQYtJYrote2c4eg0drBHk8Abk6r2aSiOGrPpeL275f3ndMwpzlb0VGprXY4j3FfC-ylHzY3VOo-Yffh56hhnRLjTwocKLrhdj7nCDlt3oIUMlmOkIcRpqqll9Qa6Y0Ypc9rpbwHtg8en8clp358nXhB-h489q_4AKI26aitPsDlZH2ZnLqiSfAxpcPTMRd0HPHAHzbNLvZUdbg-kK1natcH7TqfkC95sADXm1j6ucby')"></div>
+<!-- Scrim gradient overlays -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-transparent to-transparent"></div>
+<!-- Billboard Content -->
+<div class="relative z-10 max-w-xl text-left flex flex-col items-start gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-badge text-label-badge font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-error inline-block animate-ping"></span> Exclusivo
+                </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/80 text-on-surface font-label-badge text-label-badge">4K ULTRA HD</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/80 text-on-surface font-label-badge text-label-badge">HDR10+</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/80 text-on-surface font-label-badge text-label-badge">DOLBY ATMOS</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Interestelar: Alvorada Estelar</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 max-w-md">
+                Uma expedição interplanetária descobre distorções no horizonte de eventos de uma supernova em colapso. Continuação direta da saga estelar.
+              </p>
+<div class="mt-2 flex items-center gap-3">
+<button class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-on-surface text-surface font-label-md text-label-md font-semibold hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                  Assistir Agora
+                </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface font-label-md text-label-md hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">info</span>
+                  Detalhes
+                </button>
+</div>
+</div>
+</div>
+<!-- "Continuar Assistindo" Rail Inside Mockup -->
+<div class="p-4 md:p-6 bg-surface-container-lowest flex flex-col gap-3 text-left">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">history</span>
+                Continuar Assistindo
+              </span>
+<span class="font-label-badge text-label-badge text-primary cursor-pointer hover:underline">Ver Todos (14)</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<!-- Item 1 -->
+<div class="group/card relative rounded bg-surface-container flex flex-col overflow-hidden hover:scale-[1.02] transition-transform cursor-pointer">
+<div class="relative w-full aspect-video bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="Cyberpunk high-octane racing car speeding on a rainy neon highway at midnight with deep cobalt blue ambient reflections and reflections on asphalt." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB69-vhPh1nZxWDmPQL_3XWTwM1kMJS1HIhB9Hnwhnji9Y5O6g8frh1GDQJ1qM-Gf6XZeKFTmzkUBPLHdA2KVjCOd8UN1K4XR3Th_fKQhu_jRwwFcBa9NZ47dUb53ad_p9YJEbDJF70uPSGXea5f8rC7wFRRsnpIw82RSiNxA-4vhik4jM-X8xcJhcpSFE2YA2vwqk-vEN1I2efpv7_VNsV2aVpcc2lSoVxIHG8LqQZyq6suiRDr88c')"></div>
+<div class="absolute bottom-0 inset-x-0 h-1 bg-surface-variant">
+<div class="h-full bg-primary-container w-[72%]"></div>
+</div>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">T2:E04</span>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">Velocidade Limite: Tóquio</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Faltam 18 min</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group/card relative rounded bg-surface-container flex flex-col overflow-hidden hover:scale-[1.02] transition-transform cursor-pointer">
+<div class="relative w-full aspect-video bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="Dense atmospheric ancient jungle with towering redwood trees and emerald mist highlighting documentary photography mood." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwuRTYIvencnD1fD2HBe6ImyCo3NzdF4ondMq7GfeiRQpkK4RKut-WOdMvVvUUiMo-mfxmphKtYWhcNAZ-NUxHiaWuqVaRXh-Q8K4JnX-WkWxmoriSQge03mIQNpWOamKXvfGyUdVtrgaabGz5Kg-N4uswT_i26o49bOctYGgK1S6JEWhVYlTbH-TA1WCL6ycLsG-o6VE9LPo4XsNXswleAP29pWKKIDqF1WKl8bMFKczy2rnl9h40')"></div>
+<div class="absolute bottom-0 inset-x-0 h-1 bg-surface-variant">
+<div class="h-full bg-primary-container w-[45%]"></div>
+</div>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">DOCS 4K</span>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">Planeta Selvagem: Amazônia</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Faltam 31 min</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group/card relative rounded bg-surface-container flex flex-col overflow-hidden hover:scale-[1.02] transition-transform cursor-pointer hidden md:flex">
+<div class="relative w-full aspect-video bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="Night soccer championship match with bright stadium halogen floodlights, green turf field, and intense cinematic sports atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBuAgbsNFtby9V1be85ea8jDvCftKE0_kAR0lLfhkueD8LibPYshcD10DR8BnJeenJ8HMt394enpxTkk9vSTQrzgih3A8MFkBGEvUHdL69YUZtO3aI0qm1uDo3u8jcschgnPIDS8GgP4Vkca6QsQJsWaFcrLiU5SeH6Nmr-e3zpp6ultsLNxIaFPYhjM20a3RRKqeyeEhGnMC44IxmFJytdgSC7VVUKxjoQkLWXBd--D074EISaGBRn')"></div>
+<div class="absolute bottom-0 inset-x-0 h-1 bg-surface-variant">
+<div class="h-full bg-error w-[90%]"></div>
+</div>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-error text-on-error font-label-badge text-label-badge font-bold uppercase">AO VIVO</span>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">Final Libertadores: Minuto 82</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Transmissão Ao Vivo</span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="group/card relative rounded bg-surface-container flex flex-col overflow-hidden hover:scale-[1.02] transition-transform cursor-pointer hidden md:flex">
+<div class="relative w-full aspect-video bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="Minimalist dark detective interrogation room with a single overhead dramatic bulb illuminating an investigator profile in a stylish noir thriller." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAR9wg_9IESXW8mUlPiate2OhoawyBa6XudzRx23lGlK4YnLV1nOadiC_6BmjE5P5EpORYqiNFwbFNFZf-2njLEnrjVLnIDy6wiKpVy_X_DF6sefB2d69KKEgCrgp-XqsGI41jEkY_0G5EE_Jan0nDpvgIVY-hZPWlSYXaLTgfVZzL_eRtqqPjOUD8c51iwi1UL60tUX3TIFO7dqEfApu23BPGmNQeS5c9JNH63-P5GK7Yj_obvroEs')"></div>
+<div class="absolute bottom-0 inset-x-0 h-1 bg-surface-variant">
+<div class="h-full bg-primary-container w-[15%]"></div>
+</div>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">T1:E01</span>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">O Inquérito de Berlim</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Faltam 52 min</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. TRÊS BLOCOS DE RECURSOS PRINCIPAIS -->
+<section class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin py-space-xl flex flex-col gap-space-xl" id="recursos">
+<!-- Section Header -->
+<div class="text-center max-w-3xl mx-auto flex flex-col items-center">
+<span class="font-label-badge text-label-badge text-primary uppercase tracking-widest">Arquitetura de Próxima Geração</span>
+<h2 class="mt-space-xs font-headline-lg text-headline-lg text-on-surface font-bold">
+          Construído para os cinéfilos e fãs de esportes mais exigentes.
+        </h2>
+<p class="mt-space-sm font-body-md text-body-md text-on-surface-variant">
+          Diga adeus a players lentos, menus congelados e interfaces dos anos 2000. O PedreiraFlix traz fluidez de 60fps diretamente para o seu navegador.
+        </p>
+</div>
+<!-- Feature Block 1: Canais Ao Vivo & EPG -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center rounded-xl bg-surface-container-low p-6 md:p-10 shadow-lg">
+<div class="lg:col-span-5 flex flex-col gap-space-sm text-left">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">live_tv</span>
+</div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary">EPG em Tempo Real</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface font-bold">Canais Ao Vivo com Grade Completa e Catch-Up</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Grade de programação interativa com atualização minuto a minuto. Veja o que está passando agora com barra de tempo decorrido, sinopse do episódio e gravação retroativa de até 7 dias nos canais compatíveis.
+          </p>
+<div class="pt-2 flex flex-col gap-2">
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+<span>Rebobine transmissões ao vivo com 1 clique (Catch-up Playback)</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">tune</span>
+<span>Filtro dinâmico por categorias (Esportes, Notícias, Aberta, Cinema)</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+<span>Troca de canal com latência de zapping inferior a 350ms</span>
+</div>
+</div>
+</div>
+<!-- Mockup EPG / Live TV UI -->
+<div class="lg:col-span-7 rounded-lg bg-surface-container-lowest p-4 shadow-inner flex flex-col gap-3 overflow-hidden">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-badge text-label-badge font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-error inline-block animate-pulse"></span> TRANSMISSÃO ATIVA
+              </span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Premiere Clubes HD</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-label-badge text-label-badge">1080p 60FPS</span>
+<button class="px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">animated_images</span>
+                Catch-up (7 dias)
+              </button>
+</div>
+</div>
+<!-- Video Frame Mockup -->
+<div class="relative w-full aspect-video rounded bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="Dynamic wide-angle soccer shot of a Brazilian championship match inside an illuminated packed stadium with green turf and deep evening light." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAmMK-xt2hkgPiMHAGaKoy3QV--6tK_dg00RSYKT7z1kpawf3sDHxBYyqEp44y4hrgj6dfdExh8K7waakOayb_U-qa0xQcA68bM-11z0hYXccvTKdo4pDuB11p2zIfLz5hCDI5L-13oe-_JSOxVzyysn1C1ImMoGQKoNdBytP6xD_sFCESXfS_s-IYPA_CrSfB_rbwsbP-1TLce7-G6WI7yZd9a8jeidCOxaJ_OJhNYbEmtS6Ewfw38')"></div>
+<!-- Live Overlays inside stream -->
+<div class="absolute bottom-3 left-3 right-3 p-3 rounded bg-surface-container-lowest/85 backdrop-blur-md flex items-center justify-between gap-4">
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-bold truncate">Flamengo vs Palmeiras • Rodada 34</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ao Vivo • 68min decorridos • Placar: 2 x 1</span>
+<!-- Mini Progress -->
+<div class="w-48 sm:w-64 h-1.5 bg-surface-variant rounded-full mt-1.5 overflow-hidden">
+<div class="bg-primary-container h-full w-[75%] rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center gap-2 flex-shrink-0">
+<button class="p-2 rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">fast_rewind</span>
+</button>
+<button class="px-3 py-1.5 rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container font-label-badge text-label-badge font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                  AO VIVO
+                </button>
+</div>
+</div>
+</div>
+<!-- EPG Channel list snippet below -->
+<div class="flex flex-col gap-1.5 pt-1">
+<div class="p-2 rounded bg-surface-container-high flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="font-mono text-on-surface-variant font-label-badge text-label-badge">001</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Globo SP 4K</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Jornal Nacional • Ao Vivo</span>
+</div>
+<span class="font-label-badge text-label-badge text-on-surface-variant">20:30 - 21:20</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="font-mono text-on-surface-variant font-label-badge text-label-badge">002</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">HBO Cinema HD</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Duna: Parte 2</span>
+</div>
+<span class="font-label-badge text-label-badge text-on-surface-variant">21:00 - 23:45</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Feature Block 2: Filmes e Séries Organizados -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center rounded-xl bg-surface-container-low p-6 md:p-10 shadow-lg">
+<!-- Mockup Cinema Grid on Left for visual variety -->
+<div class="order-2 lg:order-1 lg:col-span-7 rounded-lg bg-surface-container-lowest p-4 shadow-inner flex flex-col gap-4 overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Catálogo VOD</span>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">TMDb Integrado</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-badge text-label-badge text-on-surface-variant">Ordenar por: <strong class="text-on-surface">Mais Recentes</strong></span>
+</div>
+</div>
+<!-- Poster Grid -->
+<div class="grid grid-cols-3 gap-3">
+<!-- Movie 1 -->
+<div class="group relative rounded bg-surface-container overflow-hidden flex flex-col shadow-md">
+<div class="relative aspect-[2/3] w-full bg-surface-container-high">
+<div class="w-full h-full bg-cover bg-center" data-alt="High-contrast cinematic movie poster artwork of a solitary astronaut walking on a copper-tinted alien desert landscape under double celestial moons." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCthKhqW02-5GMhlh7iZYbz3_7R8_ptaOXgHiHDBrnFFSbqRgqbQX4pNdoonHZsaAXDYqF4QV0XjJNLzuAanjWHx0sD_OQnhu4NW03dXATMoAs4CAxiPPJeHmNLtyl15DUQ3yj3PAmem0AzAp1_8IwOGU8JNXua4NLRLvZZssrb2yeiZvZU8bCTQ7e-mNpJ4w36n_-4yGuNMx9ehfX8cRRD1gopgGxX9zZZ5SA30jo8PdCsQOjZpzbA')"></div>
+<div class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md text-primary font-label-badge text-label-badge font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px] text-tertiary">star</span> 8.8
+                </div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">4K HDR</span>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Odisseia Proxima</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ficção • 2h 24m</span>
+</div>
+</div>
+<!-- Movie 2 -->
+<div class="group relative rounded bg-surface-container overflow-hidden flex flex-col shadow-md">
+<div class="relative aspect-[2/3] w-full bg-surface-container-high">
+<div class="w-full h-full bg-cover bg-center" data-alt="Dark dramatic movie poster artwork showing a mystery silhouette under Victorian rain and streetlamps in London." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB5pU8vOxyrSaEA224lulkj1vv1ezBfr_uIb9ntr_EyPPRZAm8cbWFF4FgjStYL0nyiURotxLWzbrz2waYinXnGhFWw-ts265-C5hBGOirOw24MXaa7yqSwrkkmzsMR3e9b7uVMx0lY-e7R17kGexeK--iQqRfEpgJaFOM7ISo4rA95RS-EuC4aHWnv9RHdl8sZH3tXH1zg5yrOgP4vJ9Ro2kDIG50mwIcNRh3XRPyJebymezDVos1V')"></div>
+<div class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md text-primary font-label-badge text-label-badge font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px] text-tertiary">star</span> 8.4
+                </div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">DOLBY 5.1</span>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Sombras na Névoa</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Suspense • 1h 56m</span>
+</div>
+</div>
+<!-- Movie 3 -->
+<div class="group relative rounded bg-surface-container overflow-hidden flex flex-col shadow-md">
+<div class="relative aspect-[2/3] w-full bg-surface-container-high">
+<div class="w-full h-full bg-cover bg-center" data-alt="Vibrant animated fantasy world poster with glowing enchanted flowers, whimsical magical creatures and a purple sunset sky." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCKPxMx7zTpEQzL44jPWJB3N4Ai2g2XVOUPSNkLTx13HOYj9XrTmujPBRNfBBpgFCPpl48I-WmjV7kfyNKyJv_6wgs-wCyyYZvHOCTX97OBRyONCBKVkmbNa0waWuHERUka-bNnXM9wHFDP9Kdfvz8hMWkWclchqc0s9Ec_hfb7cWfjJwebMJB6NsBKf1uVZcX8VJ_BVnqWKjvIQ4CiPmW3XT4r0r2TsQ00dvit3JEH3Yf1DoLsP6cL')"></div>
+<div class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md text-primary font-label-badge text-label-badge font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px] text-tertiary">star</span> 9.1
+                </div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-badge text-label-badge">DUBLADO</span>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">O Reino Encantado</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Animação • 1h 38m</span>
+</div>
+</div>
+</div>
+<!-- Series Episode Drawer Mockup -->
+<div class="p-3 rounded bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[24px]">video_library</span>
+<div class="flex flex-col text-left">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Temporadas e Episódios Limpos</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Pula introdução automaticamente e salva o minuto exato</span>
+</div>
+</div>
+<span class="font-label-badge text-label-badge px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface">Auto-Next ON</span>
+</div>
+</div>
+<div class="order-1 lg:order-2 lg:col-span-5 flex flex-col gap-space-sm text-left">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">movie</span>
+</div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary">Catálogo Cinematográfico</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface font-bold">Filmes e Séries Organizados como no Cinema</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Metadados automáticos via TMDb e IMDb integrados. Cada título recebe pôster oficial em 4K, sinopse traduzida para o português, lista de elenco, gêneros e trailers oficiais.
+          </p>
+<div class="pt-2 flex flex-col gap-2">
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">subtitles</span>
+<span>Busca automática de legendas em múltiplos idiomas com OpenSubtitles</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">bookmark</span>
+<span>Listas de favoritos sincronizadas com backup local criptografado</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">speed</span>
+<span>Controle de velocidade de reprodução (0.75x a 2.0x sem distorção)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Feature Block 3: Player PWA no Bolso -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center rounded-xl bg-surface-container-low p-6 md:p-10 shadow-lg">
+<div class="lg:col-span-5 flex flex-col gap-space-sm text-left">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">smartphone</span>
+</div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary">Engenharia PWA</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface font-bold">O Player Definitivo no Seu Bolso</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Instalação com 1 toque no Safari (iOS) ou Chrome (Android e Windows). Funciona em tela cheia com consumo ultra-otimizado de bateria, gestos táteis para ajuste de brilho e volume, e travamento de toque para crianças.
+          </p>
+<div class="pt-2 flex flex-col gap-2">
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">touch_app</span>
+<span>Gestos intuitivos no vidro: deslize para cima/baixo para volume e brilho</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">screen_lock_rotation</span>
+<span>Bloqueio de tela inteligente para evitar toques acidentais em movimento</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">battery_saver</span>
+<span>Decodificação de hardware (VA-API / VideoToolbox / MediaCodec)</span>
+</div>
+</div>
+</div>
+<!-- Phone Landscape Mockup -->
+<div class="lg:col-span-7 rounded-lg bg-surface-container-lowest p-6 shadow-inner flex items-center justify-center">
+<div class="relative w-full max-w-lg aspect-[16/9] rounded-xl bg-surface-container-high shadow-2xl p-2 flex flex-col justify-between overflow-hidden">
+<!-- Background Stream in phone -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Cinematic high speed car drift in an illuminated rainy metropolitan tunnel with vibrant blue brake disc glows and hyper-realistic reflections." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAoNl6T451yf7o4qbJVeqzeGRUpWOqxTRiQL4W7T_nHlGiIDpIunjHn9vPUAI5mqaRDlsDU6Rq1ULX9bm6AP2460Ttz3RgkzERCfRcNxJgNBv5eMHUQEuoEqXh3oQ38cKIR_a55MEuSjJgkHBkkc2tb3ogqBmH9SBNZdgJkFwWSJ_Vkc6qI_l38zBrVneSU0aDWySglNUFwmZlfwAZ8xHywWCg_XepMv1wFuKAMip-zkymdBCQMp1GJ')"></div>
+<!-- Vignette overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-surface-container-lowest/70"></div>
+<!-- Player Top Controls inside phone -->
+<div class="relative z-10 flex items-center justify-between text-on-surface">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">arrow_back_ios</span>
+<span class="font-label-md text-label-md font-semibold truncate max-w-[200px]">Velocidade Extrema (2024)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">lock_open</span>
+<span class="material-symbols-outlined text-[18px]">cast</span>
+<span class="material-symbols-outlined text-[18px]">settings</span>
+</div>
+</div>
+<!-- Touch indicator visual (center) -->
+<div class="relative z-10 self-center px-4 py-2 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px]">volume_up</span>
+<span class="font-label-md text-label-md font-mono">85%</span>
+</div>
+<!-- Player Bottom Timeline Controls -->
+<div class="relative z-10 flex flex-col gap-1.5 text-on-surface">
+<div class="w-full flex items-center gap-3">
+<span class="font-mono font-label-badge text-label-badge text-on-surface-variant">42:15</span>
+<div class="relative flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="absolute left-0 top-0 h-full bg-primary-container w-[42%] rounded-full"></div>
+</div>
+<span class="font-mono font-label-badge text-label-badge text-on-surface-variant">1:48:30</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] text-primary">play_arrow</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">replay_10</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">forward_10</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/80 text-on-surface font-label-badge text-label-badge">Português [5.1]</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/80 text-on-surface font-label-badge text-label-badge">Legendas PT-BR</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. GRADE DE RECURSOS ESSENCIAIS (4 Cartões Premium) -->
+<section class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin py-space-xl">
+<div class="text-left mb-space-lg flex flex-col gap-space-xs">
+<span class="font-label-badge text-label-badge text-primary uppercase tracking-wider">Poder sob o Capô</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Cada detalhe pensado para a melhor sessão.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-md group">
+<div class="flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">group</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Perfis da Família &amp; Kids</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Até 5 perfis individuais com histórico e favoritos separados. Perfil Infantil dedicado com bloqueio por PIN de quatro dígitos para canais restritos.
+            </p>
+</div>
+<span class="mt-space-md font-label-badge text-label-badge text-primary flex items-center gap-1 font-semibold">
+            PIN Parental Ativo <span class="material-symbols-outlined text-[14px]">lock</span>
+</span>
+</div>
+<!-- Card 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-md group">
+<div class="flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">download_for_offline</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Downloads para Ver Offline</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Guarde episódios da sua série favorita e filmes diretamente no armazenamento do dispositivo. Assista sem consumir 4G/5G em viagens de avião ou estrada.
+            </p>
+</div>
+<span class="mt-space-md font-label-badge text-label-badge text-primary flex items-center gap-1 font-semibold">
+            IndexedDB de Alta Velocidade <span class="material-symbols-outlined text-[14px]">memory</span>
+</span>
+</div>
+<!-- Card 3 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-md group">
+<div class="flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">cast</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Transmissão para a TV</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Envie o vídeo instantaneamente com suporte nativo ao Apple AirPlay e Google Cast / Chromecast. Sem perda de sincronia de áudio ou resolução.
+            </p>
+</div>
+<span class="mt-space-md font-label-badge text-label-badge text-primary flex items-center gap-1 font-semibold">
+            AirPlay 2 • Google Cast <span class="material-symbols-outlined text-[14px]">airplay</span>
+</span>
+</div>
+<!-- Card 4 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-md group">
+<div class="flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">offline_bolt</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">PWA Ultraleve e Instantâneo</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Tamanho inferior a 4 MB. Carrega em menos de 1 segundo sem passar pela burocracia ou limites de lojas de aplicativos, sempre na versão mais recente.
+            </p>
+</div>
+<span class="mt-space-md font-label-badge text-label-badge text-primary flex items-center gap-1 font-semibold">
+            Service Workers Ativos <span class="material-symbols-outlined text-[14px]">check_circle</span>
+</span>
+</div>
+</div>
+</section>
+<!-- 4. SEÇÃO DE PRIVACIDADE & TRANSPARÊNCIA (BYOC) -->
+<section class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin py-space-xl" id="privacidade">
+<div class="rounded-xl bg-surface-container-low p-8 md:p-12 shadow-2xl relative overflow-hidden">
+<div class="absolute -top-32 -right-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center">
+<div class="lg:col-span-7 flex flex-col gap-space-sm text-left">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-badge text-label-badge w-fit">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+              POLÍTICA BRING YOUR OWN CONTENT (BYOC)
+            </div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">
+              Privacidade levada a sério. Seus dados, suas listas.
+            </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+              O PedreiraFlix é estritamente um <strong>reprodutor de mídia de ponta a ponta</strong>. Nós não comercializamos, hospedamos, retransmitimos ou distribuímos qualquer fluxo, canal ou vídeo.
+            </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Você insere as credenciais do seu provedor de preferência (API Xtream Codes ou link M3U) e todo o processamento ocorre localmente no motor JavaScript do seu navegador. Seus dados de acesso nunca passam pelos nossos servidores.
+            </p>
+<div class="pt-space-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="p-3 rounded bg-surface-container-lowest flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[20px]">no_encryption</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Zero Logs no Servidor</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Nenhum histórico ou link enviado para a nuvem.</span>
+</div>
+<div class="p-3 rounded bg-surface-container-lowest flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[20px]">lock</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Armazenamento Local</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Senhas e tokens salvos sob chave no seu navegador.</span>
+</div>
+<div class="p-3 rounded bg-surface-container-lowest flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[20px]">visibility_off</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Sem Rastreamento</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Zero cookies de publicidade ou telemetria invasiva.</span>
+</div>
+</div>
+</div>
+<!-- Privacy Architecture Visual -->
+<div class="lg:col-span-5 rounded-lg bg-surface-container-lowest p-6 shadow-inner flex flex-col gap-4 text-left">
+<div class="flex items-center justify-between pb-3">
+<span class="font-label-md text-label-md text-on-surface font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">security</span>
+                Fluxo Seguro no Cliente
+              </span>
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary font-label-badge text-label-badge">TLS 1.3</span>
+</div>
+<!-- Flow Step 1 -->
+<div class="p-3 rounded bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold font-mono">1</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Seu Dispositivo</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Navegador Web / App PWA</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+</div>
+<!-- Direct Line Visual -->
+<div class="flex items-center justify-center text-on-surface-variant gap-2 text-xs font-mono">
+<span class="material-symbols-outlined text-[18px]">arrow_downward</span>
+<span>Conexão Direta Criptografada</span>
+<span class="material-symbols-outlined text-[18px]">arrow_downward</span>
+</div>
+<!-- Flow Step 2 -->
+<div class="p-3 rounded bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold font-mono">2</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Seu Provedor IPTV</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sua API Xtream ou Servidor M3U</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[18px]">cloud</span>
+</div>
+<div class="p-3 rounded bg-primary-container/10 text-on-surface text-center font-body-sm text-body-sm">
+<span class="text-primary font-semibold">Os servidores do PedreiraFlix não intermedeiam</span> nenhum segundo da sua reprodução.
+            </div>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. SEÇÃO DE COMPATIBILIDADE / COMO FUNCIONA EM 3 PASSOS -->
+<section class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin py-space-xl text-center" id="como-funciona">
+<span class="font-label-badge text-label-badge text-primary uppercase tracking-wider">Configuração Sem Complicação</span>
+<h2 class="mt-space-xs font-headline-lg text-headline-lg text-on-surface font-bold">
+        Pronto para assistir em menos de 60 segundos
+      </h2>
+<p class="mt-space-sm font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">
+        Esqueça tutoriais complexos ou instalações demoradas via pen drive. Tudo acontece no seu navegador padrão.
+      </p>
+<div class="mt-space-xl grid grid-cols-1 md:grid-cols-3 gap-space-lg text-left">
+<!-- Step 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low shadow-md flex flex-col gap-space-sm relative">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold flex items-center justify-center">
+            1
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Abra no Navegador
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Acesse o PedreiraFlix pelo Chrome, Safari ou Edge no celular, tablet, computador ou no navegador da sua Smart TV LG (webOS) e Samsung (Tizen).
+          </p>
+<div class="mt-auto pt-2 flex items-center gap-2 font-label-badge text-label-badge text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">public</span>
+            Compatível com Safari, Chrome e Edge
+          </div>
+</div>
+<!-- Step 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low shadow-md flex flex-col gap-space-sm relative">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold flex items-center justify-center">
+            2
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Conecte sua Lista
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Insira os dados do seu painel Xtream Codes (Servidor, Usuário e Senha) ou cole o link da sua lista de reprodução M3U pessoal.
+          </p>
+<div class="mt-auto pt-2 flex items-center gap-2 font-label-badge text-label-badge text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">sync_alt</span>
+            Importação instantânea com validação
+          </div>
+</div>
+<!-- Step 3 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low shadow-md flex flex-col gap-space-sm relative">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold flex items-center justify-center">
+            3
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Assista no Luxo
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Navegue por categorias com cartazes, consulte o guia de TV ao vivo em tempo real e desfrute de reprodução estável sem travamentos.
+          </p>
+<div class="mt-auto pt-2 flex items-center gap-2 font-label-badge text-label-badge text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">smart_display</span>
+            Interface 4K Ultra Fluida
+          </div>
+</div>
+</div>
+</section>
+<!-- 6. BANNER FINAL CTA -->
+<section class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin pt-space-md pb-space-xl" id="conectar">
+<div class="relative rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-8 md:p-14 shadow-2xl text-center flex flex-col items-center gap-space-md overflow-hidden">
+<div class="absolute inset-0 bg-primary-container/5 blur-2xl pointer-events-none"></div>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/20 text-primary font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[16px]">stars</span>
+          ACESSO INSTANTÂNEO • SEM REGISTROS DE CARTÃO
+        </div>
+<h2 class="font-headline-lg text-headline-lg md:font-display-hero md:text-display-hero text-on-surface font-bold max-w-3xl">
+          Pronto para transformar sua experiência com TV?
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+          Conecte sua lista em segundos e descubra como uma interface moderna e rápida pode valorizar o seu entretenimento diário.
+        </p>
+<div class="flex flex-wrap items-center justify-center gap-space-md pt-space-xs">
+<button class="inline-flex items-center gap-space-xs px-space-xl py-space-sm rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container font-label-md text-label-md transition-all shadow-[0_0_32px_rgba(76,142,255,0.45)] hover:shadow-[0_0_42px_rgba(76,142,255,0.7)] font-semibold">
+<span class="material-symbols-outlined text-[20px]">login</span>
+<span>Acessar PedreiraFlix agora</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span>Instalar como App PWA</span>
+</button>
+</div>
+<div class="mt-space-md flex flex-wrap items-center justify-center gap-6 text-on-surface-variant font-label-badge text-label-badge uppercase tracking-wider">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">check</span> iOS &amp; iPadOS</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Android</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Smart TVs (Tizen &amp; webOS)</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Windows &amp; macOS</span>
+</div>
+</div>
+</section>
+</div>
+</div></main><footer class="w-full bg-surface-container-lowest"><div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin pt-space-xl pb-space-lg"><div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg pb-space-xl"><div class="md:col-span-6 flex flex-col gap-space-sm"><div class="flex items-center gap-space-sm"><img alt="PedreiraFlix Logo" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-embedded-content/AB668-wW-p_l7lqY1R_Zl36x-Kqf2jQ8c2J1Vb_N8w=s200"/><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">PedreiraFlix</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">Experiência de streaming cinematográfica de ultrabaixa latência para PWA e Smart TVs. O PedreiraFlix é estritamente um reprodutor de mídia cliente (Bring Your Own Content). Não hospedamos, fornecemos ou distribuímos nenhum fluxo, canal de TV ou arquivo de vídeo. Compatível com listas M3U e APIs Xtream Codes de sua própria titularidade.</p></div><div class="md:col-span-3 flex flex-col gap-space-sm"><span class="font-label-md text-label-md text-on-surface font-semibold uppercase tracking-wider">Navegação</span><div class="flex flex-col gap-space-xs"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="home" href="#">Recursos da Plataforma</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="como-funciona" href="#">Guia Xtream &amp; M3U</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="dispositivos" href="#">Smart TVs &amp; Mobile</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="instalar-pwa" href="#">PWA Web Client</a></div></div><div class="md:col-span-3 flex flex-col gap-space-sm"><span class="font-label-md text-label-md text-on-surface font-semibold uppercase tracking-wider">Transparência</span><div class="flex flex-col gap-space-xs"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacidade" href="#">Política de Privacidade</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Termos de Uso</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Isenção de Responsabilidade</a></div></div></div><div class="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm"><p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 PedreiraFlix Player. Todos os direitos reservados.</p><div class="flex items-center gap-space-sm"><span class="inline-flex items-center px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface font-label-badge text-label-badge">PWA READY</span><span class="inline-flex items-center px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface font-label-badge text-label-badge">XTREAM / M3U</span></div></div></div></footer></body></html>
