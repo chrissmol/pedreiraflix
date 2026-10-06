@@ -18,6 +18,7 @@ interface PosterCardProps {
 export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
   return (
     <button
+      data-spatial
       onClick={onClick}
       // Apple-style hover: the card itself lifts and deepens its own (neutral) shadow — no colored
       // border/glow lighting up around it, unlike before.

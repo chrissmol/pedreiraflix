@@ -85,7 +85,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
       data-testid={`live-card-${channel.streamId}`}
       className="group relative flex items-center gap-3 rounded-xl border border-white/[0.06] bg-zinc-900/80 p-3 transition-all duration-200 hover:border-white/20 hover:bg-zinc-800"
     >
-      <button onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <button data-spatial onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black/40">
           {channel.streamIcon ? (
             <img
