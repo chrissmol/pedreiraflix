@@ -1,0 +1,34 @@
+import { expect, test } from '@playwright/test'
+import { login } from './helpers'
+
+// Safari responde 'maybe' para o MIME de HLS em varias versoes. O app exigia 'probably', caia no hls.js
+// e o AirPlay passava a mandar so audio — a TV ficava preta no ao vivo.
+test('num navegador WebKit o HLS toca nativamente, mesmo com canPlayType "maybe"', async ({ page }) => {
+  await page.addInitScript(() => {
+    const proto = HTMLMediaElement.prototype as unknown as Record<string, unknown>
+    proto.canPlayType = function () {
+      return 'maybe'
+    }
+    proto.webkitShowPlaybackTargetPicker = function () {}
+  })
+
+  await login(page)
+  await page.goto('/watch/live/101?name=Canal')
+  await expect(page.locator('video')).toBeVisible()
+
+  // O botao "Rápido" so existe quando o hls.js esta no comando; com HLS nativo ele nao aparece.
+  await expect(page.getByRole('button', { name: /Rápido/ })).toHaveCount(0)
+})
+
+test('sem as APIs do WebKit, um "maybe" continua caindo no hls.js', async ({ page }) => {
+  await page.addInitScript(() => {
+    ;(HTMLMediaElement.prototype as unknown as Record<string, unknown>).canPlayType = function () {
+      return 'maybe'
+    }
+  })
+
+  await login(page)
+  await page.goto('/watch/live/101?name=Canal')
+  await expect(page.locator('video')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Rápido/ })).toBeVisible()
+})

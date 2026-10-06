@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
+import { moveFocusVertically } from '../lib/spatialNav'
 import MobileNav from './MobileNav'
 import TopNav from './TopNav'
 import UpdatePrompt from './UpdatePrompt'
@@ -38,6 +39,19 @@ export default function Layout() {
   // Except on Back/Forward: every native app (and every browser, for normal page scrolling) returns you
   // to where you were in the list, instead of to the top. React Router reports that as navigationType
   // 'POP', and each history entry gets its own `key`, which is what the saved offset is stored under.
+  // Setas verticais movem o foco entre fileiras/cartoes quando ele ja esta no catalogo — o gesto de um
+  // controle remoto de TV, e util tambem para quem navega so de teclado no desktop. Fora do catalogo as
+  // setas seguem rolando a pagina normalmente (ver lib/spatialNav).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+      if (moveFocusVertically(e.key === 'ArrowUp' ? 'up' : 'down')) e.preventDefault()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   const navigationType = useNavigationType()
   const { key } = useLocation()
   useEffect(() => {

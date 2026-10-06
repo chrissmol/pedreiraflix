@@ -43,3 +43,22 @@ test('does not log out mid-playback even with zero pointer/keyboard activity', a
   await page.waitForTimeout(2500)
   await expect(page).toHaveURL(/\/watch\/movie\//) // not bounced to /login
 })
+
+// Em AirPlay quem toca e a TV: o elemento local pode ficar `paused`, e a sessao caia no logout por
+// inatividade justamente enquanto o filme rodava na televisao.
+test('does not log out while playing to a TV over AirPlay, even with the local element paused', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLMediaElement.prototype, 'webkitCurrentPlaybackTargetIsWireless', {
+      configurable: true,
+      get: () => true,
+    })
+  })
+
+  await login(page)
+  await page.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await expect(page.locator('video')).toBeVisible()
+  await page.locator('video').evaluate((v) => (v as HTMLVideoElement).pause())
+
+  await page.waitForTimeout(2500)
+  await expect(page).toHaveURL(/\/watch\/movie\//)
+})
