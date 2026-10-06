@@ -22,7 +22,13 @@ export default function AutoLogout() {
 
     function isVideoActivelyPlaying(): boolean {
       const video = document.querySelector('video')
-      return !!video && !video.paused && !video.ended
+      if (!video) return false
+      // Em AirPlay quem toca e a TV, e o elemento local pode reportar `paused` — era por isso que uma
+      // sessao assistida pela TV, sem ninguem tocar no telefone, caia no logout por inatividade. Enquanto
+      // a saida sem fio estiver ativa, isso conta como assistindo.
+      const wireless = (video as { webkitCurrentPlaybackTargetIsWireless?: boolean }).webkitCurrentPlaybackTargetIsWireless
+      if (wireless) return true
+      return !video.paused && !video.ended
     }
 
     function fire() {

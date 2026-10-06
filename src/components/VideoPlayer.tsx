@@ -290,11 +290,20 @@ export default function VideoPlayer({
       // have that limit. The trade-off (accepted): the audio-track/subtitle-track/manual-quality menus
       // below are populated from hls.js's own events, so they stay empty here — Safari's native player
       // doesn't hand those to JS the same way. Most IPTV sources only carry one audio track anyway.
-      // Strictly 'probably', not just non-empty: canPlayType can also return the noncommittal 'maybe'
-      // for a MIME type a browser doesn't actually support (confirmed against real Chromium, which
-      // answered 'maybe' here despite having no native HLS playback at all) — 'probably' is what Safari
-      // specifically answers for HLS, and the well-established way sites detect it.
-      const nativeHlsSupported = video.canPlayType('application/vnd.apple.mpegurl') === 'probably'
+      // Safari precisa tocar HLS nativamente, nao via hls.js, senao o video sai por MediaSource e o
+      // AirPlay manda so o audio — a TV fica preta. O teste era `=== 'probably'`, e e justamente ai que
+      // quebrava no iPhone: o Safari responde 'maybe' para este MIME em varias versoes, entao o app caia
+      // no hls.js e o ao vivo nao aparecia na TV (relatado com uma Samsung via AirPlay 2).
+      //
+      // So que aceitar qualquer resposta nao-vazia tambem nao serve: o Chromium responde 'maybe' sem ter
+      // HLS nativo nenhum. O desempate e por recurso, nao por string nem por user agent — as APIs de
+      // midia prefixadas do WebKit (`webkitShowPlaybackTargetPicker`, usada pelo proprio botao de
+      // AirPlay) existem no Safari e em nenhum outro lugar.
+      const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl')
+      const isWebKitMedia =
+        typeof (video as { webkitShowPlaybackTargetPicker?: unknown }).webkitShowPlaybackTargetPicker === 'function' ||
+        'webkitSupportsPresentationMode' in video
+      const nativeHlsSupported = canPlayHls === 'probably' || (canPlayHls !== '' && isWebKitMedia)
       if (isHls && !nativeHlsSupported) {
         // hls.js (~250KB) is only needed for live channels; VOD plays as
         // plain mp4/webm, so keep it out of the main bundle.
