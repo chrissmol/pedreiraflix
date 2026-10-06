@@ -10,6 +10,22 @@ import UpdatePrompt from './UpdatePrompt'
 const scrollOffsets = new Map<string, number>()
 
 export default function Layout() {
+  // Altura medida, nao `dvh`: no iPhone com o app na tela de inicio o WebKit calcula `100dvh` menor que a
+  // area realmente visivel, e como o menu flutuante e ancorado no fim deste shell ele nascia no meio da
+  // tela, com conteudo passando por baixo (foi o que o video mostrou). `innerHeight` e medido de fato, e
+  // de proposito nao e `visualViewport.height`: esse encolhe quando o teclado abre, o que faria o menu
+  // pular para cima enquanto se digita na busca.
+  useEffect(() => {
+    const apply = () => document.documentElement.style.setProperty('--app-h', `${window.innerHeight}px`)
+    apply()
+    window.addEventListener('resize', apply)
+    window.addEventListener('orientationchange', apply)
+    return () => {
+      window.removeEventListener('resize', apply)
+      window.removeEventListener('orientationchange', apply)
+    }
+  }, [])
+
   const sessionWarning = useAuthStore((s) => s.sessionWarning)
   const dismissWarning = useAuthStore((s) => s.dismissWarning)
   const { pathname } = useLocation()
@@ -103,7 +119,7 @@ export default function Layout() {
     // banner) positions itself against with `absolute`, not `fixed` — see the comment on `TopNav`'s
     // header and `MobileNav`'s nav for why `fixed` specifically was still wrong on an iOS PWA even after
     // `body` stopped scrolling.
-    <div className="relative h-dvh overflow-hidden">
+    <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
       {/* Off-screen until focused (Tab from the very top of the page) — lets keyboard users jump past
           the header/nav straight to the page content instead of tabbing through every nav link first. */}
       <a
@@ -124,7 +140,7 @@ export default function Layout() {
       <main
         id="main-content"
         ref={mainRef}
-        className="h-full overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0"
+        className="h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0"
       >
         <Outlet />
       </main>
