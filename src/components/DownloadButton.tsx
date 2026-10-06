@@ -43,9 +43,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
   if (done) {
     return (
       <span
-        className={`flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 font-medium text-emerald-300 ${
-          compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'
-        }`}
+        className={`${compact ? 'inline-flex h-10 w-10 items-center justify-center rounded-full' : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'} bg-done/15 text-done`}
       >
         <Check className="h-5 w-5" />
         {!compact && <span className="hidden sm:inline">Baixado</span>}
@@ -56,9 +54,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
   if (progress !== undefined) {
     return (
       <span
-        className={`flex items-center gap-2 rounded-lg border border-brand-400/30 bg-brand-500/10 font-medium text-brand-200 tabular-nums ${
-          compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'
-        }`}
+        className={`${compact ? 'inline-flex h-10 items-center justify-center gap-1 rounded-full px-2.5 text-label-badge' : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'} bg-brand-500/15 text-brand-300 tabular-nums`}
       >
         <Download className="h-5 w-5 animate-pulse motion-reduce:animate-none" />
         {!compact && <span className="hidden sm:inline">Baixando... {progress}%</span>}
@@ -72,11 +68,12 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
       onClick={() => client && start(client, profileId, kind, String(id), ext, name, image, seriesId)}
       disabled={!client}
       title={failed ? 'Falhou — toque para tentar de novo' : 'Baixar para ver offline'}
-      className={`flex items-center gap-2 rounded-lg border font-medium transition-all disabled:opacity-50 ${
-        failed
-          ? 'border-rose-500/40 bg-rose-950/30 text-rose-300 hover:bg-rose-950/50'
-          : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
-      } ${compact ? 'p-2.5' : 'p-2.5 sm:px-4 sm:py-2.5'}`}
+      aria-label={failed ? 'Tentar de novo' : 'Baixar para ver offline'}
+      className={`${
+        compact
+          ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white'
+          : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'
+      } disabled:opacity-50 ${failed ? 'text-live' : ''}`}
     >
       <Download className="h-5 w-5" />
       {!compact && <span className="hidden sm:inline">{failed ? 'Tentar de novo' : 'Baixar para ver offline'}</span>}

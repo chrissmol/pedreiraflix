@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import { Check, FileArrowDown, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
@@ -72,37 +73,24 @@ export default function MovieDetailPage() {
   const plot = movie.plot || tmdb?.overview
   // Xtream hands duration over as a raw clock string ("01:32:00"), which reads like a timestamp rather
   // than a length — every streaming service shows "1h 32min" here instead.
-  const meta = [year, formatRuntime(movie.duration), genre].filter(Boolean)
+  const chips = [year, formatRuntime(movie.duration)].filter(Boolean) as string[]
 
   return (
     <div className="min-h-screen pb-16">
-      <div className="relative h-[46vw] max-h-[520px] min-h-[280px] w-full">
-        {backdrop && <img src={backdrop} alt={movie.name} className="h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
-        <div className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-brand-500/15 blur-[100px]" />
-      </div>
-
-      <div className="relative z-10 -mt-24 flex flex-col gap-6 px-4 sm:flex-row sm:px-10">
-        {movie.streamIcon && (
-          <img
-            src={movie.streamIcon}
-            alt={movie.name}
-            className="glow-border hidden w-48 rounded-xl shadow-2xl sm:block"
-          />
-        )}
-        <div className="flex-1">
-          <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{movie.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-on-surface-variant">
-            {rating ? <span className="font-semibold text-rating">★ {rating.toFixed(1)}</span> : null}
-            {meta.map((item, i) => (
-              <span key={item}>
-                {(i > 0 || rating) && <span className="pr-2 text-zinc-600">·</span>}
-                {item}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
+      <DetailHero
+        title={movie.name}
+        backdrop={backdrop}
+        poster={movie.streamIcon}
+        rating={rating}
+        chips={chips}
+        genre={genre}
+        plot={plot}
+        credits={[
+          { label: 'Elenco', value: movie.cast },
+          { label: 'Direção', value: movie.director },
+        ]}
+        actions={
+          <>
             <button
               onClick={() =>
                 navigate(
@@ -111,7 +99,7 @@ export default function MovieDetailPage() {
                   )}&image=${encodeURIComponent(movie.streamIcon || '')}`,
                 )
               }
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 font-bold text-black shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)] transition-all hover:scale-[1.03] sm:w-auto sm:py-2.5"
+              className="btn-primary w-full sm:w-auto"
             >
               <Play className="h-5 w-5" /> Assistir
             </button>
@@ -121,11 +109,7 @@ export default function MovieDetailPage() {
               }
               aria-label={isFavorite ? 'Na lista' : 'Minha lista'}
               title={isFavorite ? 'Na lista' : 'Minha lista'}
-              className={`flex items-center gap-2 rounded-lg border p-2.5 font-medium transition-all sm:px-4 sm:py-2.5 ${
-                isFavorite
-                  ? 'border-brand-400/40 bg-brand-500/15 text-brand-200'
-                  : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
-              }`}
+              className={`btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md ${isFavorite ? 'text-brand-300' : ''}`}
             >
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               <span className="hidden sm:inline">{isFavorite ? 'Na lista' : 'Minha lista'}</span>
@@ -143,34 +127,23 @@ export default function MovieDetailPage() {
                 download
                 title="Baixar o arquivo original (fora do app)"
                 aria-label="Baixar arquivo"
-                className="flex items-center gap-2 rounded-lg border border-outline-soft bg-surface-container p-2.5 font-medium text-white transition-all hover:border-brand-500/40 hover:bg-surface-high sm:px-4 sm:py-2.5"
+                className="btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md"
               >
                 {/* Not the same glyph as the offline download beside it: with labels hidden on phones, two
                     identical arrows gave no way to tell "save into the app" from "save to the device". */}
                 <FileArrowDown className="h-5 w-5" /> <span className="hidden sm:inline">Baixar arquivo</span>
               </a>
             )}
-          </div>
-
-          {plot && <p className="mt-6 max-w-2xl text-zinc-300">{plot}</p>}
-
-          <div className="mt-6 space-y-1 text-sm text-on-surface-variant">
-            {movie.cast && (
-              <p>
-                <span className="text-on-surface-variant">Elenco: </span>
-                {movie.cast}
-              </p>
-            )}
-            {movie.director && (
-              <p>
-                <span className="text-on-surface-variant">Direção: </span>
-                {movie.director}
-              </p>
-            )}
-            {tmdb && <p className="pt-2 text-xs">Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.</p>}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+        footnote={
+          tmdb && (
+            <p className="mt-6 text-body-sm text-on-surface-muted">
+              Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.
+            </p>
+          )
+        }
+      />
     </div>
   )
 }

@@ -406,7 +406,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busyId !== null}
-              className="mt-8 h-12 w-full rounded-full bg-brand-500 text-body-lg font-semibold text-white shadow-[0_8px_30px_-6px_rgba(15,123,255,0.55)] transition-all duration-200 hover:bg-brand-400 disabled:opacity-50 disabled:hover:bg-brand-500"
+              className="btn-primary mt-8 w-full text-body-lg"
             >
               {busyId === 'form' ? 'Conectando...' : 'Entrar'}
             </button>

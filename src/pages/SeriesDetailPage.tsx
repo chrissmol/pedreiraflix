@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
-import Select from '../components/Select'
-import { Check, FileArrowDown, Play, Plus } from '../components/icons'
-import { formatRuntime } from '../components/videoPlayerUtils'
+import { Check, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
+import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
-import type { SeriesDetails } from '../types'
+import type { Episode, SeriesDetails } from '../types'
 
 export default function SeriesDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -58,159 +58,228 @@ export default function SeriesDetailPage() {
   if (error || !series) return <div className="pt-32 text-center text-rose-400">{error || 'Série não encontrada'}</div>
 
   const backdrop = series.backdropPath[0] || series.cover
-  // Mesma apresentacao da pagina de filme: nota em destaque e o resto separado por ponto.
   const rating = Number(series.rating) > 0 ? Number(series.rating) : null
-  const meta = [
+  const chips = [
     series.releaseDate?.slice(0, 4),
-    series.genre,
     `${series.seasons.length} temporada${series.seasons.length > 1 ? 's' : ''}`,
   ].filter(Boolean) as string[]
   const season = series.seasons.find((s) => s.seasonNumber === activeSeason)
 
+  const playUrl = (ep: Episode) =>
+    `/watch/series/${ep.id}?ext=${ep.containerExtension}&name=${encodeURIComponent(
+      `${series.name} - ${ep.title}`,
+    )}&image=${encodeURIComponent(series.cover || '')}&seriesId=${series.seriesId}`
+
+  // "Continuar T2:E4": o episodio desta serie com progresso mais recente; sem nenhum, o primeiro.
+  const allEpisodes = series.seasons.flatMap((s) => s.episodes)
+  const resume = allEpisodes
+    .flatMap((ep) => {
+      const p = episodeProgress[`${profileId}:series-${ep.id}`]
+      return p ? [{ ep, p }] : []
+    })
+    .sort((a, b) => b.p.updatedAt - a.p.updatedAt)[0]
+  const first = allEpisodes[0]
+  const tag = (ep: Episode) => `T${ep.season}:E${ep.episodeNum}`
+
   return (
     <div className="min-h-screen pb-16">
-      <div className="relative h-[46vw] max-h-[520px] min-h-[280px] w-full">
-        {backdrop && <img src={backdrop} alt={series.name} className="h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
-        <div className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-brand-500/15 blur-[100px]" />
-      </div>
-
-      <div className="relative z-10 -mt-24 flex flex-col gap-6 px-4 sm:flex-row sm:px-10">
-        {series.cover && (
-          <img src={series.cover} alt={series.name} className="glow-border hidden w-48 rounded-xl shadow-2xl sm:block" />
-        )}
-        <div className="flex-1">
-          <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{series.name}</h1>
-          <div className="mt-2 flex flex-wrap gap-3 text-sm text-on-surface-variant">
-            {rating ? <span className="font-semibold text-rating">★ {rating.toFixed(1)}</span> : null}
-            {meta.map((item, i) => (
-              <span key={item}>
-                {(i > 0 || rating) && <span className="pr-2 text-zinc-600">·</span>}
-                {item}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
+      <DetailHero
+        title={series.name}
+        backdrop={backdrop}
+        poster={series.cover}
+        rating={rating}
+        chips={chips}
+        genre={series.genre}
+        plot={series.plot}
+        credits={[
+          { label: 'Elenco', value: series.cast },
+          { label: 'Direção', value: series.director },
+        ]}
+        actions={
+          <>
+            {resume ? (
+              <>
+                <button onClick={() => navigate(playUrl(resume.ep))} className="btn-primary w-full sm:w-auto">
+                  <Play className="h-5 w-5" />
+                  <span className="text-left leading-tight">
+                    Continuar {tag(resume.ep)}
+                    <span className="block text-body-sm font-normal text-white/80">
+                      {formatRemaining(resume.p.positionSeconds, resume.p.durationSeconds)}
+                    </span>
+                  </span>
+                </button>
+                {first && first.id !== resume.ep.id && (
+                  <button onClick={() => navigate(playUrl(first))} className="btn-secondary">
+                    <RefreshCw className="h-5 w-5" /> Do início ({tag(first)})
+                  </button>
+                )}
+              </>
+            ) : (
+              first && (
+                <button onClick={() => navigate(playUrl(first))} className="btn-primary w-full sm:w-auto">
+                  <Play className="h-5 w-5" /> Assistir {tag(first)}
+                </button>
+              )
+            )}
             <button
               onClick={() =>
                 toggleFavorite(profileId, { kind: 'series', id: series.seriesId, name: series.name, image: series.cover })
               }
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-all ${
-                isFavorite
-                  ? 'border-brand-400/40 bg-brand-500/15 text-brand-200'
-                  : 'border-outline-soft bg-surface-container text-white hover:border-brand-500/40 hover:bg-surface-high'
-              }`}
+              aria-label={isFavorite ? 'Na lista' : 'Minha lista'}
+              title={isFavorite ? 'Na lista' : 'Minha lista'}
+              className={`btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md ${isFavorite ? 'text-brand-300' : ''}`}
             >
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-              {isFavorite ? 'Na lista' : 'Minha lista'}
+              <span className="hidden sm:inline">{isFavorite ? 'Na lista' : 'Minha lista'}</span>
             </button>
-          </div>
+          </>
+        }
+      />
 
-          {series.plot && <p className="mt-6 max-w-2xl text-zinc-300">{series.plot}</p>}
-
-          <div className="mt-6 space-y-1 text-sm text-on-surface-variant">
-            {series.cast && (
-              <p>
-                <span className="text-on-surface-variant">Elenco: </span>
-                {series.cast}
-              </p>
-            )}
-            {series.director && (
-              <p>
-                <span className="text-on-surface-variant">Direção: </span>
-                {series.director}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-10 px-4 sm:px-10">
-        <div className="mb-4 flex items-center gap-3">
-          <h2 className="font-display text-xl font-bold text-white">Episódios</h2>
-          <Select
-            label="Temporada"
-            className="ml-auto max-w-56"
-            value={String(activeSeason)}
-            onChange={(v) => setActiveSeason(Number(v))}
-            options={series.seasons.map((s) => ({ value: String(s.seasonNumber), label: s.name }))}
-          />
+      <div className="px-4 sm:px-10">
+        {/* Abas de temporada em pilula, como no Stitch; rolam na horizontal quando sao muitas. */}
+        <div
+          role="tablist"
+          aria-label="Temporada"
+          className="no-scrollbar -mx-4 mb-8 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:rounded-2xl sm:bg-surface-low sm:p-2"
+        >
+          {series.seasons.map((s) => (
+            <button
+              key={s.seasonNumber}
+              role="tab"
+              aria-selected={s.seasonNumber === activeSeason}
+              onClick={() => setActiveSeason(s.seasonNumber)}
+              className={`shrink-0 whitespace-nowrap rounded-full px-5 py-2.5 text-label-md transition-colors ${
+                s.seasonNumber === activeSeason
+                  ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                  : 'bg-surface-container text-on-surface-variant hover:text-white sm:bg-transparent'
+              }`}
+            >
+              {s.name} <span className="text-body-sm opacity-70">({s.episodes.length} eps)</span>
+            </button>
+          ))}
         </div>
 
-        <div className="space-y-2">
+        <div className="mb-5 flex items-baseline gap-3">
+          <h2 className="font-display text-headline-md text-white">Episódios</h2>
+          <span className="text-body-sm text-on-surface-muted">{season?.episodes.length ?? 0} nesta temporada</span>
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
           {season?.episodes.map((ep) => {
             const key = `${profileId}:series-${ep.id}`
             const inProgress = episodeProgress[key]
             const isWatched = Boolean(watched[key])
+            const isCurrent = resume?.ep.id === ep.id
             const watchedPct = inProgress
               ? Math.min(100, Math.round((inProgress.positionSeconds / (inProgress.durationSeconds || 1)) * 100))
               : isWatched
                 ? 100
                 : 0
+            const thumb = ep.image || season.cover || backdrop
 
             return (
               <div
                 key={ep.id}
                 role="button"
                 tabIndex={0}
-                onClick={() =>
-                  navigate(
-                    `/watch/series/${ep.id}?ext=${ep.containerExtension}&name=${encodeURIComponent(
-                      `${series.name} - ${ep.title}`,
-                    )}&image=${encodeURIComponent(series.cover || '')}&seriesId=${series.seriesId}`,
-                  )
-                }
+                data-spatial
+                onClick={() => navigate(playUrl(ep))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click()
                 }}
-                className="group relative flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-xl border border-outline-soft bg-surface-container p-3 text-left transition-all duration-200 hover:border-outline-strong hover:bg-surface-high hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.6)]"
+                className={`group flex cursor-pointer gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 sm:gap-4 sm:p-3 ${
+                  isCurrent
+                    ? 'border-brand-500/50 bg-surface-container shadow-[0_0_30px_-12px_rgba(15,123,255,0.5)]'
+                    : 'border-outline-soft bg-surface-low hover:border-outline-strong hover:bg-surface-container'
+                }`}
               >
-                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 font-bold text-brand-300">
-                  {isWatched ? <Check className="h-5 w-5 text-brand-400" /> : ep.episodeNum}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate font-medium text-white">{ep.title}</p>
-                    {isWatched && <span className="text-[10px] font-semibold uppercase text-brand-400">Assistido</span>}
-                  </div>
-                  {formatRuntime(ep.duration) && <p className="text-xs text-on-surface-variant">{formatRuntime(ep.duration)}</p>}
-                  {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-on-surface-variant">{ep.plot}</p>}
-                </div>
-                <span onClick={(e) => e.stopPropagation()} className="mt-0.5 shrink-0">
-                  <DownloadButton
-                    kind="series"
-                    id={ep.id}
-                    ext={ep.containerExtension}
-                    name={`${series.name} - ${ep.title}`}
-                    image={series.cover}
-                    seriesId={series.seriesId}
-                    compact
-                  />
-                </span>
-                {client && (
-                  <a
-                    href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
-                    download
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-0.5 shrink-0 rounded-lg p-2.5 text-on-surface-muted transition-colors hover:bg-white/10 hover:text-brand-300"
-                    title="Baixar arquivo original (fora do app)"
-                  >
-                    {/* Glifo diferente do download para ver offline: sem rotulo, duas setas iguais nao
-                        diziam qual era qual - mesma correcao ja feita na pagina de filme. */}
-                    <FileArrowDown className="h-5 w-5" />
-                  </a>
-                )}
-                <Play className="mt-2 h-5 w-5 shrink-0 text-on-surface-muted" />
-
-                {watchedPct > 0 && (
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-white/10">
-                    <div
-                      className={`h-full ${isWatched ? 'bg-on-surface-muted' : 'bg-gradient-to-r from-brand-500 to-brand-400'}`}
-                      style={{ width: `${watchedPct}%` }}
+                <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-surface-high sm:w-44">
+                  {thumb && (
+                    <img
+                      src={thumb}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
                     />
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500">
+                      <Play className="h-5 w-5 text-white" />
+                    </span>
+                  </span>
+                  {(isWatched || inProgress) && (
+                    <span
+                      className={`absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-label-badge font-semibold ${
+                        isWatched ? 'bg-black/70 text-done' : 'bg-brand-500 text-white'
+                      }`}
+                    >
+                      {isWatched ? 'Assistido' : 'Em andamento'}
+                    </span>
+                  )}
+                  {formatRuntime(ep.duration) && (
+                    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-label-badge text-white">
+                      {formatRuntime(ep.duration)}
+                    </span>
+                  )}
+                  {watchedPct > 0 && (
+                    <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
+                      <div
+                        className={`h-full ${isWatched ? 'bg-on-surface-muted' : 'bg-brand-500'}`}
+                        style={{ width: `${watchedPct}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <p className="flex min-w-0 items-baseline gap-1.5 text-label-md text-white">
+                    <span className="shrink-0 text-on-surface-muted">Ep. {ep.episodeNum} •</span>
+                    <span className={`truncate ${isCurrent ? 'text-brand-300' : ''}`}>{ep.title}</span>
+                  </p>
+                  {ep.plot && <p className="mt-1 line-clamp-2 text-body-sm text-on-surface-variant">{ep.plot}</p>}
+                  <div className="mt-auto flex items-center gap-1 pt-2">
+                    <span className="mr-auto text-label-badge">
+                      {isWatched ? (
+                        <span className="inline-flex items-center gap-1 text-done">
+                          <Check className="h-3.5 w-3.5" /> Concluído
+                        </span>
+                      ) : inProgress ? (
+                        <span className="text-brand-300">
+                          {formatRemaining(inProgress.positionSeconds, inProgress.durationSeconds)}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <DownloadButton
+                        kind="series"
+                        id={ep.id}
+                        ext={ep.containerExtension}
+                        name={`${series.name} - ${ep.title}`}
+                        image={series.cover}
+                        seriesId={series.seriesId}
+                        compact
+                      />
+                    </span>
+                    {client && (
+                      <a
+                        href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
+                        download
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white"
+                        title="Baixar arquivo original (fora do app)"
+                        aria-label="Baixar arquivo original"
+                      >
+                        {/* Glifo diferente do download para ver offline: sem rotulo, duas setas iguais nao
+                            diziam qual era qual - mesma correcao ja feita na pagina de filme. */}
+                        <FileArrowDown className="h-5 w-5" />
+                      </a>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )
           })}

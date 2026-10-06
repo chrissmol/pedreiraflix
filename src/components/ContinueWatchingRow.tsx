@@ -3,18 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from './ConfirmDialog'
 import PosterCard from './PosterCard'
 import Row from './Row'
+import { formatRemaining } from './videoPlayerUtils'
 import { progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 
 interface ContinueWatchingRowProps {
   /** Restricts the row to one kind (Filmes/Séries pages); omit to show everything (Home). */
   kind?: 'movie' | 'series'
-}
-
-function restante(posicao: number, duracao: number): string {
-  const faltam = Math.max(0, Math.round((duracao - posicao) / 60))
-  if (!duracao || faltam === 0) return 'Quase no fim'
-  return faltam >= 60 ? `Faltam ${Math.floor(faltam / 60)}h ${faltam % 60}min` : `Faltam ${faltam} min`
 }
 
 /** Purely local data (localStorage), so it renders instantly regardless of how long the catalog
@@ -50,8 +45,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
                 )}&image=${encodeURIComponent(p.image || '')}${p.seriesId ? `&seriesId=${p.seriesId}` : ''}`,
               )
             }
-            // "Faltam 18 min" diz mais do que "68% assistido" na hora de escolher o que ver agora.
-            subtitle={restante(p.positionSeconds, p.durationSeconds)}
+            subtitle={formatRemaining(p.positionSeconds, p.durationSeconds)}
             progressPct={(p.positionSeconds / (p.durationSeconds || 1)) * 100}
           />
           <button

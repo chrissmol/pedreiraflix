@@ -273,7 +273,7 @@ export class XtreamClient implements ProviderClient {
           episode_num: number
           title: string
           container_extension: string
-          info?: { plot?: string | null; duration?: string | null }
+          info?: { plot?: string | null; duration?: string | null; movie_image?: string | null }
         }[]
       >
     }>('get_series_info', { series_id: String(seriesId) })
@@ -290,6 +290,7 @@ export class XtreamClient implements ProviderClient {
         plot: e.info?.plot || null,
         duration: e.info?.duration || null,
         season: seasonNumber,
+        image: proxyImage(e.info?.movie_image),
       }))
       return {
         seasonNumber,

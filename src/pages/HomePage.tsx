@@ -172,7 +172,7 @@ export default function HomePage() {
             onClick={surpreendaMe}
             aria-label="Surpreenda-me"
             title="Surpreenda-me"
-            className="glass-panel flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
+            className="btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md"
           >
             <Shuffle className="h-5 w-5" />
             <span className="hidden sm:inline">Surpreenda-me</span>

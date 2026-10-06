@@ -111,10 +111,10 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
         {current.description && (
           <p className="line-clamp-3 max-w-lg text-body-md text-on-surface-variant drop-shadow sm:text-body-lg">{current.description}</p>
         )}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={current.onPlay}
-            className="flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-black shadow-[0_10px_30px_-8px_rgba(0,0,0,0.6)] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_14px_40px_-8px_rgba(0,0,0,0.7)] sm:px-6 sm:text-base"
+            className="btn-primary"
           >
             <Play className="h-5 w-5" /> Assistir
           </button>
@@ -122,7 +122,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
             onClick={current.onPlay}
             aria-label="Detalhes"
             title="Detalhes"
-            className="glass-panel flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10 sm:px-6 sm:text-base"
+            className="btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md"
           >
             <Info className="h-5 w-5" /> <span className="hidden sm:inline">Detalhes</span>
           </button>
@@ -130,7 +130,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
             onClick={() => toggleFavorite(profileId, { kind: current.kind, id: current.id, name: current.title, image: current.image })}
             aria-label={isFavorite ? 'Remover da Minha lista' : 'Adicionar à Minha lista'}
             title={isFavorite ? 'Na lista' : 'Minha lista'}
-            className="glass-panel flex items-center rounded-lg p-2.5 text-white transition-all duration-200 hover:border-brand-400/40 hover:bg-white/10"
+            className="btn-icon"
           >
             {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
           </button>

@@ -319,3 +319,15 @@ img {
     scroll-behavior: auto !important;
   }
 }
+
+/* Botoes do Stitch, iguais em todas as telas: pilula azul para a acao principal, pilula translucida
+   para as demais. `btn-icon` e a versao quadrada (so icone) da secundaria. */
+@utility btn-primary {
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-all duration-200 hover:bg-brand-400 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-500 sm:px-8;
+}
+@utility btn-secondary {
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-surface-high/70 px-5 text-label-md text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95 disabled:opacity-50 sm:px-6;
+}
+@utility btn-icon {
+  @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-high/70 text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95;
+}

@@ -89,6 +89,8 @@ export interface Episode {
   plot: string | null
   duration: string | null
   season: number
+  /** Miniatura do episodio (info.movie_image do Xtream), quando o provedor manda. */
+  image: string | null
 }
 
 export interface SeriesDetails extends SeriesItem {
