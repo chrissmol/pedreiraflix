@@ -179,6 +179,17 @@ body {
   text-shadow: none;
 }
 
+/* Foco visivel em TUDO, nao so nos poucos componentes que pediam `.brand-focus` explicitamente. O resto
+ * dependia do anel padrao do navegador, que sobre fundo quase preto some. Vale para quem navega por
+ * teclado no Windows e, principalmente, para controle remoto: numa TV o foco e a unica forma de saber
+ * onde voce esta. `outline` em vez de `box-shadow` de proposito - compoe com as sombras que varios
+ * elementos ja tem, e segue o `border-radius` sozinho. So em `:focus-visible`, entao clique de mouse e
+ * toque nao mostram nada. */
+:focus-visible {
+  outline: 3px solid rgba(58, 151, 255, 0.9);
+  outline-offset: 2px;
+}
+
 .brand-focus:focus-visible {
   outline: none;
   box-shadow:

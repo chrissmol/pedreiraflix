@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
 import DownloadButton from '../components/DownloadButton'
 import Select from '../components/Select'
-import { Check, Download, Play, Plus } from '../components/icons'
+import { Check, FileArrowDown, Play, Plus } from '../components/icons'
+import { formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
@@ -57,6 +58,13 @@ export default function SeriesDetailPage() {
   if (error || !series) return <div className="pt-32 text-center text-rose-400">{error || 'Série não encontrada'}</div>
 
   const backdrop = series.backdropPath[0] || series.cover
+  // Mesma apresentacao da pagina de filme: nota em destaque e o resto separado por ponto.
+  const rating = Number(series.rating) > 0 ? Number(series.rating) : null
+  const meta = [
+    series.releaseDate?.slice(0, 4),
+    series.genre,
+    `${series.seasons.length} temporada${series.seasons.length > 1 ? 's' : ''}`,
+  ].filter(Boolean) as string[]
   const season = series.seasons.find((s) => s.seasonNumber === activeSeason)
 
   return (
@@ -74,12 +82,13 @@ export default function SeriesDetailPage() {
         <div className="flex-1">
           <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{series.name}</h1>
           <div className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-400">
-            {series.releaseDate && <span>{series.releaseDate.slice(0, 4)}</span>}
-            {series.rating && Number(series.rating) > 0 && (
-              <span className="text-brand-300">★ {Number(series.rating).toFixed(1)}</span>
-            )}
-            {series.genre && <span>{series.genre}</span>}
-            <span>{series.seasons.length} temporada(s)</span>
+            {rating ? <span className="font-semibold text-brand-300">★ {rating.toFixed(1)}</span> : null}
+            {meta.map((item, i) => (
+              <span key={item}>
+                {(i > 0 || rating) && <span className="pr-2 text-zinc-600">·</span>}
+                {item}
+              </span>
+            ))}
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -165,7 +174,7 @@ export default function SeriesDetailPage() {
                     <p className="truncate font-medium text-white">{ep.title}</p>
                     {isWatched && <span className="text-[10px] font-semibold uppercase text-brand-400">Assistido</span>}
                   </div>
-                  {ep.duration && <p className="text-xs text-zinc-400">{ep.duration}</p>}
+                  {formatRuntime(ep.duration) && <p className="text-xs text-zinc-400">{formatRuntime(ep.duration)}</p>}
                   {ep.plot && <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ep.plot}</p>}
                 </div>
                 <span onClick={(e) => e.stopPropagation()} className="mt-0.5 shrink-0">
@@ -187,7 +196,9 @@ export default function SeriesDetailPage() {
                     className="mt-0.5 shrink-0 rounded-lg p-2.5 text-zinc-500 transition-colors hover:bg-white/10 hover:text-brand-300"
                     title="Baixar arquivo original (fora do app)"
                   >
-                    <Download className="h-5 w-5" />
+                    {/* Glifo diferente do download para ver offline: sem rotulo, duas setas iguais nao
+                        diziam qual era qual - mesma correcao ja feita na pagina de filme. */}
+                    <FileArrowDown className="h-5 w-5" />
                   </a>
                 )}
                 <Play className="mt-2 h-5 w-5 shrink-0 text-zinc-500" />
