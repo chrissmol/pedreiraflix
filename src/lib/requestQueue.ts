@@ -18,7 +18,7 @@ const CONCURRENCY = 3
 // the provider rate-limits. Up to CONCURRENCY calls run at once; each lane waits `gapMs` after its call
 // finishes before picking up the next queued one, so the pacing guarantee is per-lane, not just a capped
 // total start rate.
-class RequestThrottle {
+export class RequestThrottle {
   private gapMs: number
   private successStreak = 0
   private queue: (() => void)[] = []
@@ -49,17 +49,26 @@ class RequestThrottle {
     }
   }
 
+  // Pedidos que a pessoa disparou agora (abrir um filme, uma serie, checar o perfil) nao podem esperar
+  // atras das centenas de categorias que o catalogo baixa em segundo plano: antes, com uma fila so,
+  // abrir um filme levava minutos depois de um 429. Eles furam a fila e tem uma via extra so deles,
+  // entao nem esperam uma das vias do catalogo terminar.
+  private urgent: (() => void)[] = []
+
   private pump() {
-    if (this.active >= this.concurrency) return
-    const next = this.queue.shift()
-    if (!next) return
-    this.active++
-    next()
+    for (;;) {
+      const fromUrgent = this.urgent.length > 0 && this.active < this.concurrency + 1
+      const fromQueue = !fromUrgent && this.queue.length > 0 && this.active < this.concurrency
+      if (!fromUrgent && !fromQueue) return
+      const next = (fromUrgent ? this.urgent : this.queue).shift()!
+      this.active++
+      next()
+    }
   }
 
-  schedule<T>(fn: () => Promise<T>): Promise<T> {
+  schedule<T>(fn: () => Promise<T>, priority: 'urgent' | 'background' = 'background'): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.queue.push(() => {
+      ;(priority === 'urgent' ? this.urgent : this.queue).push(() => {
         fn().then(
           (value) => {
             resolve(value)

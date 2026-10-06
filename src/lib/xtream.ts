@@ -40,6 +40,10 @@ export function proxyImage(url: string | null | undefined): string | null {
   return `/api/stream?url=${encodeURIComponent(url)}`
 }
 
+// O que o app baixa em massa sozinho (listas de cada categoria e guia). Todo o resto — detalhes de filme e
+// serie, login, listas de categorias — e alguem esperando na tela, e fura a fila (ver requestQueue.ts).
+const BACKGROUND_ACTIONS = new Set(['get_vod_streams', 'get_series', 'get_live_streams', 'get_short_epg', 'get_simple_data_table'])
+
 export class XtreamApiError extends Error {
   status?: number
   constructor(message: string, status?: number) {
@@ -64,7 +68,10 @@ export class XtreamClient implements ProviderClient {
       ...(action ? { action } : {}),
       ...params,
     })
-    const res = await xtreamQueue.schedule(() => fetch(`/api/xtream?${query.toString()}`))
+    const res = await xtreamQueue.schedule(
+      () => fetch(`/api/xtream?${query.toString()}`),
+      action && BACKGROUND_ACTIONS.has(action) ? 'background' : 'urgent',
+    )
     if (res.status === 429) {
       // The provider is telling us our current pacing is still too fast for its rate limiter — widen
       // the gap between every future request app-wide so subsequent categories back off automatically

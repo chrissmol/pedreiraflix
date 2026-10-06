@@ -6,7 +6,7 @@
 // Bump this on any change to the strategy below (not on every deploy — the HTML/JS/CSS themselves are
 // versioned by Vite's content-hashed filenames, and the network-first navigation handler below already
 // keeps index.html itself fresh on every load with a connection).
-const VERSION = 'v1'
+const VERSION = 'v2'
 const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 
 // No skipWaiting() on install, on purpose: a new worker waits until the page asks it to take over, so an
@@ -66,7 +66,9 @@ self.addEventListener('fetch', (event) => {
   // The proxy: player_api.php calls and every HLS/MP4 byte must always be live, never served stale.
   if (url.pathname.startsWith('/api/')) return
 
-  if (request.mode === 'navigate') {
+  // Nem todo pedido de pagina chega como 'navigate' (o Chrome mostrou um /watch/... caindo no ramo de baixo
+  // e, sem rede, virando Response.error()). Qualquer pedido de HTML ganha o fallback para o app guardado.
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(networkFirst(request))
     return
   }
