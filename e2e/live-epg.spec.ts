@@ -41,3 +41,33 @@ test('on a phone the catch-up filter sits behind "Filtrar"', async ({ page }) =>
   await catchUp.click()
   await expect(catchUp).toHaveAttribute('aria-pressed', 'true')
 })
+
+// O cache e stale-while-revalidate: entrega o guardado (de ate 24h) e so depois atualiza. Para "o que
+// esta no ar agora" isso mostrava o programa de ontem como se fosse o atual.
+test('nao mostra como atual um programa que ja terminou', async ({ page }) => {
+  const ontem = new Date(Date.now() - 20 * 3600_000)
+  const stamp = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ')
+
+  await page.route(/\/api\/xtream\?.*action=get_short_epg/, (route) =>
+    route.fulfill({
+      json: {
+        epg_listings: [
+          {
+            id: '1',
+            title: btoa('Programa de ontem'),
+            description: btoa(''),
+            start: stamp(ontem),
+            end: stamp(new Date(ontem.getTime() + 3600_000)),
+          },
+        ],
+      },
+    }),
+  )
+
+  await login(page)
+  await page.goto('/live')
+  const card = page.getByTestId('live-card-101')
+  await expect(card.getByText('Canal Notícias 24h')).toBeVisible()
+  await expect(card.getByText('Sem programação')).toBeVisible()
+  await expect(card.getByText('Programa de ontem')).toHaveCount(0)
+})
