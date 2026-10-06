@@ -32,12 +32,20 @@ test('a lista de canais usa mais colunas em tela grande', async ({ page }) => {
   await expect.poll(columns).toBeGreaterThan(noNotebook)
 })
 
-test('a cor da moldura do sistema acompanha o tema', async ({ page }) => {
+// O tema claro foi removido (so o escuro ficou, com o design system Cinematic Obsidian). A meta
+// theme-color continua importando: ela pinta a barra de status do Android instalado e a barra de titulo
+// do PWA no Windows, e precisa casar com o fundo do app.
+test('a moldura do sistema usa a cor de fundo do app', async ({ page }) => {
   await login(page)
-  const themeColor = () => page.locator('meta[name="theme-color"]').getAttribute('content')
-  expect(await themeColor()).toBe('#06070c')
+  const themeColor = await page.locator('meta[name="theme-color"]').getAttribute('content')
+  expect(themeColor?.toLowerCase()).toBe('#06070c')
 
-  await page.getByRole('button', { name: /Conta|Perfil|D/ }).first().click()
-  await page.getByRole('button', { name: /Tema claro/ }).click()
-  await expect.poll(themeColor).toBe('#f7f8fb')
+  const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  expect(bodyBg).toBe('rgb(6, 7, 12)')
+})
+
+test('a fonte do design system esta aplicada', async ({ page }) => {
+  await login(page)
+  const fonte = await page.evaluate(() => getComputedStyle(document.body).fontFamily)
+  expect(fonte).toContain('Inter')
 })

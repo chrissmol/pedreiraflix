@@ -1,10 +1,9 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLockGate from './components/AppLockGate'
 import AutoLogout from './components/AutoLogout'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
-import { useThemeStore } from './store/theme'
 
 // Code-split per route: nobody navigating straight to /watch needs the movies/series/profiles
 // bundles, and vice versa. LoginPage stays eager (it's what everyone hits first, unauthenticated;
@@ -31,15 +30,7 @@ function RouteFallback() {
 }
 
 export default function App() {
-  const theme = useThemeStore((s) => s.theme)
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    // theme-color pinta a barra de status do Android no app instalado e a barra de titulo do PWA no
-    // Windows. Era fixa no tom escuro, entao no tema claro a moldura do sistema destoava do app inteiro.
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'light' ? '#f7f8fb' : '#06070c')
-  }, [theme])
+
 
   return (
     <BrowserRouter>
