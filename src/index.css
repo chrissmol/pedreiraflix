@@ -83,6 +83,16 @@ body {
   overflow: hidden;
 }
 
+/* O guard de rolagem horizontal precisa estar em quem realmente rola. Quando `<main>` virou o unico
+ * elemento rolavel, `overflow-y: auto` sozinho deixa o eixo X como `auto` tambem, entao qualquer coisa
+ * mais larga (os circulos decorativos de glow usam posicao negativa de proposito) voltava a permitir
+ * arrastar a tela para o lado. A classe `overflow-x-hidden` em Layout.tsx fecha isso; esta regra cobre
+ * o caso de alguem criar outro container rolavel e esquecer. */
+#main-content {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   /* Much fainter than before — a bare hint of tint instead of an obvious blue wash across the page. */
   background-image:
