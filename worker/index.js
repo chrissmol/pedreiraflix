@@ -138,6 +138,43 @@ async function xtream(url) {
   }
 }
 
+// Este provedor da 502/504 e picos de latencia de varios segundos sob carga — esta documentado no
+// proprio projeto. O hls.js absorve isso com a politica de retry configurada no player, mas o Safari
+// toca HLS nativamente (de proposito: so assim o AirPlay manda video, e nao so audio para a TV), e o
+// player nativo desiste bem mais facil. Resultado relatado: o canal congela e nao volta mais.
+//
+// Retentar aqui transforma uma falha passageira do provedor numa resposta um pouco mais lenta, em vez de
+// um erro que a TV nao tenta de novo. GET e idempotente, inclusive com Range, entao repetir e seguro.
+// Nao se retenta 4xx (nao adianta) nem 429 (seria insistir em quem ja pediu para parar).
+const RETRY_STATUSES = new Set([502, 503, 504])
+const UPSTREAM_ATTEMPTS = 3
+
+async function fetchUpstream(target, request) {
+  let lastError
+  for (let attempt = 0; attempt < UPSTREAM_ATTEMPTS; attempt++) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 15_000)
+    try {
+      const res = await fetch(target, {
+        headers: request.headers.has('range')
+          ? { ...UPSTREAM_HEADERS, range: request.headers.get('range') }
+          : UPSTREAM_HEADERS,
+        signal: ctrl.signal,
+      })
+      clearTimeout(timer)
+      if (!RETRY_STATUSES.has(res.status) || attempt === UPSTREAM_ATTEMPTS - 1) return res
+      // Descartar explicitamente: a resposta sera substituida pela da proxima tentativa.
+      res.body?.cancel()
+    } catch (e) {
+      clearTimeout(timer)
+      lastError = e
+      if (attempt === UPSTREAM_ATTEMPTS - 1) throw e
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)))
+  }
+  throw lastError
+}
+
 async function stream(request, url) {
   let target
   try {
@@ -147,21 +184,12 @@ async function stream(request, url) {
   }
   if (!isAllowed(target)) return new Response('host not allowed', { status: 403 })
 
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), 15_000)
   let up
   try {
-    up = await fetch(target, {
-      headers: request.headers.has('range')
-        ? { ...UPSTREAM_HEADERS, range: request.headers.get('range') }
-        : UPSTREAM_HEADERS,
-      signal: ctrl.signal,
-    })
+    up = await fetchUpstream(target, request)
   } catch (e) {
     const timedOut = e.name === 'AbortError'
     return new Response(timedOut ? 'upstream timed out' : 'upstream fetch failed', { status: timedOut ? 504 : 502 })
-  } finally {
-    clearTimeout(timer)
   }
 
   const headers = new Headers()
