@@ -46,9 +46,15 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
   useEffect(() => {
     if (!visible || !client) return
     let cancelled = false
-    cached(`epg-now:${channel.streamId}`, () => client.getShortEpg(channel.streamId, 1))
+    cached(`epg-now:${channel.streamId}`, () => client.getShortEpg(channel.streamId, 2))
       .then((programs) => {
-        if (!cancelled) setProgram(programs[0] ?? null)
+        if (cancelled) return
+        // O cache e stale-while-revalidate: entrega o valor guardado (de ate 24h) e so depois atualiza em
+        // segundo plano. Para "o que esta no ar agora" isso significa mostrar o programa de ontem como se
+        // fosse o atual. Entao o que importa nao e a idade da entrada, e sim se o programa ja acabou —
+        // por isso vem dois, e fica o primeiro que ainda nao terminou.
+        const now = Date.now()
+        setProgram(programs.find((p) => toDate(p.end).getTime() > now) ?? null)
       })
       // No EPG for this channel is the normal case on many providers, not an error worth showing.
       .catch(() => {})
