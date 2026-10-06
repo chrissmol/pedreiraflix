@@ -144,7 +144,7 @@ export default function Layout() {
       </a>
       <TopNav />
       {sessionWarning && (
-        <div className="absolute inset-x-0 top-14 z-40 flex items-center justify-between gap-3 bg-amber-500/95 px-4 py-2 text-sm font-medium text-black sm:top-16">
+        <div className="absolute inset-x-0 top-14 z-40 flex items-center justify-between gap-3 bg-rating/95 px-4 py-2 text-label-md text-black sm:top-16">
           <span>{sessionWarning}</span>
           <button onClick={dismissWarning} className="shrink-0 rounded px-2 py-0.5 hover:bg-black/10">
             ✕

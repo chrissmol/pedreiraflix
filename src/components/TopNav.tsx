@@ -4,9 +4,8 @@ import { useDialogA11y } from '../hooks/useDialogA11y'
 import { clearAllCaches } from '../lib/cache'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
-import { useThemeStore } from '../store/theme'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Moon, RefreshCw, Search, Sun, User } from './icons'
+import { Download, RefreshCw, Search, User } from './icons'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 
@@ -32,8 +31,6 @@ export default function TopNav() {
   const activeProfile = useActiveProfile()
   const profiles = useProfiles()
   const setActiveProfile = useProfilesStore((s) => s.setActiveProfile)
-  const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggle)
   const [pinTarget, setPinTarget] = useState<Profile | null>(null)
   const [confirmClearCache, setConfirmClearCache] = useState(false)
   const [clearingCache, setClearingCache] = useState(false)
@@ -113,15 +110,15 @@ export default function TopNav() {
         PedreiraFlix
       </span>
 
-      <nav className="hidden gap-1 text-sm font-medium text-zinc-400 sm:flex">
+      <nav className="hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md sm:flex">
         {links.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
             end={l.to === '/'}
             className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 transition-colors ${
-                isActive ? 'bg-brand-500/12 text-white' : 'hover:text-white'
+              `rounded-full px-4 py-1.5 transition-colors ${
+                isActive ? 'bg-surface-high text-white shadow-[0_0_24px_-2px_rgba(15,123,255,0.35)]' : 'hover:text-white'
               }`
             }
           >
@@ -132,7 +129,7 @@ export default function TopNav() {
 
       <form ref={searchRef} onSubmit={handleSearch} className="group relative ml-auto flex items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-brand-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
             type="search"
             enterKeyHint="search"
@@ -152,7 +149,7 @@ export default function TopNav() {
             // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
             // header (and anything anchored to the search box, like its suggestions dropdown) past the
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            className="brand-focus w-10 rounded-full border border-zinc-800 bg-zinc-900/70 py-1.5 pl-8 pr-3 text-sm text-white transition-all duration-300 placeholder:text-zinc-500 focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            className="brand-focus h-10 w-10 rounded-full border border-outline-soft bg-surface-container pl-8 pr-3 text-body-md text-white transition-all duration-300 placeholder:text-on-surface-muted focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -163,7 +160,7 @@ export default function TopNav() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
           style={activeProfile ? { background: activeProfile.color } : undefined}
-          className="glow-border flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white transition-transform hover:scale-105"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105"
         >
           {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
         </button>
@@ -173,10 +170,10 @@ export default function TopNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu da conta"
-            className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 text-sm shadow-2xl backdrop-blur-xl"
+            className="menu-panel absolute right-0 mt-2 w-64"
           >
-            <p className="truncate px-2 py-1.5 text-zinc-400">
-              {activeProfile?.name} <span className="text-zinc-400">· {user?.username}</span>
+            <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
+              {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
             </p>
             {profiles.length > 1 && (
               <div className="my-1 space-y-0.5">
@@ -186,10 +183,10 @@ export default function TopNav() {
                     <button
                       key={p.id}
                       onClick={() => switchTo(p)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+                      className="menu-option"
                     >
                       <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-label-badge font-bold text-white"
                         style={{ background: p.color }}
                       >
                         {p.name[0]?.toUpperCase()}
@@ -204,38 +201,31 @@ export default function TopNav() {
                 setMenuOpen(false)
                 navigate('/profiles')
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
-              <User className="h-4 w-4 text-zinc-400" /> Gerenciar perfis
+              <User className="h-4 w-4 text-on-surface-variant" /> Gerenciar perfis
             </button>
             <button
               onClick={() => {
                 setMenuOpen(false)
                 navigate('/downloads')
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
-              <Download className="h-4 w-4 text-zinc-400" /> Downloads
-            </button>
-            <button
-              onClick={toggleTheme}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-zinc-400" /> : <Moon className="h-4 w-4 text-zinc-400" />}
-              Tema {theme === 'dark' ? 'claro' : 'escuro'}
+              <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
             </button>
             <button
               onClick={() => {
                 setMenuOpen(false)
                 setConfirmClearCache(true)
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-white transition-colors hover:bg-white/10 active:bg-white/10"
+              className="menu-option"
             >
-              <RefreshCw className="h-4 w-4 text-zinc-400" /> Limpar cache
+              <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
             </button>
             <button
               onClick={logout}
-              className="mt-1 w-full rounded-lg px-2 py-2.5 text-left text-rose-400 transition-colors hover:bg-rose-500/10 active:bg-rose-500/10"
+              className="menu-option mt-1 text-live hover:bg-live/10 active:bg-live/10"
             >
               Sair
             </button>

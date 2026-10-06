@@ -1,15 +1,70 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Apple's own system-font stack, not a downloaded webfont — SF Pro isn't licensed for general web
-   * embedding, but -apple-system/BlinkMacSystemFont resolve to real San Francisco natively on every
-   * Apple device (Mac, iPhone, iPad), which is the actual "feels like Apple" win, for free and with zero
-   * network request. Everywhere else it falls back to that platform's own native font (Segoe UI on
-   * Windows, Roboto on Android/Chrome OS) — still native-feeling, just not Apple's specific typeface. One
-   * stack for both sans and display now (Apple doesn't use a separate display face either, just heavier
-   * weights of the same SF Pro) — replaces the two Google-hosted fonts (Manrope/Sora) this used before. */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Inter, do design system adotado (design/stitch/DESIGN.md), com a pilha nativa de cada plataforma
+   * como fallback — se o Google Fonts estiver fora, o texto continua legivel em vez de cair numa serifa
+   * padrao do navegador. */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* --- Design system "Cinematic Obsidian" (design/stitch3/BRAND-BOOK.md) --------------------------
+   * O brand book e a referencia canonica, e e ele que vale quando conflita com o DESIGN.md da
+   * primeira rodada (que trazia uma escala tipografica maior e a paleta generica do Material 3).
+   * O brand book usa as cores que o app ja tinha e proibe explicitamente o brilho azul difuso — a
+   * mesma decisao tomada aqui em 28/09. */
+  --color-surface: #06070c;
+  --color-surface-lowest: #0d0e13;
+  --color-surface-low: #121319;
+  --color-surface-container: #1a1b21;
+  --color-surface-high: #22232b;
+  --color-surface-highest: #2b2d36;
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #a1a1aa;
+  --color-on-surface-muted: #71717a;
+  --color-outline-soft: rgba(255, 255, 255, 0.08);
+  --color-outline-strong: rgba(255, 255, 255, 0.16);
+
+  /* Status, do brand book. */
+  --color-live: #ff3b30;
+  --color-done: #34c759;
+  --color-rating: #ffb800;
+
+  /* Escala tipografica do brand book. */
+  --text-display-hero: 48px;
+  --text-display-hero--line-height: 1.1;
+  --text-display-hero--font-weight: 700;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 1.2;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 1.3;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 16px;
+  --text-headline-sm--line-height: 1.4;
+  --text-headline-sm--font-weight: 500;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.5;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 1.5;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 1.45;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 1.4;
+  --text-label-md--font-weight: 500;
+  --text-label-badge: 12px;
+  --text-label-badge--line-height: 1.4;
+  --text-label-badge--font-weight: 500;
+
+  /* Raios e espacamentos do brand book. */
+  --radius-card: 0.75rem;
+  --radius-panel: 1rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-margin-mobile: 1rem;
+  --spacing-margin: 3rem;
 
   /* PedreiraFlix electric-blue brand scale */
   --color-brand-50: #eaf4ff;
@@ -26,37 +81,10 @@
 
 :root {
   color-scheme: dark;
-  /* Apple-style elevation: a soft, mostly-neutral drop shadow and a hairline border, instead of a
-   * colored halo around every glowing element. The brand blue still shows up (buttons, badges, focus
-   * rings), just as a normal accent color, not as ambient light bleeding off of everything it touches. */
-  --glow-soft: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
-  --glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 28px -8px rgba(0, 0, 0, 0.55);
   --app-bg: #06070c;
   --app-fg: #f1f5fb;
 }
 
-/* Light theme: every existing bg-zinc-N, text-white, bg-black and border-zinc-N class in the app
- * resolves to these CSS custom properties (Tailwind v4 compiles color utilities to var(--color-N)), so
- * overriding the scale here re-themes the whole app without touching each component. The scale is
- * inverted: what read as near-black background (zinc-900/950) becomes near-white, and vice versa. */
-:root[data-theme='light'] {
-  color-scheme: light;
-  --app-bg: #f7f8fb;
-  --app-fg: #10131a;
-  --color-white: #10131a;
-  --color-black: #ffffff;
-  --color-zinc-50: #18181b;
-  --color-zinc-100: #27272a;
-  --color-zinc-200: #3f3f46;
-  --color-zinc-300: #52525b;
-  --color-zinc-400: #71717a;
-  --color-zinc-500: #a1a1aa;
-  --color-zinc-600: #d4d4d8;
-  --color-zinc-700: #e4e4e7;
-  --color-zinc-800: #f4f4f5;
-  --color-zinc-900: #fafafa;
-  --color-zinc-950: #ffffff;
-}
 
 html,
 body,
@@ -165,23 +193,6 @@ body {
     inset 0 -1px 0 rgba(0, 0, 0, 0.2),
     0 8px 30px -10px rgba(0, 0, 0, 0.5);
 }
-:root[data-theme='light'] .glass-panel {
-  background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, 0.15) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 245, 0.93));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 8px 30px -10px rgba(0, 0, 0, 0.18);
-}
-
-.glow-border {
-  box-shadow: var(--glow-soft);
-}
-
-.glow-border-strong {
-  box-shadow: var(--glow-strong);
-}
 
 /* No glow anymore — Apple's own wordmarks/headlines are just crisp, high-contrast type, not lit up. Kept
  * as a class (rather than removed from callers) so it's still one place to reintroduce a treatment later. */
@@ -280,10 +291,6 @@ img {
   background-size: 400% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
 }
-:root[data-theme='light'] .skeleton {
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 25%, rgba(0, 0, 0, 0.09) 37%, rgba(0, 0, 0, 0.04) 63%);
-  background-size: 400% 100%;
-}
 
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
  * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
@@ -298,4 +305,77 @@ img {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Botoes do Stitch, iguais em todas as telas: pilula azul para a acao principal, pilula translucida
+   para as demais. `btn-icon` e a versao quadrada (so icone) da secundaria. */
+@utility btn-primary {
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-all duration-200 hover:bg-brand-400 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-500 sm:px-8;
+}
+@utility btn-secondary {
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-surface-high/70 px-5 text-label-md text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95 disabled:opacity-50 sm:px-6;
+}
+@utility btn-icon {
+  @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-high/70 text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95;
+}
+
+/* Padrao do Stitch para player e menus: botoes redondos translucidos, paineis escuros arredondados e opcoes com
+   a selecionada em azul e um check. Um lugar so, para todos os menus e selects do app ficarem iguais. */
+@utility player-btn {
+  @apply inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-black/45 px-2.5 text-label-md text-white backdrop-blur-md transition-colors hover:bg-white/15 active:bg-white/20;
+}
+@utility player-btn-active {
+  @apply bg-brand-500/25 text-brand-300 hover:bg-brand-500/35;
+}
+@utility menu-panel {
+  @apply overflow-hidden rounded-2xl border border-outline-soft bg-surface-lowest/95 p-1.5 text-body-md shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl;
+}
+@utility menu-option {
+  @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-white transition-colors hover:bg-surface-high active:bg-surface-high;
+}
+@utility menu-option-active {
+  @apply bg-brand-500/15 font-semibold text-brand-300 after:ml-auto after:content-['✓'];
+}
+@utility menu-label {
+  @apply px-3 pt-3 pb-1 text-label-badge uppercase tracking-wider text-on-surface-muted;
+}
+@utility chip {
+  @apply rounded-full bg-surface-high px-3 py-1.5 text-body-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white;
+}
+
+/* Barras do player (progresso e volume): trilho grosso com a parte ja vista em azul, como no Stitch.
+   `--pct` vem do componente; o input nativo continua cuidando de teclado, toque e acessibilidade. */
+.player-range {
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  background: linear-gradient(to right, var(--color-brand-500) var(--pct, 0%), rgba(255, 255, 255, 0.22) var(--pct, 0%));
+}
+.player-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 123, 255, 0.35);
+}
+.player-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 123, 255, 0.35);
+}
+@media (pointer: coarse) {
+  .player-range {
+    height: 8px;
+  }
+}
+
+/* Cartao de dialogo/aviso do Stitch (o mesmo do login): fundo mais baixo que a pagina, borda suave,
+   cantos grandes. Usado em confirmacoes, PIN, trava do app e aviso de atualizacao. */
+@utility card-panel {
+  @apply rounded-3xl border border-outline-soft bg-surface-lowest shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)];
 }

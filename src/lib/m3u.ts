@@ -256,6 +256,7 @@ export class M3uClient implements ProviderClient {
             plot: null,
             duration: null,
             season: seasonNumber,
+            image: proxyImage(e.logo),
           }))
           .sort((a, b) => a.episodeNum - b.episodeNum),
       }))

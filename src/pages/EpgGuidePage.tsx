@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, Clock } from '../components/icons'
+import { Calendar, ChevronLeft, Clock } from '../components/icons'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
@@ -10,7 +10,9 @@ import type { EpgProgram, LiveChannel } from '../types'
 // Grid window: a couple hours of history (for catch-up) through several hours ahead.
 const WINDOW_BEFORE_MS = 2 * 3600_000
 const WINDOW_AFTER_MS = 6 * 3600_000
-const PX_PER_HOUR = 180
+const PX_PER_HOUR = 200
+// Coluna de canais mais estreita no celular, onde cada pixel de grade conta.
+const channelCol = () => (window.innerWidth < 640 ? 116 : 168)
 
 function watchUrl(ch: LiveChannel, program?: EpgProgram, now = Date.now()) {
   const base = `/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`
@@ -80,53 +82,82 @@ export default function EpgGuidePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowStart, windowEnd])
 
+  // Abre ja no "agora" (como no Stitch), deixando ~1h de historico visivel a esquerda para o catch-up.
+  const gridRef = useRef<HTMLDivElement>(null)
+  const scrolledToNow = useRef(false)
+  const hasChannels = channels.length > 0
+  const CHANNEL_COL = channelCol()
+  useEffect(() => {
+    if (!hasChannels || scrolledToNow.current || !gridRef.current) return
+    scrolledToNow.current = true
+    gridRef.current.scrollLeft = Math.max(0, xFor(now) - (window.innerWidth < 640 ? PX_PER_HOUR / 6 : PX_PER_HOUR))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasChannels])
+
   return (
-    <div className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))]">
-      <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-8">
-        <button
-          onClick={() => navigate('/live')}
-          aria-label="Voltar para Ao Vivo"
-          className="rounded-full p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
-        >
+    <div className="flex h-full flex-col pt-[calc(4rem+env(safe-area-inset-top))]">
+      <div className="flex items-center gap-3 px-4 py-4 sm:px-10">
+        <button onClick={() => navigate('/live')} aria-label="Voltar para Ao Vivo" className="btn-icon h-10 w-10">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="font-display text-xl font-bold text-white">Guia de programação</h1>
+        <Calendar className="h-6 w-6 text-brand-400" />
+        <h1 className="font-display text-headline-md text-white">Guia de programação</h1>
       </div>
 
       {loading && channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Carregando canais...</p>
+        <p className="px-4 py-8 text-center text-on-surface-variant sm:px-10">Carregando canais...</p>
       ) : channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-400 sm:px-8">Nenhum canal nesta categoria.</p>
+        <p className="px-4 py-8 text-center text-on-surface-variant sm:px-10">Nenhum canal nesta categoria.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <div style={{ width: totalWidth + 140 }}>
+        // O grid e a propria area de rolagem (nos dois eixos): so assim a regua de horas gruda no topo e a
+        // coluna de canais na esquerda. Antes a regua era sticky em relacao a pagina, mas morava dentro de
+        // um overflow-x — e acabava deslocada 64px para dentro do grid, por cima da primeira linha.
+        <div ref={gridRef} className="mx-4 mb-4 min-h-0 flex-1 overflow-auto rounded-2xl border border-outline-soft bg-surface-lowest sm:mx-10 sm:mb-6">
+          <div className="relative" style={{ width: totalWidth + CHANNEL_COL }}>
             {/* Hour ruler */}
-            <div className="sticky top-16 z-10 flex border-b border-white/[0.06] bg-[#06070c]/95 backdrop-blur-sm">
-              <div className="w-[140px] shrink-0" />
-              <div className="relative h-8 flex-1">
+            <div className="sticky top-0 z-20 flex border-b border-outline-soft bg-surface-lowest/95 backdrop-blur-md">
+              <div className="sticky left-0 z-10 shrink-0 bg-surface-lowest" style={{ width: CHANNEL_COL }} />
+              <div className="relative h-10 flex-1">
                 {hourMarks.map((m) => (
-                  <span key={m.x} className="absolute top-0 border-l border-white/10 pl-1.5 text-[11px] text-zinc-400" style={{ left: m.x }}>
+                  <span
+                    key={m.x}
+                    className="absolute top-0 flex h-full items-center border-l border-outline-soft pl-2 text-label-badge text-on-surface-variant"
+                    style={{ left: m.x }}
+                  >
                     {m.label}
                   </span>
                 ))}
+                <span
+                  className="absolute top-0 flex h-full items-center gap-1.5 pl-2 text-label-badge font-semibold text-brand-400"
+                  style={{ left: xFor(now) }}
+                >
+                  <span className="h-2 w-2 rounded-full bg-brand-500" /> Agora
+                </span>
               </div>
             </div>
+
+            {/* Linha do "agora" atravessando todos os canais */}
+            <div
+              className="pointer-events-none absolute bottom-0 top-10 z-10 w-0.5 bg-brand-500/70 shadow-[0_0_12px_rgba(15,123,255,0.6)]"
+              style={{ left: CHANNEL_COL + xFor(now) }}
+            />
 
             {channels.map((ch) => {
               const programs = epgByChannel[ch.streamId]
               return (
-                <div key={ch.streamId} data-testid={`epg-row-${ch.streamId}`} className="flex border-b border-white/[0.04]">
+                <div key={ch.streamId} data-testid={`epg-row-${ch.streamId}`} className="flex border-b border-outline-soft/60">
                   <button
                     onClick={() => navigate(watchUrl(ch))}
-                    className="flex w-[140px] shrink-0 items-center gap-2 border-r border-white/[0.06] bg-[#06070c] px-2.5 py-3 text-left transition-colors hover:bg-white/5"
+                    style={{ width: CHANNEL_COL }}
+                    className="sticky left-0 z-10 flex shrink-0 items-center gap-2.5 border-r border-outline-soft bg-surface-low px-3 py-3 text-left transition-colors hover:bg-surface-container"
                   >
-                    {ch.streamIcon && <img src={ch.streamIcon} alt="" className="h-6 w-6 shrink-0 object-contain" />}
-                    <span className="line-clamp-2 text-xs text-zinc-300">{ch.name}</span>
+                    {ch.streamIcon && <img src={ch.streamIcon} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-8 sm:w-8" />}
+                    <span className="line-clamp-2 text-body-sm font-medium text-white sm:text-label-md">{ch.name}</span>
                   </button>
 
-                  <div className="relative flex-1" style={{ height: 56 }}>
+                  <div className="relative flex-1" style={{ height: 68 }}>
                     {programs === undefined ? (
-                      <div className="skeleton absolute inset-y-1.5 left-2 right-2 rounded-md" />
+                      <div className="skeleton absolute inset-y-1.5 left-2 right-2 rounded-xl" />
                     ) : (
                       programs
                         // The API's timestamps are Unix seconds; windowStart/windowEnd (and `now`) are
@@ -149,21 +180,30 @@ export default function EpgGuidePage() {
                               disabled={!playable}
                               onClick={() => navigate(watchUrl(ch, p, now))}
                               title={`${formatEpgTime(p.start)}–${formatEpgTime(p.end)} · ${p.title}${p.description ? `\n${p.description}` : ''}`}
-                              className={`absolute inset-y-1.5 overflow-hidden rounded-md border px-2 py-1 text-left text-xs transition-colors ${
+                              className={`absolute inset-y-1.5 overflow-hidden rounded-xl px-3 py-1.5 text-left transition-colors ${
                                 isNow
-                                  ? 'border-brand-400/60 bg-brand-500/20 text-white hover:bg-brand-500/30'
+                                  ? 'border-b-2 border-brand-500 bg-surface-high text-white hover:bg-surface-highest'
                                   : isPast
                                     ? playable
-                                      ? 'border-white/10 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
-                                      : 'cursor-default border-white/5 bg-zinc-900/40 text-zinc-600'
-                                    : 'cursor-default border-white/5 bg-zinc-900/60 text-zinc-400'
+                                      ? 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
+                                      : 'cursor-default bg-surface-low/60 text-on-surface-muted'
+                                    : 'cursor-default bg-surface-container text-on-surface-variant'
                               }`}
-                              style={{ left, width }}
+                              style={{ left: left + 2, width: width - 4 }}
                             >
-                              <span className="line-clamp-1 font-medium">{p.title}</span>
-                              {isPast && p.hasArchive && ch.hasArchive && (
-                                <span className="mt-0.5 flex items-center gap-1 text-[10px] text-brand-300">
-                                  <Clock className="h-2.5 w-2.5" /> Assistir de novo
+                              <span className="flex items-center gap-2">
+                                <span className="line-clamp-1 text-label-md">{p.title}</span>
+                                {isNow && width > 160 && (
+                                  <span className="ml-auto shrink-0 rounded bg-live px-1.5 py-0.5 text-label-badge font-bold text-white">NO AR</span>
+                                )}
+                              </span>
+                              {isPast && p.hasArchive && ch.hasArchive ? (
+                                <span className="mt-0.5 flex items-center gap-1 whitespace-nowrap text-label-badge text-brand-300">
+                                  <Clock className="h-3 w-3" /> Assistir de novo
+                                </span>
+                              ) : (
+                                <span className="mt-0.5 block truncate text-label-badge text-on-surface-muted">
+                                  {formatEpgTime(p.start)}–{formatEpgTime(p.end)}
                                 </span>
                               )}
                             </button>

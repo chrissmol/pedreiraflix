@@ -25,6 +25,13 @@ export function formatRuntime(raw: string | null): string | null {
   return total >= 60 ? `${Math.floor(total / 60)}h ${total % 60 > 0 ? `${total % 60}min` : ''}`.trim() : `${total}min`
 }
 
+/** "Faltam 18 min" diz mais do que "68% assistido" na hora de escolher o que ver agora. */
+export function formatRemaining(positionSeconds: number, durationSeconds: number): string {
+  const left = Math.max(0, Math.round((durationSeconds - positionSeconds) / 60))
+  if (!durationSeconds || left === 0) return 'Quase no fim'
+  return left >= 60 ? `Faltam ${Math.floor(left / 60)}h ${left % 60}min` : `Faltam ${left} min`
+}
+
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const h = Math.floor(seconds / 3600)

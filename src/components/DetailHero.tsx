@@ -1,0 +1,67 @@
+import type { ReactNode } from 'react'
+
+interface DetailHeroProps {
+  title: string
+  backdrop: string | null
+  poster: string | null
+  rating?: number | null
+  /** Selos curtos ao lado da nota: ano, duracao, "3 temporadas"... */
+  chips: string[]
+  genre?: string | null
+  plot?: string | null
+  credits: { label: string; value: string | null }[]
+  actions: ReactNode
+  footnote?: ReactNode
+}
+
+/** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
+ * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
+export default function DetailHero({ title, backdrop, poster, rating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+  const shownCredits = credits.filter((c) => c.value)
+  return (
+    <section className="relative overflow-hidden">
+      {backdrop && <img src={backdrop} alt="" className="absolute inset-0 h-full max-h-[720px] w-full object-cover opacity-60" />}
+      <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-surface/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-surface/95 via-surface/60 to-transparent" />
+
+      <div className="relative z-10 flex items-end gap-10 px-4 pb-10 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10 sm:pt-32">
+        <div className="min-w-0 max-w-3xl flex-1">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {rating ? (
+              <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge font-semibold text-rating">
+                ★ {rating.toFixed(1)}
+              </span>
+            ) : null}
+            {chips.map((chip) => (
+              <span key={chip} className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-on-surface-variant">
+                {chip}
+              </span>
+            ))}
+          </div>
+          {genre && <p className="mb-2 text-label-badge uppercase tracking-wider text-brand-400">{genre}</p>}
+          <h1 className="font-display text-headline-lg text-white sm:text-display-hero">{title}</h1>
+          {plot && <p className="mt-4 max-w-2xl text-body-md text-on-surface-variant sm:text-body-lg">{plot}</p>}
+          {shownCredits.length > 0 && (
+            <dl className="mt-4 grid max-w-2xl gap-x-6 gap-y-1 text-body-sm sm:grid-cols-[auto_1fr]">
+              {shownCredits.map((c) => (
+                <div key={c.label} className="contents">
+                  <dt className="text-on-surface-muted">{c.label}</dt>
+                  <dd className="mb-1 text-white sm:mb-0">{c.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <div className="mt-6 flex flex-wrap items-center gap-3">{actions}</div>
+          {footnote}
+        </div>
+        {poster && (
+          <img
+            src={poster}
+            alt={title}
+            className="ml-auto hidden w-56 shrink-0 rounded-2xl border border-outline-soft shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] lg:block"
+          />
+        )}
+      </div>
+    </section>
+  )
+}

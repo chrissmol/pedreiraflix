@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from './ConfirmDialog'
 import PosterCard from './PosterCard'
 import Row from './Row'
+import { formatRemaining } from './videoPlayerUtils'
 import { progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 
@@ -44,7 +45,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
                 )}&image=${encodeURIComponent(p.image || '')}${p.seriesId ? `&seriesId=${p.seriesId}` : ''}`,
               )
             }
-            subtitle={`${Math.round((p.positionSeconds / (p.durationSeconds || 1)) * 100)}% assistido`}
+            subtitle={formatRemaining(p.positionSeconds, p.durationSeconds)}
             progressPct={(p.positionSeconds / (p.durationSeconds || 1)) * 100}
           />
           <button
@@ -52,7 +53,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
               e.stopPropagation()
               setRemoveTarget({ key: `${p.kind}-${p.id}`, name: p.name })
             }}
-            className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black pointer-fine:hidden pointer-fine:group-hover:flex"
+            className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-label-badge text-white backdrop-blur-sm hover:bg-live"
             title="Remover de continuar assistindo"
           >
             ✕

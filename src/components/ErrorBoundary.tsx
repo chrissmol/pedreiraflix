@@ -29,14 +29,14 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#06070c] px-4 text-center">
-        <p className="text-lg font-semibold text-white">Algo deu errado</p>
-        <p className="max-w-sm text-sm text-zinc-400">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-surface px-4 text-center">
+        <p className="font-display text-headline-md text-white">Algo deu errado</p>
+        <p className="max-w-sm text-body-md text-on-surface-variant">
           O app encontrou um erro inesperado. Recarregar a página costuma resolver.
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 px-5 py-2.5 text-sm font-bold text-white"
+          className="btn-primary"
         >
           <RefreshCw className="h-4 w-4" /> Recarregar
         </button>

@@ -29,7 +29,7 @@ export function VideoPlayerZappingControls({
         disabled={!onChannelUp}
         aria-label="Próximo canal"
         title="Próximo canal (↑)"
-        className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
+        className="player-btn h-11 w-11 disabled:opacity-30"
       >
         <ChevronUp className="h-5 w-5" />
       </button>
@@ -38,7 +38,7 @@ export function VideoPlayerZappingControls({
         disabled={!onChannelDown}
         aria-label="Canal anterior"
         title="Canal anterior (↓)"
-        className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-transform hover:scale-110 active:bg-black/70 disabled:opacity-30"
+        className="player-btn h-11 w-11 disabled:opacity-30"
       >
         <ChevronDown className="h-5 w-5" />
       </button>

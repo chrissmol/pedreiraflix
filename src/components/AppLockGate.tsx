@@ -27,10 +27,10 @@ export default function AppLockGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black p-4">
-      <div className="glass-panel glow-border w-full max-w-xs rounded-2xl p-6 text-center">
-        <Lock className="mx-auto mb-3 h-8 w-8 text-brand-400" />
-        <p className="mb-4 text-sm font-semibold text-white">Digite o PIN do app</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface p-4">
+      <div className="card-panel w-full max-w-xs p-6 text-center sm:p-8">
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/15 text-brand-400"><Lock className="h-7 w-7" /></span>
+        <p className="font-display mb-5 text-headline-sm text-white">Digite o PIN do app</p>
         <input
           autoFocus
           inputMode="numeric"
@@ -38,11 +38,11 @@ export default function AppLockGate() {
           onChange={(e) => handleChange(e.target.value)}
           maxLength={4}
           aria-label="PIN do app"
-          className={`brand-focus w-full rounded-xl border bg-zinc-900/70 px-3 py-3 text-center text-2xl tracking-[0.5em] text-white ${
-            wrong ? 'border-rose-500/60' : 'border-zinc-800'
+          className={`brand-focus h-14 w-full rounded-2xl border bg-surface-container px-3 text-center text-headline-md tracking-[0.5em] text-white ${
+            wrong ? 'border-live/60' : 'border-outline-soft'
           }`}
         />
-        {wrong && <p className="mt-2 text-xs text-rose-400">PIN incorreto</p>}
+        {wrong && <p className="mt-2 text-body-sm text-live">PIN incorreto</p>}
       </div>
     </div>
   )

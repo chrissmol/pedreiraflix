@@ -35,28 +35,28 @@ export function VideoPlayerDisplayMenu({
       <button
         onClick={onToggle}
         aria-label="Ajustes de exibição"
-        className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:border-brand-400/40"
+        className="player-btn"
       >
         <Sliders className="h-4 w-4" />
         {sleepRemaining != null && <span className="tabular-nums">{sleepRemaining}min</span>}
       </button>
       {open && (
-        <div className="glass-panel absolute right-0 mt-1.5 w-60 overflow-hidden rounded-lg text-sm">
-          <p className="px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">Proporção</p>
+        <div className="menu-panel absolute right-0 mt-2 w-72">
+          <p className="menu-label">Proporção</p>
           {FITS.map((option) => (
             <button
               key={option.value}
               onClick={() => onSelectFit(option.value)}
-              className={`block w-full px-3 py-2.5 text-left transition-colors hover:bg-white/10 active:bg-white/10 ${
-                fit === option.value ? 'text-brand-300' : 'text-white'
-              }`}
+              className={`menu-option ${fit === option.value ? 'menu-option-active' : ''}`}
             >
-              {option.label}
-              <span className="block text-xs text-zinc-400">{option.hint}</span>
+              <span>
+                {option.label}
+                <span className="block text-body-sm font-normal text-on-surface-variant">{option.hint}</span>
+              </span>
             </button>
           ))}
 
-          <p className="border-t border-white/10 px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+          <p className="menu-label mt-1 border-t border-outline-soft">
             Desligar em
           </p>
           <div className="flex flex-wrap gap-1.5 p-3 pt-2">
@@ -64,11 +64,7 @@ export function VideoPlayerDisplayMenu({
               <button
                 key={minutes}
                 onClick={() => onSelectSleep(minutes)}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  (minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes)
-                    ? 'border-brand-400/50 bg-brand-500/15 text-brand-200'
-                    : 'border-zinc-700 text-zinc-300 hover:border-brand-500/40 hover:text-white'
-                }`}
+                className={`chip ${(minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes) ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
               >
                 {minutes === 0 ? 'Nunca' : `${minutes}min`}
               </button>

@@ -51,12 +51,12 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
     }
   }, [downloadKey])
 
-  if (record === undefined) return <div className="pt-32 text-center text-zinc-400">Carregando download...</div>
+  if (record === undefined) return <div className="pt-32 text-center text-on-surface-variant">Carregando download...</div>
   if (!record || !objectUrl) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
-        <p className="text-zinc-400">Este download não foi encontrado neste aparelho.</p>
-        <button onClick={() => navigate('/downloads')} className="text-sm text-brand-300 hover:underline">
+        <p className="text-on-surface-variant">Este download não foi encontrado neste aparelho.</p>
+        <button onClick={() => navigate('/downloads')} className="btn-secondary">
           Ver downloads
         </button>
       </div>

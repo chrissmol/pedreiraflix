@@ -7,14 +7,14 @@ export default function BlockedByProfile() {
   const navigate = useNavigate()
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
-      <Shield className="h-12 w-12 text-zinc-500" />
-      <p className="text-lg font-semibold text-white">Conteúdo bloqueado para este perfil</p>
-      <p className="max-w-sm text-sm text-zinc-400">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-container"><Shield className="h-8 w-8 text-on-surface-variant" /></span>
+      <p className="font-display text-headline-md text-white">Conteúdo bloqueado para este perfil</p>
+      <p className="max-w-sm text-body-md text-on-surface-variant">
         Esse título está numa categoria oculta para perfis infantis. Troque de perfil para assistir.
       </p>
       <button
         onClick={() => navigate('/')}
-        className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+        className="btn-primary mt-2"
       >
         Voltar ao início
       </button>

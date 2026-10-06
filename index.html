@@ -16,10 +16,16 @@
     <meta name="msapplication-TileColor" content="#06070c" />
     <meta name="msapplication-TileImage" content="/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- No Google Fonts anymore: the app uses each platform's native system font (real San Francisco on
-         Apple devices) instead of a downloaded webfont — see the --font-sans/--font-display comment in
-         index.css. One less network request on every load, and Apple doesn't license SF Pro for general
-         web embedding anyway. -->
+    <!-- Inter: a fonte do design system "Cinematic Obsidian" (design/stitch/DESIGN.md). Substitui a
+         pilha de fonte do sistema que o app usava antes; por isso o CSP do Worker voltou a liberar
+         fonts.googleapis.com/fonts.gstatic.com (worker/index.js). A pilha do sistema segue como
+         fallback no --font-sans, para a tela nao ficar sem fonte se o Google estiver fora. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>PedreiraFlix</title>
   </head>
   <body>

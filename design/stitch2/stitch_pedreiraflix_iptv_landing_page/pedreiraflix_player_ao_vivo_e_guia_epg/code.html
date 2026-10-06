@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-dim": "#121319", "tertiary-container": "#ef671a", "on-error": "#690005", "secondary-fixed-dim": "#a7c8ff", "on-primary-container": "#00285c", "secondary-container": "#3491fc", "on-background": "#e3e1ea", "on-secondary-fixed": "#001c3b", "inverse-primary": "#005ac1", "on-surface-variant": "#c1c6d7", "inverse-surface": "#e3e1ea", "on-error-container": "#ffdad6", "surface-tint": "#adc6ff", "surface-container-low": "#1a1b21", "primary-fixed": "#d8e2ff", "surface-container": "#1e1f25", "tertiary-fixed-dim": "#ffb595", "primary": "#adc6ff", "surface": "#121319", "on-primary-fixed-variant": "#004494", "background": "#121319", "on-tertiary": "#571e00", "on-tertiary-fixed": "#351000", "secondary": "#a7c8ff", "on-primary-fixed": "#001a41", "error": "#ffb4ab", "surface-container-highest": "#33343b", "surface-container-lowest": "#0d0e13", "outline": "#8b90a0", "surface-variant": "#33343b", "primary-fixed-dim": "#adc6ff", "on-secondary": "#003060", "secondary-fixed": "#d5e3ff", "on-secondary-fixed-variant": "#004787", "outline-variant": "#414754", "error-container": "#93000a", "on-tertiary-fixed-variant": "#7c2e00", "tertiary": "#ffb595", "tertiary-fixed": "#ffdbcc", "on-primary": "#002e69", "primary-container": "#4c8eff", "on-surface": "#e3e1ea", "on-tertiary-container": "#4c1a00", "on-secondary-container": "#002a54", "inverse-on-surface": "#2f3036", "surface-bright": "#38393f", "surface-container-high": "#292a30" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "space-sm": "0.5rem", "margin-mobile": "1rem", "gutter-mobile": "0.75rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-lg": "1.5rem", "margin": "3rem", "space-xl": "2.5rem" }, "fontFamily": { "headline-lg-mobile": ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "body-lg": ["Inter"], "headline-sm": ["Inter"], "body-md": ["Inter"], "display-hero-mobile": ["Inter"], "headline-lg": ["Inter"], "display-hero": ["Inter"], "label-badge": ["Inter"], "body-sm": ["Inter"] }, "fontSize": { "headline-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.025em", "fontWeight": "700" }], "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "label-badge": ["11px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_12px_32px_-4px_rgba(0,0,0,0.7)]"><div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-DEFAULT bg-primary-container flex items-center justify-center shadow-[0_0_24px_-2px_rgba(15,123,255,0.35)]"><span class="material-symbols-outlined text-on-primary-container text-[22px]">play_circle</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">PEDREIRA<span class="text-primary-container">FLIX</span></span><div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span><span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-widest">4K Ultra Stream</span></div></div></div><nav class="hidden xl:flex items-center gap-space-xs bg-surface-container-low/70 px-space-xs py-1 rounded-full backdrop-blur-md" data-active-classes="bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(15,123,255,0.45)]"><a aria-current="page" class="px-space-md py-1.5 rounded-full font-label-md transition-all bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(15,123,255,0.45)]" data-path="ao-vivo" href="#">Ao Vivo</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="filmes" href="#">Filmes</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="series" href="#">Séries</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="minha-lista" href="#">Minha Lista</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="configuracoes" href="#">Configurações</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center relative"><span class="material-symbols-outlined text-on-surface-variant absolute left-3 text-[18px]">search</span><input class="w-72 lg:w-96 pl-10 pr-12 py-2 bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-full focus:outline-none focus:ring-1 focus:ring-primary-container transition-all" placeholder="Buscar canais, filmes ou séries..." type="text"/><span class="absolute right-3 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-surface-container-high text-on-surface-variant">⌘K</span></div><div class="flex items-center gap-space-sm pl-space-sm"><div class="hidden sm:flex flex-col items-end"><span class="font-label-md text-label-md text-on-surface">Pedreira Family</span><span class="font-label-badge text-label-badge text-secondary">Master Profile</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<div class="w-full px-gutter-mobile lg:px-gutter py-space-sm flex flex-col gap-space-md">
+<!-- Top Status Bar & Stream Vitality Metrics -->
+<div class="w-full bg-surface-container-lowest/80 backdrop-blur-xl px-space-md py-2.5 rounded-DEFAULT flex flex-wrap items-center justify-between gap-space-sm shadow-xl">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse shadow-[0_0_10px_#ef671a]"></span>
+<span class="font-label-badge text-label-badge text-on-surface uppercase tracking-wider font-semibold">Feed Primário CDN-BR-SP01</span>
+</div>
+<div class="h-3.5 w-[1px] bg-surface-container-highest"></div>
+<div class="hidden sm:flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-primary">speed</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Latência: <strong class="text-on-surface font-label-md text-label-md">320ms</strong> (Low-Latency CMAF)</span>
+</div>
+<div class="hidden md:flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">wifi_channel</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Bitrate: <strong class="text-on-surface font-label-md text-label-md">8.420 Kbps (CBR)</strong></span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<div class="flex items-center gap-1 bg-surface-container-high/60 px-space-xs py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-primary">hdr_auto</span>
+<span class="font-label-badge text-label-badge text-primary uppercase">Dolby Vision / Atmos</span>
+</div>
+<button class="flex items-center gap-1 bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-space-sm py-1 rounded-full font-label-badge text-label-badge transition-all" id="toggle-drawer-btn">
+<span class="material-symbols-outlined text-[16px]">side_navigation</span>
+<span class="hidden sm:inline">Alternar Guia Lateral</span>
+</button>
+</div>
+</div>
+<!-- Main Live Workspace (Split Layout) -->
+<div class="w-full grid grid-cols-1 xl:grid-cols-12 gap-space-md items-start">
+<!-- LEFT DRAWER / CHANNEL LIST (Width ~ 380px on 12 cols: 4 cols) -->
+<aside class="xl:col-span-4 flex flex-col gap-space-sm bg-surface-container-lowest/90 backdrop-blur-2xl p-space-sm rounded-DEFAULT shadow-2xl" id="channel-drawer">
+<!-- Drawer Header & Search -->
+<div class="flex flex-col gap-space-xs pb-space-xs">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]">tv</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Grade Ao Vivo</h2>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-badge text-label-badge font-semibold">2.410 Canais</span>
+</div>
+<!-- Channel Search Input -->
+<div class="relative w-full mt-1">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-9 pr-14 py-2 bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-full focus:outline-none focus:ring-1 focus:ring-primary-container transition-all" id="channel-search-input" placeholder="Buscar canal, número ou jogo... [⌘K]" type="text"/>
+<div class="absolute right-2.5 top-2 flex items-center gap-1">
+<button class="text-on-surface-variant hover:text-tertiary-container transition-colors p-0.5" title="Apenas Favoritos">
+<span class="material-symbols-outlined text-[17px]">star</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Filter Categories Pills -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none no-scrollbar">
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-label-badge text-label-badge whitespace-nowrap shadow-[0_0_14px_rgba(15,123,255,0.4)]">Todos (2.410)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge whitespace-nowrap transition-colors">Esportes (184)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge whitespace-nowrap transition-colors">Filmes & Séries (420)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge whitespace-nowrap transition-colors">Abertos (48)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge whitespace-nowrap transition-colors">Notícias (92)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge whitespace-nowrap transition-colors">Infantil (65)</button>
+</div>
+<!-- Channel Scrollable Feed List -->
+<div class="flex flex-col gap-1.5 max-h-[740px] overflow-y-auto pr-1">
+<!-- ACTIVE CHANNEL: 001 Premiere Clubes HD -->
+<div class="group relative flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-high/90 shadow-[0_0_24px_-4px_rgba(15,123,255,0.35)] cursor-pointer transition-all">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center font-headline-sm text-headline-sm text-primary font-bold shadow-inner">
+                  P
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge font-bold text-primary">#001</span>
+<h3 class="font-label-md text-label-md font-bold text-on-surface">Premiere Clubes HD</h3>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-container text-on-tertiary font-label-badge text-label-badge uppercase font-bold animate-pulse">Ao Vivo</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[190px]">Flamengo x Palmeiras - Brasileirão Série A</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<!-- Progresso do Evento Atual -->
+<div class="w-full mt-2.5 flex flex-col gap-1">
+<div class="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full shadow-[0_0_8px_#3491fc]" style="width: 68%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>20:00 - 22:30 (74')</span>
+<div class="flex items-center gap-2">
+<span class="text-secondary font-semibold">1080p 60fps</span>
+<span class="px-1 py-0.2 rounded bg-surface-container font-label-badge text-label-badge text-on-surface-variant">Catch-Up 7d</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel 2: ESPN 4 HD -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  E4
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#002</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">ESPN 4 HD</h3>
+<span class="px-1 py-0.2 rounded bg-surface-container-highest text-on-surface-variant font-label-badge text-label-badge">Ao Vivo</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Arsenal vs Manchester City - Premier League</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 45%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>20:45 - 22:45</span>
+<span>FHD • 380ms</span>
+</div>
+</div>
+</div>
+<!-- Channel 3: SporTV HD -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  ST
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#003</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">SporTV HD</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Troca de Passes - Pré-Jogo & Análises</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 82%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>21:00 - 22:15</span>
+<span>Catch-Up 7d</span>
+</div>
+</div>
+</div>
+<!-- Channel 4: Globo SP 4K -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  G4
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#004</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Globo SP 4K</h3>
+<span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary font-label-badge text-label-badge font-bold">4K HDR</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Jornal Nacional - Edição Noturna</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 30%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>20:30 - 21:20</span>
+<span>UHD H.265</span>
+</div>
+</div>
+</div>
+<!-- Channel 5: HBO Signature HD -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  HB
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#021</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">HBO Signature HD</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Duna: Parte 2 (2024) [Dub/Leg]</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 55%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>20:15 - 23:05</span>
+<span>5.1 Surround</span>
+</div>
+</div>
+</div>
+<!-- Channel 6: Telecine Premium HD -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  TC
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#035</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Telecine Premium HD</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Oppenheimer (Recém-Iniciado)</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 14%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>21:00 - 00:00</span>
+<span>Catch-Up 7d</span>
+</div>
+</div>
+</div>
+<!-- Channel 7: Discovery Channel HD -->
+<div class="group flex flex-col p-space-sm rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center font-label-md text-label-md text-on-surface-variant font-semibold">
+                  DC
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-badge text-label-badge text-on-surface-variant font-medium">#052</span>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Discovery Channel HD</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[210px]">Planeta Selvagem: Predadores do Ártico</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+</button>
+</div>
+<div class="w-full mt-2 flex flex-col gap-1">
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 90%;"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge">
+<span>20:00 - 21:15</span>
+<span>Finalizando</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- RIGHT / MAIN LIVE VIDEO PLAYER & EPG SECTION (8 cols on desktop) -->
+<section class="xl:col-span-8 flex flex-col gap-space-md w-full" id="player-and-epg-section">
+<!-- VIDEO CONTAINER (16:9 Cinema Aspect Frame) -->
+<div class="relative w-full aspect-video rounded-DEFAULT overflow-hidden bg-surface-container-lowest shadow-2xl group select-none" id="video-stage">
+<!-- Background Video Mockup / Stadium Broadcast Visual -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center" data-alt="Panoramic high resolution 4K view of a packed football stadium under bright floodlights during an intense night match. Vibrant green pitch with dynamic match action, blurred crowd in background, cinematic volumetric blue and warm arena lighting with realistic depth of field." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCC7BF_U_v3ry9uYiSruEYbLHNZ5_KBNriEZkynMTbl5jIWrU_mEe7jw0zZI_eZSU7EDS_Vw1G8HYs8zEKpx1v44vNVc4qzCaPu_8yO3YPYouz6nGr53_MG9vyBwhYpPY2ljhhVsdPLyiR_p0r0D26gqQIgTSlPfBXYveaFmMhNrpQAmWZjuZVhuqpJCLazfJF1wvee-aDLzRIHnV2Pvlc5SoB3Ur_OHe5e5Y4ajus')">
+<!-- Ambient Dynamic Scrim -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/30 to-surface-container-lowest/70 backdrop-blur-[0.5px]"></div>
+</div>
+<!-- TOP BAR OSD OVERLAY -->
+<div class="absolute top-0 inset-x-0 p-space-md flex items-center justify-between gap-space-sm z-30 transition-opacity duration-300">
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-2 bg-surface-container-lowest/75 backdrop-blur-md px-3 py-1 rounded-full shadow-lg">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">001 • Premiere Clubes HD</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary font-label-badge text-label-badge uppercase font-bold">Ao Vivo</span>
+</div>
+<div class="hidden sm:flex items-center gap-1.5 bg-surface-container-lowest/60 backdrop-blur-md px-2.5 py-1 rounded-full text-on-surface-variant font-label-badge text-label-badge">
+<span>1080p 60fps</span>
+<span>•</span>
+<span>HLS v7</span>
+<span>•</span>
+<span class="text-primary">Buffer: 14s</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high/80 hover:bg-surface-container-highest backdrop-blur-md text-on-surface font-label-badge text-label-badge transition-all" title="Reiniciar do Início (Catch-up)">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container">replay</span>
+<span>Ver do Começo</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest/70 hover:bg-surface-container-high backdrop-blur-md flex items-center justify-center text-on-surface transition-all" title="Picture in Picture">
+<span class="material-symbols-outlined text-[18px]">picture_in_picture_alt</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest/70 hover:bg-surface-container-high backdrop-blur-md flex items-center justify-center text-on-surface transition-all" title="Multi-Tela / Mosaico">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+</button>
+</div>
+</div>
+<!-- MATCH SCOREBOARD OVERLAY (Sports Event Widget) -->
+<div class="absolute top-16 left-space-md z-20 flex flex-col gap-1 pointer-events-none">
+<div class="flex items-center bg-surface-container-lowest/85 backdrop-blur-md rounded-DEFAULT p-2 shadow-2xl gap-3">
+<div class="flex items-center gap-2 pr-2">
+<span class="w-5 h-5 rounded-full bg-error-container text-on-error-container flex items-center justify-center font-label-badge text-label-badge font-bold">FLA</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">2</span>
+</div>
+<span class="text-on-surface-variant font-bold text-label-badge">X</span>
+<div class="flex items-center gap-2 pl-2">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">1</span>
+<span class="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-badge text-label-badge font-bold">PAL</span>
+</div>
+<div class="h-4 w-[1px] bg-surface-container-highest mx-0.5"></div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge font-bold text-tertiary-container">74:18 (2ºT)</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Maracanã • RJ</span>
+</div>
+</div>
+</div>
+<!-- CENTER PLAY/PAUSE WATERMARK INTERACTION -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<button class="w-16 h-16 rounded-full bg-primary-container/85 text-on-primary-container flex items-center justify-center shadow-[0_0_30px_rgba(15,123,255,0.6)] pointer-events-auto transform hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[36px]">pause</span>
+</button>
+</div>
+<!-- BOTTOM OSD CONTROLS BAR -->
+<div class="absolute bottom-0 inset-x-0 p-space-md flex flex-col gap-2 z-30 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent">
+<!-- Interactive Scrub Timeline with Key Match Event Markers -->
+<div class="relative w-full flex flex-col gap-1 group/scrub cursor-pointer">
+<!-- Event Markers (Goals, Cards) on timeline -->
+<div class="relative w-full h-1.5 bg-surface-container-highest/80 rounded-full">
+<!-- Buffer progress -->
+<div class="absolute left-0 top-0 bottom-0 bg-on-surface-variant/30 rounded-full" style="width: 86%;"></div>
+<!-- Playhead current live stream progress -->
+<div class="absolute left-0 top-0 bottom-0 bg-primary-container rounded-full shadow-[0_0_12px_#4c8eff]" style="width: 78%;">
+<span class="absolute -right-1.5 -top-1 w-3.5 h-3.5 rounded-full bg-on-surface shadow-md transform scale-0 group-hover/scrub:scale-100 transition-transform"></span>
+</div>
+<!-- Event Marker 1: Gol Fla 23' -->
+<div class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center" style="left: 24%;" title="24' Gol - Flamengo (G. Barbosa)">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container shadow-[0_0_6px_#ef671a]"></span>
+</div>
+<!-- Event Marker 2: Cartão Amarelo 38' -->
+<div class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center" style="left: 39%;" title="39' Cartão Amarelo (Palmeiras)">
+<span class="w-1.5 h-2 rounded bg-tertiary shadow-sm"></span>
+</div>
+<!-- Event Marker 3: Gol Pal 52' -->
+<div class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center" style="left: 54%;" title="54' Gol - Palmeiras (R. Veiga)">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container shadow-[0_0_6px_#3491fc]"></span>
+</div>
+<!-- Event Marker 4: Gol Fla 68' -->
+<div class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center" style="left: 71%;" title="71' Gol - Flamengo (Pedro)">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container shadow-[0_0_6px_#ef671a]"></span>
+</div>
+</div>
+<!-- Time stamps and live badge -->
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-0.5">
+<div class="flex items-center gap-2">
+<span class="text-on-surface font-semibold">74:18</span>
+<span>/ 90:00+</span>
+<span class="hidden sm:inline text-outline">• Rodada 34 do Brasileirão Série A</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="flex items-center gap-1 text-tertiary-container font-bold hover:brightness-125 transition-all">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+<span>SINCRONIZADO AO VIVO</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Lower Controls Row -->
+<div class="flex flex-wrap items-center justify-between gap-space-xs pt-1">
+<!-- Left: Transport Controls -->
+<div class="flex items-center gap-space-xs">
+<button class="w-9 h-9 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">pause</span>
+</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Voltar 10 segundos">
+<span class="material-symbols-outlined text-[18px]">replay_10</span>
+</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Avançar 10 segundos">
+<span class="material-symbols-outlined text-[18px]">forward_10</span>
+</button>
+<!-- Volume Group -->
+<div class="flex items-center gap-1.5 pl-1">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[19px]">volume_up</span>
+</button>
+<div class="w-16 h-1 bg-surface-container-highest rounded-full overflow-hidden hidden sm:block">
+<div class="h-full bg-primary" style="width: 75%;"></div>
+</div>
+</div>
+</div>
+<!-- Right: Audio, Subtitle, Quality & Sizing Controls -->
+<div class="flex items-center gap-space-xs">
+<!-- Audio Selector Button -->
+<button class="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-badge text-label-badge transition-colors">
+<span class="material-symbols-outlined text-[15px] text-primary">audiotrack</span>
+<span>PT-BR (Dolby 5.1)</span>
+</button>
+<!-- Subtitles Indicator -->
+<button class="w-8 h-8 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Legendas Desativadas">
+<span class="material-symbols-outlined text-[18px]">closed_caption</span>
+</button>
+<!-- Resolution Pill -->
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-badge text-label-badge transition-colors font-bold">
+<span class="material-symbols-outlined text-[14px] text-primary">hd</span>
+<span>1080p60</span>
+</button>
+<!-- Aspect Ratio -->
+<button class="w-8 h-8 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Ajuste de Proporção (16:9 Fit/Fill)">
+<span class="material-symbols-outlined text-[18px]">aspect_ratio</span>
+</button>
+<!-- Fullscreen -->
+<button class="w-9 h-9 rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container flex items-center justify-center shadow-lg transition-colors" title="Tela Cheia">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- INTEGRATED EPG TIMELINE GUIDE (Grade de Programação Abaixo do Player) -->
+<div class="w-full bg-surface-container-lowest/80 backdrop-blur-xl rounded-DEFAULT p-space-md shadow-2xl flex flex-col gap-space-md">
+<!-- EPG Guide Header & Day Selectors -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs border-b border-surface-container-high/40">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]">calendar_view_day</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Guia de Programação (EPG)</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-badge text-label-badge">Sincronizado via Satélite</span>
+</div>
+<!-- Day Selector Tabs -->
+<div class="flex items-center gap-1 overflow-x-auto pb-1">
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge transition-colors">Ontem (Catch-Up)</button>
+<button class="px-3.5 py-1 rounded-full bg-primary-container text-on-primary-container font-label-badge text-label-badge font-semibold shadow-[0_0_12px_rgba(15,123,255,0.4)]">Hoje (Ao Vivo)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge transition-colors">Amanhã (Qui)</button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-badge text-label-badge transition-colors">Sex 15</button>
+</div>
+</div>
+<!-- Timeslot Horizontal Indicator Headers -->
+<div class="grid grid-cols-12 gap-1 text-on-surface-variant font-label-badge text-label-badge pl-28 sm:pl-36">
+<div class="col-span-3 text-primary font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+<span>21:00 (Agora)</span>
+</div>
+<div class="col-span-3">21:30</div>
+<div class="col-span-3">22:00</div>
+<div class="col-span-3">22:30</div>
+</div>
+<!-- EPG Timeline Channels Rows -->
+<div class="flex flex-col gap-2">
+<!-- ROW 1: Premiere Clubes (Active stream) -->
+<div class="flex items-stretch gap-2 w-full">
+<!-- Channel Tag -->
+<div class="w-28 sm:w-36 flex-shrink-0 flex items-center gap-2 p-2 bg-surface-container-high rounded-DEFAULT">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-badge text-label-badge font-bold text-on-surface truncate">Premiere Clubes</span>
+<span class="font-label-badge text-label-badge text-primary">#001 • HD</span>
+</div>
+</div>
+<!-- Programs Slots Grid -->
+<div class="flex-1 grid grid-cols-12 gap-1.5 min-w-0">
+<!-- Program 1: Currently Playing (Spans 8 cols) -->
+<div class="col-span-8 p-2.5 rounded-DEFAULT bg-surface-container-high/90 shadow-[0_0_16px_rgba(15,123,255,0.25)] flex flex-col justify-between cursor-pointer hover:bg-surface-container-highest transition-all relative overflow-hidden">
+<div class="flex items-center justify-between gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface truncate">Ao Vivo: Flamengo vs Palmeiras</span>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-container text-on-tertiary font-label-badge text-label-badge font-bold uppercase">No Ar</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>20:30 - 22:30</span>
+<span class="text-primary font-semibold">Brasileirão Série A • Maracanã</span>
+</div>
+<!-- Progress Bar Line -->
+<div class="absolute bottom-0 inset-x-0 h-0.5 bg-primary-container"></div>
+</div>
+<!-- Program 2: Next Show (Spans 4 cols) -->
+<div class="col-span-4 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface truncate font-semibold">Pós-Jogo: Linha de Passe</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>22:30 - 23:30</span>
+<span>Debate</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ROW 2: SporTV -->
+<div class="flex items-stretch gap-2 w-full">
+<!-- Channel Tag -->
+<div class="w-28 sm:w-36 flex-shrink-0 flex items-center gap-2 p-2 bg-surface-container-low rounded-DEFAULT">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-badge text-label-badge font-bold text-on-surface truncate">SporTV</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">#003 • HD</span>
+</div>
+</div>
+<!-- Programs Slots Grid -->
+<div class="flex-1 grid grid-cols-12 gap-1.5 min-w-0">
+<div class="col-span-6 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Troca de Passes - Pré-Jogo</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>21:00 - 22:15</span>
+<span class="text-secondary font-medium">Ao Vivo</span>
+</div>
+</div>
+<div class="col-span-6 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Circuito Mundial de Surf - Etapa Saquarema</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>22:15 - 23:45</span>
+<span>Compacto</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ROW 3: ESPN 4 HD -->
+<div class="flex items-stretch gap-2 w-full">
+<!-- Channel Tag -->
+<div class="w-28 sm:w-36 flex-shrink-0 flex items-center gap-2 p-2 bg-surface-container-low rounded-DEFAULT">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-badge text-label-badge font-bold text-on-surface truncate">ESPN 4 HD</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">#002 • FHD</span>
+</div>
+</div>
+<!-- Programs Slots Grid -->
+<div class="flex-1 grid grid-cols-12 gap-1.5 min-w-0">
+<div class="col-span-7 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Premier League: Arsenal vs Man City</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>20:45 - 22:45</span>
+<span class="text-secondary font-medium">Ao Vivo</span>
+</div>
+</div>
+<div class="col-span-5 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">SportsCenter Edição da Noite</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>22:45 - 00:00</span>
+<span>Notícias</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ROW 4: Globo SP 4K -->
+<div class="flex items-stretch gap-2 w-full">
+<!-- Channel Tag -->
+<div class="w-28 sm:w-36 flex-shrink-0 flex items-center gap-2 p-2 bg-surface-container-low rounded-DEFAULT">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-badge text-label-badge font-bold text-on-surface truncate">Globo SP 4K</span>
+<span class="font-label-badge text-label-badge text-secondary">#004 • 4K</span>
+</div>
+</div>
+<!-- Programs Slots Grid -->
+<div class="flex-1 grid grid-cols-12 gap-1.5 min-w-0">
+<div class="col-span-3 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Jornal Nacional</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>20:30 - 21:20</span>
+</div>
+</div>
+<div class="col-span-5 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Novela: Renascer</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>21:20 - 22:30</span>
+<span class="text-secondary font-medium">4K HDR</span>
+</div>
+</div>
+<div class="col-span-4 p-2.5 rounded-DEFAULT bg-surface-container-low hover:bg-surface-container flex flex-col justify-between cursor-pointer transition-all">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Futebol 2024</span>
+<div class="flex items-center justify-between text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>22:30 - 00:30</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- DETAILED ACTIVE EVENT BOTTOM CARD -->
+<div class="w-full bg-surface-container-high/60 backdrop-blur-md rounded-DEFAULT p-space-md flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md max-w-2xl">
+<div class="w-12 h-12 rounded-DEFAULT bg-primary-container/20 flex items-center justify-center flex-shrink-0 text-primary-container shadow-inner">
+<span class="material-symbols-outlined text-[28px]">sports_soccer</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-2">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold">Flamengo vs Palmeiras - 34ª Rodada</h4>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-badge text-label-badge text-on-surface-variant">Classificação 12 Anos</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-badge text-label-badge text-on-surface-variant">5.1 Dolby Audio</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+                  Confronto decisivo direto pelo título do Campeonato Brasileiro. Narração oficial de Luis Roberto, com comentários de Caio Ribeiro e Grafite. Imagens exclusivas em 60 quadros por segundo e múltiplas câmeras interativas disponíveis.
+                </p>
+</div>
+</div>
+<!-- Action Buttons for Selected Event -->
+<div class="flex items-center gap-space-xs flex-shrink-0 w-full md:w-auto justify-end">
+<button class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center gap-1.5 transition-all">
+<span class="material-symbols-outlined text-[18px]">bookmark_add</span>
+<span>Gravar no CloudDVR</span>
+</button>
+<button class="px-5 py-2 rounded-full bg-primary-container hover:bg-secondary-container text-on-primary-container font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-[0_0_20px_rgba(15,123,255,0.45)] transition-all">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+<span>Assistir do Início</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<script>
+    // Client-side micro interactions for live streaming player
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleDrawerBtn = document.getElementById('toggle-drawer-btn');
+      const drawer = document.getElementById('channel-drawer');
+      const playerSection = document.getElementById('player-and-epg-section');
+      
+      if (toggleDrawerBtn && drawer && playerSection) {
+        toggleDrawerBtn.addEventListener('click', () => {
+          drawer.classList.toggle('hidden');
+          if (drawer.classList.contains('hidden')) {
+            playerSection.classList.remove('xl:col-span-8');
+            playerSection.classList.add('xl:col-span-12');
+          } else {
+            playerSection.classList.remove('xl:col-span-12');
+            playerSection.classList.add('xl:col-span-8');
+          }
+        });
+      }
+
+      // Quick channel filter search simulation
+      const searchInput = document.getElementById('channel-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const val = e.target.value.toLowerCase();
+          const items = drawer.querySelectorAll('.group.cursor-pointer');
+          items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(val) ? 'flex' : 'none';
+          });
+        });
+      }
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest py-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm text-on-surface-variant"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-on-surface">PEDREIRA<span class="text-primary-container">FLIX</span></span><span>© 2025 Todos os direitos reservados.</span></div><div class="flex items-center gap-space-md font-label-md text-label-md"><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="status" href="#">Status da Rede</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="suporte" href="#">Suporte</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="termos" href="#">Termos de Uso</a></div></div></footer></body></html>

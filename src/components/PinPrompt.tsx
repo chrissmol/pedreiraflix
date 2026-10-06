@@ -31,23 +31,23 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={onCancel}>
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`PIN do perfil ${profile.name}`}
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel glow-border w-full max-w-xs rounded-2xl p-6 text-center"
+        className="card-panel w-full max-w-xs p-6 text-center sm:p-8"
       >
         <span
-          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white"
+          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-headline-md text-white"
           style={{ background: profile.color }}
         >
           {profile.name[0]?.toUpperCase()}
         </span>
-        <p className="mb-1 text-sm font-semibold text-white">{profile.name}</p>
-        <p className="mb-4 flex items-center justify-center gap-1.5 text-xs text-zinc-400">
+        <p className="font-display mb-1 text-headline-sm text-white">{profile.name}</p>
+        <p className="mb-5 flex items-center justify-center gap-1.5 text-body-sm text-on-surface-variant">
           <Lock className="h-3.5 w-3.5" /> Digite o PIN de 4 dígitos
         </p>
         <input
@@ -57,12 +57,12 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
           onChange={(e) => handleChange(e.target.value)}
           maxLength={4}
           aria-label="PIN"
-          className={`brand-focus w-full rounded-xl border bg-zinc-900/70 px-3 py-3 text-center text-2xl tracking-[0.5em] text-white ${
-            wrong ? 'border-rose-500/60' : 'border-zinc-800'
+          className={`brand-focus h-14 w-full rounded-2xl border bg-surface-container px-3 text-center text-headline-md tracking-[0.5em] text-white ${
+            wrong ? 'border-live/60' : 'border-outline-soft'
           }`}
         />
-        {wrong && <p className="mt-2 text-xs text-rose-400">PIN incorreto</p>}
-        <button onClick={onCancel} className="mt-4 text-xs text-zinc-400 hover:text-white">
+        {wrong && <p className="mt-2 text-body-sm text-live">PIN incorreto</p>}
+        <button onClick={onCancel} className="mt-4 text-label-md text-on-surface-variant hover:text-white">
           Cancelar
         </button>
       </div>

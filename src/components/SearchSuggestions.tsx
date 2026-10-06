@@ -64,7 +64,7 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
     // forced it wider than its container, overflowing past the right edge of narrow phones entirely. A
     // fixed width anchored to the input's right edge, capped to the viewport, stays on screen regardless
     // of how wide the input itself currently is.
-    <div className="glass-panel absolute right-0 top-full mt-2 max-h-96 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl text-sm shadow-2xl">
+    <div className="menu-panel absolute right-0 top-full mt-2 max-h-96 w-80 max-w-[calc(100vw-2rem)] overflow-y-auto">
       {results.map((r) => {
         const Icon = KIND_ICON[r.kind]
         return (
@@ -74,21 +74,21 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
               navigate(r.path)
               onNavigate()
             }}
-            className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white/10 active:bg-white/10"
+            className="menu-option py-2"
           >
-            <span className="flex h-10 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-zinc-800">
+            <span className="flex h-12 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-high">
               {r.image ? (
                 <img src={r.image} alt="" className="h-full w-full object-cover" />
               ) : (
-                <Icon className="h-4 w-4 text-zinc-500" />
+                <Icon className="h-4 w-4 text-on-surface-muted" />
               )}
             </span>
             <span className="min-w-0 flex-1 truncate text-white">{r.name}</span>
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KIND_LABEL[r.kind]}</span>
+            <span className="shrink-0 rounded bg-surface-high px-1.5 py-0.5 text-label-badge font-semibold uppercase tracking-wide text-on-surface-variant">{KIND_LABEL[r.kind]}</span>
           </button>
         )
       })}
-      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-zinc-400">Buscando...</p>}
+      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-on-surface-variant">Buscando...</p>}
     </div>
   )
 }

@@ -48,19 +48,19 @@ export function VideoPlayerCenterOverlays({
     <>
       {nextUpVisible && next && !error && (
         <div data-controls className="absolute bottom-24 right-3 z-20 sm:bottom-28 sm:right-6">
-          <div className="glass-panel glow-border flex w-64 flex-col gap-2 rounded-xl p-3">
-            <p className="text-xs text-zinc-400">A seguir</p>
-            <p className="truncate text-sm font-semibold text-white">{next.label}</p>
+          <div className="menu-panel flex w-72 flex-col gap-2 p-4">
+            <p className="text-label-badge uppercase tracking-wider text-brand-400">A seguir</p>
+            <p className="truncate text-label-md text-white">{next.label}</p>
             <div className="flex gap-2">
               <button
                 onClick={onPlayNext}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 py-2 text-xs font-bold text-white hover:brightness-110"
+                className="btn-primary h-10 flex-1 px-4 sm:px-4"
               >
                 <SkipNext className="h-4 w-4" /> Reproduzir
               </button>
               <button
                 onClick={onDismissNextUp}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10"
+                className="btn-secondary h-10 px-4 sm:px-4"
               >
                 Cancelar
               </button>
@@ -72,7 +72,7 @@ export function VideoPlayerCenterOverlays({
       {seekFlash && (
         <div
           key={seekFlash.key}
-          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-sm font-bold text-white ${
+          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/3 items-center justify-center bg-white/10 text-headline-sm text-white ${
             seekFlash.side === -1 ? 'left-0 rounded-r-[100%]' : 'right-0 rounded-l-[100%]'
           }`}
         >
@@ -82,14 +82,14 @@ export function VideoPlayerCenterOverlays({
 
       {buffering && !error && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-brand-400" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-outline-strong border-t-brand-400" />
           {downloadedPct !== null && (
-            <p className="rounded-lg bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm tabular-nums">
+            <p className="rounded-full bg-black/60 px-3 py-1.5 text-label-md text-white backdrop-blur-md tabular-nums">
               {downloadedPct}%
             </p>
           )}
           {showSlowHint && (
-            <p className="rounded-lg bg-black/60 px-3 py-1.5 text-xs text-zinc-300 backdrop-blur-sm">
+            <p className="rounded-full bg-black/60 px-3 py-1.5 text-body-sm text-on-surface-variant backdrop-blur-md">
               Conexão lenta com o servidor — ainda carregando...
             </p>
           )}
@@ -100,7 +100,7 @@ export function VideoPlayerCenterOverlays({
         <button
           data-controls
           onClick={onUnmute}
-          className="glass-panel absolute left-3 top-20 z-20 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-brand-400/40"
+          className="player-btn absolute left-3 top-20 z-20 px-4"
         >
           <VolumeMute className="h-4 w-4" /> Ativar som
         </button>
@@ -109,7 +109,7 @@ export function VideoPlayerCenterOverlays({
       {/* Mouse: just an icon while paused (click anywhere toggles). */}
       {!buffering && !isPlaying && !error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center pointer-coarse:hidden">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-500 shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)]">
             <Play className="ml-1 h-8 w-8 text-white" />
           </div>
         </div>
@@ -127,7 +127,7 @@ export function VideoPlayerCenterOverlays({
               data-controls
               onClick={() => onSkip(-10)}
               aria-label="Voltar 10s"
-              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+              className={`rounded-full bg-black/45 p-3.5 text-white backdrop-blur-md active:bg-white/20 ${controlsVisible ? 'pointer-events-auto' : ''}`}
             >
               <SkipBack className="h-6 w-6" />
             </button>
@@ -136,7 +136,7 @@ export function VideoPlayerCenterOverlays({
             data-controls
             onClick={onTogglePlay}
             aria-label="Play/Pause"
-            className={`rounded-full bg-black/40 p-5 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+            className={`rounded-full bg-brand-500 p-5 text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)] active:scale-95 ${controlsVisible ? 'pointer-events-auto' : ''}`}
           >
             {isPlaying ? <Pause className="h-9 w-9" /> : <Play className="ml-0.5 h-9 w-9" />}
           </button>
@@ -145,7 +145,7 @@ export function VideoPlayerCenterOverlays({
               data-controls
               onClick={() => onSkip(10)}
               aria-label="Avançar 10s"
-              className={`rounded-full bg-black/40 p-3 text-white backdrop-blur-sm active:bg-black/60 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+              className={`rounded-full bg-black/45 p-3.5 text-white backdrop-blur-md active:bg-white/20 ${controlsVisible ? 'pointer-events-auto' : ''}`}
             >
               <SkipForward className="h-6 w-6" />
             </button>
@@ -154,11 +154,11 @@ export function VideoPlayerCenterOverlays({
       )}
 
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/90 text-center text-sm text-rose-300">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface/95 px-6 text-center text-body-md text-red-200">
           <p className="max-w-xs">{error}</p>
           <button
             onClick={onRetry}
-            className="glow-border rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
+            className="btn-primary"
           >
             Tentar novamente
           </button>

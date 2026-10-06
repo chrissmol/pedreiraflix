@@ -37,13 +37,13 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
 
   return (
     <section className="mb-12">
-      <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-lg font-bold text-white sm:px-10">
+      <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-headline-sm text-white sm:px-10 sm:text-headline-md">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-400 to-brand-600 shadow-none" />
         {title}
         {seeAllHref && (
           <Link
             to={seeAllHref}
-            className="brand-focus ml-1 rounded px-1.5 py-0.5 text-xs font-semibold text-zinc-400 transition-colors hover:text-brand-300"
+            className="brand-focus ml-1 rounded-full px-2.5 py-0.5 text-label-badge font-semibold text-brand-400 transition-colors hover:bg-surface-high hover:text-brand-300"
           >
             Ver tudo
           </Link>
@@ -53,7 +53,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         <button
           onClick={() => scrollBy(-600)}
           aria-label={`Rolar "${title}" para a esquerda`}
-          className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-[#06070c] to-transparent transition-opacity sm:flex"
+          className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-surface to-transparent transition-opacity sm:flex"
         >
           <ChevronLeft className="h-8 w-8 text-white" />
         </button>
@@ -67,7 +67,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="skeleton aspect-2/3 w-32 shrink-0 rounded-xl border border-white/5 bg-zinc-900 sm:w-40 md:w-44"
+                  className="skeleton aspect-2/3 w-32 shrink-0 rounded-xl border border-white/5 bg-surface-container sm:w-40 md:w-44"
                 />
               ))
             : children}
@@ -76,7 +76,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         <button
           onClick={() => scrollBy(600)}
           aria-label={`Rolar "${title}" para a direita`}
-          className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-[#06070c] to-transparent transition-opacity sm:flex"
+          className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-surface to-transparent transition-opacity sm:flex"
         >
           <ChevronRight className="h-8 w-8 text-white" />
         </button>

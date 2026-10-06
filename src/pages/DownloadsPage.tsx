@@ -30,17 +30,17 @@ export default function DownloadsPage() {
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <div className="mb-1 flex items-center gap-2">
-        <Download className="h-6 w-6 text-brand-400" />
-        <h1 className="font-display text-2xl font-bold text-white">Downloads</h1>
+        <Download className="h-7 w-7 text-brand-400" />
+        <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Downloads</h1>
       </div>
-      <p className="mb-8 text-sm text-zinc-400">
+      <p className="mb-8 text-body-md text-on-surface-variant">
         {downloads.length === 0
           ? 'Nada baixado neste perfil ainda.'
           : `${downloads.length} título${downloads.length > 1 ? 's' : ''} · ${formatSize(totalBytes)} usados neste aparelho`}
       </p>
 
       {downloads.length === 0 ? (
-        <p className="text-sm text-zinc-400">
+        <p className="text-body-md text-on-surface-variant">
           Toque em "Baixar para ver offline" na página de um filme ou episódio pra ele aparecer aqui.
         </p>
       ) : (
@@ -58,11 +58,11 @@ export default function DownloadsPage() {
                   setDeleteKey(d.key)
                 }}
                 aria-label={`Excluir download de ${d.name}`}
-                className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-500/80 pointer-fine:hidden pointer-fine:group-hover:flex"
+                className="absolute right-1.5 top-1.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur-sm hover:bg-live"
               >
-                <Trash className="h-3 w-3" />
+                <Trash className="h-4 w-4" />
               </button>
-              <span className="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-zinc-300 backdrop-blur-sm">
+              <span className="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1.5 py-0.5 text-label-badge text-white backdrop-blur-sm">
                 {formatSize(d.sizeBytes)}
               </span>
             </div>
@@ -72,7 +72,7 @@ export default function DownloadsPage() {
 
       <button
         onClick={() => navigate('/')}
-        className="mt-6 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-brand-500/40 hover:bg-zinc-800"
+        className="btn-secondary mt-6"
       >
         <Play className="h-4 w-4" /> Voltar ao início
       </button>

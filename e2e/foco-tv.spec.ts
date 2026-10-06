@@ -25,11 +25,18 @@ test('todo elemento focado por teclado mostra um anel visivel', async ({ page })
 test('clique de mouse nao deixa anel de foco para tras', async ({ page }) => {
   await login(page)
   await page.goto('/live')
-  // Botao com rotulo estavel: o de favoritar muda de nome ao ser clicado.
-  const guia = page.getByRole('button', { name: 'Guia' })
-  await guia.hover()
+  // Medido: o Chromium reporta `outline-width: 3px` mesmo com `outline-style: none`, ou seja, mesmo sem
+  // desenhar anel nenhum. Era por isso que este teste oscilava — ele olhava a largura. O que diz se o
+  // anel aparece e o ESTILO.
+  const filtro = page.getByRole('button', { name: 'Com catch-up' })
+  await filtro.hover()
   await page.mouse.down()
   await page.mouse.up()
-  const outlineWidth = await guia.evaluate((el) => getComputedStyle(el).outlineWidth)
-  expect(parseFloat(outlineWidth) || 0).toBeLessThan(2)
+
+  const estado = await filtro.evaluate((el) => ({
+    focusVisible: el.matches(':focus-visible'),
+    estilo: getComputedStyle(el).outlineStyle,
+  }))
+  expect(estado.focusVisible).toBe(false)
+  expect(estado.estilo).toBe('none')
 })

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { matchesQuery } from '../lib/search'
@@ -45,17 +46,20 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
-      <h1 className="mb-6 text-2xl font-bold text-white">Resultados para "{query}"</h1>
+      <h1 className="font-display text-headline-md text-white sm:text-headline-lg mb-8">Resultados para "{query}"</h1>
 
-      {loading && <p className="text-zinc-400">Carregando catálogo...</p>}
-      {!loading && total === 0 && <p className="text-zinc-400">Nenhum resultado encontrado.</p>}
+      {loading && <p className="text-on-surface-variant">Carregando catálogo...</p>}
+      {!loading && total === 0 && <p className="text-on-surface-variant">Nenhum resultado encontrado.</p>}
 
       {results.movies.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold text-white">Filmes</h2>
+          <h2 className="font-display mb-3 flex items-center gap-2 text-headline-sm text-white">
+            <span className="h-4 w-1 rounded-full bg-brand-500" />
+            Filmes
+          </h2>
           <div className="flex flex-wrap gap-3">
             {results.movies.map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} onClick={() => navigate(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => navigate(`/movies/${m.streamId}`)} />
             ))}
           </div>
         </section>
@@ -63,10 +67,13 @@ export default function SearchPage() {
 
       {results.series.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold text-white">Séries</h2>
+          <h2 className="font-display mb-3 flex items-center gap-2 text-headline-sm text-white">
+            <span className="h-4 w-1 rounded-full bg-brand-500" />
+            Séries
+          </h2>
           <div className="flex flex-wrap gap-3">
             {results.series.map((s) => (
-              <PosterCard key={s.seriesId} title={s.name} image={s.cover} onClick={() => navigate(`/series/${s.seriesId}`)} />
+              <PosterCard key={s.seriesId} title={s.name} image={s.cover} badge={Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null} onClick={() => navigate(`/series/${s.seriesId}`)} />
             ))}
           </div>
         </section>
@@ -74,14 +81,16 @@ export default function SearchPage() {
 
       {results.live.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold text-white">Canais</h2>
-          <div className="flex flex-wrap gap-3">
+          <h2 className="font-display mb-3 flex items-center gap-2 text-headline-sm text-white">
+            <span className="h-4 w-1 rounded-full bg-brand-500" />
+            Canais
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3">
             {results.live.map((c) => (
-              <PosterCard
+              <LiveChannelCard
                 key={c.streamId}
-                title={c.name}
-                image={c.streamIcon}
-                onClick={() => navigate(`/watch/live/${c.streamId}?name=${encodeURIComponent(c.name)}`)}
+                channel={c}
+                onOpen={() => navigate(`/watch/live/${c.streamId}?name=${encodeURIComponent(c.name)}`)}
               />
             ))}
           </div>

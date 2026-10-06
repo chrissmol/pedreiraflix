@@ -88,7 +88,7 @@ export default function SeriesPage() {
   return (
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
-        <h1 className="font-display text-2xl font-bold text-white">Séries</h1>
+        <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Séries</h1>
         <FilterBar
           active={[sort !== 'default', minRating > 0, activeYear != null, activeCategory != null].filter(Boolean).length}
         >
@@ -125,13 +125,13 @@ export default function SeriesPage() {
       </div>
 
       {allGenres.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-2 px-4 sm:px-10">
+        <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto px-4 sm:flex-wrap sm:px-10">
           <button
             onClick={() => setActiveGenre(null)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
               activeGenre === null
-                ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
-                : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-brand-500/40 hover:text-white'
+                ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
             }`}
           >
             Todos os gêneros
@@ -140,11 +140,11 @@ export default function SeriesPage() {
             <button
               key={g}
               onClick={() => setActiveGenre(g === activeGenre ? null : g)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeGenre === g
-                  ? 'border-brand-400/60 bg-brand-500/20 text-brand-200'
-                  : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-brand-500/40 hover:text-white'
-              }`}
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
+              activeGenre === g
+                ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
+            }`}
             >
               {g}
             </button>
@@ -154,7 +154,7 @@ export default function SeriesPage() {
 
       <ContinueWatchingRow kind="series" />
 
-      {error && <p className="px-4 text-rose-400 sm:px-10">{error}</p>}
+      {error && <p className="px-4 text-live sm:px-10">{error}</p>}
       <CatalogProgress groups={groups} label="Carregando séries" />
       {loading && groups.length === 0 && <Row title="Carregando..." loading />}
 

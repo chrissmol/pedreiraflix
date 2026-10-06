@@ -19,12 +19,12 @@ export default function FilterBar({ active, children }: FilterBarProps) {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm font-medium text-white transition-colors active:bg-zinc-800 sm:hidden"
+        className="btn-secondary h-11 sm:hidden"
       >
         <Sliders className="h-4 w-4" />
         Filtrar
         {active > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-xs font-bold text-white">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-label-badge font-bold text-white">
             {active}
           </span>
         )}

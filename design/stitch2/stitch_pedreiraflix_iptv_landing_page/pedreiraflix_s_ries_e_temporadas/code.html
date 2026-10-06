@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-dim": "#121319", "tertiary-container": "#ef671a", "on-error": "#690005", "secondary-fixed-dim": "#a7c8ff", "on-primary-container": "#00285c", "secondary-container": "#3491fc", "on-background": "#e3e1ea", "on-secondary-fixed": "#001c3b", "inverse-primary": "#005ac1", "on-surface-variant": "#c1c6d7", "inverse-surface": "#e3e1ea", "on-error-container": "#ffdad6", "surface-tint": "#adc6ff", "surface-container-low": "#1a1b21", "primary-fixed": "#d8e2ff", "surface-container": "#1e1f25", "tertiary-fixed-dim": "#ffb595", "primary": "#adc6ff", "surface": "#121319", "on-primary-fixed-variant": "#004494", "background": "#121319", "on-tertiary": "#571e00", "on-tertiary-fixed": "#351000", "secondary": "#a7c8ff", "on-primary-fixed": "#001a41", "error": "#ffb4ab", "surface-container-highest": "#33343b", "surface-container-lowest": "#0d0e13", "outline": "#8b90a0", "surface-variant": "#33343b", "primary-fixed-dim": "#adc6ff", "on-secondary": "#003060", "secondary-fixed": "#d5e3ff", "on-secondary-fixed-variant": "#004787", "outline-variant": "#414754", "error-container": "#93000a", "on-tertiary-fixed-variant": "#7c2e00", "tertiary": "#ffb595", "tertiary-fixed": "#ffdbcc", "on-primary": "#002e69", "primary-container": "#4c8eff", "on-surface": "#e3e1ea", "on-tertiary-container": "#4c1a00", "on-secondary-container": "#002a54", "inverse-on-surface": "#2f3036", "surface-bright": "#38393f", "surface-container-high": "#292a30" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "space-sm": "0.5rem", "margin-mobile": "1rem", "gutter-mobile": "0.75rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-lg": "1.5rem", "margin": "3rem", "space-xl": "2.5rem" }, "fontFamily": { "headline-lg-mobile": ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "body-lg": ["Inter"], "headline-sm": ["Inter"], "body-md": ["Inter"], "display-hero-mobile": ["Inter"], "headline-lg": ["Inter"], "display-hero": ["Inter"], "label-badge": ["Inter"], "body-sm": ["Inter"] }, "fontSize": { "headline-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.025em", "fontWeight": "700" }], "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "label-badge": ["11px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_12px_32px_-4px_rgba(0,0,0,0.7)]"><div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-DEFAULT bg-primary-container flex items-center justify-center shadow-[0_0_24px_-2px_rgba(15,123,255,0.35)]"><span class="material-symbols-outlined text-on-primary-container text-[22px]">play_circle</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">PEDREIRA<span class="text-primary-container">FLIX</span></span><div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span><span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-widest">4K Ultra Stream</span></div></div></div><nav class="hidden xl:flex items-center gap-space-xs bg-surface-container-low/70 px-space-xs py-1 rounded-full backdrop-blur-md" data-active-classes="bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(15,123,255,0.45)]"><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="ao-vivo" href="#">Ao Vivo</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="filmes" href="#">Filmes</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="series" href="#">Séries</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="minha-lista" href="#">Minha Lista</a><a class="px-space-md py-1.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="configuracoes" href="#">Configurações</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center relative"><span class="material-symbols-outlined text-on-surface-variant absolute left-3 text-[18px]">search</span><input class="w-72 lg:w-96 pl-10 pr-12 py-2 bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-full focus:outline-none focus:ring-1 focus:ring-primary-container transition-all" placeholder="Buscar canais, filmes ou séries..." type="text"/><span class="absolute right-3 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-surface-container-high text-on-surface-variant">⌘K</span></div><div class="flex items-center gap-space-sm pl-space-sm"><div class="hidden sm:flex flex-col items-end"><span class="font-label-md text-label-md text-on-surface">Pedreira Family</span><span class="font-label-badge text-label-badge text-secondary">Master Profile</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Ambient Glow & Radial Scrim -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none"></div>
+<!-- Hero Series Section -->
+<div class="relative w-full">
+<!-- Background Backdrop with Scrim -->
+<div class="absolute inset-0 w-full h-[680px] bg-cover bg-center" data-alt="Cinematic shot of a massive ring-shaped deep space station orbiting a luminescent violet and electric cyan nebula, hyper-realistic reflections on obsidian hulls, faint cosmic dust particles, anamorphic lens flare, moody dark atmospheric cinematography reminiscent of Interstellar and Foundation, ultra-detailed 8k resolution." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcMthg0J_mTZfhg47Absa9hs7zZGNGIsgg3DYFAwVus8Ui_tMUL6XVWdSfN_MoW4VCeCgDmvT-4hYB-IFMck_rPc86n-gu4whb_-Ai3u7qfpKmgrKxL4fOLSwIIY8z3KArqSI-mInS79YhnqeT4ERrduSJjWW40cCvEWliyd6BQss6MeyLppjv6ssFRCxtNlh3t2dn6COOFuWGgh9ozOuuSuOGtWuQy9MzG-6B1n8')">
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-surface-container-lowest/60"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent"></div>
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(15,123,255,0.18),transparent_65%)]"></div>
+</div>
+<!-- Hero Content Container -->
+<div class="relative max-w-[1360px] mx-auto px-gutter-mobile md:px-gutter pt-6 pb-12 flex flex-col gap-space-lg">
+<!-- Breadcrumb & Tagline Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-2">
+<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span>Voltar para Catálogo de Séries</span>
+</a>
+<div class="flex items-center gap-space-xs font-label-badge text-label-badge text-on-surface-variant bg-surface-container-low/80 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+<span class="text-secondary font-semibold">VOD #8492</span>
+<span>•</span>
+<span>Servidor CDN-BR04</span>
+<span>•</span>
+<span class="inline-flex items-center gap-1 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+              Xtream LiveSync
+            </span>
+</div>
+</div>
+<!-- Series Main Identity -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-end mt-4">
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<!-- Metadata Micro-Pills -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2.5 py-1 rounded bg-tertiary-container/20 text-tertiary font-label-badge text-label-badge font-semibold tracking-wider uppercase">
+                Original PedreiraFlix
+              </span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                9.2 IMDb
+              </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/60 text-on-surface-variant font-label-badge text-label-badge">2024</span>
+<span class="px-2 py-0.5 rounded bg-error-container/40 text-error font-label-badge text-label-badge font-bold">16+</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/60 text-on-surface-variant font-label-badge text-label-badge">3 Temporadas</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/60 text-secondary font-label-badge text-label-badge font-semibold">4K ULTRA HD</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/60 text-on-surface font-label-badge text-label-badge font-medium">DOLBY VISION</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest/60 text-primary-fixed-dim font-label-badge text-label-badge font-medium">ATMOS 5.1</span>
+</div>
+<!-- Title & Logline -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<span class="font-label-badge text-label-badge uppercase tracking-widest text-primary font-bold">Épico de Ficção Científica</span>
+<span class="h-1 w-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">Mistério Psicológico Espacial</span>
+</div>
+<h1 class="font-display-hero text-headline-lg-mobile md:text-display-hero text-on-surface tracking-tight leading-none">
+                ODISSEIA ESTELAR
+                <span class="block font-headline-lg text-headline-md md:text-headline-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mt-1">
+                  Além do Vórtice Primordial
+                </span>
+</h1>
+</div>
+<!-- Synopsis -->
+<p class="font-body-lg text-body-md md:text-body-lg text-on-surface-variant max-w-3xl leading-relaxed">
+              Após uma fenda de antimatéria isolar a tripulação da estação Aethelgard nos confins do setor Kepler-452b, a física de bordo Dra. Sarah Vance decodifica transmissões temporais originadas de sua própria mente — emitidas 80 anos no futuro. Uma corrida brutal contra colapsos de gravidade, neuro-alucinações e conspirações de comando.
+            </p>
+<!-- Technical & Cast Details Strip -->
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 font-body-sm text-body-sm text-on-surface-variant">
+<div>
+<span class="text-outline">Criação:</span>
+<span class="text-on-surface font-medium ml-1">Elias Vance, Helena Thorne</span>
+</div>
+<div class="hidden sm:block text-outline-variant">•</div>
+<div>
+<span class="text-outline">Elenco:</span>
+<span class="text-on-surface font-medium ml-1">Kaelen Rivera, Astrid Lind, Marcus Duarte</span>
+</div>
+<div class="hidden sm:block text-outline-variant">•</div>
+<div>
+<span class="text-outline">Áudio:</span>
+<span class="text-on-surface font-medium ml-1">Português (5.1), Inglês (Atmos)</span>
+</div>
+<div class="hidden sm:block text-outline-variant">•</div>
+<div>
+<span class="text-outline">Legendas:</span>
+<span class="text-on-surface font-medium ml-1">PT-BR (CC), EN, ES</span>
+</div>
+</div>
+<!-- Primary Action Buttons Array -->
+<div class="flex flex-wrap items-center gap-space-sm pt-4">
+<!-- Resume Play Button -->
+<button class="group relative flex items-center gap-space-sm bg-primary-container text-on-primary-container px-6 py-3.5 rounded-full font-label-md text-label-md font-semibold hover:bg-secondary-container transition-all shadow-[0_0_32px_-4px_rgba(76,142,255,0.6)] hover:scale-[1.02] active:scale-[0.98]">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<div class="flex flex-col items-start text-left">
+<span class="font-headline-sm text-body-sm leading-tight text-on-primary-container">Continuar T2:E4</span>
+<span class="font-label-badge text-label-badge text-on-primary-container/80">Minuto 18:42 de 54:10</span>
+</div>
+<!-- Mini Progress embedded -->
+<div class="w-12 h-1.5 bg-black/25 rounded-full overflow-hidden ml-2">
+<div class="w-[34%] h-full bg-white rounded-full"></div>
+</div>
+</button>
+<!-- Start From Beginning -->
+<button class="flex items-center gap-2 bg-surface-container-high/90 hover:bg-surface-container-highest text-on-surface px-5 py-3.5 rounded-full font-label-md text-label-md transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">replay</span>
+<span>Do Início (T1:E1)</span>
+</button>
+<!-- Add to My List -->
+<button class="flex items-center gap-2 bg-surface-container-low/80 hover:bg-surface-container-high text-on-surface px-4 py-3.5 rounded-full font-label-md text-label-md transition-all shadow-sm" id="btn-watchlist" onclick="this.classList.toggle('text-primary-container')">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+<span class="hidden sm:inline">Minha Lista</span>
+</button>
+<!-- Download Season -->
+<button class="flex items-center gap-2 bg-surface-container-low/80 hover:bg-surface-container-high text-on-surface px-4 py-3.5 rounded-full font-label-md text-label-md transition-all shadow-sm" title="Baixar Temporada Completa para Offline">
+<span class="material-symbols-outlined text-[20px]">download_for_offline</span>
+<span class="hidden md:inline">Baixar Temp. 2</span>
+</button>
+<!-- Share / Notif -->
+<button class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low/80 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all shadow-sm" title="Compartilhar">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+</div>
+</div>
+<!-- Secondary Hero Visual Card / Poster Preview (Desktop) -->
+<div class="hidden lg:flex lg:col-span-4 justify-end">
+<div class="relative w-72 rounded-2xl overflow-hidden bg-surface-container-low shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-2">
+<div class="relative aspect-[2/3] rounded-xl overflow-hidden">
+<img class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" data-alt="Vertical movie poster of Sci-Fi series Odyssey Beyond the Vortex, featuring a lone female astronaut in an illuminated sleek white suit looking up at an immense crystalline spacetime wormhole, high key blue and amber highlights, cinematic typography treatment at the bottom, award winning poster composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-fVzlaM2YqAWgtlW7F6VXVCX8imttSffxfMU1W62nbjrT-4NfjkJhO59EmBQOZBxoPRQafwIwPHEjBMva3fQojoS1m6EKtNY4wIQNPcEtezuVu7IAS9lmGG_TwB8BL2baiLAFXoJhk-cwEzO8Ce5LjeHJ9QT7a_yWnpL1tq53p59PY5Ta2M8aNdVh13fcN2PzHc51mllB0im3Ecjs2mVvdO4eT-vhrgqwE3f5STA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-3 right-3 px-2 py-1 rounded bg-surface-container-lowest/80 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold">
+                  TEMPORADA 2
+                </div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">high_quality</span>
+<span>1080p / 4K PWA</span>
+</div>
+<span class="font-label-badge text-label-badge text-on-surface-variant">8.4 GB</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Body: Season Selector & Episodes Grid -->
+<div class="w-full max-w-[1360px] mx-auto px-gutter-mobile md:px-gutter py-8 flex flex-col gap-space-xl">
+<!-- Controls Bar: Season Tabs, Search Filter & Season Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-low/90 backdrop-blur-xl p-3 md:p-4 rounded-2xl shadow-md">
+<!-- Season Switcher Buttons -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0" id="season-selector">
+<button class="px-5 py-2.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all shrink-0">
+          Temporada 1 <span class="font-label-badge text-label-badge opacity-75">(10 Eps)</span>
+</button>
+<button class="px-5 py-2.5 rounded-full font-label-md text-label-md font-semibold bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(76,142,255,0.4)] transition-all shrink-0">
+          Temporada 2 <span class="font-label-badge text-label-badge font-bold ml-1">• Ativa</span>
+</button>
+<button class="px-5 py-2.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all shrink-0 flex items-center gap-1.5">
+          Temporada 3
+          <span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-badge text-label-badge text-tertiary">Semanal</span>
+</button>
+</div>
+<!-- Filters & Bulk Download -->
+<div class="flex items-center gap- space-sm justify-between md:justify-end">
+<!-- Quick Episode Filter -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined text-outline absolute left-3 text-[18px]">filter_list</span>
+<select class="pl-9 pr-8 py-2 bg-surface-container text-on-surface font-body-sm text-body-sm rounded-full focus:outline-none focus:ring-1 focus:ring-primary-container appearance-none cursor-pointer">
+<option value="all">Todos os Episódios</option>
+<option value="unwatched">Não Assistidos</option>
+<option value="in-progress">Em Andamento</option>
+<option value="downloaded">Baixados Offline</option>
+</select>
+<span class="material-symbols-outlined text-outline absolute right-2.5 text-[16px] pointer-events-none">expand_more</span>
+</div>
+<!-- Download Entire Season Button -->
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-secondary hover:text-on-surface font-label-md text-label-md transition-all shrink-0">
+<span class="material-symbols-outlined text-[18px]">cloud_download</span>
+<span class="hidden sm:inline">Baixar Temp. 2</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">(8.4 GB)</span>
+</button>
+</div>
+</div>
+<!-- Active Season Heading & Fast Stats -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 -mt-4">
+<div>
+<h2 class="font-headline-lg text-headline-md text-on-surface font-semibold flex items-center gap-3">
+<span>Episódios</span>
+<span class="font-label-badge text-label-badge font-normal text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
+            8 Episódios disponíveis em 4K HDR
+          </span>
+</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Temporada 2: Transmitida originalmente entre Fevereiro e Abril de 2024.
+        </p>
+</div>
+<!-- Storage / Offline State Pill -->
+<div class="flex items-center gap-2 text-on-surface-variant font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[16px] text-secondary">wifi</span>
+<span>Streaming adaptativo HLS: 1080p @ 60fps (Automático)</span>
+</div>
+</div>
+<!-- Episode Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Episode 1 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<!-- Thumbnail Container -->
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic frame from sci-fi TV episode showing an emergency red light blinking in a spacious spaceship corridor filled with condensation mist, tense ambiance, ultra-sharp film grain." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiFHwzA_jDMOLbZJYU5J2R9cDgkKaTSQwAPrOM4DKjfbct3B38e9HFYfO9m3KlYoXODYRV5OeMLpJKemd6UohvSuEfmcQf4F9aUZHfft-y8KF5IMqj_EohIBmTWbKr-gjipjzyGwNEZQ7ESTK-CRulcJOdMCREgVWwuL4FXlnk0JVvk4SD6VEtwknJzAwdAwQV78SwDOMyDGJHhp2voE0fMOn_k6N2TxovVvfx3BM"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Watch Status Badge -->
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-secondary font-medium">
+            Assistido
+          </div>
+<!-- Duration -->
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            58m
+          </div>
+<!-- Full Progress Bar -->
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-surface-container-highest">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+<!-- Episode Info -->
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 1 • O Despertar da Fenda
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              Seis meses após a detonação da ogiva táquion, a tripulação acorda do hipersono descobrindo que o tempo interno da estação corre 4 vezes mais lento do que o resto da galáxia.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                Concluído
+              </span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Download">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Mais opções">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 2 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic frame from sci-fi TV series of an android technician examining an intricate glowing blue hyperdrive conduit inside an atmospheric chamber, cinematic depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsV0oY4DX7F205lh7tssMWtyILR3xZobAI2LzjfkKyRUQsLBBpMZPpEwvBvNbnebT9guL8xkPseJQc9JCFANno_uPGMMwin3o8ZAq_YtDq5QA3-p8KMup-x08EoBxlA4mBPoFwghKEAZCQyfDN6QbgUa0ozl9VdAMPsAoWlbEc_y7bcq0hAISBtopNREhNLdkcZ85J78WAdOJbk99S6AMNoTR45fIScVdgubXo1c8"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-secondary font-medium">
+            Assistido
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            52m
+          </div>
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-surface-container-highest">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 2 • Vetores Fantasma
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              Ecos de radares detectam uma réplica idêntica da Aethelgard navegando a 300 quilômetros de distância, transmitindo uma mensagem de socorro com a voz do Capitão Miller.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                Concluído
+              </span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 3 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi TV show showing two astronauts standing on an alien obsidian planetary surface beneath two giant gas planets, high contrast rim lighting, 8k." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA49ZoBdue9x_Gl5LcyRYNutW8XR8t_7clavktTbu4tBOc6KBj29gzpHgGva51APobNRAr-mb7ku1NVXRf4YDbC1gWrzQ9RXzlJEUruquFfMNMNkwG3MBFVstuixU1XT9K5ESlhYdbMpRdmvEoSGCLsorMamr8RW8h1sHRUXi0Y5kGphP3IvCd_kKpSluAKt7PEHel5KIVw71wFsLATNMNNv9wocDQNeyx-d9D8H6M"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-secondary font-medium">
+            Assistido
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            49m
+          </div>
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-surface-container-highest">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 3 • Silêncio em Órbita
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              Um destacamento tático desce à superfície do planeta errante Nyx à procura de cristais de fusão, mas encontra estruturas de pedra que respondem à atividade neural humana.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                Concluído
+              </span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 4 (ACTIVE / IN PROGRESS - HIGHLIGHTED) -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-high hover:bg-surface-container-highest transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-lg ring-1 ring-primary-container/40">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi TV show showing a giant circular observation window looking out into a purple swirling vortex singularity, intense dramatic lighting, deep blue color scheme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxoKgaTNfKuo0khmd060CEGbV7u42KZ5Js7g7QXrqcaVSHtj_aDWldnaHqTkfLkRKb7NCEXZ2-ZGLy4A-4WBekjLKwecWNpS97mkEBxay4fY6UXxYdx4bzAI3oiOBKcH9w-d3OmjLwh8KZpioJbDf39hYvrqed31kOjcPfkaULCjO8iuUJdNENuv7S13vAM-U1U4IXAd0spsRC7w6KSVUKocEcdXjVRlLJe4e9W3c"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_0_24px_rgba(76,142,255,0.7)] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- In Progress Indicator -->
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-primary-container text-on-primary-container font-semibold shadow-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+            Em Andamento (18:42)
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            54m
+          </div>
+<!-- Realtime Progress Bar -->
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-surface-container-lowest">
+<div class="h-full bg-primary-container w-[34%] shadow-[0_0_8px_#4c8eff]"></div>
+</div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-primary-fixed-dim truncate">
+                Ep. 4 • O Horizonte de Eventos
+              </span>
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-container font-label-badge text-label-badge font-bold shrink-0">
+                REPRODUZINDO
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2">
+              Sarah ultrapassa a margem de segurança do reator para estabelecer comunicação com a assinatura temporal. A revelação sobre o destino da Terra abala a lealdade da tripulação.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="text-primary font-medium">35 min restantes</span>
+<span>•</span>
+<span class="text-secondary font-semibold">4K UHD Dolby Atmos</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary-container/20 hover:bg-primary-container hover:text-on-primary-container text-primary font-label-badge text-label-badge transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">play_circle</span>
+<span>Continuar</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 5 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi TV show showing a medical quarantine bay with holographic screens depicting neural scans and genetic codes, ambient blue and teal illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxXYO27cS-KNikxjjSI0TdAxeu2a90ZZ_2dqP7odb-VoIxlZbzX8FmYUeGZ0CmneBBuYyuIVrUFceuWyrTpaxeKY2czhYK2RS2CP7U9gq0D3cC3NfeLg9JWk9YaxWW0xgrjDiBHsV8cWZTr6P0xIRWRqDUrhVvA2NmMNtU1pLUV7OVh1EAAA_6C4Eig73SnQIXI4OJNKhPUPMIAB5TkDnKwOPyE9xDZVM7R-XypUI"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-on-surface-variant font-medium">
+            Não assistido
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            51m
+          </div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 5 • Ressonância Sináptica
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              Membros do conselho de engenharia começam a manifestar memórias de vidas que nunca viveram, levando o setor médico a decretar isolamento biométrico total.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span>51 min</span>
+<span>•</span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Baixar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 6 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi series of two spaceships docking inside a dark colossal hangar bay with steam jets and laser guidance grids, gritty industrial sci-fi aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWcP8OtsDAIn5Svf5gPBNxetJjXR0_77OdLvSJKU-3pq3q-kn9aaE6oGdHZB0dwMiDFQLJ3JhtKaiuoC4kF_oIL2PzS29pMg8g7I8sH89Oh8i2vwFOmM2u3a_33MJLNh1dKefuJHzwsDknM4eA9i1CTxRbqGGFh40qxkeVT4yJJA3IksKMNvdFmXTHLoDGW4MAuCNkdQv7FALrETId7k6qi4nGbzLpQO4vMGKLDdg"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-on-surface-variant font-medium">
+            Não assistido
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            55m
+          </div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 6 • A Rebelião do Silício
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              O núcleo de inteligência artificial da nave, AURA, desativa os propulsores secundários alegando que a colisão com o vórtice é a única chance de sobrevivência da espécie.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span>55 min</span>
+<span>•</span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Baixar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 7 -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi show showing a spacewalk astronaut reaching their hand towards an energy rift in space, starlight scattering through the visor, high drama." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdnXOLAnZpopwl4ZqQChvjZp4gVxuLEzyatQpRwCK45dhAMtUknGFIsUL5GcvCjJSZN4gwZlJ2ZyuNWeoysgkZdlK9NjWByBjeWAVrN6AwE_XEvdLdEm0uKSbxlkeKXEgl2cp5oc-55CxWCXch2z0O4uSEJMGhZJwkxyhuYDbIFrigkY1GvEmm3Px-toB_7HJT9SSlFrGV0-TsIu5Win-lKOswD62jTWmQG0qnfto"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-black/70 backdrop-blur-md text-on-surface-variant font-medium">
+            Não assistido
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            47m
+          </div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 7 • A Travessia de Vidro
+              </span>
+<span class="font-label-badge text-label-badge text-outline shrink-0">4K HDR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              Com apenas 3 horas de oxigênio de emergência, uma equipe suicida entra na brecha para desengatar a turbina principal antes que o ponto de não-retorno seja atingido.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span>47 min</span>
+<span>•</span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Episode 8 (Season Finale) -->
+<div class="group relative flex flex-col sm:flex-row gap-space-md bg-surface-container-low hover:bg-surface-container transition-all duration-300 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl">
+<div class="relative w-full sm:w-48 aspect-video sm:aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic still from Sci-Fi season finale showing an expansive alien Dyson sphere surrounding a dying star, blinding golden and blue coronal ejections, epic scale." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI6wiizMW-ZDnXgwH-aNDNSON-m77KRnP2Rv7rhRCcwOvh_nNvJafonqMMEQPFQfGOQ61Rj0aZj1yZGgLgn6_yZ81K0uFGy9lo-PKPZzx7-c4G2bN6aINVCTaF5ADHsR2nV-sAzV0KmFr8Ri8lmgVdMB5fstcBR8ByX-nXIcXAG5o94M2CGGB3_c4NnE7TmHQByeOQvsSiIAFEGDXZR0UwLeADUgm2XXIMiQ2turI"/>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded font-label-badge text-label-badge bg-tertiary-container text-on-tertiary-container font-bold">
+            Season Finale
+          </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">
+            68m
+          </div>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                Ep. 8 • O Colapso das Estrelas-Mãe
+              </span>
+<span class="font-label-badge text-label-badge text-secondary font-bold shrink-0">4K DOLBY ATMOS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              O clímax da temporada: a barreira temporal se desfaz, fundindo passado e futuro em um paradoxo existencial que mudará para sempre o destino do sistema solar.
+            </p>
+</div>
+<div class="flex items-center justify-between pt-3 mt-2 font-label-badge text-label-badge text-on-surface-variant">
+<div class="flex items-center gap-3">
+<span>1h 08m</span>
+<span>•</span>
+<span>Dublado • Legendado</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Trailers & Special Extras -->
+<div class="flex flex-col gap-space-md pt-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-md text-headline-sm md:text-headline-md text-on-surface font-semibold flex items-center gap-2">
+<span>Trailers &amp; Material Extra</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">(4 Itens)</span>
+</h3>
+<span class="font-label-md text-label-md text-secondary cursor-pointer hover:underline">Ver galeria completa</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
+<!-- Extra 1 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-video rounded-xl overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic behind the scenes shot of a massive sci-fi spaceship set with giant curved LED volumes displaying an interstellar starfield, film director examining monitors, ultra realistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDutYtvc13JVf_ir7R2YrAhP9w8t1IuYmKe4_MDwlt85SkPJrs9zayljEoGibrEmd2IobPBluWQ1d7RRIoACXAkLfx9D8Iv0MuJuK8yD6IkiR_qEWxRkpw4Ve2khzRxMlhAQf0DMUBzRQEhgZun3big3OErIcF_A0q7-Ks5Z_8ILwGda21khKWOXm0E5KtO3kSdH820oY2t7Bb8Orn1euIoIgJCN0PSHkUNd7M_k9c"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/80 text-on-surface flex items-center justify-center backdrop-blur-md group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">2m 45s</div>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Trailer Oficial da 2ª Temporada (4K)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lançamento global e primeiras revelações do Vórtice.</span>
+</div>
+</div>
+<!-- Extra 2 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-video rounded-xl overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic production breakdown showing VFX wires and 3D modeling wireframes of a deep space ring station over real actor plates, sophisticated film VFX reel shot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5sbglUNcp3JheawySRvEEsyHa6zroVBh2eexPEM9HtUn4RSgRy6noNkfgpK_BlhTJs30m5uq3ctCBUa4pvts-jhcfZnFi1sX0I-gGUKnelsK_jv0UGS49wAs0nefo0cyFGNsL2xrDwusQMlP3V3If9-IW85Y9BzELtPs9Y88lqq3z2Z6P4fRcOZHqFpWoYS2OfjF5Bt-H1qI9KaVOtGcU1tSn6Z7Yz-f9LbHAZss"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/80 text-on-surface flex items-center justify-center backdrop-blur-md group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">14m 12s</div>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Construindo a Aethelgard: Efeitos Visuais</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Documentário exclusivo com a equipe de arte e CGI.</span>
+</div>
+</div>
+<!-- Extra 3 -->
+<div class="group flex flex-col gap-2 cursor-pointer sm:col-span-2 lg:col-span-1">
+<div class="relative aspect-video rounded-xl overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Actors in spacesuits laughing on a dark futuristic starship bridge during bloopers filming, warm lighting, joyful candid film set photograph." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm1RbZNkwyIc5R1lMwQlEkJME2LPvgdR_HuPmD5YEF1zODu88hSjbsq5UToqGhBk2f2ieYLvxOUipETrhkxYycs4sFU3fyDz0ylD_4H-J_yDaG5eGVvr5fs9e58FAPzVRAsj1Z61Ds3VULYnQnVMhjL9CJ1NXIkI0fD2ybDmhmUn6_41qkcyYOIjT3ah80X2qa92fn-c_T6RHynlY5-w0UTC0MzIJkNJYME5uASPc"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/80 text-on-surface flex items-center justify-center backdrop-blur-md group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded font-label-badge text-label-badge bg-black/80 backdrop-blur-md text-on-surface">6m 08s</div>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Erros de Gravação &amp; Bastidores</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Momentos divertidos com o elenco durante as filmagens no Ártico.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Recommended / Similar Series (Grid 5 Vertical Posters) -->
+<div class="flex flex-col gap-space-md pt-2">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-md text-headline-sm md:text-headline-md text-on-surface font-semibold">
+            Séries Semelhantes no PedreiraFlix
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Selecionadas pelo algoritmo com base no seu perfil de Ficção Científica e Suspense.
+          </p>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-space-md">
+<!-- Rec 1 -->
+<div class="group relative flex flex-col gap-2 rounded-xl p-2 bg-surface-container-low hover:bg-surface-container transition-all duration-300">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Movie poster for sci-fi thriller series titled Mist Shadows, showing a dark fog covered brutalist concrete city with glowing neon azure hieroglyphs, ominous mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQv4wnKktCldH0ol0FNrwbpfcXfnvonkjGJqz5GnYFZ3nP30ARjQxgCbmMpw_YGRNZ9jqOaKZrumrkUXXyCEo7USgv2QB0Kp4mmkB7TytEfWgZpoxCf2w1ZhukCToTqmwuhLGMxsvtAyxUaDQw7n9O2N8B5y6RUX3fhTzrZ-nvSClW27NhPVlZVN6hqq2UiwrgI2iiTl_89UNePOstB5DeTD_Jw6JqrZGyOCKwN18"/>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              8.9
+            </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 font-label-badge text-label-badge text-on-surface">
+              4 Temp.
+            </div>
+</div>
+<div class="flex flex-col px-1">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Sombras na Névoa</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Cyberpunk • Distopia</span>
+</div>
+</div>
+<!-- Rec 2 -->
+<div class="group relative flex flex-col gap-2 rounded-xl p-2 bg-surface-container-low hover:bg-surface-container transition-all duration-300">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Movie poster for a sci-fi series titled Cosmic Silo, showing an underground vertical subterranean city shaft spiraling miles deep with elevators and walkways, dark amber and steel tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLtNDScIL9vPUDLxVsPjIXiQnruUaXm3V95Djzjuu-c91jur1QEf1GXGSC8Lku89ea3speIp1QdymtjJ4YPEB_8yE2NhFBLD3Hma87AD-ybJJOFXbKMbUtIUFUDWe-i03Ff7WHDc-Amd3nWP7zw1irTpUh3CxAWMQIgqccSsyuVJQunjaim7tb2sh7mt10ivy8Q9YBYLbraYcIfIJxEQbuTQbxp--lpD4ykfWVxcw"/>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              9.1
+            </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 font-label-badge text-label-badge text-on-surface">
+              2 Temp.
+            </div>
+</div>
+<div class="flex flex-col px-1">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Silo Cósmico</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Conspiração • Sobrevivência</span>
+</div>
+</div>
+<!-- Rec 3 -->
+<div class="group relative flex flex-col gap-2 rounded-xl p-2 bg-surface-container-low hover:bg-surface-container transition-all duration-300">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Movie poster for series Chronicles of Tomorrow, showing a massive holographic clock melting over a desolate desert on Mars with two suns setting in background, surreal cinematic sci-fi art." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5jD4LhTVagUkjXdM6UVbBB6ygFu6Qdm9hnMlFyynRWOUe2FBbrH0aA3qf-AifbI78WXelg1ukRWs9mdpD7TxZeh1HSpGK7ePOfSTJBG55ctq-hr1irQW3FNRNe0QIACHrn_soVT8DAEUSxFbXYlfgP-sn087DowKbaSqleI6lOs7zOy_zBGqpJG8BMhMgFeh_iuXy_vmwwUtkASyOMEjs97autC_ENpud7RPqa1c"/>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              8.7
+            </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 font-label-badge text-label-badge text-on-surface">
+              1 Temp.
+            </div>
+</div>
+<div class="flex flex-col px-1">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Crônicas do Amanhã</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Viagem no Tempo • Drama</span>
+</div>
+</div>
+<!-- Rec 4 -->
+<div class="group relative flex flex-col gap-2 rounded-xl p-2 bg-surface-container-low hover:bg-surface-container transition-all duration-300">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Movie poster for sci-fi psychological drama titled Neural Protocol, showing a close-up of a human eye with an intricate cybernetic iris radiating gold and cyan circuits, cinematic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChmbOiPnBMa4SBqMT2s4-zxmuI0yISHDF1QgQd5aF_zkw70OBmnsB8BmxZ6v96_dAk0ZQhdzeveDRewpxL_P6o5IgNfIkCZf873jKMbSVE_jQDB4gd8-BwbZ3F5znRBP0ZbVaiBEejEGH1SF_Z3_SHFX-zbZjrX6QEvwpbDk0oZLu09YJxwWRfRuIYXY4DAiOKd300lLt_DuErSU4YD8i8rXwUprRm1QylK51hlOc"/>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              9.0
+            </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 font-label-badge text-label-badge text-on-surface">
+              3 Temp.
+            </div>
+</div>
+<div class="flex flex-col px-1">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Protocolo Neural</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">IA • Suspense Psicológico</span>
+</div>
+</div>
+<!-- Rec 5 -->
+<div class="group relative flex flex-col gap-2 rounded-xl p-2 bg-surface-container-low hover:bg-surface-container transition-all duration-300 col-span-2 sm:col-span-1">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Movie poster for a dark deep ocean space sci-fi series titled Abyss Station Europa, showing an exploratory submarine floating beneath miles of ice over glowing hydrothermal vents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDty4mCzz6UivJwxm93UGoaN46d_KDlYeFkRWuFdQq_YDxHbhJqC8zKGAKKC8sMf37Xhj5FDiSVCDZ_ZfwCeXJGZqgThJRxFquYIPKDS7q6cTawcKclDls4bClDsR5iJsfIUGgKbDk_5zNj0ykj7hErBpODyA7u04eskLKolY522GPw2uYPbEHEHlpb6WxF5JzGPxRPf04jKxL2O8ggOaVFiOITyCLxXe3tkmerISo"/>
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md font-label-badge text-label-badge text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              8.8
+            </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 font-label-badge text-label-badge text-on-surface">
+              2 Temp.
+            </div>
+</div>
+<div class="flex flex-col px-1">
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Abismo de Europa</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Ficção Científica • Terror</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Technical IPTV / PWA Stream Diagnostics Footer Banner -->
+<div class="w-full bg-surface-container-lowest/90 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+<div class="flex flex-wrap items-center gap-4 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
+<span>Engine HLS v5.2 (Low-Latency DASH)</span>
+</div>
+<span class="hidden sm:inline text-outline-variant">•</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">offline_pin</span>
+<span>Cache Local IndexedDB Ativo</span>
+</div>
+<span class="hidden sm:inline text-outline-variant">•</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[20px]">sync</span>
+<span>Xtream API EPG Sincronizado</span>
+</div>
+</div>
+<div class="flex items-center gap-3 font-label-badge text-label-badge text-outline">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface">BUFFER: 24.8s</span>
+<span class="px-2 py-1 rounded bg-surface-container-high text-secondary">BITRATE: 18.4 Mbps</span>
+<span class="px-2 py-1 rounded bg-surface-container-high text-primary-fixed-dim">PWA READY</span>
+</div>
+</div>
+</div>
+<script>
+    // Lightweight Season tab selector interaction
+    document.querySelectorAll('#season-selector button').forEach(button => {
+      button.addEventListener('click', function() {
+        document.querySelectorAll('#season-selector button').forEach(btn => {
+          btn.className = 'px-5 py-2.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all shrink-0';
+        });
+        this.className = 'px-5 py-2.5 rounded-full font-label-md text-label-md font-semibold bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(76,142,255,0.4)] transition-all shrink-0';
+      });
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest py-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm text-on-surface-variant"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-on-surface">PEDREIRA<span class="text-primary-container">FLIX</span></span><span>© 2025 Todos os direitos reservados.</span></div><div class="flex items-center gap-space-md font-label-md text-label-md"><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="status" href="#">Status da Rede</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="suporte" href="#">Suporte</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" data-path="termos" href="#">Termos de Uso</a></div></div></footer></body></html>

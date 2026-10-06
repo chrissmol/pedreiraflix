@@ -23,10 +23,11 @@ const SECURITY_HEADERS = {
   'content-security-policy': [
     "default-src 'self'",
     "script-src 'self' https://www.gstatic.com",
-    // No more fonts.googleapis.com/gstatic.com here: the app dropped its Google-hosted webfonts for each
-    // platform's native system font (see index.css) — nothing left that needs those origins.
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self'",
+    // fonts.googleapis.com/gstatic.com voltaram: o design system adotado especifica a Inter, servida pelo
+    // Google Fonts (ver index.html). Sem estas duas origens a folha e o arquivo da fonte sao bloqueados e
+    // o app cai no fallback do sistema sem nenhum aviso.
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
     "connect-src 'self' https://www.gstatic.com",
     // blob: is hls.js's own delivery mechanism (MediaSource + a blob: object URL as video.src) for every
