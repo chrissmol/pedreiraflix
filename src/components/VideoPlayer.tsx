@@ -11,6 +11,7 @@ import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import {
   NEXT_UP_LEAD,
   SCREEN_LIMIT_MESSAGE,
+  SKIP_SECONDS,
   estimateInitialBandwidthBps,
 } from './videoPlayerUtils'
 
@@ -33,6 +34,8 @@ interface VideoPlayerProps {
   onEnded?: () => void
   /** Series only: renders a "next episode" button plus an auto-advance prompt in the closing seconds. */
   next?: NextEpisode | null
+  /** Series only: botao "episodio anterior" (voltar para rever o que acabou de ver). */
+  previous?: NextEpisode | null
   /** Live only: zapping to the previous/next channel — arrow keys, on-screen buttons, and a vertical swipe on touch. */
   onChannelUp?: () => void
   onChannelDown?: () => void
@@ -61,6 +64,7 @@ export default function VideoPlayer({
   onProgress,
   onEnded,
   next,
+  previous,
   onChannelUp,
   onChannelDown,
 }: VideoPlayerProps) {
@@ -659,13 +663,14 @@ export default function VideoPlayer({
       navigator.mediaSession.setActionHandler('seekforward', null)
       navigator.mediaSession.setActionHandler('seekto', null)
     } else {
-      navigator.mediaSession.setActionHandler('seekbackward', () => skip(-10))
-      navigator.mediaSession.setActionHandler('seekforward', () => skip(10))
+      navigator.mediaSession.setActionHandler('seekbackward', () => skip(-SKIP_SECONDS))
+      navigator.mediaSession.setActionHandler('seekforward', () => skip(SKIP_SECONDS))
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         if (videoRef.current && details.seekTime != null) videoRef.current.currentTime = details.seekTime
       })
     }
     navigator.mediaSession.setActionHandler('nexttrack', next ? next.onPlay : null)
+    navigator.mediaSession.setActionHandler('previoustrack', previous ? previous.onPlay : null)
     return () => {
       navigator.mediaSession.setActionHandler('play', null)
       navigator.mediaSession.setActionHandler('pause', null)
@@ -675,7 +680,7 @@ export default function VideoPlayer({
       navigator.mediaSession.setActionHandler('nexttrack', null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, subtitle, poster, isPlaying, isLive, next])
+  }, [title, subtitle, poster, isPlaying, isLive, next, previous])
 
   // --- Media Session: keep the lock-screen scrubber in sync with playback position. ---
   useEffect(() => {
@@ -775,7 +780,7 @@ export default function VideoPlayer({
     if (isRepeat) {
       // Keeping `time` fresh means a third/fourth tap keeps seeking, as on YouTube.
       if (side !== 0 && !isLive) {
-        skip(side * 10)
+        skip(side * SKIP_SECONDS)
         setSeekFlash({ side, key: now })
         if (flashTimer.current) clearTimeout(flashTimer.current)
         flashTimer.current = setTimeout(() => setSeekFlash(null), 600)
@@ -962,6 +967,8 @@ export default function VideoPlayer({
           volume={volume}
           onToggleMute={toggleMute}
           onVolumeChange={handleVolume}
+          hasPrevious={Boolean(previous)}
+          onPlayPrevious={() => previous?.onPlay()}
           hasNext={Boolean(next)}
           onPlayNext={playNext}
           fsSupported={fsSupported}

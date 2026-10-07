@@ -1,5 +1,5 @@
-import { Maximize, Minimize, Pause, Play, SkipBack, SkipForward, SkipNext, VolumeHigh, VolumeMute, Zap } from './icons'
-import { formatTime } from './videoPlayerUtils'
+import { Maximize, Minimize, Pause, Play, SkipNext, SkipPrevious, SkipSeconds, VolumeHigh, VolumeMute, Zap } from './icons'
+import { SKIP_SECONDS, formatTime } from './videoPlayerUtils'
 
 interface VideoPlayerBottomControlsProps {
   controlsVisible: boolean
@@ -17,6 +17,8 @@ interface VideoPlayerBottomControlsProps {
   volume: number
   onToggleMute: () => void
   onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  hasPrevious: boolean
+  onPlayPrevious: () => void
   hasNext: boolean
   onPlayNext: () => void
   fsSupported: boolean
@@ -40,6 +42,8 @@ export function VideoPlayerBottomControls({
   volume,
   onToggleMute,
   onVolumeChange,
+  hasPrevious,
+  onPlayPrevious,
   hasNext,
   onPlayNext,
   fsSupported,
@@ -95,16 +99,16 @@ export function VideoPlayerBottomControls({
 
         {!isLive && (
           <>
-            <button onClick={() => onSkip(-10)} className="player-btn bg-transparent pointer-coarse:hidden" aria-label="Voltar 10s">
-              <SkipBack className="h-5 w-5" />
+            <button onClick={() => onSkip(-SKIP_SECONDS)} className="player-btn bg-transparent pointer-coarse:hidden" aria-label="Voltar 10s">
+              <SkipSeconds direction="back" seconds={SKIP_SECONDS} className="h-8 w-8" />
             </button>
-            <button onClick={() => onSkip(10)} className="player-btn bg-transparent pointer-coarse:hidden" aria-label="Avançar 10s">
-              <SkipForward className="h-5 w-5" />
+            <button onClick={() => onSkip(SKIP_SECONDS)} className="player-btn bg-transparent pointer-coarse:hidden" aria-label="Avançar 10s">
+              <SkipSeconds direction="forward" seconds={SKIP_SECONDS} className="h-8 w-8" />
             </button>
           </>
         )}
 
-        <div className="flex items-center gap-2 pointer-coarse:hidden">
+        <div className="hidden items-center gap-2 sm:flex pointer-coarse:hidden">
           <button onClick={onToggleMute} className="player-btn bg-transparent" aria-label="Mudo">
             {isMuted || volume === 0 ? <VolumeMute className="h-5 w-5" /> : <VolumeHigh className="h-5 w-5" />}
           </button>
@@ -117,7 +121,7 @@ export function VideoPlayerBottomControls({
             onChange={onVolumeChange}
             aria-label="Volume"
             style={{ '--pct': `${(isMuted ? 0 : volume) * 100}%` } as React.CSSProperties}
-            className="player-range w-16 shrink-0 sm:w-24"
+            className="player-range w-24 shrink-0"
           />
         </div>
 
@@ -131,13 +135,15 @@ export function VideoPlayerBottomControls({
         )}
 
         <div className="ml-auto flex items-center gap-1">
+          {/* Episodio anterior e proximo aparecem tambem no toque: no celular nao ha outro jeito de voltar
+              para o episodio que acabou de ver (o proximo so surgia no cartao do fim do episodio). */}
+          {hasPrevious && !isLive && (
+            <button onClick={onPlayPrevious} aria-label="Episódio anterior" title="Episódio anterior" className="player-btn bg-transparent">
+              <SkipPrevious className="h-5 w-5" />
+            </button>
+          )}
           {hasNext && !isLive && (
-            <button
-              onClick={onPlayNext}
-              aria-label="Próximo episódio"
-              title="Próximo episódio"
-              className="player-btn bg-transparent pointer-coarse:hidden"
-            >
+            <button onClick={onPlayNext} aria-label="Próximo episódio" title="Próximo episódio" className="player-btn bg-transparent">
               <SkipNext className="h-5 w-5" />
             </button>
           )}

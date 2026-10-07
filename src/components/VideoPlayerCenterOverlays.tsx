@@ -1,4 +1,5 @@
-import { Pause, Play, SkipBack, SkipForward, SkipNext, VolumeMute } from './icons'
+import { Pause, Play, SkipNext, SkipSeconds, VolumeMute } from './icons'
+import { SKIP_SECONDS } from './videoPlayerUtils'
 
 interface NextEpisode {
   label: string
@@ -125,11 +126,11 @@ export function VideoPlayerCenterOverlays({
           {!isLive && (
             <button
               data-controls
-              onClick={() => onSkip(-10)}
+              onClick={() => onSkip(-SKIP_SECONDS)}
               aria-label="Voltar 10s"
               className={`rounded-full bg-black/45 p-3.5 text-white backdrop-blur-md active:bg-white/20 ${controlsVisible ? 'pointer-events-auto' : ''}`}
             >
-              <SkipBack className="h-6 w-6" />
+              <SkipSeconds direction="back" seconds={SKIP_SECONDS} className="h-8 w-8" />
             </button>
           )}
           <button
@@ -143,11 +144,11 @@ export function VideoPlayerCenterOverlays({
           {!isLive && (
             <button
               data-controls
-              onClick={() => onSkip(10)}
+              onClick={() => onSkip(SKIP_SECONDS)}
               aria-label="Avançar 10s"
               className={`rounded-full bg-black/45 p-3.5 text-white backdrop-blur-md active:bg-white/20 ${controlsVisible ? 'pointer-events-auto' : ''}`}
             >
-              <SkipForward className="h-6 w-6" />
+              <SkipSeconds direction="forward" seconds={SKIP_SECONDS} className="h-8 w-8" />
             </button>
           )}
         </div>

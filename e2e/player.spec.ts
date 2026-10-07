@@ -194,3 +194,28 @@ test('proxied poster images are served with long-lived cache headers', async ({ 
   expect(res.ok()).toBe(true)
   expect(res.headers()['cache-control']).toBe('public, max-age=604800')
 })
+
+// Pedido do Christian: estou no ep 20 e quero rever o 19. O primeiro episodio nao tem anterior.
+test('o botao "Episódio anterior" volta um episodio e nao existe no primeiro', async ({ page }) => {
+  await page.goto('/series/50')
+  await page.getByText('T1E2 - Episódio 2').click()
+  await expect(page).toHaveURL(/\/watch\/series\/5012/)
+  await expect(page.locator('video')).toBeVisible()
+
+  await page.mouse.move(400, 300)
+  await page.getByRole('button', { name: 'Episódio anterior' }).click()
+  await expect(page).toHaveURL(/\/watch\/series\/5011/)
+
+  await page.mouse.move(420, 320)
+  await expect(page.getByRole('button', { name: 'Próximo episódio' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Episódio anterior' })).toHaveCount(0)
+})
+
+test('os botoes de pular mostram o numero de segundos no icone', async ({ page }) => {
+  await page.goto('/series/50')
+  await page.getByText('T1E1 - Episódio 1').click()
+  await expect(page.locator('video')).toBeVisible()
+  await page.mouse.move(400, 300)
+  await expect(page.getByRole('button', { name: 'Voltar 10s' }).locator('text')).toHaveText('10')
+  await expect(page.getByRole('button', { name: 'Avançar 10s' }).locator('text')).toHaveText('10')
+})
