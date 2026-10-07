@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { clearAllCaches } from '../lib/cache'
+import { connectionStatus, refreshSession } from '../lib/session'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
@@ -27,6 +28,8 @@ export default function TopNav() {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
+  const isXtream = useAuthStore((s) => s.credentials?.type === 'xtream')
+  const connections = isXtream ? connectionStatus(user) : null
   const accId = useActiveAccountId()
   const activeProfile = useActiveProfile()
   const profiles = useProfiles()
@@ -46,6 +49,11 @@ export default function TopNav() {
   }
 
   useDialogA11y(menuPanelRef, menuOpen, () => setMenuOpen(false))
+
+  // O numero de telas muda toda hora (outro aparelho liga ou desliga), entao abre o menu e atualiza.
+  useEffect(() => {
+    if (menuOpen) refreshSession(20_000)
+  }, [menuOpen])
 
   // Tap outside closes the account menu (there is no hover on touch screens).
   useEffect(() => {
@@ -175,6 +183,24 @@ export default function TopNav() {
             <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
             </p>
+            {connections && (
+              // "Telas" e quantas pessoas/aparelhos o provedor deixa tocar ao mesmo tempo com este login. Quando
+              // enche, o provedor recusa o video (403) — o numero explica isso antes de o filme falhar.
+              <div
+                data-testid="conexoes"
+                className={`mx-1.5 mb-1 rounded-xl px-3 py-2 text-body-sm ${connections.full ? 'bg-live/10 text-red-200' : 'bg-surface-container text-on-surface-variant'}`}
+              >
+                <p className="flex items-center gap-2 text-label-md text-white">
+                  <span className={`h-2 w-2 rounded-full ${connections.full ? 'bg-live' : 'bg-done'}`} />
+                  Telas em uso: {connections.active} de {connections.max}
+                </p>
+                <p className="mt-0.5">
+                  {connections.full
+                    ? 'Limite cheio: o provedor vai recusar novos vídeos. Feche em outro aparelho ou espere uns minutos.'
+                    : 'Inclui este aparelho se estiver tocando.'}
+                </p>
+              </div>
+            )}
             {profiles.length > 1 && (
               <div className="my-1 space-y-0.5">
                 {profiles

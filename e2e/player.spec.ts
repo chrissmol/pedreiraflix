@@ -80,7 +80,9 @@ test('auto-advances to the next episode and offers a manual "next episode" butto
   await nextButton.click()
   await expect(page).toHaveURL(/\/watch\/series\/5012/)
 
-  // Auto-advance prompt near the end of playback.
+  // Auto-advance prompt near the end of playback. Depois de trocar de episodio o <video> novo ainda pode estar
+  // sem metadados (duration = NaN) e o navegador recusa currentTime nao finito — media-se 1 falha em ~30 rodadas.
+  await expect.poll(() => page.locator('video').evaluate((v: HTMLVideoElement) => Number.isFinite(v.duration))).toBe(true)
   await page.locator('video').evaluate((v: HTMLVideoElement) => {
     v.currentTime = Math.max(0, v.duration - 5)
   })
