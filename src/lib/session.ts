@@ -26,6 +26,16 @@ export function accountWarning(user: UserInfo): string | null {
     : null
 }
 
+/** Telas em uso na conta, para o menu mostrar quando o limite do provedor esta cheio. null quando o provedor nao
+ * informa um limite (ou nao e Xtream: o login por M3U inventa 1 de 1, que nao quer dizer nada). */
+export function connectionStatus(user: UserInfo | null): { active: number; max: number; full: boolean } | null {
+  if (!user) return null
+  const active = Number(user.activeConnections)
+  const max = Number(user.maxConnections)
+  if (!Number.isFinite(active) || !Number.isFinite(max) || max <= 0) return null
+  return { active, max, full: active >= max }
+}
+
 /** Moves the pre-profiles "legacy" favorites/progress/watched bucket onto an account's real first
  * profile, the first time that profile exists. Safe to call on every login/launch — once the legacy
  * bucket is empty, it's a no-op forever after. */
@@ -155,9 +165,14 @@ export async function signInSavedAccount(account: SavedAccount): Promise<void> {
 
 /** Refreshes account info (status, expiry, connections) for an already-open Xtream session, without ever
  * logging out on failure. M3U sessions have no server to refresh against — nothing to do. */
-export async function refreshSession(): Promise<void> {
+let lastRefreshAt = 0
+
+export async function refreshSession(minIntervalMs = 0): Promise<void> {
   const { credentials, setSession } = useAuthStore.getState()
   if (!credentials || credentials.type !== 'xtream') return
+  // Abrir o menu da conta repetidas vezes nao pode virar uma chamada ao provedor a cada abertura.
+  if (Date.now() - lastRefreshAt < minIntervalMs) return
+  lastRefreshAt = Date.now()
   try {
     const { user, server } = await new XtreamClient(credentials).login()
     if (useAuthStore.getState().credentials !== credentials) return
