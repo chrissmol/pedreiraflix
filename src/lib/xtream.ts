@@ -44,6 +44,30 @@ export function proxyImage(url: string | null | undefined): string | null {
 // serie, login, listas de categorias — e alguem esperando na tela, e fura a fila (ver requestQueue.ts).
 const BACKGROUND_ACTIONS = new Set(['get_vod_streams', 'get_series', 'get_live_streams', 'get_short_epg', 'get_simple_data_table'])
 
+// Codigo cifrado que substitui usuario e senha nas URLs de video (ver worker/streamSession.js). Guardado no
+// aparelho, por conta, para a primeira URL ja sair sem a senha ao reabrir o app; renovado a cada login.
+const SID_STORE = 'pf-stream-sid'
+const sidKey = (c: XtreamCredentials) => `${c.baseUrl}|${c.username}`
+
+function readSids(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(SID_STORE) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function writeSid(c: XtreamCredentials, sid: string | null) {
+  try {
+    const all = readSids()
+    if (sid) all[sidKey(c)] = sid
+    else delete all[sidKey(c)]
+    localStorage.setItem(SID_STORE, JSON.stringify(all))
+  } catch {
+    // Sem storage (aba privada): as URLs seguem no formato antigo, o video toca igual.
+  }
+}
+
 export class XtreamApiError extends Error {
   status?: number
   constructor(message: string, status?: number) {
@@ -60,16 +84,16 @@ export class XtreamClient implements ProviderClient {
   }
 
   private async call<T>(action: string | null, params: Record<string, string> = {}): Promise<T> {
+    // Usuario e senha vao em cabecalhos, nao na URL: a URL aparece no console, na aba Rede e em logs.
     const query = new URLSearchParams({
       base: this.creds.baseUrl,
       path: 'player_api.php',
-      username: this.creds.username,
-      password: this.creds.password,
       ...(action ? { action } : {}),
       ...params,
     })
+    const headers = { 'x-xtream-username': this.creds.username, 'x-xtream-password': this.creds.password }
     const res = await xtreamQueue.schedule(
-      () => fetch(`/api/xtream?${query.toString()}`),
+      () => fetch(`/api/xtream?${query.toString()}`, { headers }),
       action && BACKGROUND_ACTIONS.has(action) ? 'background' : 'urgent',
     )
     if (res.status === 429) {
@@ -107,6 +131,7 @@ export class XtreamClient implements ProviderClient {
     if (!data.user_info || data.user_info.auth !== 1) {
       throw new XtreamApiError('Credenciais inválidas ou servidor indisponível')
     }
+    await this.refreshStreamSession()
 
     return {
       user: {
@@ -375,10 +400,40 @@ export class XtreamClient implements ProviderClient {
     }))
   }
 
+  /** Pede ao proxy o codigo cifrado das URLs de video. Falhar aqui nunca derruba o login: sem codigo, as
+   * URLs so voltam ao formato antigo. 204 = o servidor ainda nao tem a chave (secret STREAM_KEY). */
+  private async refreshStreamSession(): Promise<void> {
+    try {
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ base: this.creds.baseUrl, username: this.creds.username, password: this.creds.password }),
+      })
+      if (res.status === 204) writeSid(this.creds, null)
+      else if (res.ok) writeSid(this.creds, ((await res.json()) as { sid: string }).sid)
+    } catch {
+      // Offline ou proxy antigo: mantem o que ja havia.
+    }
+  }
+
+  /** URL de video no proxy. `path` usa ~u/~p no lugar de usuario e senha (ex. /movie/~u/~p/1.mp4). */
+  private mediaUrl(path: string): string {
+    const sid = readSids()[sidKey(this.creds)]
+    // O codigo guarda so a origem do painel; um endereco com subpasta segue no formato antigo.
+    let sameOrigin = false
+    try {
+      sameOrigin = new URL(this.creds.baseUrl).origin === this.creds.baseUrl
+    } catch {
+      // URL invalida: formato antigo
+    }
+    if (sid && sameOrigin) return `/api/stream?s=${sid}&p=${encodeURIComponent(path)}`
+    const direct = this.creds.baseUrl + path.replace('~u', this.creds.username).replace('~p', this.creds.password)
+    return `/api/stream?url=${encodeURIComponent(direct)}`
+  }
+
   streamUrl(kind: 'live' | 'movie' | 'series', id: number | string, ext = 'm3u8'): string {
     const folder = kind === 'live' ? 'live' : kind === 'movie' ? 'movie' : 'series'
-    const direct = `${this.creds.baseUrl}/${folder}/${this.creds.username}/${this.creds.password}/${id}.${ext}`
-    return `/api/stream?url=${encodeURIComponent(direct)}`
+    return this.mediaUrl(`/${folder}/~u/~p/${id}.${ext}`)
   }
 
   /** Catch-up/rewind playback: `startUnixSeconds` is when the program began, `durationMinutes` how long to
@@ -387,15 +442,13 @@ export class XtreamClient implements ProviderClient {
     const d = new Date(startUnixSeconds * 1000)
     const pad = (n: number) => String(n).padStart(2, '0')
     const start = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}:${pad(d.getHours())}-${pad(d.getMinutes())}`
-    const direct = `${this.creds.baseUrl}/timeshift/${this.creds.username}/${this.creds.password}/${Math.ceil(durationMinutes)}/${start}/${streamId}.m3u8`
-    return `/api/stream?url=${encodeURIComponent(direct)}`
+    return this.mediaUrl(`/timeshift/~u/~p/${Math.ceil(durationMinutes)}/${start}/${streamId}.m3u8`)
   }
 
   /** Same file as streamUrl, but asks the proxy to send it as a "Save As" download instead of an inline stream. */
   downloadUrl(kind: 'movie' | 'series', id: number | string, ext: string, filename: string): string {
     const folder = kind === 'movie' ? 'movie' : 'series'
-    const direct = `${this.creds.baseUrl}/${folder}/${this.creds.username}/${this.creds.password}/${id}.${ext}`
     const safeName = `${filename}.${ext}`.replace(/[/\\]/g, '_')
-    return `/api/stream?url=${encodeURIComponent(direct)}&download=1&filename=${encodeURIComponent(safeName)}`
+    return `${this.mediaUrl(`/${folder}/~u/~p/${id}.${ext}`)}&download=1&filename=${encodeURIComponent(safeName)}`
   }
 }

@@ -6,6 +6,8 @@
 // always target the single host the user typed at login, so this is no less safe for those; images
 // just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
+import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
+
 // Workers send no User-Agent by default and Xtream panels commonly answer 404 to that.
 const UPSTREAM_HEADERS = { 'user-agent': 'Mozilla/5.0' }
 
@@ -118,8 +120,15 @@ function isAllowed(url) {
   return (url.protocol === 'http:' || url.protocol === 'https:') && !isPrivateAddress(url.hostname)
 }
 
-async function xtream(url) {
-  const q = url.searchParams
+// Usuario e senha chegam em cabecalhos (x-xtream-username/password), fora da URL — a URL aparece no console,
+// na aba Rede e no wrangler tail. ponytail: a query ainda e aceita para PWAs instalados que nao atualizaram;
+// remover quando todos tiverem passado pela versao nova.
+async function xtream(request, url) {
+  const q = new URLSearchParams(url.searchParams)
+  for (const k of ['username', 'password']) {
+    const v = request.headers.get(`x-xtream-${k}`)
+    if (v != null) q.set(k, v)
+  }
   let target
   try {
     target = new URL(`${new URL(q.get('base')).origin}/${q.get('path') || 'player_api.php'}`)
@@ -176,12 +185,22 @@ async function fetchUpstream(target, request) {
   throw lastError
 }
 
-async function stream(request, url) {
+async function stream(request, url, env) {
   let target
-  try {
-    target = new URL(url.searchParams.get('url'))
-  } catch {
-    return new Response('invalid url', { status: 400 })
+  let session = null
+  const sid = url.searchParams.get('s')
+  if (sid) {
+    session = await openSession(env.STREAM_KEY, sid)
+    // Chave trocada ou codigo adulterado: o app pede um codigo novo no proximo login/abertura.
+    if (!session) return new Response('invalid stream session', { status: 401 })
+    target = targetFor(session, url.searchParams.get('p'))
+    if (!target) return new Response('invalid path', { status: 400 })
+  } else {
+    try {
+      target = new URL(url.searchParams.get('url'))
+    } catch {
+      return new Response('invalid url', { status: 400 })
+    }
   }
   if (!isAllowed(target)) return new Response('host not allowed', { status: 403 })
 
@@ -208,11 +227,13 @@ async function stream(request, url) {
   // touched here (live in particular must never be cached), only actual image responses.
   if ((headers.get('content-type') || '').startsWith('image/')) headers.set('cache-control', 'public, max-age=604800')
 
-  if ((headers.get('content-type') || '').includes('mpegurl') || target.pathname.endsWith('.m3u8')) {
+  // raw=1 (playlist M3U baixada para virar catalogo, nao para tocar) nao pode ser reescrita: o dev ja
+  // respeitava isso, a producao nao — e cada canal virava um proxy dentro de outro.
+  if (url.searchParams.get('raw') !== '1' && ((headers.get('content-type') || '').includes('mpegurl') || target.pathname.endsWith('.m3u8'))) {
     // Resolve against the final URL (after redirects) when that host is public too, otherwise keep the
     // original host (which re-redirects). Also rewrite URI="..." attributes (alt audio, subtitles, keys).
     const base = up.url && isAllowed(new URL(up.url)) ? up.url : target.toString()
-    const proxied = (ref) => `/api/stream?url=${encodeURIComponent(new URL(ref, base).toString())}`
+    const proxied = (ref) => proxiedRef(new URL(ref, base).toString(), session, sid)
     const text = (await up.text())
       .split('\n')
       .map((line) => {
@@ -227,6 +248,31 @@ async function stream(request, url) {
     return new Response(text, { status: up.status, headers })
   }
   return new Response(up.body, { status: up.status, headers })
+}
+
+// Emite o codigo cifrado das URLs de video (ver streamSession.js). Sem o secret STREAM_KEY responde 204 e o
+// app segue montando as URLs do jeito antigo.
+async function streamSession(request, env) {
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return new Response('invalid json', { status: 400 })
+  }
+  const { base, username, password } = body || {}
+  if (typeof base !== 'string' || typeof username !== 'string' || typeof password !== 'string') {
+    return new Response('missing fields', { status: 400 })
+  }
+  let origin
+  try {
+    origin = new URL(base)
+  } catch {
+    return new Response('invalid base url', { status: 400 })
+  }
+  if (!isAllowed(origin)) return new Response('host not allowed', { status: 403 })
+  const sid = await sealSession(env.STREAM_KEY, { base, username, password })
+  if (!sid) return new Response(null, { status: 204 })
+  return Response.json({ sid }, { headers: { 'cache-control': 'no-store' } })
 }
 
 // Client-side error reporting: no Sentry/analytics account exists for this project, so instead of
@@ -314,7 +360,11 @@ export default {
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
       if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
-      return withSecurityHeaders(await xtream(url))
+      return withSecurityHeaders(await xtream(request, url))
+    }
+    if (url.pathname === '/api/session' && request.method === 'POST') {
+      if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await streamSession(request, env))
     }
     if (url.pathname === '/api/tmdb') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
@@ -324,7 +374,7 @@ export default {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
       // requests within a few seconds, especially right after a channel switch or quality change.
       if (isRateLimited(ip, 'stream', 600, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
-      return withSecurityHeaders(await stream(request, url))
+      return withSecurityHeaders(await stream(request, url, env))
     }
     return withSecurityHeaders(await env.ASSETS.fetch(request), url.pathname)
   },

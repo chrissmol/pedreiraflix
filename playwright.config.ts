@@ -29,7 +29,14 @@ export default defineConfig({
   ],
   webServer: [
     { command: 'node e2e/mock-xtream.mjs', port: 8790, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'node server/index.js', port: 8787, reuseExistingServer: true, env: { ALLOW_PRIVATE_HOSTS: '1' } },
+    // STREAM_KEY aqui e uma chave so de teste: liga as URLs de video cifradas (worker/streamSession.js) para
+    // todos os testes de player passarem pelo caminho que vai para producao.
+    {
+      command: 'node server/index.js',
+      port: 8787,
+      reuseExistingServer: true,
+      env: { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'CIJftNzU3hhiG9CV99+iGV4xVn3CMuMWqOizVT0m2Z0=' },
+    },
     { command: 'npx vite --port 5173 --strictPort', port: 5173, reuseExistingServer: true },
     // Rebuilds first so the PWA test exercises what would actually ship, not a stale dist/. Kill any
     // process already on :4173 (`npx kill-port` isn't installed) before re-running after a code change.
