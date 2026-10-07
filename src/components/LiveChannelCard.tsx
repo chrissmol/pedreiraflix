@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Plus } from './icons'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
+import { useMinuteClock } from '../lib/minuteClock'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import type { EpgProgram, LiveChannel } from '../types'
@@ -63,16 +64,10 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
     }
   }, [visible, client, channel.streamId])
 
-  // The bar has to advance while the page is open, so "now" is state on a minute tick rather than a
-  // `Date.now()` read during render (which would also freeze at whatever the first render saw).
-  // ponytail: one interval per card with a program — fine for the dozens actually scrolled through; if a
-  // 500-channel lineup ever feels heavy, hoist it to a single shared clock in a context.
-  const [nowMs, setNowMs] = useState(() => Date.now())
-  useEffect(() => {
-    if (!program) return
-    const timer = setInterval(() => setNowMs(Date.now()), 60_000)
-    return () => clearInterval(timer)
-  }, [program])
+  // The bar has to advance while the page is open, so "now" comes from a shared minute clock rather than a
+  // `Date.now()` read during render (which would freeze at whatever the first render saw). One interval for
+  // every card on screen — see lib/minuteClock.ts.
+  const nowMs = useMinuteClock(Boolean(program))
 
   let progress: number | null = null
   let endsAt = ''

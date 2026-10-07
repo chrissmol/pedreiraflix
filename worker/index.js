@@ -120,11 +120,13 @@ function isAllowed(url) {
   return (url.protocol === 'http:' || url.protocol === 'https:') && !isPrivateAddress(url.hostname)
 }
 
-// Usuario e senha chegam em cabecalhos (x-xtream-username/password), fora da URL — a URL aparece no console,
-// na aba Rede e no wrangler tail. ponytail: a query ainda e aceita para PWAs instalados que nao atualizaram;
-// remover quando todos tiverem passado pela versao nova.
+// Usuario e senha chegam SO em cabecalhos (x-xtream-username/password), fora da URL — a URL aparece no console,
+// na aba Rede e no wrangler tail. A query com credenciais ja nao e aceita: o app sempre carrega o HTML novo
+// do servidor (service worker network-first), entao nao sobra versao antiga que ainda a use.
 async function xtream(request, url) {
   const q = new URLSearchParams(url.searchParams)
+  q.delete('username')
+  q.delete('password')
   for (const k of ['username', 'password']) {
     const v = request.headers.get(`x-xtream-${k}`)
     if (v != null) q.set(k, v)
