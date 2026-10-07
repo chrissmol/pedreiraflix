@@ -127,7 +127,9 @@ async function assertPublicHost(hostname) {
 // Proxies Xtream Codes JSON API calls (player_api.php, xmltv.php, etc).
 app.get('/api/xtream', async (req, res) => {
   const { base, path, ...rest } = req.query
-  // Mesmo contrato do Worker: usuario e senha em cabecalhos, query so como fallback de versao antiga.
+  // Mesmo contrato do Worker: usuario e senha so em cabecalhos; a query com credenciais e descartada.
+  delete rest.username
+  delete rest.password
   for (const k of ['username', 'password']) {
     const v = req.get(`x-xtream-${k}`)
     if (v != null) rest[k] = v

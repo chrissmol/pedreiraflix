@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { login, MOCK } from './helpers'
 
+const CREDS = { 'x-xtream-username': MOCK.username, 'x-xtream-password': MOCK.password }
+
 test('security headers are present on proxy responses', async ({ request }) => {
-  const res = await request.get(
-    `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&username=${MOCK.username}&password=${MOCK.password}`,
-  )
+  const res = await request.get(`/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php`, { headers: CREDS })
   expect(res.headers()['x-content-type-options']).toBe('nosniff')
   expect(res.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin')
 })
@@ -16,9 +16,9 @@ test('excessive requests to /api/xtream get rate-limited with 429', async ({ req
   // traffic (catalog loads, EPG, search suggestions...) already put into it moments earlier.
   await new Promise((resolve) => setTimeout(resolve, 10_500))
 
-  const url = `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&username=${MOCK.username}&password=${MOCK.password}&action=get_live_categories`
+  const url = `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&action=get_live_categories`
   const statuses: number[] = []
-  for (let i = 0; i < 310; i++) statuses.push((await request.get(url)).status())
+  for (let i = 0; i < 310; i++) statuses.push((await request.get(url, { headers: CREDS })).status())
   expect(statuses).toContain(429)
   // The very first requests, before the limit trips, must have gone through normally.
   expect(statuses[0]).toBe(200)
@@ -57,4 +57,13 @@ test('a plaintext pre-obfuscation session (from an older app version) still logs
   // And it gets re-saved obfuscated going forward.
   const raw = await page.evaluate(() => localStorage.getItem('iptv-session'))
   expect(raw).not.toContain(MOCK.password)
+})
+
+// Credenciais na URL aparecem em console, aba Rede e logs: o proxy nao as aceita mais, so por cabecalho.
+test('o proxy ignora usuario e senha na URL (so aceita por cabecalho)', async ({ request }) => {
+  const base = `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php`
+  const naUrl = await (await request.get(`${base}&username=${MOCK.username}&password=${MOCK.password}`)).json()
+  expect(naUrl.user_info?.auth).not.toBe(1)
+  const porCabecalho = await (await request.get(base, { headers: CREDS })).json()
+  expect(porCabecalho.user_info?.auth).toBe(1)
 })

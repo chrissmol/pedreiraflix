@@ -84,3 +84,20 @@ test('raw=1 (playlist M3U para virar catalogo) chega intacta, sem reescrita', as
   const res = await worker.fetch(new Request(`http://app/api/stream?raw=1&url=${encodeURIComponent('http://iptv.exemplo/lista.m3u')}`), ENV)
   assert.equal(await res.text(), m3u)
 })
+
+test('usuario e senha na query sao descartados: o provedor so recebe o que veio nos cabecalhos', async () => {
+  const calls = stubFetch(() => Response.json({ ok: true }))
+  await worker.fetch(
+    new Request(`http://app/api/xtream?base=${encodeURIComponent(BASE)}&username=intruso&password=vazada`, {
+      headers: { 'x-xtream-username': 'usuario1', 'x-xtream-password': 'segredo9' },
+    }),
+    ENV,
+  )
+  const sent = new URL(calls[0])
+  assert.equal(sent.searchParams.get('username'), 'usuario1')
+  assert.equal(sent.searchParams.get('password'), 'segredo9')
+  // Sem cabecalho, a query nao vale como credencial.
+  const semCabecalho = stubFetch(() => Response.json({ ok: true }))
+  await worker.fetch(new Request(`http://app/api/xtream?base=${encodeURIComponent(BASE)}&username=intruso&password=vazada`), ENV)
+  assert.equal(new URL(semCabecalho[0]).searchParams.get('username'), null)
+})
