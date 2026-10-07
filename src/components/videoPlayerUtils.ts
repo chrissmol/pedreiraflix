@@ -32,6 +32,10 @@ export function formatRemaining(positionSeconds: number, durationSeconds: number
   return left >= 60 ? `Faltam ${Math.floor(left / 60)}h ${left % 60}min` : `Faltam ${left} min`
 }
 
+/** Quanto os botoes, o duplo toque, as setas do teclado e a tela de bloqueio pulam. Um valor so, para o numero
+ * dentro do icone nunca divergir do que o botao faz. */
+export const SKIP_SECONDS = 10
+
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const h = Math.floor(seconds / 3600)

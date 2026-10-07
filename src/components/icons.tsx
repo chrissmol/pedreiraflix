@@ -120,18 +120,18 @@ export function Minimize({ className }: IconProps) {
   )
 }
 
-export function SkipBack({ className }: IconProps) {
+/** Pular para frente/tras: seta circular com o numero de segundos no meio (o padrao dos players de video).
+ * O numero fica fora do grupo espelhado, senao "10" apareceria de tras para frente no icone de voltar. */
+export function SkipSeconds({ direction, seconds, className }: IconProps & { direction: 'back' | 'forward'; seconds: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z" />
-    </svg>
-  )
-}
-
-export function SkipForward({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M13 6v12l8.5-6L13 6zm-.5 6L4 6v12l8.5-6z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="butt" className={className}>
+      <g transform={direction === 'back' ? 'translate(24 0) scale(-1 1)' : undefined}>
+        <path d="M18.13 7.86A8 8 0 1 1 12 5h3" />
+        <path d="M15 2l4.2 3L15 8z" fill="currentColor" strokeLinejoin="round" strokeWidth={1} />
+      </g>
+      <text x="12" y="16.4" textAnchor="middle" fontSize={seconds >= 100 ? 7 : 8.5} fontWeight={700} fill="currentColor" stroke="none" fontFamily="Inter, system-ui, sans-serif">
+        {seconds}
+      </text>
     </svg>
   )
 }
@@ -358,6 +358,14 @@ export function Bookmark({ className }: IconProps) {
     <Stroke className={className}>
       <path d="M6 3h12v18l-6-4-6 4z" />
     </Stroke>
+  )
+}
+
+export function SkipPrevious({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18 5v14l-9-7zM5.5 5H8v14H5.5z" />
+    </svg>
   )
 }
 

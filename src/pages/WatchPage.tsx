@@ -173,6 +173,14 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     return episodes[index + 1] ?? null
   }, [seriesDetails, kind, id])
 
+  // Episodio anterior: null no primeiro da serie (e quando o episodio nao foi achado na lista).
+  const previousEpisode = useMemo(() => {
+    if (!seriesDetails || kind !== 'series') return null
+    const episodes = flattenEpisodes(seriesDetails)
+    const index = episodes.findIndex((e) => e.id === id)
+    return index > 0 ? episodes[index - 1] : null
+  }, [seriesDetails, kind, id])
+
   function goToEpisode(ep: Episode) {
     if (!seriesDetails) return
     navigate(
@@ -238,6 +246,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onProgress={handleProgress}
         onEnded={handleEnded}
         next={nextEpisode ? { label: `${nextEpisode.title}`, onPlay: () => goToEpisode(nextEpisode) } : null}
+        previous={previousEpisode ? { label: previousEpisode.title, onPlay: () => goToEpisode(previousEpisode) } : null}
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
       />
