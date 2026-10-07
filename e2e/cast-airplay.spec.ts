@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { login } from './helpers'
+import { login, MOCK } from './helpers'
 
 test('AirPlay button appears on a mocked Safari and opens the native picker', async ({ page }) => {
   // Simulates Safari's <video> AirPlay members, which no other engine has, before the app boots.
@@ -93,7 +93,9 @@ test('the Cast (Chromecast) button appears, opens a session and loads media with
   await expect.poll(() => page.evaluate(() => (window as any).__castRequestSessionCalls)).toBe(1)
   const calls = await page.evaluate(() => (window as any).__castLoadMediaCalls)
   expect(calls).toHaveLength(1)
-  expect(calls[0].url).toMatch(/^http:\/\/localhost:5173\/api\/stream\?url=/)
+  // A TV recebe esta URL: tem que ser a forma cifrada, sem a senha do provedor.
+  expect(calls[0].url).toMatch(/^http:\/\/localhost:5173\/api\/stream\?s=/)
+  expect(decodeURIComponent(calls[0].url)).not.toContain(MOCK.password)
   expect(calls[0].contentType).toBe('video/mp4')
   expect(calls[0].title).toBe('Filme Explosivo')
 })

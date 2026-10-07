@@ -2,6 +2,7 @@ import dns from 'node:dns/promises'
 import net from 'node:net'
 import cors from 'cors'
 import express from 'express'
+import { openSession, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
 
 const app = express()
 
@@ -38,6 +39,10 @@ function isRateLimited(ip, key, limit, windowMs) {
   return bucket.count > limit
 }
 app.use('/api/xtream', (req, res, next) => {
+  if (isRateLimited(req.ip, 'xtream', 300, 10_000)) return res.status(429).send('rate limited')
+  next()
+})
+app.use('/api/session', (req, res, next) => {
   if (isRateLimited(req.ip, 'xtream', 300, 10_000)) return res.status(429).send('rate limited')
   next()
 })
@@ -122,6 +127,11 @@ async function assertPublicHost(hostname) {
 // Proxies Xtream Codes JSON API calls (player_api.php, xmltv.php, etc).
 app.get('/api/xtream', async (req, res) => {
   const { base, path, ...rest } = req.query
+  // Mesmo contrato do Worker: usuario e senha em cabecalhos, query so como fallback de versao antiga.
+  for (const k of ['username', 'password']) {
+    const v = req.get(`x-xtream-${k}`)
+    if (v != null) rest[k] = v
+  }
   const baseUrl = sanitizeBaseUrl(typeof base === 'string' ? base : '')
   if (!baseUrl) return res.status(400).json({ error: 'invalid base url' })
 
@@ -151,16 +161,37 @@ app.get('/api/xtream', async (req, res) => {
   }
 })
 
+// Espelho do /api/session do Worker (ver worker/streamSession.js).
+app.post('/api/session', express.json({ limit: '4kb' }), async (req, res) => {
+  const { base, username, password } = req.body || {}
+  if (typeof base !== 'string' || typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).send('missing fields')
+  }
+  if (!sanitizeBaseUrl(base)) return res.status(400).send('invalid base url')
+  const sid = await sealSession(process.env.STREAM_KEY, { base, username, password })
+  if (!sid) return res.status(204).end()
+  res.setHeader('cache-control', 'no-store')
+  res.json({ sid })
+})
+
 // Proxies live/VOD/series media streams (HLS playlists, TS/MP4 segments).
 app.get('/api/stream', async (req, res) => {
-  const { url, download, filename } = req.query
-  if (typeof url !== 'string') return res.status(400).send('missing url')
+  const { url, download, filename, s: sid, p: path } = req.query
 
   let target
-  try {
-    target = new URL(url)
-  } catch {
-    return res.status(400).send('invalid url')
+  let session = null
+  if (typeof sid === 'string') {
+    session = await openSession(process.env.STREAM_KEY, sid)
+    if (!session) return res.status(401).send('invalid stream session')
+    target = targetFor(session, path)
+    if (!target) return res.status(400).send('invalid path')
+  } else {
+    if (typeof url !== 'string') return res.status(400).send('missing url')
+    try {
+      target = new URL(url)
+    } catch {
+      return res.status(400).send('invalid url')
+    }
   }
   if (target.protocol !== 'http:' && target.protocol !== 'https:') {
     return res.status(400).send('invalid protocol')
@@ -201,7 +232,7 @@ app.get('/api/stream', async (req, res) => {
       // against the final URL (panels usually redirect streams to a CDN), and
       // include URI="..." attributes (alternate audio, subtitles, keys).
       const base = upstream.url || target.toString()
-      const proxied = (ref) => `/api/stream?url=${encodeURIComponent(new URL(ref, base).toString())}`
+      const proxied = (ref) => proxiedRef(new URL(ref, base).toString(), session, sid)
       const text = await upstream.text()
       const rewritten = text
         .split('\n')
