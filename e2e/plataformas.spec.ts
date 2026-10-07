@@ -49,3 +49,10 @@ test('a fonte do design system esta aplicada', async ({ page }) => {
   const fonte = await page.evaluate(() => getComputedStyle(document.body).fontFamily)
   expect(fonte).toContain('Inter')
 })
+
+// Relato do Christian (07/10): o navegador traduzia o site toda vez. O HTML dizia lang="en" com o app todo em
+// portugues, entao o navegador achava que era uma pagina em ingles e oferecia (ou fazia sozinho) a traducao.
+test('a pagina declara o idioma em que esta escrita', async ({ page }) => {
+  await login(page)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
+})
