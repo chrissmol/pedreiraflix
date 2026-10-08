@@ -40,6 +40,12 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const existingProgress = useLibraryStore((s) => s.progress[`${profileId}:${kind}-${id}`])
   const lastSaved = useRef(0)
 
+  // Canal aberto entra em "Recentes" da tela de canais.
+  const addRecentLive = useLibraryStore((s) => s.addRecentLive)
+  useEffect(() => {
+    if (kind === 'live' && id && Number(id)) addRecentLive(profileId, Number(id))
+  }, [kind, id, profileId, addRecentLive])
+
   // Guard against literal "undefined"/"null" strings ending up in the URL or
   // in progress entries persisted before a field existed — a plain `|| ''`
   // fallback chain treats those non-empty strings as valid values otherwise.
