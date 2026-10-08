@@ -82,8 +82,9 @@ test('auto-advances to the next episode and offers a manual "next episode" butto
 
   // Auto-advance prompt near the end of playback. Depois de trocar de episodio o <video> novo ainda pode estar
   // sem metadados (duration = NaN) e o navegador recusa currentTime nao finito — media-se 1 falha em ~30 rodadas.
-  await expect.poll(() => page.locator('video').evaluate((v: HTMLVideoElement) => Number.isFinite(v.duration))).toBe(true)
-  await page.locator('video').evaluate((v: HTMLVideoElement) => {
+  // Esperar e pular no mesmo passo: com um poll antes, o video ainda podia ser trocado entre os dois (08/10, 1 falha).
+  await page.locator('video').evaluate(async (v: HTMLVideoElement) => {
+    while (!Number.isFinite(v.duration)) await new Promise((r) => v.addEventListener('loadedmetadata', r, { once: true }))
     v.currentTime = Math.max(0, v.duration - 5)
   })
   await expect(page.getByText('A seguir')).toBeVisible({ timeout: 10000 })

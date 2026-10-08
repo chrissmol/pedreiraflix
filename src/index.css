@@ -86,11 +86,14 @@
 }
 
 
+/* `--app-h` (medido em Layout.tsx), nao so 100%: no iPhone instalado o 100% de html/body tambem sai da altura
+ * curta do WebKit, e como o body nao rola (`overflow: hidden` abaixo) ele cortava o shell nessa altura — o
+ * video de 08/10 mostrou o menu cortado embaixo e a faixa preta mesmo com o shell ja do tamanho da tela. */
 html,
 body,
 #root {
   margin: 0;
-  height: 100%;
+  height: var(--app-h, 100%);
   background: var(--app-bg);
   color: var(--app-fg);
   font-family: var(--font-sans);
