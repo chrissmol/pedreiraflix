@@ -15,6 +15,7 @@ import type { Episode, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
+import { getTmdbInfo } from '../lib/tmdb'
 
 export default function SeriesDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -59,6 +60,17 @@ export default function SeriesDetailPage() {
     }
   }, [client, id, isKids, attempt])
 
+  // So a nota do IMDb (via /api/tmdb, kind=tv); genero/sinopse da serie continuam vindo so do provedor.
+  const [imdbRating, setImdbRating] = useState<string | null>(null)
+  useEffect(() => {
+    if (!series) return
+    let cancelled = false
+    getTmdbInfo(series.name, series.releaseDate, 'tv').then((info) => !cancelled && setImdbRating(info?.imdbRating ?? null))
+    return () => {
+      cancelled = true
+    }
+  }, [series])
+
   if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
   if (error) return <ErrorCard message={error} onRetry={() => setAttempt((n) => n + 1)} className="mt-32" />
@@ -95,6 +107,7 @@ export default function SeriesDetailPage() {
         backdrop={backdrop}
         poster={series.cover}
         rating={rating}
+        imdbRating={imdbRating}
         chips={chips}
         genre={series.genre}
         plot={series.plot}

@@ -31,3 +31,15 @@ test('movie detail still renders when /api/tmdb has no data', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Filme Explosivo' })).toBeVisible()
   await expect(page.getByText('Sinopse de Filme Explosivo.')).toBeVisible()
 })
+
+test('serie mostra a nota do IMDb (busca com kind=tv)', async ({ page }) => {
+  let pedido = ''
+  await page.route('**/api/tmdb?*', (route) => {
+    pedido = route.request().url()
+    return route.fulfill({ json: { genres: [], year: null, rating: null, overview: null, imdbRating: '9.1' } })
+  })
+  await login(page)
+  await page.goto('/series/50')
+  await expect(page.getByText('IMDb 9.1')).toBeVisible()
+  expect(pedido).toContain('kind=tv')
+})
