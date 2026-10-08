@@ -5,6 +5,8 @@ export interface TmdbInfo {
   year: string | null
   rating: number | null
   overview: string | null
+  /** IMDb's rating ("7.8"), via OMDb in the Worker; absent/null when OMDB_KEY isn't set or there's no match. */
+  imdbRating?: string | null
 }
 
 // "Filme (2023)" / "[L] Filme" -> "Filme": providers decorate titles, TMDB's search wants the bare name.

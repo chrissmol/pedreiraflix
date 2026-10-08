@@ -11,7 +11,7 @@ test('movie detail fills missing genre, year, rating and plot from /api/tmdb', a
     await route.fulfill({ response: res, json })
   })
   await page.route('**/api/tmdb?*', (route) =>
-    route.fulfill({ json: { genres: ['Ficção científica', 'Aventura'], year: '2014', rating: 7.4, overview: 'Sinopse vinda do TMDB.' } }),
+    route.fulfill({ json: { genres: ['Ficção científica', 'Aventura'], year: '2014', rating: 7.4, overview: 'Sinopse vinda do TMDB.', imdbRating: '7.8' } }),
   )
 
   await login(page)
@@ -19,6 +19,7 @@ test('movie detail fills missing genre, year, rating and plot from /api/tmdb', a
   await expect(page.getByText('Ficção científica, Aventura')).toBeVisible()
   await expect(page.getByText('2014')).toBeVisible()
   await expect(page.getByText('★ 7.4')).toBeVisible()
+  await expect(page.getByText('IMDb 7.8')).toBeVisible()
   await expect(page.getByText('Sinopse vinda do TMDB.')).toBeVisible()
   await expect(page.getByText(/Dados complementares do TMDB/)).toBeVisible()
 })
