@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
 import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
+import SeasonDownloadButton from '../components/SeasonDownloadButton'
 import { Check, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
 import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
@@ -166,9 +167,20 @@ export default function SeriesDetailPage() {
           ))}
         </div>
 
-        <div className="mb-5 flex items-baseline gap-3">
+        <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
           <h2 className="font-display text-headline-md text-white">Episódios</h2>
           <span className="text-body-sm text-on-surface-muted">{season?.episodes.length ?? 0} nesta temporada</span>
+          {season && (
+            <div className="sm:ml-auto">
+              <SeasonDownloadButton
+                seriesId={series.seriesId}
+                seriesName={series.name}
+                season={season.seasonNumber}
+                episodes={season.episodes}
+                image={series.cover}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid gap-3 lg:grid-cols-2">

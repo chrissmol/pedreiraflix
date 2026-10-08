@@ -32,7 +32,21 @@ interface DownloadsState {
     image: string | null,
     seriesId?: number,
   ) => Promise<void>
+  /** Season downloads in flight, by `${profileId}:season-${seriesId}-${season}`: how far the queue got. */
+  seasons: Record<string, { done: number; total: number }>
+  startSeason: (
+    client: ProviderClient,
+    profileId: string,
+    seasonKey: string,
+    seriesId: number,
+    episodes: { id: string; ext: string; name: string }[],
+    image: string | null,
+  ) => Promise<void>
+  /** Stops the queue after the episode currently downloading (that one finishes normally). */
+  stopSeason: (seasonKey: string) => void
 }
+
+const stopRequested = new Set<string>()
 
 const EMPTY: DownloadMeta[] = []
 
@@ -40,6 +54,38 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
   items: {},
   progress: {},
   failed: {},
+  seasons: {},
+  // One episode at a time: each download holds one of the provider's screens, and the phone's memory and
+  // bandwidth go to finishing one file instead of crawling through ten.
+  startSeason: async (client, profileId, seasonKey, seriesId, episodes, image) => {
+    if (get().seasons[seasonKey]) return
+    stopRequested.delete(seasonKey)
+    const total = episodes.length
+    set((state) => ({ seasons: { ...state.seasons, [seasonKey]: { done: 0, total } } }))
+    // Keeps the screen on: a locked iPhone pauses the PWA and kills the download. Released on its own
+    // when the app goes to the background; best effort where unsupported.
+    const wakeLock = await navigator.wakeLock?.request('screen').catch(() => null)
+    try {
+      for (const [i, ep] of episodes.entries()) {
+        if (stopRequested.has(seasonKey)) break
+        await get().start(client, profileId, 'series', ep.id, ep.ext, ep.name, image, seriesId)
+        // No point trying the rest on a full disk.
+        if (get().failed[`${profileId}:series-${ep.id}`]?.startsWith('Sem espaço')) break
+        set((state) => ({ seasons: { ...state.seasons, [seasonKey]: { done: i + 1, total } } }))
+      }
+    } finally {
+      await wakeLock?.release().catch(() => {})
+      stopRequested.delete(seasonKey)
+      set((state) => {
+        const seasons = { ...state.seasons }
+        delete seasons[seasonKey]
+        return { seasons }
+      })
+    }
+  },
+  stopSeason: (seasonKey) => {
+    stopRequested.add(seasonKey)
+  },
   refresh: async (profileId) => {
     const meta = await listDownloadMeta(profileId)
     set((state) => ({ items: { ...state.items, [profileId]: meta } }))
