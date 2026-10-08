@@ -30,3 +30,14 @@ dist-ssr
 e2e/fixtures
 test-results
 playwright-report
+
+# Android (Capacitor): saidas de build, caches e copias geradas pelo `cap sync` nunca vao para o Git.
+# Em 08/10 um `git add -A` levou 1.845 desses arquivos para a main por engano (PR #84).
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json

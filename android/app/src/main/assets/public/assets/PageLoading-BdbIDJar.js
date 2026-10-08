@@ -1,1 +1,0 @@
-import{ft as e}from"./profiles-3xWuwQm5.js";var t=e();function n({label:e=`Carregando`,className:n=`pt-32`}){return(0,t.jsxs)(`div`,{role:`status`,className:`flex justify-center ${n}`,children:[(0,t.jsx)(`span`,{className:`h-8 w-8 animate-spin rounded-full border-[3px] border-white/10 border-t-brand-500`}),(0,t.jsx)(`span`,{className:`sr-only`,children:e})]})}export{n as t};
