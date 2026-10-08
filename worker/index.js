@@ -346,19 +346,24 @@ async function tmdb(url, env) {
   const headers = { authorization: `Bearer ${token}`, accept: 'application/json' }
   const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
 
-  const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
+  // kind=tv: series. TMDB names the same things differently there (first_air_date, first_air_date_year) and
+  // only hands out the IMDb id through external_ids.
+  const tv = url.searchParams.get('kind') === 'tv'
+  const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
+  const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
   const hit = search.ok ? (await search.json()).results?.[0] : null
   if (!hit) return none(search.ok ? 'no-match' : `search-${search.status} ${shape}`)
-  const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
+  const details = await get(tv ? `/tv/${hit.id}` : `/movie/${hit.id}`, { language: 'pt-BR', ...(tv ? { append_to_response: 'external_ids' } : {}) })
   if (!details.ok) return none(`details-${details.status}`)
   const d = await details.json()
+  const firstDate = tv ? d.first_air_date : d.release_date
   return Response.json(
     {
       genres: (d.genres || []).map((g) => g.name),
-      year: d.release_date ? d.release_date.slice(0, 4) : null,
+      year: firstDate ? firstDate.slice(0, 4) : null,
       rating: d.vote_average || null,
       overview: d.overview || null,
-      imdbRating: await imdbRating(d.imdb_id, env),
+      imdbRating: await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env),
     },
     { headers: { 'cache-control': 'public, max-age=86400' } },
   )

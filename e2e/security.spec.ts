@@ -16,12 +16,18 @@ test('excessive requests to /api/xtream get rate-limited with 429', async ({ req
   // traffic (catalog loads, EPG, search suggestions...) already put into it moments earlier.
   await new Promise((resolve) => setTimeout(resolve, 10_500))
 
-  const url = `/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&action=get_live_categories`
-  const statuses: number[] = []
-  for (let i = 0; i < 310; i++) statuses.push((await request.get(url, { headers: CREDS })).status())
+  // Direto no proxy por 127.0.0.1, sem o Vite no meio: o Vite conecta em `localhost`, e no Node 24 cada conexao
+  // nova pode cair em IPv4 ou IPv6 — o proxy via dois "IPs", dividia os pedidos em dois baldes e nenhum
+  // chegava ao limite (falhava as vezes, so local).
+  const url = `http://127.0.0.1:8787/api/xtream?base=${encodeURIComponent(MOCK.baseUrl)}&path=player_api.php&action=get_live_categories`
+  // Todos de uma vez, nao um depois do outro: em sequencia, numa maquina ocupada pela suite, os 310 levavam
+  // mais que a janela de 10s, ela recomecava no meio e o limite nunca disparava (falhou 2x em 08/10).
+  const statuses = await Promise.all(
+    Array.from({ length: 310 }, () => request.get(url, { headers: CREDS }).then((r) => r.status())),
+  )
   expect(statuses).toContain(429)
-  // The very first requests, before the limit trips, must have gone through normally.
-  expect(statuses[0]).toBe(200)
+  // The requests before the limit trips must have gone through normally.
+  expect(statuses.filter((s) => s === 200).length).toBeGreaterThan(0)
 
   // Waits out the window afterward too, so the *next* test to hit /api/xtream doesn't inherit a false 429.
   await new Promise((resolve) => setTimeout(resolve, 10_500))
