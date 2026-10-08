@@ -56,3 +56,19 @@ test('cabecalho igual no topo e rolado, sem animacao', async ({ page }) => {
   expect(await estilo()).toEqual(antes)
   expect(antes[2]).toBe('0s')
 })
+
+// Toda largura entre celular e computador: o cabecalho cabe (o avatar fica dentro da tela) e ha sempre um menu
+// de navegacao visivel — as abas do topo ou o menu flutuante de baixo. Em 654px (painel do navegador do app) o
+// cabecalho de computador estourava (08/10).
+test('cabecalho cabe e ha navegacao em todas as larguras', async ({ page }) => {
+  await seedSession(page)
+  await page.goto('/movies')
+  for (let w = 360; w <= 1100; w += 40) {
+    await page.setViewportSize({ width: w, height: 800 })
+    const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+    expect(avatar.x + avatar.width, `largura ${w}`).toBeLessThanOrEqual(w)
+    const abas = await page.locator('header nav').isVisible()
+    const menuDeBaixo = await page.locator('nav').filter({ hasText: 'Séries' }).last().isVisible()
+    expect(abas || menuDeBaixo, `largura ${w}`).toBe(true)
+  }
+})

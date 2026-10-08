@@ -22,7 +22,7 @@ const links: { to: string; label: string; Icon: ComponentType<{ className?: stri
 export default function MobileNav() {
   return (
     <nav
-      className="absolute inset-x-4 border border-outline-soft bg-surface-low/90 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 sm:hidden"
+      className="absolute inset-x-4 border border-outline-soft bg-surface-low/90 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex justify-around rounded-full p-1.5 md:hidden"
     >
       {links.map(({ to, label, Icon }) => (
         <NavLink
