@@ -109,7 +109,11 @@ export default function TopNav() {
       // the real screen via `h-dvh` and is `position: relative`, so anchoring against that shell with
       // `absolute` sidesteps the whole fixed-vs-viewport-unit computation this bug lives in — it only
       // needs ordinary box layout, which iOS gets right.
-      className={`absolute left-[env(safe-area-inset-left)] right-[env(safe-area-inset-right)] top-0 z-50 flex items-center gap-3 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:gap-6 sm:px-10 ${
+      //
+      // Largura inteira de proposito, sem as margens laterais da Dynamic Island: em paisagem a ilha fica no
+      // meio da altura da tela, nunca na altura do cabecalho, e com as margens o conteudo do cabecalho nao
+      // cabia e empurrava o avatar para fora da tela (video de 08/10, depois do #77).
+      className={`absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:gap-6 sm:px-10 ${
         scrolled
           ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
           : 'bg-transparent'
