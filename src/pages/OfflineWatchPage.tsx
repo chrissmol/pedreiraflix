@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import VideoPlayer from '../components/VideoPlayer'
-import { getDownload } from '../lib/offlineStore'
+import { getDownload, getDownloadBlob } from '../lib/offlineStore'
 import type { DownloadRecord } from '../lib/offlineStore'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
@@ -37,10 +37,11 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
     let cancelled = false
     let url: string | null = null
     getDownload(downloadKey)
-      .then((r) => {
+      .then(async (r) => {
+        const blob = r ? await getDownloadBlob(r) : null
         if (cancelled) return
-        if (r) {
-          url = URL.createObjectURL(r.blob)
+        if (blob) {
+          url = URL.createObjectURL(blob)
           setObjectUrl(url)
         }
         setRecord(r ?? null)
