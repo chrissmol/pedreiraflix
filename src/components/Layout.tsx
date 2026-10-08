@@ -16,8 +16,18 @@ export default function Layout() {
   // tela, com conteudo passando por baixo (foi o que o video mostrou). `innerHeight` e medido de fato, e
   // de proposito nao e `visualViewport.height`: esse encolhe quando o teclado abre, o que faria o menu
   // pular para cima enquanto se digita na busca.
+  //
+  // E no iPhone instalado nem `innerHeight` serve: com a barra de status `black-translucent` ele vem menor
+  // que a tela (some a altura da barra de status), deixando uma faixa preta embaixo e o menu alto (print do
+  // Christian de 08/10). Instalado (`navigator.standalone`, so existe no iOS) nao ha barra do navegador, entao
+  // a altura do app e a da tela inteira; o iOS nao troca `screen.width/height` ao girar, dai o min/max.
   useEffect(() => {
-    const apply = () => document.documentElement.style.setProperty('--app-h', `${window.innerHeight}px`)
+    const appHeight = () => {
+      if (!(navigator as Navigator & { standalone?: boolean }).standalone) return window.innerHeight
+      const landscape = window.matchMedia('(orientation: landscape)').matches
+      return landscape ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height)
+    }
+    const apply = () => document.documentElement.style.setProperty('--app-h', `${appHeight()}px`)
     apply()
     window.addEventListener('resize', apply)
     window.addEventListener('orientationchange', apply)
