@@ -110,7 +110,10 @@ export default function TopNav() {
         PedreiraFlix
       </span>
 
-      <nav className="hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md sm:flex">
+      {/* Abas no topo so de md (768px) para cima, e a busca larga so de lg (1024px): entre 640 e ~830px o cabecalho
+          "de computador" nao cabia e empurrava a busca e o avatar para fora da tela (painel de 654px, 08/10). Abaixo
+          de md fica o menu flutuante de baixo (MobileNav), como no celular. */}
+      <nav className="hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md md:flex">
         {links.map((l) => (
           <NavLink
             key={l.to}
@@ -153,7 +156,7 @@ export default function TopNav() {
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
             // Em repouso no celular o recuo direito e zero e o texto de exemplo fica invisivel: com `pl-8 pr-3` +
             // borda o campo media 46px e nao cabia nos 40px do circulo (saia oval, lupa torta — video de 08/10).
-            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-all duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted sm:w-44 sm:pr-3 sm:placeholder:text-on-surface-muted sm:focus:w-64"
+            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-all duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}

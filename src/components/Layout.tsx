@@ -164,7 +164,7 @@ export default function Layout() {
       <main
         id="main-content"
         ref={mainRef}
-        className="h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0"
+        className="h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
         <Outlet />
       </main>
