@@ -32,3 +32,13 @@ test('destaque mostra o esqueleto enquanto carrega e depois o titulo', async ({ 
   await expect(page.getByTestId('hero-carregando')).toHaveCount(0, { timeout: 15000 })
   await expect(page.locator('h1')).toBeVisible()
 })
+
+// Paisagem de iPhone (852x393): tudo do cabecalho cabe na tela. Com as margens da Dynamic Island no cabecalho
+// (#77) o conteudo nao cabia e o avatar saia pela borda direita (video de 08/10).
+test('paisagem: o avatar do cabecalho fica dentro da tela', async ({ page }) => {
+  await page.setViewportSize({ width: 852, height: 393 })
+  await seedSession(page)
+  await page.goto('/')
+  const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+  expect(avatar.x + avatar.width).toBeLessThanOrEqual(852 - 16)
+})
