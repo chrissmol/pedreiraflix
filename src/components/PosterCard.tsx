@@ -1,3 +1,4 @@
+import { displayTitle } from '../lib/displayTitle'
 import { Play } from './icons'
 
 interface PosterCardProps {
@@ -15,7 +16,9 @@ interface PosterCardProps {
   fill?: boolean
 }
 
-export default function PosterCard({ title, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
+export default function PosterCard({ title: rawTitle, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
+  // Sem os enfeites do provedor ("[L]", ano repetido) em todo poster do app — mesma limpeza do destaque (#86).
+  const title = displayTitle(rawTitle)
   return (
     <button
       data-spatial

@@ -96,3 +96,18 @@ test('titulo longo do destaque nao invade o cabecalho', async ({ page }) => {
     expect(caixa.y, `largura ${largura}`).toBeGreaterThanOrEqual(cabecalho.y + cabecalho.height - 8)
   }
 })
+
+// Os posteres tambem sem os enfeites do provedor (mesma limpeza do destaque).
+test('poster mostra o titulo sem [L] e sem ano repetido', async ({ page }) => {
+  await page.route(/action=get_vod_streams&/, async (route) => {
+    const res = await route.fetch()
+    const json = (await res.json()) as { name: string }[]
+    await route.fulfill({ response: res, json: json.map((m) => (m.name === 'Filme Explosivo' ? { ...m, name: 'Filme Explosivo [L] (2025) (2025)' } : m)) })
+  })
+  await seedSession(page)
+  await page.goto('/movies')
+  const poster = page.getByRole('button', { name: /^Filme Explosivo/ }).first()
+  await expect(poster).toBeVisible({ timeout: 15000 })
+  await expect(poster).toContainText('Filme Explosivo (2025)')
+  await expect(poster).not.toContainText('[L]')
+})
