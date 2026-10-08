@@ -46,6 +46,18 @@ test('download a movie, watch it fully offline, then delete it', async ({ page }
   await page.getByRole('button', { name: /Excluir download de/ }).click()
   await page.getByRole('button', { name: 'Excluir', exact: true }).click()
   await expect(page.getByText('Nada baixado neste perfil ainda.')).toBeVisible()
+  // Excluir tambem apaga as partes do video (senao os GB ficariam presos no aparelho).
+  const partes = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const req = indexedDB.open('pedreiraflix-offline')
+        req.onsuccess = () => {
+          const n = req.result.transaction('parts').objectStore('parts').count()
+          n.onsuccess = () => resolve(n.result)
+        }
+      }),
+  )
+  expect(partes).toBe(0)
 
   await page.goto('/movies/1')
   await expect(page.getByRole('button', { name: 'Baixar para ver offline' })).toBeVisible()

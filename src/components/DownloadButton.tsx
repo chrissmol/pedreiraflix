@@ -67,8 +67,8 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
     <button
       onClick={() => client && start(client, profileId, kind, String(id), ext, name, image, seriesId)}
       disabled={!client}
-      title={failed ? 'Falhou — toque para tentar de novo' : 'Baixar para ver offline'}
-      aria-label={failed ? 'Tentar de novo' : 'Baixar para ver offline'}
+      title={failed || 'Baixar para ver offline'}
+      aria-label={failed ? `${failed}. Tentar de novo` : 'Baixar para ver offline'}
       className={`${
         compact
           ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white'
@@ -76,7 +76,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
       } disabled:opacity-50 ${failed ? 'text-live' : ''}`}
     >
       <Download className="h-5 w-5" />
-      {!compact && <span className="hidden sm:inline">{failed ? 'Tentar de novo' : 'Baixar para ver offline'}</span>}
+      {!compact && <span className="hidden sm:inline">{failed ? (failed.startsWith('Sem espaço') ? 'Sem espaço' : 'Tentar de novo') : 'Baixar para ver offline'}</span>}
     </button>
   )
 }
