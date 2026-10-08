@@ -12,6 +12,10 @@ test('PWA instalado no iPhone usa a altura da tela inteira, nao innerHeight', as
   await seedSession(page)
   await page.goto('/')
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--app-h'))).toBe('932px')
+  // O body tambem: ele nao rola e corta o que passar da altura dele (era o que ainda deixava a faixa preta).
+  await expect.poll(() => page.evaluate(() => [document.body.clientHeight, document.getElementById('root')!.clientHeight])).toEqual([932, 932])
+  const menu = await page.getByRole('link', { name: 'Início' }).last().boundingBox()
+  expect(menu!.y + menu!.height).toBeGreaterThan(932 - 120)
 })
 
 test('no navegador comum continua medindo innerHeight', async ({ page }) => {
