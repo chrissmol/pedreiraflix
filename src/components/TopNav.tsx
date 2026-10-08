@@ -19,7 +19,6 @@ const links = [
 ]
 
 export default function TopNav() {
-  const [scrolled, setScrolled] = useState(false)
   const [query, setQuery] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -75,18 +74,6 @@ export default function TopNav() {
     return () => document.removeEventListener('pointerdown', close)
   }, [suggestionsOpen])
 
-  // `window` never scrolls anymore — `Layout.tsx`'s `<main id="main-content">` is the actual scrollable
-  // element (see the index.css comment on `html, body { overflow: hidden }`). This runs on every route
-  // change too, not just mount: WatchPage/LoginPage render outside `Layout` and have no such element, and
-  // React Router remounts this listener fresh whenever TopNav itself (re)mounts inside Layout.
-  useEffect(() => {
-    const scrollEl = document.getElementById('main-content')
-    if (!scrollEl) return
-    const onScroll = () => setScrolled(scrollEl.scrollTop > 10)
-    scrollEl.addEventListener('scroll', onScroll)
-    return () => scrollEl.removeEventListener('scroll', onScroll)
-  }, [])
-
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     if (query.trim()) {
@@ -113,11 +100,11 @@ export default function TopNav() {
       // Largura inteira de proposito, sem as margens laterais da Dynamic Island: em paisagem a ilha fica no
       // meio da altura da tela, nunca na altura do cabecalho, e com as margens o conteudo do cabecalho nao
       // cabia e empurrava o avatar para fora da tela (video de 08/10, depois do #77).
-      className={`absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:gap-6 sm:px-10 ${
-        scrolled
-          ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
-          : 'bg-transparent'
-      }`}
+      //
+      // Sombra fixa de cima para baixo, sempre igual: antes o fundo alternava entre transparente e uma faixa de
+      // vidro escura conforme a rolagem passava de 10px, com transicao de 300ms — sobre um destaque claro isso
+      // piscava (video do Christian, 08/10). A sombra deixa o logo e a busca legiveis sobre qualquer imagem.
+      className="absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-6 sm:px-10"
     >
       <span className="neon-text font-display bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
         PedreiraFlix

@@ -42,3 +42,17 @@ test('paisagem: o avatar do cabecalho fica dentro da tela', async ({ page }) => 
   const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
   expect(avatar.x + avatar.width).toBeLessThanOrEqual(852 - 16)
 })
+
+// O fundo do cabecalho nao muda com a rolagem (antes alternava transparente/vidro com 300ms e piscava sobre
+// destaques claros — video de 08/10).
+test('cabecalho igual no topo e rolado, sem animacao', async ({ page }) => {
+  await seedSession(page)
+  await page.goto('/movies')
+  const header = page.locator('header')
+  const estilo = () => header.evaluate((el) => { const c = getComputedStyle(el); return [c.backgroundImage, c.backgroundColor, c.transitionDuration] })
+  const antes = await estilo()
+  await page.locator('#main-content').evaluate((el) => el.scrollTo(0, 600))
+  await page.waitForTimeout(400)
+  expect(await estilo()).toEqual(antes)
+  expect(antes[2]).toBe('0s')
+})
