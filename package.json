@@ -18,6 +18,8 @@
     "test:worker": "node --test tools/claude-worker/*.test.ts"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "hls.js": "^1.7.3",
@@ -27,6 +29,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/cors": "^2.8.19",
