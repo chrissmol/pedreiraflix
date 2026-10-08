@@ -21,6 +21,8 @@ interface CategorizedCatalogState<T> {
   error: string | null
 }
 
+export type CatalogState<T> = CategorizedCatalogState<T> & { retry: () => void }
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -44,13 +46,13 @@ async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number,
  * ...) into something a non-technical user can act on, instead of showing HTTP jargon on screen. Falls
  * back to a generic message rather than the raw one — the raw message is still in the console/error
  * object for debugging, it's just not what gets rendered. */
-function friendlyCatalogError(err: unknown): string {
+export function friendlyCatalogError(err: unknown): string {
   if (err instanceof XtreamApiError) {
-    if (err.status === 429) return 'O provedor está recebendo muitas requisições no momento. Tentando de novo...'
-    if (err.status && err.status >= 500) return 'O provedor está instável no momento. Tentando de novo...'
+    if (err.status === 429) return 'O provedor está recebendo muitos pedidos agora. Espere alguns segundos e tente de novo.'
+    if (err.status && err.status >= 500) return 'O provedor está instável no momento. Tente de novo em instantes.'
     if (err.status === 401 || err.status === 403) return 'Sessão expirada ou sem permissão. Tente entrar de novo.'
   }
-  return 'Não foi possível carregar. Verifique sua internet ou tente novamente em instantes.'
+  return 'Não foi possível carregar. Confira sua internet e tente de novo.'
 }
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
@@ -81,7 +83,7 @@ function useCategorizedCatalog<T>(
   loadCategories: (client: ProviderClient) => Promise<Category[]>,
   loadItemsForCategory: (client: ProviderClient, categoryId: string) => Promise<T[]>,
   hideAdultCategories: boolean,
-): CategorizedCatalogState<T> {
+): CatalogState<T> {
   const [state, setState] = useState<CategorizedCatalogState<T>>({
     categories: [],
     groups: [],
@@ -89,6 +91,8 @@ function useCategorizedCatalog<T>(
     error: null,
   })
   const requestId = useRef(0)
+  const [attempt, setAttempt] = useState(0)
+  const retry = useCallback(() => setAttempt((n) => n + 1), [])
 
   useEffect(() => {
     if (!client) return
@@ -153,9 +157,9 @@ function useCategorizedCatalog<T>(
     return () => {
       cancelled = true
     }
-  }, [kind, client, loadCategories, loadItemsForCategory, hideAdultCategories])
+  }, [kind, client, loadCategories, loadItemsForCategory, hideAdultCategories, attempt])
 
-  return state
+  return { ...state, retry }
 }
 
 export function useLiveCatalog() {

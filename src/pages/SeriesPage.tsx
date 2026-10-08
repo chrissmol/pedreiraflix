@@ -10,6 +10,7 @@ import Row from '../components/Row'
 import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import type { SeriesItem } from '../types'
+import ErrorCard from '../components/ErrorCard'
 
 type SortKey = 'default' | 'name' | 'rating'
 
@@ -54,7 +55,7 @@ function extractYears(items: SeriesItem[]): number[] {
 }
 
 export default function SeriesPage() {
-  const { groups, loading, error } = useSeriesCatalog()
+  const { groups, loading, error, retry } = useSeriesCatalog()
   const [searchParams] = useSearchParams()
   // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
@@ -154,9 +155,9 @@ export default function SeriesPage() {
 
       <ContinueWatchingRow kind="series" />
 
-      {error && <p className="px-4 text-live sm:px-10">{error}</p>}
+      {error && <ErrorCard message={error} onRetry={retry} className="mb-8" />}
       <CatalogProgress groups={groups} label="Carregando séries" />
-      {loading && groups.length === 0 && <Row title="Carregando..." loading />}
+      {loading && groups.length === 0 && <Row title="" loading />}
 
       {activeCategory ? (
         <PosterGrid kind="series" items={visibleGroups[0]?.items ?? []} loading={visibleGroups[0]?.loading} />

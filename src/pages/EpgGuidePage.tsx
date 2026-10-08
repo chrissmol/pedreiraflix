@@ -6,6 +6,7 @@ import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { formatEpgTime } from '../hooks/useShortEpg'
 import type { EpgProgram, LiveChannel } from '../types'
+import PageLoading from '../components/PageLoading'
 
 // Grid window: a couple hours of history (for catch-up) through several hours ahead.
 const WINDOW_BEFORE_MS = 2 * 3600_000
@@ -105,7 +106,7 @@ export default function EpgGuidePage() {
       </div>
 
       {loading && channels.length === 0 ? (
-        <p className="px-4 py-8 text-center text-on-surface-variant sm:px-10">Carregando canais...</p>
+        <PageLoading label="Carregando canais" className="py-8" />
       ) : channels.length === 0 ? (
         <p className="px-4 py-8 text-center text-on-surface-variant sm:px-10">Nenhum canal nesta categoria.</p>
       ) : (

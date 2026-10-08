@@ -39,7 +39,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
     <section className="mb-12">
       <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-headline-sm text-white sm:px-10 sm:text-headline-md">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-400 to-brand-600 shadow-none" />
-        {title}
+        {title || <span className="skeleton h-5 w-40 rounded" />}
         {seeAllHref && (
           <Link
             to={seeAllHref}

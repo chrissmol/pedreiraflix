@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
 import { Download, RefreshCw, Search, User } from './icons'
+import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 
@@ -135,7 +136,9 @@ export default function TopNav() {
         ))}
       </nav>
 
-      <form ref={searchRef} onSubmit={handleSearch} className="group relative ml-auto flex items-center">
+      <div className="ml-auto flex items-center gap-3">
+      <LoadingRing />
+      <form ref={searchRef} onSubmit={handleSearch} className="group relative flex items-center">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
@@ -162,6 +165,7 @@ export default function TopNav() {
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
       </form>
+      </div>
 
       <div ref={menuRef} className="relative">
         <button

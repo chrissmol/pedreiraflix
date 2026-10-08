@@ -4,6 +4,7 @@ import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { matchesQuery } from '../lib/search'
+import PageLoading from '../components/PageLoading'
 
 export default function SearchPage() {
   const [params] = useSearchParams()
@@ -48,7 +49,7 @@ export default function SearchPage() {
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg mb-8">Resultados para "{query}"</h1>
 
-      {loading && <p className="text-on-surface-variant">Carregando catálogo...</p>}
+      {loading && <PageLoading label="Carregando catálogo" className="py-8" />}
       {!loading && total === 0 && <p className="text-on-surface-variant">Nenhum resultado encontrado.</p>}
 
       {results.movies.length > 0 && (

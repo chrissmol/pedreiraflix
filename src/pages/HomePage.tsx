@@ -11,6 +11,7 @@ import { flattenGroups, useMovieCatalog, useSeriesCatalog } from '../hooks/useCa
 import { favoritesFor, progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import type { Movie, SeriesItem } from '../types'
+import ErrorCard from '../components/ErrorCard'
 
 interface RecommendedItem {
   kind: 'movie' | 'series'
@@ -225,7 +226,7 @@ export default function HomePage() {
         )}
 
         <CatalogProgress groups={[...movies.groups, ...series.groups]} label="Carregando catálogo" />
-        {movies.error && <p className="px-4 text-body-sm text-live sm:px-10">{movies.error}</p>}
+        {movies.error && <ErrorCard message={movies.error} onRetry={movies.retry} className="mb-8" />}
         {visibleMovieGroups.map(({ category, items, loading }) => (
           <CategoryRow
             key={category.categoryId}
@@ -238,7 +239,7 @@ export default function HomePage() {
           />
         ))}
 
-        {series.error && <p className="px-4 text-body-sm text-live sm:px-10">{series.error}</p>}
+        {series.error && <ErrorCard message={series.error} onRetry={series.retry} className="mb-8" />}
         {visibleSeriesGroups.map(({ category, items, loading }) => (
           <CategoryRow
             key={category.categoryId}

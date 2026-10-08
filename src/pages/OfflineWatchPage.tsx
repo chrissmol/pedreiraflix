@@ -5,6 +5,7 @@ import { getDownload } from '../lib/offlineStore'
 import type { DownloadRecord } from '../lib/offlineStore'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
+import PageLoading from '../components/PageLoading'
 
 interface OfflineWatchPageProps {
   /** The IndexedDB record key, `${profileId}:${kind}-${id}` — see store/downloads.ts. */
@@ -51,7 +52,7 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
     }
   }, [downloadKey])
 
-  if (record === undefined) return <div className="pt-32 text-center text-on-surface-variant">Carregando download...</div>
+  if (record === undefined) return <PageLoading label="Carregando download" />
   if (!record || !objectUrl) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
