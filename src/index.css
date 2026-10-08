@@ -306,6 +306,13 @@ img {
   animation: ring-in 300ms ease-out 400ms forwards;
 }
 
+/* O iPhone desenha campos de busca com estilo proprio (largura minima, arredondamento, lupa e "x" nativos)
+ * por cima do nosso: o botao de busca saia oval e com a lupa torta. `appearance-none` no input + isto. */
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
  * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
  * behavior (a `scroll-behavior` of `auto` here overrides the smooth *request*, per spec) — rather than

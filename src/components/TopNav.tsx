@@ -109,7 +109,7 @@ export default function TopNav() {
       // the real screen via `h-dvh` and is `position: relative`, so anchoring against that shell with
       // `absolute` sidesteps the whole fixed-vs-viewport-unit computation this bug lives in — it only
       // needs ordinary box layout, which iOS gets right.
-      className={`absolute inset-x-0 top-0 z-50 flex items-center gap-6 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:px-10 ${
+      className={`absolute left-[env(safe-area-inset-left)] right-[env(safe-area-inset-right)] top-0 z-50 flex items-center gap-3 border-0 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-all duration-300 sm:gap-6 sm:px-10 ${
         scrolled
           ? 'glass-panel shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
           : 'bg-transparent'
@@ -140,7 +140,7 @@ export default function TopNav() {
       <LoadingRing />
       <form ref={searchRef} onSubmit={handleSearch} className="group relative flex items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
             type="search"
             enterKeyHint="search"
@@ -160,7 +160,9 @@ export default function TopNav() {
             // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
             // header (and anything anchored to the search box, like its suggestions dropdown) past the
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            className="brand-focus h-10 w-10 rounded-full border border-outline-soft bg-surface-container pl-8 pr-3 text-body-md text-white transition-all duration-300 placeholder:text-on-surface-muted focus:w-28 focus:border-brand-500/60 sm:w-44 sm:focus:w-64"
+            // Em repouso no celular o recuo direito e zero e o texto de exemplo fica invisivel: com `pl-8 pr-3` +
+            // borda o campo media 46px e nao cabia nos 40px do circulo (saia oval, lupa torta — video de 08/10).
+            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-all duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted sm:w-44 sm:pr-3 sm:placeholder:text-on-surface-muted sm:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
