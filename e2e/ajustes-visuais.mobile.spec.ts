@@ -72,3 +72,27 @@ test('cabecalho cabe e ha navegacao em todas as larguras', async ({ page }) => {
     expect(abas || menuDeBaixo, `largura ${w}`).toBe(true)
   }
 })
+
+// Titulo longo do provedor no destaque (painel de 654px, 08/10): subia ate o cabecalho e ficava por cima do logo,
+// com "[L] (2025) (2025) (2025)". Agora 2 linhas no maximo e sem os enfeites.
+test('titulo longo do destaque nao invade o cabecalho', async ({ page }) => {
+  const longo = 'Purgatorio - Limbo - Arafta - Bound by Fate Amor e Confusão [L] (2025) (2025) (2025)'
+  // Todo filme e serie com o nome longo: qualquer um que o destaque escolher (ele alterna pelo relogio) serve.
+  await page.route(/action=(get_vod_streams|get_series)&/, async (route) => {
+    const res = await route.fetch()
+    const json = (await res.json()) as { name: string }[]
+    await route.fulfill({ response: res, json: json.map((m) => ({ ...m, name: longo })) })
+  })
+  await seedSession(page)
+  for (const largura of [390, 654]) {
+    await page.setViewportSize({ width: largura, height: 800 })
+    await page.goto('/')
+    const titulo = page.locator('h1').filter({ hasText: 'Purgatorio' })
+    await expect(titulo).toBeVisible({ timeout: 15000 })
+    await expect(titulo).not.toContainText('[L]')
+    expect((await titulo.textContent())!.match(/\(2025\)/g)).toHaveLength(1)
+    const cabecalho = (await page.locator('header').boundingBox())!
+    const caixa = (await titulo.boundingBox())!
+    expect(caixa.y, `largura ${largura}`).toBeGreaterThanOrEqual(cabecalho.y + cabecalho.height - 8)
+  }
+})

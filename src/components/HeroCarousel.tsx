@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Check, Info, Play, Plus } from './icons'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
+import { displayTitle } from '../lib/displayTitle'
 
 export interface FeaturedCandidate {
   key: string
@@ -110,8 +111,10 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
       <div className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-[100px]" />
 
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
-        <h1 className="font-display max-w-xl text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
-          {current.title}
+        {/* No maximo 2 linhas e sem os enfeites do provedor: um titulo longo subia ate o cabecalho e ficava por
+            cima do logo (painel de 654px, 08/10). */}
+        <h1 className="font-display line-clamp-2 max-w-xl text-balance text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
+          {displayTitle(current.title)}
         </h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">
           {current.rating > 0 && <span className="font-semibold text-rating">★ {current.rating.toFixed(1)}</span>}
