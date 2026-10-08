@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { displayTitle } from '../lib/displayTitle'
 
 interface DetailHeroProps {
   title: string
@@ -18,7 +19,9 @@ interface DetailHeroProps {
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title, backdrop, poster, rating, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+export default function DetailHero({ title: rawTitle, backdrop, poster, rating, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+  // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
+  const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
   return (
     <section className="relative overflow-hidden">
