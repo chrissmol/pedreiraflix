@@ -88,6 +88,7 @@ export default function MovieDetailPage() {
         backdrop={backdrop}
         poster={movie.streamIcon}
         rating={rating}
+        imdbRating={tmdb?.imdbRating}
         chips={chips}
         genre={genre}
         plot={plot}

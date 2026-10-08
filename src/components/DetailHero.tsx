@@ -7,6 +7,8 @@ interface DetailHeroProps {
   rating?: number | null
   /** Selos curtos ao lado da nota: ano, duracao, "3 temporadas"... */
   chips: string[]
+  /** IMDb's rating, shown beside the provider/TMDB star when available. */
+  imdbRating?: string | null
   genre?: string | null
   plot?: string | null
   credits: { label: string; value: string | null }[]
@@ -16,7 +18,7 @@ interface DetailHeroProps {
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title, backdrop, poster, rating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+export default function DetailHero({ title, backdrop, poster, rating, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
   const shownCredits = credits.filter((c) => c.value)
   return (
     <section className="relative overflow-hidden">
@@ -32,6 +34,11 @@ export default function DetailHero({ title, backdrop, poster, rating, chips, gen
                 ★ {rating.toFixed(1)}
               </span>
             ) : null}
+            {imdbRating && (
+              <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-white">
+                <span className="font-extrabold text-rating">IMDb</span> {imdbRating}
+              </span>
+            )}
             {chips.map((chip) => (
               <span key={chip} className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-on-surface-variant">
                 {chip}

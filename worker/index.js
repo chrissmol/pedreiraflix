@@ -311,6 +311,22 @@ async function logError(request) {
   return new Response(null, { status: 204 })
 }
 
+// IMDb's own rating (far more votes than TMDB's) via OMDb, keyed by the IMDb id TMDB already returns.
+// Optional like TMDB: needs the OMDB_KEY secret (free tier, 1,000 lookups/day — the daily cache on the
+// /api/tmdb response keeps us well under it). Any failure just means no IMDb badge, never a broken page.
+async function imdbRating(imdbId, env) {
+  if (!env.OMDB_KEY || !/^tt\d+$/.test(imdbId || '')) return null
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?${new URLSearchParams({ i: imdbId, apikey: String(env.OMDB_KEY).trim() })}`, {
+      signal: AbortSignal.timeout(5000),
+    })
+    const rating = res.ok ? (await res.json()).imdbRating : null
+    return /^\d+(\.\d)?$/.test(rating || '') ? rating : null
+  } catch {
+    return null
+  }
+}
+
 // Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
 // Needs the TMDB_TOKEN secret (v4 "API Read Access Token"); without it, or with no match, answers 204 and
 // the app just shows what the provider sent. The token stays server-side — never reaches the browser.
@@ -342,6 +358,7 @@ async function tmdb(url, env) {
       year: d.release_date ? d.release_date.slice(0, 4) : null,
       rating: d.vote_average || null,
       overview: d.overview || null,
+      imdbRating: await imdbRating(d.imdb_id, env),
     },
     { headers: { 'cache-control': 'public, max-age=86400' } },
   )
