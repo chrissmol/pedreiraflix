@@ -31,6 +31,9 @@ interface LibraryState {
   // point is removed (so it drops out of "continue watching"), but this flag
   // stays forever so episode lists can still show "already watched".
   watched: Record<string, true>
+  /** Canais ao vivo abertos por ultimo, por perfil, mais recente primeiro (a tela de canais abre nele). */
+  recentLive: Record<string, number[]>
+  addRecentLive: (profileId: string, streamId: number) => void
   toggleFavorite: (profileId: string, ref: FavoriteRef) => void
   isFavorite: (profileId: string, kind: FavoriteRef['kind'], id: number) => boolean
   setProgress: (profileId: string, entry: WatchProgress) => void
@@ -44,6 +47,13 @@ export const useLibraryStore = create<LibraryState>()(
       favorites: {},
       progress: {},
       watched: {},
+      recentLive: {},
+      addRecentLive: (profileId, streamId) =>
+        set((state) => {
+          const list = state.recentLive[profileId] ?? []
+          // ponytail: 20 fixos; mais que isso deixa de ser "recente"
+          return { recentLive: { ...state.recentLive, [profileId]: [streamId, ...list.filter((id) => id !== streamId)].slice(0, 20) } }
+        }),
       toggleFavorite: (profileId, ref) =>
         set((state) => {
           const list = state.favorites[profileId] ?? []
