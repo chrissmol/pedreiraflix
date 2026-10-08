@@ -7,11 +7,12 @@ import { useLiveCatalog } from '../hooks/useCatalog'
 import { matchesQuery } from '../lib/search'
 import { favoritesFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
+import ErrorCard from '../components/ErrorCard'
 
 const PAGE_SIZE = 60
 
 export default function LivePage() {
-  const { groups, loading, error } = useLiveCatalog()
+  const { groups, loading, error, retry } = useLiveCatalog()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   // Live channels have none of movies/series' catalog metadata (no genre/year/rating from the provider)
@@ -148,7 +149,7 @@ export default function LivePage() {
         </section>
       )}
 
-      {error && <p className="text-live">{error}</p>}
+      {error && <ErrorCard message={error} onRetry={retry} className="!mx-0 mb-8" />}
 
       {/* A list, not a grid of logo tiles: a live channel's useful information is what's on right now,
           which needs a line of text and a progress bar — the shape every TV app uses for a lineup. */}

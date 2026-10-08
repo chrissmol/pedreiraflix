@@ -10,6 +10,7 @@ import OfflineWatchPage from './OfflineWatchPage'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, LiveChannel, SeriesDetails } from '../types'
+import PageLoading from '../components/PageLoading'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
 function flattenEpisodes(details: SeriesDetails): Episode[] {
@@ -221,7 +222,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     if (nextEpisode) goToEpisode(nextEpisode)
   }
 
-  if (!src || checkingProfile) return <div className="pt-32 text-center text-on-surface-variant">Carregando player...</div>
+  if (!src || checkingProfile) return <PageLoading label="Carregando player" />
   if (blocked) return <BlockedByProfile />
 
   const subtitle = isCatchup

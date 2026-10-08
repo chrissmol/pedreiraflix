@@ -292,6 +292,17 @@ img {
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
+/* Header loading ring: invisible for the first 400ms so fast (cached) loads never flash it. */
+@keyframes ring-in {
+  to {
+    opacity: 1;
+  }
+}
+.loading-ring {
+  opacity: 0;
+  animation: ring-in 300ms ease-out 400ms forwards;
+}
+
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
  * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
  * behavior (a `scroll-behavior` of `auto` here overrides the smooth *request*, per spec) — rather than

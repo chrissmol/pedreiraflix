@@ -1,30 +1,28 @@
+import { useEffect } from 'react'
 import type { CategoryGroup } from '../hooks/useCatalog'
+import { useCatalogProgress } from '../store/catalogProgress'
 
 interface CatalogProgressProps {
   groups: CategoryGroup<unknown>[]
   label: string
 }
 
-/** Honest loading indicator: the percentage reflects categories that have actually
- * finished fetching (success or error), not a fake/animated estimate. */
+/** Renders nothing visible: the progress lives in the header ring (`LoadingRing`), so a page full of
+ * "still loading" bars never competes with the content. The text stays for screen readers. */
 export default function CatalogProgress({ groups, label }: CatalogProgressProps) {
   const total = groups.length
   const loaded = groups.filter((g) => !g.loading).length
-  if (total === 0 || loaded >= total) return null
+  const busy = total > 0 && loaded < total
 
-  const pct = Math.round((loaded / total) * 100)
+  useEffect(() => {
+    useCatalogProgress.setState({ fraction: busy ? loaded / total : null })
+  }, [busy, loaded, total])
+  useEffect(() => () => useCatalogProgress.setState({ fraction: null }), [])
 
+  if (!busy) return null
   return (
-    <div className="mx-4 mb-6 flex items-center gap-3 rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm text-on-surface-variant sm:mx-10">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-brand-500 transition-all duration-300"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="shrink-0 tabular-nums">
-        {label}: {loaded}/{total} categorias ({pct}%)
-      </span>
-    </div>
+    <p role="status" className="sr-only">
+      {label}: {loaded}/{total} categorias
+    </p>
   )
 }

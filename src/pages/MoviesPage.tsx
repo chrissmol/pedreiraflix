@@ -10,6 +10,7 @@ import Row from '../components/Row'
 import Select from '../components/Select'
 import { useMovieCatalog } from '../hooks/useCatalog'
 import type { Movie } from '../types'
+import ErrorCard from '../components/ErrorCard'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
 
@@ -23,7 +24,7 @@ function sortMovies(items: Movie[], sort: SortKey): Movie[] {
 }
 
 export default function MoviesPage() {
-  const { groups, loading, error } = useMovieCatalog()
+  const { groups, loading, error, retry } = useMovieCatalog()
   const [searchParams] = useSearchParams()
   // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
@@ -85,9 +86,9 @@ export default function MoviesPage() {
 
       <ContinueWatchingRow kind="movie" />
 
-      {error && <p className="px-4 text-live sm:px-10">{error}</p>}
+      {error && <ErrorCard message={error} onRetry={retry} className="mb-8" />}
       <CatalogProgress groups={groups} label="Carregando filmes" />
-      {loading && groups.length === 0 && <Row title="Carregando..." loading />}
+      {loading && groups.length === 0 && <Row title="" loading />}
 
       {activeCategory ? (
         // A single category picked (category filter, or the "Ver tudo" deep link) — a grid to browse

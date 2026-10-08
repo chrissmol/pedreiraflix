@@ -11,6 +11,9 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
+import PageLoading from '../components/PageLoading'
+import ErrorCard from '../components/ErrorCard'
+import { friendlyCatalogError } from '../hooks/useCatalog'
 
 export default function SeriesDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -21,6 +24,7 @@ export default function SeriesDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   const profileId = useActiveProfileId()
   const isKids = Boolean(useActiveProfile()?.isKids)
@@ -35,6 +39,7 @@ export default function SeriesDetailPage() {
     // oxlint-disable-next-line react/set-state-in-effect -- route/profile changes start a new detail request.
     setLoading(true)
     setBlocked(false)
+    setError(null)
     cached(`series-info:${id}`, () => client.getSeriesInfo(Number(id)))
       .then((data) => {
         if (cancelled) return
@@ -43,7 +48,7 @@ export default function SeriesDetailPage() {
         if (isKids) isCategoryBlocked(client, 'series', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar série')
+        if (!cancelled) setError(friendlyCatalogError(err))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -51,11 +56,12 @@ export default function SeriesDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [client, id, isKids])
+  }, [client, id, isKids, attempt])
 
-  if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
+  if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
-  if (error || !series) return <div className="pt-32 text-center text-live">{error || 'Série não encontrada'}</div>
+  if (error) return <ErrorCard message={error} onRetry={() => setAttempt((n) => n + 1)} className="mt-32" />
+  if (!series) return <ErrorCard message="Série não encontrada." className="mt-32" />
 
   const backdrop = series.backdropPath[0] || series.cover
   const rating = Number(series.rating) > 0 ? Number(series.rating) : null

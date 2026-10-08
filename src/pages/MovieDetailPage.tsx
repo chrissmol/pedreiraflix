@@ -12,6 +12,9 @@ import { formatRuntime } from '../components/videoPlayerUtils'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
+import PageLoading from '../components/PageLoading'
+import ErrorCard from '../components/ErrorCard'
+import { friendlyCatalogError } from '../hooks/useCatalog'
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -21,6 +24,7 @@ export default function MovieDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   const profileId = useActiveProfileId()
   const isKids = Boolean(useActiveProfile()?.isKids)
@@ -33,6 +37,7 @@ export default function MovieDetailPage() {
     // oxlint-disable-next-line react/set-state-in-effect -- route/profile changes start a new detail request.
     setLoading(true)
     setBlocked(false)
+    setError(null)
     cached(`movie-info:${id}`, () => client.getVodInfo(Number(id)))
       .then((data) => {
         if (cancelled) return
@@ -41,7 +46,7 @@ export default function MovieDetailPage() {
         if (isKids) isCategoryBlocked(client, 'movie', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar filme')
+        if (!cancelled) setError(friendlyCatalogError(err))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -49,7 +54,7 @@ export default function MovieDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [client, id, isKids])
+  }, [client, id, isKids, attempt])
 
   const [tmdb, setTmdb] = useState<TmdbInfo | null>(null)
   useEffect(() => {
@@ -61,9 +66,10 @@ export default function MovieDetailPage() {
     }
   }, [movie])
 
-  if (loading) return <div className="pt-32 text-center text-on-surface-variant">Carregando...</div>
+  if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
-  if (error || !movie) return <div className="pt-32 text-center text-live">{error || 'Filme não encontrado'}</div>
+  if (error) return <ErrorCard message={error} onRetry={() => setAttempt((n) => n + 1)} className="mt-32" />
+  if (!movie) return <ErrorCard message="Filme não encontrado." className="mt-32" />
 
   const backdrop = movie.backdropPath[0] || movie.streamIcon
   // The provider's own data wins; TMDB only fills what it left empty.
