@@ -143,7 +143,7 @@ export default function Layout() {
     // banner) positions itself against with `absolute`, not `fixed` — see the comment on `TopNav`'s
     // header and `MobileNav`'s nav for why `fixed` specifically was still wrong on an iOS PWA even after
     // `body` stopped scrolling.
-    <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+    <div className="relative h-[var(--app-h,100dvh)] overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       {/* Off-screen until focused (Tab from the very top of the page) — lets keyboard users jump past
           the header/nav straight to the page content instead of tabbing through every nav link first. */}
       <a

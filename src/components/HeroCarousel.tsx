@@ -25,6 +25,8 @@ interface HeroCarouselProps {
   slotMs?: number
   /** Rendered as a third button beside Assistir/Detalhes (see HomePage's "Surpreenda-me"). */
   action?: ReactNode
+  /** Catalog still loading: shows a hero-shaped skeleton. Done with nothing to feature: only the header's room. */
+  loading?: boolean
 }
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
@@ -42,7 +44,7 @@ function resolveSlotMs(fallback: number): number {
  * No manual dot navigation on purpose — it's meant to just show one pick at a time, not advertise how
  * many titles qualify. If a poster image actually fails to load (dead URL, blocked host, broken provider)
  * it's excluded and the slot recomputes over what's left, instead of just sitting there broken. */
-export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: HeroCarouselProps) {
+export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loading }: HeroCarouselProps) {
   slotMs = resolveSlotMs(slotMs)
   const [now, setNow] = useState(() => Date.now())
   const [broken, setBroken] = useState<Set<string>>(new Set())
@@ -68,11 +70,22 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action }: H
   // sits on top of this area by design, so a collapsed hero used to let whatever HomePage renders next
   // (the "Surpreenda-me" button, first row) ride up underneath it and visually collide with the header's
   // own search box/avatar, on every screen size.
+  //
+  // Ainda carregando: o formato do destaque (titulo, linha, botoes) brilhando, nao so um bloco escuro — o
+  // video do iPhone (08/10) mostrou o retangulo antigo lido como um vazio grande. Catalogo pronto e nada
+  // para destacar (nenhum titulo 8.5+): so o espaco do cabecalho, em vez de um vazio que nunca enche.
   if (!current) {
+    if (!loading) return <div className="h-[calc(5rem+env(safe-area-inset-top))]" />
     return (
-      <div className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
-        <div className="skeleton absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
+      <div data-testid="hero-carregando" className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
+        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
+          <div className="skeleton h-10 w-3/4 max-w-md rounded-lg sm:h-14" />
+          <div className="skeleton h-4 w-1/2 max-w-sm rounded" />
+          <div className="flex gap-3">
+            <div className="skeleton h-12 w-36 rounded-full" />
+            <div className="skeleton h-12 w-12 rounded-full" />
+          </div>
+        </div>
       </div>
     )
   }

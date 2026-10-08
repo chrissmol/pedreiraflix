@@ -54,7 +54,8 @@ export default function HomePage() {
   // per catalog load, from the complete data, not a moving target.
   const catalogSettled =
     !movies.loading && !series.loading && movies.groups.every((g) => !g.loading) && series.groups.every((g) => !g.loading)
-  const [featured, setFeatured] = useState<FeaturedCandidate[]>([])
+  // null = ainda nao escolhido (o destaque mostra o esqueleto); [] = escolhido e nao ha o que destacar.
+  const [featured, setFeatured] = useState<FeaturedCandidate[] | null>(null)
   useEffect(() => {
     if (!catalogSettled) return
     const flatMovies = flattenGroups(movies.groups)
@@ -167,7 +168,8 @@ export default function HomePage() {
       {/* "Surpreenda-me" lives in the hero's own button row rather than floating alone above the first
           row, where it read as a stray control. Label hidden on phones so three buttons still fit. */}
       <HeroCarousel
-        items={featured}
+        items={featured ?? []}
+        loading={featured === null}
         action={
           <button
             onClick={surpreendaMe}
