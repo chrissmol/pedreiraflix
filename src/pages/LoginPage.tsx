@@ -118,16 +118,15 @@ export default function LoginPage() {
   const choosing = accounts.length > 0 && !showForm
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-surface px-4 pb-10 pt-[calc(2rem+env(safe-area-inset-top))] sm:justify-center sm:pt-10">
-      <span className="neon-text font-display mb-8 bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
+    // Rolavel por conta propria: o body do app nao rola (index.css) e o login fica fora do Layout, entao numa tela
+    // baixa o "Entrar" ficava inalcancavel (APK no Motorola, 08/10). No celular o login e compacto para caber sem rolar.
+    <div className="flex h-full flex-col items-center overflow-y-auto bg-surface px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:justify-[safe_center] sm:pb-10 sm:pt-10">
+      <span className="neon-text font-display mb-4 bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:mb-6">
         PedreiraFlix
       </span>
 
-      <div className="w-full max-w-xl rounded-3xl border border-outline-soft bg-surface-lowest p-6 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] sm:p-10">
-        <div className="mb-8 text-center">
-          <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/15 text-brand-400">
-            {choosing ? <User className="h-6 w-6" /> : <ListIcon className="h-6 w-6" />}
-          </span>
+      <div className="w-full max-w-xl rounded-3xl border border-outline-soft bg-surface-lowest p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] sm:px-10 sm:py-8">
+        <div className="mb-5 text-center sm:mb-6">
           <h1 className="font-display text-headline-md text-white sm:text-headline-lg">
             {choosing ? 'Escolha uma conta salva' : 'Conecte sua conta ou lista'}
           </h1>
@@ -230,7 +229,7 @@ export default function LoginPage() {
         {showForm && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
-            <div className="mb-6 grid grid-cols-3 gap-1 rounded-full border border-outline-soft bg-surface-container p-1">
+            <div className="mb-5 grid grid-cols-3 gap-1 rounded-full sm:mb-6 border border-outline-soft bg-surface-container p-1">
               {methods.map((m) => (
                 <button
                   key={m.id}
@@ -250,7 +249,7 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               {method === 'xtream' && (
                 <>
                   <Field id="server" label="Endereço do servidor" hint="http ou https" icon={<Tv className="h-5 w-5" />}>
@@ -270,7 +269,7 @@ export default function LoginPage() {
                       className={inputClass}
                     />
                   </Field>
-                  <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
                     <Field id="username" label="Usuário" icon={<User className="h-5 w-5" />}>
                       <input
                         id="username"
@@ -387,7 +386,7 @@ export default function LoginPage() {
                 />
               </Field>
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-outline-soft bg-surface-container p-4">
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-outline-soft bg-surface-container p-3 sm:p-4">
                 <input
                   type="checkbox"
                   checked={remember}
@@ -396,7 +395,7 @@ export default function LoginPage() {
                 />
                 <span>
                   <span className="block text-label-md text-white">Lembrar esses dados neste aparelho</span>
-                  <span className="block text-body-sm text-on-surface-variant">
+                  <span className="hidden text-body-sm text-on-surface-variant sm:block">
                     Ficam salvos só aqui, para entrar com um toque da próxima vez.
                   </span>
                 </span>
@@ -406,7 +405,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busyId !== null}
-              className="btn-primary mt-8 w-full text-body-lg"
+              className="btn-primary mt-5 w-full text-body-lg sm:mt-6"
             >
               {busyId === 'form' ? 'Conectando...' : 'Entrar'}
             </button>
