@@ -10,6 +10,7 @@ import { Download, RefreshCw, Search, User } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
+import { isTv } from '../lib/device'
 
 const links = [
   { to: '/', label: 'Início' },
@@ -231,15 +232,17 @@ export default function TopNav() {
             >
               <User className="h-4 w-4 text-on-surface-variant" /> Gerenciar perfis
             </button>
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                navigate('/downloads')
-              }}
-              className="menu-option"
-            >
-              <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
-            </button>
+            {!isTv && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/downloads')
+                }}
+                className="menu-option"
+              >
+                <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
+              </button>
+            )}
             <button
               onClick={() => {
                 setMenuOpen(false)

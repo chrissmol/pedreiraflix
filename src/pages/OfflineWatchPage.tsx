@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import VideoPlayer from '../components/VideoPlayer'
+import { nativeDownloads, nativeFileSrc } from '../lib/nativeDownloads'
 import { getDownload, getDownloadBlob } from '../lib/offlineStore'
 import type { DownloadRecord } from '../lib/offlineStore'
 import { useLibraryStore } from '../store/library'
@@ -38,6 +39,14 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
     let url: string | null = null
     getDownload(downloadKey)
       .then(async (r) => {
+        // Baixado pelo Android (APK): o arquivo esta na pasta do app, tocado direto de la.
+        if (r?.nativeId != null && nativeDownloads) {
+          const [st] = (await nativeDownloads.status({ ids: [r.nativeId] })).downloads
+          if (cancelled) return
+          if (st?.state === 'done' && st.uri) setObjectUrl(nativeFileSrc(st.uri))
+          setRecord(st?.state === 'done' ? r : null)
+          return
+        }
         const blob = r ? await getDownloadBlob(r) : null
         if (cancelled) return
         if (blob) {

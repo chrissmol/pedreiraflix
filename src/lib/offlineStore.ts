@@ -30,6 +30,10 @@ export interface DownloadRecord {
   blob?: Blob
   /** How many pieces live in the `parts` store (new downloads). */
   parts?: number
+  /** Baixado pelo gerenciador do Android (APK): id do DownloadManager; o arquivo fica fora do IndexedDB. */
+  nativeId?: number
+  /** Ainda baixando no Android (o registro existe desde o comeco para sobreviver ao app fechado). */
+  pending?: boolean
 }
 
 export type DownloadMeta = Omit<DownloadRecord, 'blob' | 'parts'>
