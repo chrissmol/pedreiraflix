@@ -141,19 +141,23 @@ body {
   color: #fff;
 }
 
-::-webkit-scrollbar {
-  height: 10px;
-  width: 10px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3a97ff, #0761e0);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #6bb4ff, #0f7bff);
+/* Barra de rolagem azul so com mouse. Em tela de toque (celular, tablet, APK, TV) fica a do proprio sistema, que
+ * e fina e some sozinha: a estilizada aparecia fixa com 10px na lateral (estresse do APK, 08/10). */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3a97ff, #0761e0);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #6bb4ff, #0f7bff);
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {
