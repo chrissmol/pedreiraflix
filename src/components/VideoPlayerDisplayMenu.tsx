@@ -64,7 +64,7 @@ export function VideoPlayerDisplayMenu({
               <button
                 key={minutes}
                 onClick={() => onSelectSleep(minutes)}
-                className={`chip ${(minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes) ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                className={`chip ${(minutes === 0 && sleepRemaining == null) || (minutes !== 0 && sleepRemaining === minutes) ? 'bg-brand-fill text-white hover:bg-brand-fill hover:text-white' : ''}`}
               >
                 {minutes === 0 ? 'Nunca' : `${minutes}min`}
               </button>

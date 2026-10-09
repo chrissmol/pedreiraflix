@@ -216,10 +216,18 @@ try {
   })
   await passo('girar a tela 6x', async () => {
     adb('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0')
-    for (const r of [1, 0, 1, 0, 1, 0]) (adb('shell', 'settings', 'put', 'system', 'user_rotation', String(r)), await sleep(1500))
+    for (const r of [1, 0, 1, 0, 1, 0]) {
+      adb('shell', 'settings', 'put', 'system', 'user_rotation', String(r))
+      await sleep(1500)
+    }
   })
   await passo('segundo plano e volta 5x', async () => {
-    for (let i = 0; i < 5; i++) (adb('shell', 'input', 'keyevent', 'KEYCODE_HOME'), await sleep(1000), adb('shell', 'am', 'start', '-n', ACTIVITY), await sleep(1500))
+    for (let i = 0; i < 5; i++) {
+      adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+      await sleep(1000)
+      adb('shell', 'am', 'start', '-n', ACTIVITY)
+      await sleep(1500)
+    }
   })
   await passo('sem internet e volta', async () => {
     semInternet = true
@@ -233,7 +241,10 @@ try {
     semInternet = false
   })
   await passo('botao voltar 10x', async () => {
-    for (let i = 0; i < 10; i++) (adb('shell', 'input', 'keyevent', 'KEYCODE_BACK'), await sleep(400))
+    for (let i = 0; i < 10; i++) {
+      adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+      await sleep(400)
+    }
   })
   await passo('memoria baixa', async () => adb('shell', 'am', 'send-trim-memory', PKG, 'RUNNING_CRITICAL'))
   await passo('app continua vivo', async () => {

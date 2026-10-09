@@ -154,7 +154,7 @@ export default function LoginPage() {
                   }}
                   className="flex items-center gap-3 rounded-2xl border border-brand-500/40 bg-surface-container px-4 py-3"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-fill text-white">
                     <User className="h-5 w-5" />
                   </span>
                   <input
@@ -174,7 +174,7 @@ export default function LoginPage() {
                     disabled={busyId !== null}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-outline-soft bg-surface-container px-4 py-3 text-left transition-colors hover:border-outline-strong hover:bg-surface-high active:bg-surface-high disabled:opacity-60"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-fill text-white">
                       <User className="h-5 w-5" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -243,7 +243,7 @@ export default function LoginPage() {
                   aria-label={m.label}
                   className={`flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2 py-2.5 text-body-sm font-semibold transition-colors ${
                     method === m.id
-                      ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                      ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
                       : 'text-on-surface-variant hover:text-white'
                   }`}
                 >
@@ -346,7 +346,7 @@ export default function LoginPage() {
                     accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl"
                     required
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setM3uFile(e.target.files?.[0] ?? null)}
-                    className="block w-full rounded-xl border border-dashed border-outline-strong bg-surface-container p-3 text-body-sm text-on-surface-variant file:mr-3 file:rounded-full file:border-0 file:bg-brand-500 file:px-4 file:py-2 file:text-body-sm file:font-semibold file:text-white hover:file:bg-brand-400"
+                    className="block w-full rounded-xl border border-dashed border-outline-strong bg-surface-container p-3 text-body-sm text-on-surface-variant file:mr-3 file:rounded-full file:border-0 file:bg-brand-fill file:px-4 file:py-2 file:text-body-sm file:font-semibold file:text-white hover:file:bg-brand-400"
                   />
                 </div>
               )}

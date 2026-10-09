@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLockGate from './components/AppLockGate'
 import AutoLogout from './components/AutoLogout'
 import Layout from './components/Layout'
@@ -67,6 +67,7 @@ export default function App() {
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/diagnostico" element={<DiagnosticPage />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

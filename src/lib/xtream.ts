@@ -68,6 +68,8 @@ function writeSid(c: XtreamCredentials, sid: string | null) {
   }
 }
 
+export const NOT_AVAILABLE = 'Este título não está mais disponível no provedor.'
+
 export class XtreamApiError extends Error {
   status?: number
   /** 'html': o provedor (ou o Cloudflare na frente dele) respondeu uma pagina em vez dos dados. */
@@ -268,6 +270,8 @@ export class XtreamClient implements ProviderClient {
       }
       movie_data: { stream_id: number; category_id: string; container_extension: string }
     }>('get_vod_info', { vod_id: String(vodId) })
+    // Filme que o provedor tirou do ar: ele responde "[]" (ou info vazio) em vez de um erro.
+    if (!data.info?.name || !data.movie_data) throw new XtreamApiError(NOT_AVAILABLE, 404)
 
     return {
       kind: 'movie',
@@ -347,6 +351,8 @@ export class XtreamClient implements ProviderClient {
         }[]
       >
     }>('get_series_info', { series_id: String(seriesId) })
+    // Serie que o provedor tirou do ar: info vem vazio e a pagina quebrava ao renderizar o nome.
+    if (!data.info?.name) throw new XtreamApiError(NOT_AVAILABLE, 404)
 
     const seasonMeta = new Map((data.seasons || []).map((s) => [s.season_number, s]))
     const seasons = Object.entries(data.episodes || {}).map(([seasonNumStr, episodes]) => {

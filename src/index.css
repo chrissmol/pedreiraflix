@@ -20,7 +20,7 @@
   --color-surface-highest: #2b2d36;
   --color-on-surface: #ffffff;
   --color-on-surface-variant: #a1a1aa;
-  --color-on-surface-muted: #71717a;
+  --color-on-surface-muted: #8f8f99; /* #71717a dava 3.2:1 sobre as superficies; AA pede 4.5:1 */
   --color-outline-soft: rgba(255, 255, 255, 0.08);
   --color-outline-strong: rgba(255, 255, 255, 0.16);
 
@@ -73,6 +73,8 @@
   --color-brand-300: #6bb4ff;
   --color-brand-400: #3a97ff;
   --color-brand-500: #0f7bff;
+  /* Fundo de botao com texto branco: o #0f7bff da so 3.96:1 (AA pede 4.5:1); este fecha 4.75:1 e e o mesmo azul. */
+  --color-brand-fill: #0a6cf0;
   --color-brand-600: #0761e0;
   --color-brand-700: #064cb3;
   --color-brand-800: #073d8c;
@@ -341,7 +343,7 @@ html.tv {
 /* Botoes do Stitch, iguais em todas as telas: pilula azul para a acao principal, pilula translucida
    para as demais. `btn-icon` e a versao quadrada (so icone) da secundaria. */
 @utility btn-primary {
-  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-all duration-200 hover:bg-brand-400 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-500 sm:px-8;
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-fill px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-all duration-200 hover:bg-brand-400 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-fill sm:px-8;
 }
 @utility btn-secondary {
   @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-surface-high/70 px-5 text-label-md text-white backdrop-blur-xl transition-all duration-200 hover:bg-surface-highest active:scale-95 disabled:opacity-50 sm:px-6;

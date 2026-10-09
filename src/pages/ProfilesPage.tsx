@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Lock, Play, Plus, Settings, Shield, Trash, Unlock } from '../components/icons'
+import { Check, ChevronLeft, Lock, Plus, Settings, Shield, Trash, Unlock } from '../components/icons'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PinPrompt from '../components/PinPrompt'
 import { useAppLockStore } from '../store/appLock'
@@ -319,7 +319,7 @@ export default function ProfilesPage() {
         onClick={() => navigate('/')}
         className="btn-secondary mt-10"
       >
-        <Play className="h-4 w-4" /> Voltar
+        <ChevronLeft className="h-4 w-4" /> Voltar
       </button>
 
       {pinTarget && (
