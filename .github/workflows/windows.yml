@@ -1,0 +1,37 @@
+name: App Windows
+
+# Monta o instalador do app do Windows (Tauri, src-tauri/) numa maquina Windows do GitHub — do Mac nao da para
+# gerar. Roda quando o app nativo muda (o site em si chega no app sozinho, sem instalador novo) ou na mao, em
+# Actions > App Windows > Run workflow. O instalador sai como artefato da execucao (PedreiraFlix-Windows).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src-tauri/**', '.github/workflows/windows.yml']
+  pull_request:
+    branches: [main]
+    paths: ['src-tauri/**', '.github/workflows/windows.yml']
+
+jobs:
+  instalador:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npx tauri build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PedreiraFlix-Windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
