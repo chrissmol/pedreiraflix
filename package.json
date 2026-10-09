@@ -32,6 +32,7 @@
     "@capacitor/cli": "^8.5.3",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.12.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/hls.js": "^0.13.3",
