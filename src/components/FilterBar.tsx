@@ -24,7 +24,7 @@ export default function FilterBar({ active, children }: FilterBarProps) {
         <Sliders className="h-4 w-4" />
         Filtrar
         {active > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-label-badge font-bold text-white">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-fill px-1 text-label-badge font-bold text-white">
             {active}
           </span>
         )}

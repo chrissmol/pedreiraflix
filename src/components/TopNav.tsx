@@ -171,7 +171,7 @@ export default function TopNav() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
           style={activeProfile ? { background: activeProfile.color } : undefined}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-fill text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105"
         >
           {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
         </button>

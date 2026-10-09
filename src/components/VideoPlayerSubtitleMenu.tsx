@@ -68,7 +68,7 @@ export function VideoPlayerSubtitleMenu({
                   key={size}
                   onClick={() => onSelectSize(size)}
                   aria-label={`Legenda tamanho ${size}`}
-                  className={`chip flex-1 ${subtitleSize === size ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                  className={`chip flex-1 ${subtitleSize === size ? 'bg-brand-fill text-white hover:bg-brand-fill hover:text-white' : ''}`}
                 >
                   {size === 'small' ? 'P' : size === 'medium' ? 'M' : 'G'}
                 </button>
@@ -84,7 +84,7 @@ export function VideoPlayerSubtitleMenu({
                 <button
                   key={bg}
                   onClick={() => onSelectBackground(bg)}
-                  className={`chip flex-1 ${subtitleBackground === bg ? 'bg-brand-500 text-white hover:bg-brand-500 hover:text-white' : ''}`}
+                  className={`chip flex-1 ${subtitleBackground === bg ? 'bg-brand-fill text-white hover:bg-brand-fill hover:text-white' : ''}`}
                 >
                   {label}
                 </button>

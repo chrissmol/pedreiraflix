@@ -137,7 +137,7 @@ export function VideoPlayerCenterOverlays({
             data-controls
             onClick={onTogglePlay}
             aria-label="Play/Pause"
-            className={`rounded-full bg-brand-500 p-5 text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)] active:scale-95 ${controlsVisible ? 'pointer-events-auto' : ''}`}
+            className={`rounded-full bg-brand-fill p-5 text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)] active:scale-95 ${controlsVisible ? 'pointer-events-auto' : ''}`}
           >
             {isPlaying ? <Pause className="h-9 w-9" /> : <Play className="ml-0.5 h-9 w-9" />}
           </button>

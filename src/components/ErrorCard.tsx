@@ -9,7 +9,7 @@ export default function ErrorCard({ message, onRetry, className = '' }: { messag
       {onRetry && (
         <button
           onClick={onRetry}
-          className="brand-focus flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2 text-label-md font-semibold text-white transition-transform hover:scale-105"
+          className="brand-focus flex items-center gap-2 rounded-full bg-brand-fill px-5 py-2 text-label-md font-semibold text-white transition-transform hover:scale-105"
         >
           <RefreshCw className="h-4 w-4" /> Tentar de novo
         </button>

@@ -171,11 +171,11 @@ export default function SeriesDetailPage() {
               onClick={() => setActiveSeason(s.seasonNumber)}
               className={`shrink-0 whitespace-nowrap rounded-full px-5 py-2.5 text-label-md transition-colors ${
                 s.seasonNumber === activeSeason
-                  ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                  ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
                   : 'bg-surface-container text-on-surface-variant hover:text-white sm:bg-transparent'
               }`}
             >
-              {s.name} <span className="text-body-sm opacity-70">({s.episodes.length} eps)</span>
+              {s.name} <span className={`text-body-sm ${s.seasonNumber === activeSeason ? 'text-white/90' : 'opacity-70'}`}>({s.episodes.length} eps)</span>
             </button>
           ))}
         </div>
@@ -212,19 +212,21 @@ export default function SeriesDetailPage() {
             return (
               <div
                 key={ep.id}
-                role="button"
-                tabIndex={0}
-                data-spatial
                 onClick={() => navigate(playUrl(ep))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click()
-                }}
-                className={`group flex cursor-pointer gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 sm:gap-4 sm:p-3 ${
+                className={`group relative flex cursor-pointer gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 sm:gap-4 sm:p-3 ${
                   isCurrent
                     ? 'border-brand-500/50 bg-surface-container shadow-[0_0_30px_-12px_rgba(15,123,255,0.5)]'
                     : 'border-outline-soft bg-surface-low hover:border-outline-strong hover:bg-surface-container'
                 }`}
               >
+                {/* O botao cobre a linha so para teclado e leitor de tela (a linha tem outros botoes dentro, e
+                    botao dentro de botao e invalido); o clique do mouse sobe do conteudo para a linha. */}
+                <button
+                  type="button"
+                  data-spatial
+                  aria-label={`Assistir episódio ${ep.episodeNum}: ${ep.title}`}
+                  className="absolute inset-0 rounded-2xl"
+                />
                 <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-surface-high sm:w-44">
                   {thumb && (
                     <img
@@ -245,7 +247,7 @@ export default function SeriesDetailPage() {
                   {(isWatched || inProgress) && (
                     <span
                       className={`absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-label-badge font-semibold ${
-                        isWatched ? 'bg-black/70 text-done' : 'bg-brand-500 text-white'
+                        isWatched ? 'bg-black/70 text-done' : 'bg-brand-fill text-white'
                       }`}
                     >
                       {isWatched ? 'Assistido' : 'Em andamento'}
@@ -266,7 +268,7 @@ export default function SeriesDetailPage() {
                   )}
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="relative flex min-w-0 flex-1 flex-col">
                   <p className="flex min-w-0 items-baseline gap-1.5 text-label-md text-white">
                     <span className="shrink-0 text-on-surface-muted">Ep. {ep.episodeNum} •</span>
                     <span className={`truncate ${isCurrent ? 'text-brand-300' : ''}`}>{ep.title}</span>

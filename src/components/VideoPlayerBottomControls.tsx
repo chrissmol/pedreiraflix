@@ -91,7 +91,7 @@ export function VideoPlayerBottomControls({
       <div className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={onTogglePlay}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)] transition-transform hover:scale-105 active:scale-95 pointer-coarse:hidden"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-fill text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.5)] transition-transform hover:scale-105 active:scale-95 pointer-coarse:hidden"
           aria-label="Play/Pause"
         >
           {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="ml-0.5 h-6 w-6" />}

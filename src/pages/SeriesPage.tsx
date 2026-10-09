@@ -131,7 +131,7 @@ export default function SeriesPage() {
             onClick={() => setActiveGenre(null)}
             className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
               activeGenre === null
-                ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
                 : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
             }`}
           >
@@ -143,7 +143,7 @@ export default function SeriesPage() {
               onClick={() => setActiveGenre(g === activeGenre ? null : g)}
               className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
               activeGenre === g
-                ? 'bg-brand-500 text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
+                ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
                 : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
             }`}
             >
