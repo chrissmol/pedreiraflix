@@ -19,7 +19,7 @@ test('conta salva entra sem internet e e conferida quando a conexao volta', asyn
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByText('Sem internet: dá para assistir os seus downloads.')).toBeVisible()
     await page.getByRole('button', { name: 'Conta' }).click()
-    await page.getByRole('button', { name: 'Downloads' }).click()
+    await page.getByRole('button', { name: 'Downloads', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Downloads' })).toBeVisible()
   } finally {
     await context.setOffline(false)
