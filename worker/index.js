@@ -120,6 +120,27 @@ function isAllowed(url) {
   return (url.protocol === 'http:' || url.protocol === 'https:') && !isPrivateAddress(url.hostname)
 }
 
+// O Worker nao acessa IP puro: a Cloudflare responde 403 "error code: 1003". Canais do provedor redirecionam
+// para http://64.31.31.150/... (teste na conta real do Christian, 09/10), entao os redirecionamentos sao seguidos
+// aqui, cada salto passa pelo isAllowed, e o IP vira <ip>.nip.io (DNS publico que responde o proprio IP).
+// shortcut: depende do nip.io; se ele sair do ar, trocar por sslip.io (mesmo formato).
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+const MAX_REDIRECTS = 5
+
+async function fetchFollowing(target, init) {
+  let url = new URL(target)
+  for (let hop = 0; ; hop++) {
+    if (!isAllowed(url)) return new Response('host not allowed', { status: 403 })
+    const reach = new URL(url)
+    if (IPV4.test(reach.hostname)) reach.hostname += '.nip.io'
+    const res = await fetch(reach, { ...init, redirect: 'manual' })
+    const loc = res.headers.get('location')
+    if (res.status < 300 || res.status > 399 || !loc || hop === MAX_REDIRECTS) return res
+    res.body?.cancel()
+    url = new URL(loc, url)
+  }
+}
+
 // Usuario e senha chegam SO em cabecalhos (x-xtream-username/password), fora da URL — a URL aparece no console,
 // na aba Rede e no wrangler tail. A query com credenciais ja nao e aceita: o app sempre carrega o HTML novo
 // do servidor (service worker network-first), entao nao sobra versao antiga que ainda a use.
@@ -140,7 +161,7 @@ async function xtream(request, url) {
   if (!isAllowed(target)) return new Response('host not allowed', { status: 403 })
   for (const [k, v] of q) if (k !== 'base' && k !== 'path') target.searchParams.set(k, v)
   try {
-    const up = await fetch(target, { headers: UPSTREAM_HEADERS, signal: AbortSignal.timeout(20_000) })
+    const up = await fetchFollowing(target, { headers: UPSTREAM_HEADERS, signal: AbortSignal.timeout(20_000) })
     const headers = { 'content-type': up.headers.get('content-type') || 'application/json' }
     // O "espere N segundos" do provedor no 429: o app so para de pedir pelo tempo certo se ele chegar.
     const retryAfter = up.headers.get('retry-after')
@@ -168,7 +189,7 @@ async function fetchUpstream(target, request) {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 15_000)
     try {
-      const res = await fetch(target, {
+      const res = await fetchFollowing(target, {
         headers: request.headers.has('range')
           ? { ...UPSTREAM_HEADERS, range: request.headers.get('range') }
           : UPSTREAM_HEADERS,
