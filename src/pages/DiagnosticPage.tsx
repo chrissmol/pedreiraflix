@@ -5,13 +5,23 @@ import { XtreamClient } from '../lib/xtream'
 // Diagnostico de conexao (menu da conta): roda as mesmas chamadas que o app faz e mostra o que ESTE aparelho recebe,
 // linha por linha. Existe porque o app do Windows do Christian nao carregava canais nem baixava e nao havia como ver
 // por que (09/10) — o resultado da tela da para mandar por print.
+declare global {
+  interface Window {
+    __DIAG_GAP_MS__?: number
+  }
+}
+
 interface Linha {
   nome: string
   ok: boolean
   detalhe: string
 }
 
-const resumo = (r: { status: number; type: string; ms: number; bytes: number }) => `HTTP ${r.status} · ${r.type.split(';')[0] || 'sem tipo'} · ${r.ms} ms · ${r.bytes} bytes`
+const resumo = (r: { status: number; type: string; ms: number; bytes: number; retryAfter?: string | null }) =>
+  `HTTP ${r.status} · ${r.type.split(';')[0] || 'sem tipo'} · ${r.ms} ms · ${r.bytes} bytes${
+    r.status === 429 ? ` · O PROVEDOR ESTÁ LIMITANDO OS PEDIDOS (muitos acessos)${r.retryAfter ? `, espere ${r.retryAfter}s` : ''}` : ''
+  }`
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const pagina = (text: string, type: string) => /^\s*</.test(text) || type.includes('text/html')
 
 export default function DiagnosticPage() {
@@ -30,7 +40,13 @@ export default function DiagnosticPage() {
       out.push(l)
       setLinhas([...out])
     }
-    const passo = async (nome: string, fn: () => Promise<{ ok: boolean; detalhe: string }>) => {
+    // Espaca os pedidos ao provedor (1,3 s): este teste nao pode provocar o limite que esta tentando medir.
+    let primeiro = true
+    const passo = async (nome: string, fn: () => Promise<{ ok: boolean; detalhe: string }>, aoProvedor = true) => {
+      if (aoProvedor) {
+        if (!primeiro) await sleep(window.__DIAG_GAP_MS__ ?? 1300)
+        primeiro = false
+      }
       try {
         add({ nome, ...(await fn()) })
       } catch (err) {
@@ -45,22 +61,27 @@ export default function DiagnosticPage() {
       }
     }
 
-    await passo('Servidor do app', async () => {
-      const res = await fetch('/api/xtream')
-      const text = await res.text()
-      return { ok: res.status === 400, detalhe: `HTTP ${res.status} · ${text.slice(0, 80)}` }
-    })
+    await passo(
+      'Servidor do app',
+      async () => {
+        const res = await fetch('/api/xtream')
+        const text = await res.text()
+        return { ok: res.status === 400, detalhe: `HTTP ${res.status} · ${text.slice(0, 80)}` }
+      },
+      false,
+    )
+    let loginText = ''
     await passo('Login no provedor', async () => {
       const r = await client.probe(null)
+      loginText = r.text
       const d = json(r.text)
-      return { ok: r.status === 200 && !!d?.user_info, detalhe: `${resumo(r)}${pagina(r.text, r.type) ? ` · PÁGINA: ${r.text.slice(0, 80)}` : ''}` }
+      return { ok: r.status === 200 && !!d?.user_info, detalhe: `${resumo(r)}${pagina(r.text, r.type) && r.status !== 429 ? ` · PÁGINA: ${r.text.slice(0, 80)}` : ''}` }
     })
     // O limite de telas do provedor: quando esta cheio ele recusa video (HTTP 403) e o app mostra "sua conta ja esta
     // tocando em outro aparelho" — mesmo sem ninguem assistindo, porque conexoes abandonadas contam por alguns
     // minutos (relato do Christian, 09/10: nenhum canal carregava e o download falhava).
     await passo('Telas em uso no provedor', async () => {
-      const r = await client.probe(null)
-      const u = json(r.text)?.user_info
+      const u = json(loginText)?.user_info
       if (!u) return { ok: false, detalhe: 'Sem os dados da conta (veja a linha acima).' }
       const ativas = Number(u.active_cons)
       const max = Number(u.max_connections)
@@ -70,19 +91,19 @@ export default function DiagnosticPage() {
         ok: !cheio && String(u.status) === 'Active',
         detalhe: `${ativas} de ${max} telas em uso · conta ${u.status} · vence ${vence}${cheio ? ' · LIMITE CHEIO: o provedor recusa vídeo (HTTP 403) até uma conexão liberar. Feche o app em todos os aparelhos e espere alguns minutos.' : ''}`,
       }
-    })
+    }, false)
     let canalCat: string | null = null
     await passo('Categorias de canais', async () => {
       const r = await client.probe('get_live_categories')
       const d = json(r.text)
       if (Array.isArray(d) && d[0]) canalCat = String(d[0].category_id)
-      return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} categorias` : `PÁGINA: ${r.text.slice(0, 80)}`}` }
+      return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} categorias` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
     })
     if (canalCat) {
       await passo('Canais da primeira categoria', async () => {
         const r = await client.probe('get_live_streams', { category_id: canalCat! })
         const d = json(r.text)
-        return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} canais` : `PÁGINA: ${r.text.slice(0, 80)}`}` }
+        return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} canais` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
       })
     }
     let vodCat: string | null = null
@@ -90,7 +111,7 @@ export default function DiagnosticPage() {
       const r = await client.probe('get_vod_categories')
       const d = json(r.text)
       if (Array.isArray(d) && d[0]) vodCat = String(d[0].category_id)
-      return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} categorias` : `PÁGINA: ${r.text.slice(0, 80)}`}` }
+      return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} categorias` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
     })
     if (vodCat) {
       let filme: { id: number; ext: string } | null = null
@@ -98,7 +119,7 @@ export default function DiagnosticPage() {
         const r = await client.probe('get_vod_streams', { category_id: vodCat! })
         const d = json(r.text)
         if (Array.isArray(d) && d[0]) filme = { id: Number(d[0].stream_id), ext: String(d[0].container_extension || 'mp4') }
-        return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} filmes` : `PÁGINA: ${r.text.slice(0, 80)}`}` }
+        return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} filmes` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
       })
       if (filme) {
         const f = filme as { id: number; ext: string }

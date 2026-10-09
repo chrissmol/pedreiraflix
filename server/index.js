@@ -152,6 +152,9 @@ app.get('/api/xtream', async (req, res) => {
     const contentType = upstream.headers.get('content-type') || 'application/json'
     res.status(upstream.status)
     res.setHeader('content-type', contentType)
+    // Mesmo que o Worker: o "espere N segundos" do provedor no 429 chega no app.
+    const retryAfter = upstream.headers.get('retry-after')
+    if (retryAfter) res.setHeader('retry-after', retryAfter)
     const buffer = Buffer.from(await upstream.arrayBuffer())
     res.send(buffer)
   } catch (err) {

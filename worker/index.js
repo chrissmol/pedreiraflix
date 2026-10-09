@@ -141,10 +141,11 @@ async function xtream(request, url) {
   for (const [k, v] of q) if (k !== 'base' && k !== 'path') target.searchParams.set(k, v)
   try {
     const up = await fetch(target, { headers: UPSTREAM_HEADERS, signal: AbortSignal.timeout(20_000) })
-    return new Response(up.body, {
-      status: up.status,
-      headers: { 'content-type': up.headers.get('content-type') || 'application/json' },
-    })
+    const headers = { 'content-type': up.headers.get('content-type') || 'application/json' }
+    // O "espere N segundos" do provedor no 429: o app so para de pedir pelo tempo certo se ele chegar.
+    const retryAfter = up.headers.get('retry-after')
+    if (retryAfter) headers['retry-after'] = retryAfter
+    return new Response(up.body, { status: up.status, headers })
   } catch {
     return Response.json({ error: 'upstream fetch failed' }, { status: 502 })
   }
