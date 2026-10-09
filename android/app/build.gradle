@@ -32,6 +32,11 @@ android {
         }
     }
     buildTypes {
+        // APK de teste (scripts/estressar-apk.mjs): outro pacote, instala ao lado do app de verdade sem conflito
+        // de assinatura, e aponta para o site local com o painel falso dos testes.
+        debug {
+            applicationIdSuffix ".teste"
+        }
         release {
             if (keystoreFile.exists()) signingConfig signingConfigs.release
             minifyEnabled false
