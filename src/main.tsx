@@ -29,6 +29,8 @@ navigator.storage?.persist?.().catch(() => {})
 
 // Keep account status/expiry fresh on every launch, without ever forcing a new login.
 refreshSession()
+// E de novo quando a conexao volta: quem entrou sem internet (conta salva) tem a conta conferida de verdade.
+window.addEventListener('online', () => refreshSession())
 
 // Only in the real build: in dev, Vite serves unhashed/rebuilding modules on every save, and a service
 // worker caching those would fight HMR instead of helping anything. This is what makes "Adicionar à

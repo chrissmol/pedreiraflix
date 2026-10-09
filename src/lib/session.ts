@@ -150,7 +150,21 @@ export async function signInM3u(
  * that was parsed and saved at the original sign-in. */
 export async function signInSavedAccount(account: SavedAccount): Promise<void> {
   if (account.credentials.type === 'xtream') {
-    await signIn(account.credentials, true, account.label)
+    try {
+      await signIn(account.credentials, true, account.label)
+    } catch (err) {
+      // Sem internet nao da para perguntar ao provedor se a conta vale — mas a conta e salva neste aparelho, e
+      // sem entrar ninguem chegaria aos downloads (pedido do Christian, 08/10). Entra com os dados guardados;
+      // quando a conexao voltar, refreshSession() confere a conta de verdade. So falta de rede: senha errada
+      // ou conta vencida continuam barrando.
+      if (navigator.onLine && !(err instanceof TypeError)) throw err
+      const creds = account.credentials
+      const previous = useAuthStore.getState().credentials
+      if (switchedAccount(previous, creds)) clearCache()
+      const user: UserInfo = { username: creds.username, status: 'Active', expDate: null, isTrial: false, activeConnections: '', maxConnections: '' }
+      useAuthStore.getState().setSession(creds, user, { url: '', serverName: '', timezone: '' }, 'Sem internet: dá para assistir os seus downloads. O resto volta quando a conexão voltar.')
+      ensureActiveProfile(creds)
+    }
     return
   }
   if (!account.entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
