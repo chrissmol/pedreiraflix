@@ -53,10 +53,15 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
               e.stopPropagation()
               setRemoveTarget({ key: `${p.kind}-${p.id}`, name: p.name })
             }}
-            className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-label-badge text-white backdrop-blur-sm hover:bg-live"
+            // Area de toque de 44px (o circulo visivel continua pequeno): com 28px o dedo errava e abria o
+            // titulo em vez de remover (estresse do APK, 08/10).
+            className="group/x absolute right-0 top-0 z-10 flex h-11 w-11 items-center justify-center"
             title="Remover de continuar assistindo"
+            aria-label="Remover de continuar assistindo"
           >
-            ✕
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-label-badge text-white backdrop-blur-sm group-hover/x:bg-live">
+              ✕
+            </span>
           </button>
         </div>
       ))}

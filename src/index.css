@@ -393,9 +393,19 @@ input[type='search']::-webkit-search-cancel-button {
   background: #fff;
   box-shadow: 0 0 0 4px rgba(15, 123, 255, 0.35);
 }
+/* No toque, a faixa visivel continua fina (8px) mas o controle tem 32px de altura para o dedo pegar: com 8px
+   de controle era dificil arrastar (estresse do APK, 08/10). A faixa e desenhada so no meio pelo background-size. */
 @media (pointer: coarse) {
   .player-range {
-    height: 8px;
+    height: 32px;
+    background-size: 100% 8px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+  }
+  .player-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
   }
 }
 
