@@ -54,6 +54,10 @@ function extractYears(items: SeriesItem[]): number[] {
   return [...set].sort((a, b) => b - a)
 }
 
+// Prévia de cada categoria: 10 mil cartões de uma vez (o painel do Christian) travava o celular. O resto fica
+// em "Ver tudo", que abre a categoria em grade montada por blocos.
+const ROW_LIMIT = 40
+
 export default function SeriesPage() {
   const { groups, loading, error, retry } = useSeriesCatalog()
   const [searchParams] = useSearchParams()
@@ -169,6 +173,8 @@ export default function SeriesPage() {
             title={category.categoryName}
             loading={groupLoading && items.length === 0}
             items={items}
+            limit={ROW_LIMIT}
+            categoryId={category.categoryId}
           />
         ))
       )}
