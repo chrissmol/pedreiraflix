@@ -58,3 +58,6 @@ export const CUE_BG_BY_SUBTITLE_BACKGROUND = {
 // problema no lugar errado.
 export const SCREEN_LIMIT_MESSAGE =
   'O provedor recusou: sua conta já está tocando em outro aparelho. Feche lá (ou espere alguns minutos) e tente de novo.'
+
+export const CHANNEL_NOT_FOUND_MESSAGE =
+  'O provedor não entregou este canal (HTTP 404). Ele pode estar fora do ar ou a sua tela ainda ocupada: espere alguns minutos e tente de novo.'
