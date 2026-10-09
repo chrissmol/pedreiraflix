@@ -317,6 +317,12 @@ input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
+/* TV (main.tsx): tudo 12,5% maior, para ler do sofa. Mais que isso o cabecalho nao cabe numa TV de 960px de largura
+   CSS (Fire TV Stick em 1080p). */
+html.tv {
+  font-size: 112.5%;
+}
+
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
  * transforms, the pulsing skeletons, glow transitions, and `scroll-smooth`/scrollIntoView's smooth
  * behavior (a `scroll-behavior` of `auto` here overrides the smooth *request*, per spec) — rather than
