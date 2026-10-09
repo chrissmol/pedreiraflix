@@ -125,6 +125,9 @@ export class XtreamClient implements ProviderClient {
     const res = await xtreamQueue.schedule(
       () => fetch(`/api/xtream?${query.toString()}`, { headers }),
       action && BACKGROUND_ACTIONS.has(action) ? 'background' : 'urgent',
+      // A programacao dos canais e enfeite: com o provedor limitando, nem pede (cada pedido gasta a cota que faria
+      // os canais carregarem — 10 429 seguidos so de programacao no console do Christian, 09/10).
+      action === 'get_short_epg' ? () => (xtreamQueue.degraded ? new XtreamApiError('Programação em pausa: o provedor está limitando os pedidos', 429) : null) : undefined,
     )
     if (res.status === 429) {
       // The provider is telling us our current pacing is still too fast for its rate limiter — widen

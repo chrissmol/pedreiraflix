@@ -83,8 +83,55 @@ test('logo depois do 429 anda uma via so; pedidos bons seguidos devolvem as tres
   }
   await Promise.all(Array.from({ length: 4 }, () => q.schedule(work)))
   assert.equal(peak, 1) // uma via so
-  for (let i = 0; i < 40; i++) q.reportSuccess() // pedidos bons: o intervalo volta ao normal (40 -> 1 ms)
+  for (let i = 0; i < 400; i++) q.reportSuccess() // muitos pedidos bons: o intervalo e o piso voltam ao normal
   peak = 0
   await Promise.all(Array.from({ length: 9 }, () => q.schedule(work)))
   assert.ok(peak > 1, `pico ${peak}`)
+})
+
+// Depois do 429 o ritmo NAO volta ao de antes na hora (isso repetia o 429 em ciclos): o intervalo desce so ate um piso
+// aprendido, e o piso so cai depois de muitos pedidos bons seguidos.
+test('o ritmo que levou ao 429 nao volta na hora: o intervalo para num piso', async () => {
+  const q = new RequestThrottle(10, 3, 5, 1000) // base 10 ms, castigo 1000 ms -> piso = 250 ms
+  q.reportRateLimited()
+  const gap = () => q['gapMs']
+  for (let i = 0; i < 35; i++) q.reportSuccess() // 7 degraus de 5: 1000 -> ... desce so ate o piso
+  assert.equal(gap(), 250, 'parou no piso, nao no ritmo original')
+  assert.equal(q.degraded, true) // ainda cauteloso: programacao dos canais continua pulada
+  for (let i = 0; i < 40; i++) q.reportSuccess() // muitos pedidos bons no piso: o piso cai pela metade
+  for (let i = 0; i < 5; i++) q.reportSuccess() // e o intervalo acompanha
+  assert.ok(gap() <= 125, `intervalo ${gap()}`)
+  for (let i = 0; i < 400; i++) q.reportSuccess()
+  await new Promise((r) => setTimeout(r, 10)) // fim da pausa do 429
+  assert.equal(gap(), 10)
+  assert.equal(q.degraded, false)
+})
+
+test('429 seguidos sobem o piso (dobra) em vez de voltar ao mesmo ritmo', async () => {
+  const q = new RequestThrottle(10, 3, 5, 1000)
+  q.reportRateLimited()
+  for (let i = 0; i < 35; i++) q.reportSuccess() // intervalo no piso (250)
+  q.reportRateLimited() // limitou de novo com esse ritmo
+  for (let i = 0; i < 30; i++) q.reportSuccess() // 5 para descer ate o piso novo e ainda longe de baixa-lo (40)
+  assert.equal(q['gapMs'], 500, 'o piso dobrou')
+})
+
+// Programacao dos canais e enfeite: pedido "descartavel" cuja hora chega com o provedor limitando e recusado na fila,
+// sem ocupar via nem esperar o intervalo — nao gasta a cota que faria os canais carregarem.
+test('pedido descartavel e recusado na fila sem ocupar a via', async () => {
+  const q = new RequestThrottle(0, 1, 5, 1)
+  let degradado = false
+  const ran = []
+  const job = (n) => () => (ran.push(n), Promise.resolve(n))
+  const drop = () => (degradado ? new Error('pulado') : null)
+  const a = q.schedule(job('a'))
+  const b = q.schedule(job('epg-b'), 'background', drop)
+  const c = q.schedule(job('epg-c'), 'background', drop)
+  const d = q.schedule(job('d'))
+  degradado = true // o provedor passou a limitar enquanto eles esperavam
+  await a
+  await assert.rejects(b, /pulado/)
+  await assert.rejects(c, /pulado/)
+  await d
+  assert.deepEqual(ran, ['a', 'd']) // os dois da programacao nunca foram a rede
 })
