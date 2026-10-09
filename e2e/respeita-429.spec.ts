@@ -34,3 +34,28 @@ test('diagnostico explica o 429 do provedor', async ({ page }) => {
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText(/O PROVEDOR ESTÁ LIMITANDO OS PEDIDOS/)).toBeVisible({ timeout: 30000 })
 })
+
+// Programacao dos canais e enfeite: com o provedor limitando (429), a tela de Canais carrega os canais e NAO fica
+// mandando pedido de programacao atras de pedido — antes eram 10 429 seguidos so de programacao (console do Christian).
+test('provedor limitando: os canais carregam e a programacao nao martela o provedor', async ({ page }) => {
+  await page.addInitScript(() => ((window as unknown as { __RATE_COOLDOWN_MS__: number }).__RATE_COOLDOWN_MS__ = 200))
+  let epg = 0
+  let limitou = false
+  await page.route(/action=get_short_epg/, (route) => {
+    epg++
+    return route.fulfill({ status: 429, contentType: 'text/html', headers: { 'retry-after': '1' }, body: '' })
+  })
+  await page.route(/action=get_live_streams/, (route) => {
+    if (!limitou) {
+      limitou = true
+      return route.fulfill({ status: 429, contentType: 'text/html', headers: { 'retry-after': '1' }, body: '' })
+    }
+    return route.continue()
+  })
+  await login(page)
+  await page.goto('/live')
+  await expect(page.getByText('Canal Notícias 24h')).toBeVisible({ timeout: 40000 })
+  await page.waitForTimeout(3000)
+  // O 429 dos canais deixa o app cauteloso: a programacao nem sai (no codigo antigo eram 1 por canal visivel).
+  expect(epg).toBeLessThanOrEqual(1)
+})

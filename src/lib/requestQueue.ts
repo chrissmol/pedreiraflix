@@ -14,6 +14,11 @@ const MAX_COOLDOWN_MS = 180_000
 // How many requests in a row have to succeed, after a 429 widened the gap, before it's considered safe
 // to ease back down — one clean success isn't enough evidence the provider's limit has actually passed.
 const SUCCESSES_TO_EASE = 5
+// O ritmo que levou ao 429 nao pode voltar na hora: antes o intervalo caia de volta a 150 ms (7 pedidos/s) em ~20
+// pedidos e o provedor limitava de novo, em ciclos (app do Windows do Christian, 09/10). Cada 429 sobe um PISO
+// (dobra, ate 1/4 do intervalo de castigo); o intervalo desce so ate o piso, e o piso so cai devagar, depois de
+// muitos pedidos bons seguidos.
+const SUCCESSES_TO_LOWER_FLOOR = 40
 // The Worker's own rate limiter allows 300 req/10s (30/s) for these calls — 3 lanes at the base gap
 // below works out to well under half that, so there's real headroom before this needs to widen. Movies,
 // series and live catalogs used to fully serialize behind each other (concurrency 1) even though they're
@@ -25,15 +30,24 @@ const CONCURRENCY = 3
 // the provider rate-limits. Up to CONCURRENCY calls run at once; each lane waits `gapMs` after its call
 // finishes before picking up the next queued one, so the pacing guarantee is per-lane, not just a capped
 // total start rate.
+interface QueueItem {
+  start: () => void
+  /** Devolve um erro se o pedido nao vale mais a pena quando chegar a vez dele (nao ocupa via nem espera o intervalo). */
+  drop?: () => Error | null
+  reject: (err: Error) => void
+}
+
 export class RequestThrottle {
   private gapMs: number
   private successStreak = 0
-  private queue: (() => void)[] = []
+  private queue: QueueItem[] = []
   private active = 0
   private concurrency: number
   private baseGapMs: number
   private cooldownMs: number
   private rateLimitedGapMs: number
+  private floorGapMs: number
+  private floorStreak = 0
   private nextCooldownMs: number
   private pausedUntil = 0
   private resumeTimer: ReturnType<typeof setTimeout> | null = null
@@ -44,6 +58,7 @@ export class RequestThrottle {
     this.concurrency = concurrency
     this.cooldownMs = cooldownMs
     this.rateLimitedGapMs = rateLimitedGapMs
+    this.floorGapMs = gapMs
     this.nextCooldownMs = cooldownMs
   }
 
@@ -52,6 +67,8 @@ export class RequestThrottle {
   reportRateLimited(retryAfterSec?: number) {
     this.gapMs = Math.max(this.gapMs, this.rateLimitedGapMs)
     this.successStreak = 0
+    this.floorStreak = 0
+    this.floorGapMs = Math.min(this.rateLimitedGapMs, Math.max(this.floorGapMs * 2, Math.round(this.rateLimitedGapMs / 4)))
     const wait = Math.max(this.nextCooldownMs, (retryAfterSec ?? 0) * 1000)
     this.pausedUntil = Math.max(this.pausedUntil, Date.now() + wait)
     this.nextCooldownMs = Math.min(this.nextCooldownMs * 2, MAX_COOLDOWN_MS)
@@ -69,22 +86,32 @@ export class RequestThrottle {
    * the widen-on-429 above previously had no counterpart, so one rate limit early on silently made
    * every request for the rest of the tab's lifetime slower than it needed to be. */
   reportSuccess() {
-    if (this.gapMs <= this.baseGapMs) {
+    if (this.gapMs <= this.floorGapMs) {
       this.nextCooldownMs = this.cooldownMs
+      // No piso: depois de muitos pedidos bons o proprio piso desce (ate o ritmo original).
+      if (this.floorGapMs > this.baseGapMs && ++this.floorStreak >= SUCCESSES_TO_LOWER_FLOOR) {
+        this.floorGapMs = Math.max(this.baseGapMs, Math.round(this.floorGapMs / 2))
+        this.floorStreak = 0
+      }
       return
     }
     this.successStreak++
     if (this.successStreak >= SUCCESSES_TO_EASE) {
-      this.gapMs = Math.max(this.baseGapMs, Math.round(this.gapMs / 2))
+      this.gapMs = Math.max(this.floorGapMs, Math.round(this.gapMs / 2))
       this.successStreak = 0
     }
+  }
+
+  /** Limitando ou ainda no ritmo de cautela: o que e so enfeite (programacao dos canais) nao deve gastar a cota. */
+  get degraded() {
+    return this.paused || this.gapMs > this.baseGapMs
   }
 
   // Pedidos que a pessoa disparou agora (abrir um filme, uma serie, checar o perfil) nao podem esperar
   // atras das centenas de categorias que o catalogo baixa em segundo plano: antes, com uma fila so,
   // abrir um filme levava minutos depois de um 429. Eles furam a fila e tem uma via extra so deles,
   // entao nem esperam uma das vias do catalogo terminar.
-  private urgent: (() => void)[] = []
+  private urgent: QueueItem[] = []
 
   private pump() {
     for (;;) {
@@ -95,30 +122,37 @@ export class RequestThrottle {
       const fromQueue = !fromUrgent && this.queue.length > 0 && this.active < lanes && !this.paused
       if (!fromUrgent && !fromQueue) return
       const next = (fromUrgent ? this.urgent : this.queue).shift()!
+      const skip = next.drop?.()
+      if (skip) {
+        next.reject(skip)
+        continue
+      }
       this.active++
-      next()
+      next.start()
     }
   }
 
-  schedule<T>(fn: () => Promise<T>, priority: 'urgent' | 'background' = 'background'): Promise<T> {
+  schedule<T>(fn: () => Promise<T>, priority: 'urgent' | 'background' = 'background', dropIf?: () => Error | null): Promise<T> {
     return new Promise((resolve, reject) => {
-      ;(priority === 'urgent' ? this.urgent : this.queue).push(() => {
-        fn().then(
-          (value) => {
-            resolve(value)
-            sleep(this.gapMs).then(() => {
-              this.active--
-              this.pump()
-            })
-          },
-          (err) => {
-            reject(err)
-            sleep(this.gapMs).then(() => {
-              this.active--
-              this.pump()
-            })
-          },
-        )
+      const release = () =>
+        sleep(this.gapMs).then(() => {
+          this.active--
+          this.pump()
+        })
+      ;(priority === 'urgent' ? this.urgent : this.queue).push({
+        drop: dropIf,
+        reject,
+        start: () =>
+          fn().then(
+            (value) => {
+              resolve(value)
+              release()
+            },
+            (err) => {
+              reject(err)
+              release()
+            },
+          ),
       })
       this.pump()
     })
