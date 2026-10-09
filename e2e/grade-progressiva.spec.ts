@@ -22,3 +22,18 @@ test('grade grande monta um bloco e acrescenta o resto ao rolar', async ({ page 
   })
   await expect.poll(montados).toBeGreaterThanOrEqual(600)
 })
+
+test('linha de categoria mostra uma previa e leva o resto para "Ver tudo"', async ({ page }) => {
+  const itens = Array.from({ length: 300 }, (_, i) => ({
+    stream_id: 9000 + i, name: `Titulo ${i}`, category_id: '10', rating: '7.0', added: '1700000000', year: '2021',
+    genre: 'Acao', container_extension: 'mp4', stream_icon: '',
+  }))
+  await page.route(/action=get_vod_streams/, (r) => r.fulfill({ json: itens }))
+  await seedSession(page)
+  await page.goto('/movies')
+  await expect(page.getByText('Titulo 5', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Ver tudo/ }).first()).toBeVisible()
+  const linhas = await page.getByRole('link', { name: /Ver tudo/ }).count()
+  // Cada linha mostra no maximo 40; sem o limite seriam 300 por linha.
+  expect(await page.locator('main button[data-spatial]').count()).toBeLessThanOrEqual(40 * linhas + 10)
+})
