@@ -62,3 +62,13 @@ test('does not log out while playing to a TV over AirPlay, even with the local e
   await page.waitForTimeout(2500)
   await expect(page).toHaveURL(/\/watch\/movie\//)
 })
+
+// App instalado (APK, Windows, PWA na tela de inicio) e aparelho pessoal: sem logout automatico — sair sozinho
+// trancaria a pessoa fora, e sem internet nem os downloads ela conseguiria abrir (08/10).
+test('no app instalado nao sai sozinho por inatividade', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { value: true }))
+  await login(page)
+  await expect(page).toHaveURL(/\/$/)
+  await page.waitForTimeout(2500)
+  await expect(page).toHaveURL(/\/$/)
+})

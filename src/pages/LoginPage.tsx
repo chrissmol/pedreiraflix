@@ -139,6 +139,11 @@ export default function LoginPage() {
 
         {choosing && (
           <div className="space-y-3" data-testid="saved-accounts">
+            {!navigator.onLine && (
+              <p role="status" className="rounded-2xl bg-surface-container px-4 py-3 text-body-sm text-on-surface-variant">
+                Sem internet: entre numa conta salva para assistir os seus downloads.
+              </p>
+            )}
             {accounts.map((account) =>
               renamingId === account.id ? (
                 <form

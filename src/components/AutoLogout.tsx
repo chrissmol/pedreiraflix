@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/auth'
+import { isInstalledApp } from '../lib/device'
 
 // A shared/public computer left signed in is the actual risk this guards against — not a
 // second-by-second security boundary, so the timeout is generous rather than banking-app strict.
@@ -18,7 +19,9 @@ export default function AutoLogout() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!hasSession) return
+    // So no navegador comum (pode ser um computador compartilhado). No app instalado, sair sozinho trancaria a
+    // pessoa fora — e sem internet nem os downloads ela conseguiria abrir (08/10).
+    if (!hasSession || isInstalledApp) return
 
     function isVideoActivelyPlaying(): boolean {
       const video = document.querySelector('video')
