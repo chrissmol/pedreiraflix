@@ -55,6 +55,22 @@ export default function DiagnosticPage() {
       const d = json(r.text)
       return { ok: r.status === 200 && !!d?.user_info, detalhe: `${resumo(r)}${pagina(r.text, r.type) ? ` · PÁGINA: ${r.text.slice(0, 80)}` : ''}` }
     })
+    // O limite de telas do provedor: quando esta cheio ele recusa video (HTTP 403) e o app mostra "sua conta ja esta
+    // tocando em outro aparelho" — mesmo sem ninguem assistindo, porque conexoes abandonadas contam por alguns
+    // minutos (relato do Christian, 09/10: nenhum canal carregava e o download falhava).
+    await passo('Telas em uso no provedor', async () => {
+      const r = await client.probe(null)
+      const u = json(r.text)?.user_info
+      if (!u) return { ok: false, detalhe: 'Sem os dados da conta (veja a linha acima).' }
+      const ativas = Number(u.active_cons)
+      const max = Number(u.max_connections)
+      const cheio = Number.isFinite(ativas) && Number.isFinite(max) && max > 0 && ativas >= max
+      const vence = u.exp_date && Number(u.exp_date) > 0 ? new Date(Number(u.exp_date) * 1000).toLocaleDateString('pt-BR') : 'sem data'
+      return {
+        ok: !cheio && String(u.status) === 'Active',
+        detalhe: `${ativas} de ${max} telas em uso · conta ${u.status} · vence ${vence}${cheio ? ' · LIMITE CHEIO: o provedor recusa vídeo (HTTP 403) até uma conexão liberar. Feche o app em todos os aparelhos e espere alguns minutos.' : ''}`,
+      }
+    })
     let canalCat: string | null = null
     await passo('Categorias de canais', async () => {
       const r = await client.probe('get_live_categories')

@@ -32,3 +32,22 @@ test('todas as categorias falham: a tela de canais mostra o erro, nao fica vazia
   await page.goto('/live')
   await expect(page.getByRole('alert').filter({ hasText: 'página em vez dos canais' })).toBeVisible({ timeout: 40000 })
 })
+
+test('diagnostico mostra as telas em uso e acusa o limite cheio', async ({ page }) => {
+  await page.route(/action=(?!get_)|player_api\.php(?!.*action)/, async (route) => {
+    const res = await route.fetch()
+    const text = await res.text()
+    try {
+      const json = JSON.parse(text)
+      if (json.user_info) Object.assign(json.user_info, { active_cons: '2', max_connections: '2' })
+      await route.fulfill({ response: res, json })
+    } catch {
+      await route.fulfill({ response: res, body: text })
+    }
+  })
+  await login(page)
+  await page.goto('/diagnostico')
+  await page.getByRole('button', { name: 'Testar agora' }).click()
+  await expect(page.getByText('✗ Telas em uso no provedor')).toBeVisible({ timeout: 30000 })
+  await expect(page.getByText(/2 de 2 telas em uso.*LIMITE CHEIO/)).toBeVisible()
+})

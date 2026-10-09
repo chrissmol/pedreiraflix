@@ -64,7 +64,13 @@ export async function downloadToParts(url: string, key: string, onProgress: (pct
 
   for (;;) {
     const res = await fetchRange(url, received)
-    checkResponse(res)
+    try {
+      checkResponse(res)
+    } catch (err) {
+      // Fecha a resposta recusada: deixa-la aberta segurava a conexao no provedor — e cada tela conta no limite dele.
+      await res.body?.cancel().catch(() => {})
+      throw err
+    }
     contentType = res.headers.get('content-type') || contentType
     if (res.status === 416) break
 

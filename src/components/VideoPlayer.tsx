@@ -445,6 +445,13 @@ export default function VideoPlayer({
       if (volumeSaveTimeout.current) clearTimeout(volumeSaveTimeout.current)
       hlsRef.current = null
       hls?.destroy()
+      // Solta o video de verdade. Sem isto, sair do player deixava o <video> baixando em segundo plano ate o navegador
+      // descartar o elemento — e cada conexao aberta conta no limite de telas do provedor: depois de assistir e sair
+      // algumas vezes ele passava a recusar tudo (HTTP 403, "sua conta ja esta tocando em outro aparelho") sem ninguem
+      // assistindo (app do Windows do Christian, 09/10). removeAttribute + load() cancela o pedido em andamento.
+      video.pause()
+      video.removeAttribute('src')
+      video.load()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src, isHls, retryToken, fastLive])
