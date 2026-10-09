@@ -58,7 +58,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
         className={`${compact ? 'inline-flex h-10 items-center justify-center gap-1 rounded-full px-2.5 text-label-badge' : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'} bg-brand-500/15 text-brand-300 tabular-nums`}
       >
         <Download className="h-5 w-5 animate-pulse motion-reduce:animate-none" />
-        {!compact && <span className="hidden sm:inline">Baixando... {progress}%</span>}
+        {!compact && <span className="hidden sm:inline">Baixando… {progress}%</span>}
         {compact && `${progress}%`}
       </span>
     )

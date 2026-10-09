@@ -29,3 +29,20 @@ test('M3U login by file classifies live, movie and series', async ({ page, reque
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expectClassified(page)
 })
+
+// Titulo com virgula ("Rock, Paper") era cortado na ultima virgula: a lista mostrava "Paper, Scissors".
+test('M3U: titulo com virgula aparece inteiro e a virgula de um atributo nao o corta', async ({ page }) => {
+  const lista = [
+    '#EXTM3U',
+    '#EXTINF:-1 tvg-id="a" group-title="Filmes, Acao",Rock, Paper, Scissors (2020)',
+    'http://provedor.test/movie/1.mp4',
+    '',
+  ].join('\n')
+  await page.goto('/login')
+  await page.getByRole('button', { name: 'Arquivo M3U' }).click()
+  await page.getByLabel('Arquivo M3U do aparelho').setInputFiles({ name: 'lista.m3u', mimeType: 'audio/x-mpegurl', buffer: Buffer.from(lista) })
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await page.goto('/movies')
+  await expect(page.getByText('Rock, Paper, Scissors (2020)').first()).toBeVisible()
+})

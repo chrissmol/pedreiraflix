@@ -141,7 +141,7 @@ export default function DiagnosticPage() {
         carrega ou não baixa, rode e mande uma captura desta tela.
       </p>
       <button onClick={rodar} disabled={rodando} className="btn-primary mb-6">
-        {rodando ? 'Testando...' : linhas.length ? 'Testar de novo' : 'Testar agora'}
+        {rodando ? 'Testando…' : linhas.length ? 'Testar de novo' : 'Testar agora'}
       </button>
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (

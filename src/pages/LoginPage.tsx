@@ -186,10 +186,10 @@ export default function LoginPage() {
                         itself down to one truncated letter. "Conectando..." stays at every width: that's
                         real loading feedback, not decoration. */}
                     <span className="hidden shrink-0 text-label-md text-brand-400 sm:inline">
-                      {busyId === account.id ? 'Conectando...' : 'Entrar'}
+                      {busyId === account.id ? 'Conectando…' : 'Entrar'}
                     </span>
                     {busyId === account.id && (
-                      <span className="shrink-0 text-label-md text-brand-400 sm:hidden">Conectando...</span>
+                      <span className="shrink-0 text-label-md text-brand-400 sm:hidden">Conectando…</span>
                     )}
                   </button>
                   <button
@@ -412,7 +412,7 @@ export default function LoginPage() {
               disabled={busyId !== null}
               className="btn-primary mt-5 w-full text-body-lg sm:mt-6"
             >
-              {busyId === 'form' ? 'Conectando...' : 'Entrar'}
+              {busyId === 'form' ? 'Conectando…' : 'Entrar'}
             </button>
             {accounts.length > 0 && (
               <button

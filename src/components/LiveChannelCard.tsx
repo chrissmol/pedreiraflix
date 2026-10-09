@@ -84,7 +84,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
     <div
       ref={ref}
       data-testid={`live-card-${channel.streamId}`}
-      className="group relative flex items-center gap-3 rounded-2xl border border-outline-soft bg-surface-low p-3 transition-all duration-200 hover:border-outline-strong hover:bg-surface-container"
+      className="group relative flex items-center gap-3 rounded-2xl border border-outline-soft bg-surface-low p-3 [content-visibility:auto] [contain-intrinsic-size:auto_88px] transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 hover:border-outline-strong hover:bg-surface-container"
     >
       <button data-spatial onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-surface-high">

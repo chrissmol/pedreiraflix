@@ -213,7 +213,7 @@ export default function SeriesDetailPage() {
               <div
                 key={ep.id}
                 onClick={() => navigate(playUrl(ep))}
-                className={`group relative flex cursor-pointer gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 sm:gap-4 sm:p-3 ${
+                className={`group relative flex cursor-pointer gap-3 rounded-2xl border p-2.5 text-left transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 sm:gap-4 sm:p-3 ${
                   isCurrent
                     ? 'border-brand-500/50 bg-surface-container shadow-[0_0_30px_-12px_rgba(15,123,255,0.5)]'
                     : 'border-outline-soft bg-surface-low hover:border-outline-strong hover:bg-surface-container'
