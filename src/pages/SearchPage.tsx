@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
@@ -6,10 +6,21 @@ import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useC
 import { matchesQuery } from '../lib/search'
 import PageLoading from '../components/PageLoading'
 
+// Buscar "a" no painel do Christian dava ~29 mil cartoes montados de uma vez (209 mil nos do DOM). Cada secao
+// mostra um bloco e o resto vem em "Mostrar mais".
+const BLOCK = 60
+
+type Section = 'movies' | 'series' | 'live'
+
 export default function SearchPage() {
   const [params] = useSearchParams()
   const query = (params.get('q') || '').trim()
   const navigate = useNavigate()
+  // O quanto cada secao ja foi ampliada pertence a uma busca: outra busca volta ao primeiro bloco.
+  const [extra, setExtra] = useState({ q: query, movies: 0, series: 0, live: 0 })
+  const added = extra.q === query ? extra : { q: query, movies: 0, series: 0, live: 0 }
+  const more = (section: Section) => setExtra({ ...added, [section]: added[section] + BLOCK })
+  const shown = (section: Section) => BLOCK + added[section]
 
   const movies = useMovieCatalog()
   const series = useSeriesCatalog()
@@ -59,10 +70,15 @@ export default function SearchPage() {
             Filmes
           </h2>
           <div className="flex flex-wrap gap-3">
-            {results.movies.map((m) => (
+            {results.movies.slice(0, shown('movies')).map((m) => (
               <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => navigate(`/movies/${m.streamId}`)} />
             ))}
           </div>
+          {results.movies.length > shown('movies') && (
+            <button onClick={() => more('movies')} className="btn-secondary mt-4">
+              Mostrar mais ({results.movies.length - shown('movies')})
+            </button>
+          )}
         </section>
       )}
 
@@ -73,10 +89,15 @@ export default function SearchPage() {
             Séries
           </h2>
           <div className="flex flex-wrap gap-3">
-            {results.series.map((s) => (
+            {results.series.slice(0, shown('series')).map((s) => (
               <PosterCard key={s.seriesId} title={s.name} image={s.cover} badge={Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null} onClick={() => navigate(`/series/${s.seriesId}`)} />
             ))}
           </div>
+          {results.series.length > shown('series') && (
+            <button onClick={() => more('series')} className="btn-secondary mt-4">
+              Mostrar mais ({results.series.length - shown('series')})
+            </button>
+          )}
         </section>
       )}
 
@@ -87,7 +108,7 @@ export default function SearchPage() {
             Canais
           </h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3">
-            {results.live.map((c) => (
+            {results.live.slice(0, shown('live')).map((c) => (
               <LiveChannelCard
                 key={c.streamId}
                 channel={c}
@@ -95,6 +116,11 @@ export default function SearchPage() {
               />
             ))}
           </div>
+          {results.live.length > shown('live') && (
+            <button onClick={() => more('live')} className="btn-secondary mt-4">
+              Mostrar mais ({results.live.length - shown('live')})
+            </button>
+          )}
         </section>
       )}
     </div>
