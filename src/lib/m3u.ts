@@ -42,6 +42,17 @@ function attr(extinf: string, name: string): string | null {
   return m ? m[1] : null
 }
 
+/** A virgula que separa os atributos do titulo e a primeira FORA de aspas. `lastIndexOf` cortava titulos que tem
+ * virgula no nome ("Rock, Paper"). Sem virgula fora de aspas, cai na ultima (formato de antes). */
+function titleComma(line: string): number {
+  let quoted = false
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') quoted = !quoted
+    else if (line[i] === ',' && !quoted) return i
+  }
+  return line.lastIndexOf(',')
+}
+
 /** Parses an `#EXTM3U` playlist into flat entries with a best-effort live/movie/series classification.
  * Malformed lines (no following URL, no #EXTINF) are skipped rather than throwing — M3U in the wild is
  * rarely fully spec-compliant. */
@@ -54,7 +65,7 @@ export function parseM3u(text: string): M3uEntry[] {
     const line = lines[i].trim()
     if (!line.startsWith('#EXTINF')) continue
 
-    const name = line.slice(line.lastIndexOf(',') + 1).trim()
+    const name = line.slice(titleComma(line) + 1).trim()
     const group = attr(line, 'group-title') || ''
     const logo = attr(line, 'tvg-logo')
 
