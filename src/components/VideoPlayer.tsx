@@ -14,6 +14,7 @@ import {
   NEXT_UP_LEAD,
   SCREEN_LIMIT_MESSAGE,
   REFUSED_MESSAGE,
+  CHANNEL_BLOCKED_MESSAGE,
   CHANNEL_NOT_FOUND_MESSAGE,
   SKIP_SECONDS,
   estimateInitialBandwidthBps,
@@ -57,10 +58,10 @@ interface SubtitleTrack {
 
 // 403 nem sempre e o limite de telas (09/10: era a Cloudflare barrando IP puro e o app culpava as telas).
 // So culpa as telas quando o provedor confirma, pelo numero de conexoes da conta.
-async function refusedMessage(): Promise<string> {
-  if (useAuthStore.getState().credentials?.type !== 'xtream') return REFUSED_MESSAGE
+async function refusedMessage(fallback = REFUSED_MESSAGE): Promise<string> {
+  if (useAuthStore.getState().credentials?.type !== 'xtream') return fallback
   await refreshSession()
-  return connectionStatus(useAuthStore.getState().user)?.full ? SCREEN_LIMIT_MESSAGE : REFUSED_MESSAGE
+  return connectionStatus(useAuthStore.getState().user)?.full ? SCREEN_LIMIT_MESSAGE : fallback
 }
 
 export default function VideoPlayer({
@@ -374,6 +375,11 @@ export default function VideoPlayer({
           hls.loadSource(src)
           hls.attachMedia(video)
 
+          hls.on(HlsCtor.Events.LEVEL_LOADED, (_evt, data) => {
+            if (cancelled || !isLive || data.details.live) return
+            hls?.destroy()
+            refusedMessage(CHANNEL_BLOCKED_MESSAGE).then((msg) => !cancelled && setError(msg))
+          })
           hls.on(HlsCtor.Events.MANIFEST_PARSED, (_evt, data) => {
             if (cancelled) return
             if (data.levels.length > 1) {
