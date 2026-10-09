@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, Play, Trash } from '../components/icons'
+import { ChevronLeft, Download, Trash } from '../components/icons'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
@@ -74,7 +74,7 @@ export default function DownloadsPage() {
         onClick={() => navigate('/')}
         className="btn-secondary mt-6"
       >
-        <Play className="h-4 w-4" /> Voltar ao início
+        <ChevronLeft className="h-4 w-4" /> Voltar ao início
       </button>
 
       {deleteKey &&

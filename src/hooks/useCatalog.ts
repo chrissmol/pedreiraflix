@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { cached } from '../lib/cache'
 import { isAdultCategoryName } from '../lib/parentalControl'
 import type { ProviderClient } from '../lib/provider'
-import { XtreamApiError } from '../lib/xtream'
+import { NOT_AVAILABLE, XtreamApiError } from '../lib/xtream'
 import { useActiveProfile } from '../store/profiles'
 import type { Category, LiveChannel, Movie, SeriesItem } from '../types'
 import { useXtream } from './useXtream'
@@ -49,6 +49,7 @@ async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number,
 export function friendlyCatalogError(err: unknown): string {
   if (err instanceof XtreamApiError) {
     if (err.kind === 'html') return 'O provedor respondeu uma página em vez dos canais (bloqueio ou provedor fora do ar). Tente de novo em instantes.'
+    if (err.message === NOT_AVAILABLE) return NOT_AVAILABLE
     if (err.status === 429) return 'O provedor está recebendo muitos pedidos agora. Espere alguns segundos e tente de novo.'
     if (err.status && err.status >= 500) return 'O provedor está instável no momento. Tente de novo em instantes.'
     if (err.status === 401 || err.status === 403) return 'Sessão expirada ou sem permissão. Tente entrar de novo.'
