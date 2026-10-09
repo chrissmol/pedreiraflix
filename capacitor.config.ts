@@ -7,10 +7,11 @@ const config: CapacitorConfig = {
   appId: 'com.pedreiraflix.app',
   appName: 'PedreiraFlix',
   webDir: 'dist',
-  server: {
-    url: 'https://pedreiraflix.chrisouzamol.workers.dev',
-    androidScheme: 'https',
-  },
+  // PEDREIRAFLIX_TEST_URL: so o APK de teste (scripts/estressar-apk.mjs), apontando para o site local com o
+  // painel falso; http puro precisa de cleartext.
+  server: process.env.PEDREIRAFLIX_TEST_URL
+    ? { url: process.env.PEDREIRAFLIX_TEST_URL, cleartext: true }
+    : { url: 'https://pedreiraflix.chrisouzamol.workers.dev', androidScheme: 'https' },
   plugins: {
     // Tela de ponta a ponta com o fundo do app atras das barras do sistema (o site ja usa viewport-fit=cover e
     // env(safe-area-inset-*)); icones claros nas barras, que ficam sobre o fundo escuro.
