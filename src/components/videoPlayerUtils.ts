@@ -59,5 +59,9 @@ export const CUE_BG_BY_SUBTITLE_BACKGROUND = {
 export const SCREEN_LIMIT_MESSAGE =
   'O provedor recusou: sua conta já está tocando em outro aparelho. Feche lá (ou espere alguns minutos) e tente de novo.'
 
+// 403 sem o provedor confirmar as telas cheias (09/10: era a Cloudflare barrando IP puro, "error code: 1003").
+export const REFUSED_MESSAGE =
+  'O provedor recusou este vídeo (HTTP 403). Tente outro canal ou volte a tentar em alguns minutos.'
+
 export const CHANNEL_NOT_FOUND_MESSAGE =
   'O provedor não entregou este canal (HTTP 404). Ele pode estar fora do ar ou a sua tela ainda ocupada: espere alguns minutos e tente de novo.'
