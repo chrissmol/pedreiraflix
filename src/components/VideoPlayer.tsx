@@ -2,6 +2,8 @@ import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
+import { connectionStatus, refreshSession } from '../lib/session'
+import { useAuthStore } from '../store/auth'
 import { usePlayerPrefs } from '../store/playerPrefs'
 import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
 import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
@@ -11,6 +13,7 @@ import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import {
   NEXT_UP_LEAD,
   SCREEN_LIMIT_MESSAGE,
+  REFUSED_MESSAGE,
   CHANNEL_NOT_FOUND_MESSAGE,
   SKIP_SECONDS,
   estimateInitialBandwidthBps,
@@ -50,6 +53,14 @@ interface AudioTrack {
 interface SubtitleTrack {
   id: number
   name: string
+}
+
+// 403 nem sempre e o limite de telas (09/10: era a Cloudflare barrando IP puro e o app culpava as telas).
+// So culpa as telas quando o provedor confirma, pelo numero de conexoes da conta.
+async function refusedMessage(): Promise<string> {
+  if (useAuthStore.getState().credentials?.type !== 'xtream') return REFUSED_MESSAGE
+  await refreshSession()
+  return connectionStatus(useAuthStore.getState().user)?.full ? SCREEN_LIMIT_MESSAGE : REFUSED_MESSAGE
 }
 
 export default function VideoPlayer({
@@ -213,7 +224,10 @@ export default function VideoPlayer({
         ? 'Erro ao carregar o stream. Verifique a conexão ou o canal.'
         : 'Não foi possível reproduzir este arquivo. Formato pode não ser suportado pelo navegador.'
       fetch(video.currentSrc || src, { headers: { Range: 'bytes=0-0' } })
-        .then((res) => !cancelled && setError(res.status === 403 ? SCREEN_LIMIT_MESSAGE : fallback))
+        .then(async (res) => {
+          const msg = res.status === 403 ? await refusedMessage() : fallback
+          if (!cancelled) setError(msg)
+        })
         .catch(() => !cancelled && setError(fallback))
     }
     async function attemptAutoplay() {
@@ -405,8 +419,8 @@ export default function VideoPlayer({
               case HlsCtor.ErrorTypes.NETWORK_ERROR:
                 // Recusa do provedor nao melhora tentando de novo — so gastaria as 4 tentativas.
                 if (data.response?.code === 403) {
-                  setError(SCREEN_LIMIT_MESSAGE)
                   hls?.destroy()
+                  refusedMessage().then((msg) => !cancelled && setError(msg))
                   break
                 }
                 networkRetries += 1
