@@ -64,3 +64,16 @@ test('series (kind=tv): busca em /search/tv e pega o codigo IMDb dos external_id
   assert.ok(calls.some((u) => u.includes('append_to_response=external_ids')))
   assert.ok(calls.some((u) => u.includes('i=tt0903747')))
 })
+
+// O Retry-After do provedor no 429 tem que chegar no app (ele para de pedir pelo tempo certo) — Worker de verdade.
+test('429 do provedor: /api/xtream repassa o Retry-After', async () => {
+  globalThis.fetch = async () => new Response('', { status: 429, headers: { 'content-type': 'text/html', 'retry-after': '7' } })
+  const res = await worker.fetch(
+    new Request('http://app/api/xtream?base=http%3A%2F%2Fpainel.exemplo%3A8080&path=player_api.php&action=get_live_streams', {
+      headers: { 'x-xtream-username': 'u', 'x-xtream-password': 'p', 'cf-connecting-ip': String(Math.random()) },
+    }),
+    ENV,
+  )
+  assert.equal(res.status, 429)
+  assert.equal(res.headers.get('retry-after'), '7')
+})

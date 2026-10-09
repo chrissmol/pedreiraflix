@@ -95,7 +95,7 @@ export class XtreamClient implements ProviderClient {
       headers: { 'x-xtream-username': this.creds.username, 'x-xtream-password': this.creds.password },
     })
     const text = await res.text()
-    return { status: res.status, type: res.headers.get('content-type') || '', ms: Math.round(performance.now() - started), bytes: text.length, text }
+    return { status: res.status, type: res.headers.get('content-type') || '', ms: Math.round(performance.now() - started), bytes: text.length, text, retryAfter: res.headers.get('retry-after') }
   }
 
   /** Diagnostico: os primeiros bytes do video (o mesmo pedido que o download faz). */
@@ -131,7 +131,8 @@ export class XtreamClient implements ProviderClient {
       // the gap between every future request app-wide so subsequent categories back off automatically
       // instead of repeating the same mistake. Eases back toward the normal pace after a streak of
       // clean requests (see requestQueue.ts) rather than staying defensive for the rest of the session.
-      xtreamQueue.reportRateLimited()
+      const retryAfter = Number(res.headers.get('retry-after'))
+      xtreamQueue.reportRateLimited(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined)
     } else {
       xtreamQueue.reportSuccess()
     }
