@@ -33,6 +33,15 @@ public class BaixadorPlugin extends Plugin {
             call.reject("url e fileName sao obrigatorios");
             return;
         }
+        // So o nome do arquivo, dentro da pasta do app: "../" levaria o download para fora dela.
+        if (fileName.contains("/") || fileName.contains("\\") || fileName.contains("..")) {
+            call.reject("fileName invalido");
+            return;
+        }
+        if (!url.startsWith("https://") && !url.startsWith("http://")) {
+            call.reject("url invalida");
+            return;
+        }
         DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url))
             .setTitle(call.getString("title", "PedreiraFlix"))
             .setDescription("PedreiraFlix")
