@@ -6,7 +6,7 @@ import { connectionStatus, refreshSession } from '../lib/session'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Plus, RefreshCw, Search, User } from './icons'
+import { Download, Plus, RefreshCw, Search, Settings, User } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
@@ -264,6 +264,15 @@ export default function TopNav() {
               className="menu-option"
             >
               <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/diagnostico')
+              }}
+              className="menu-option"
+            >
+              <Settings className="h-4 w-4 text-on-surface-variant" /> Diagnóstico
             </button>
             <button
               onClick={logout}
