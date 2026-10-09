@@ -11,6 +11,7 @@ import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import {
   NEXT_UP_LEAD,
   SCREEN_LIMIT_MESSAGE,
+  CHANNEL_NOT_FOUND_MESSAGE,
   SKIP_SECONDS,
   estimateInitialBandwidthBps,
 } from './videoPlayerUtils'
@@ -390,6 +391,15 @@ export default function VideoPlayer({
           })
 
           hls.on(HlsCtor.Events.ERROR, (_evt, data) => {
+            // Lista do canal com 404 o hls.js repete sem fim e sem erro fatal (console do Christian, 09/10: ~35x o
+            // mesmo /auth/<token>). Com 1 tela na conta, insistir segura a tela no provedor e ele recusa tudo.
+            const isPlaylist =
+              data.details === HlsCtor.ErrorDetails.MANIFEST_LOAD_ERROR || data.details === HlsCtor.ErrorDetails.LEVEL_LOAD_ERROR
+            if (isPlaylist && data.response?.code === 404) {
+              setError(CHANNEL_NOT_FOUND_MESSAGE)
+              hls?.destroy()
+              return
+            }
             if (!data.fatal) return
             switch (data.type) {
               case HlsCtor.ErrorTypes.NETWORK_ERROR:
