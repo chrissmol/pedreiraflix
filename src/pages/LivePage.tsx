@@ -130,7 +130,8 @@ export default function LivePage() {
       active ? 'bg-brand-500/15 text-brand-300' : 'text-on-surface-variant hover:bg-surface-high hover:text-white'
     }`
   const tab = (active: boolean) =>
-    `shrink-0 whitespace-nowrap border-b-2 px-1 pb-2 text-label-md transition-colors ${
+    // 44px de altura para o dedo (com pb-2 eram 29px — achado do /estressar-apk, 08/10).
+    `flex h-11 shrink-0 items-center whitespace-nowrap border-b-2 px-1 text-label-md transition-colors ${
       active ? 'border-brand-500 text-white' : 'border-transparent text-on-surface-variant'
     }`
   const matchesCategoryFilter = (name: string) => !categoryFilter.trim() || matchesQuery(cleanCategoryName(name), categoryFilter)
