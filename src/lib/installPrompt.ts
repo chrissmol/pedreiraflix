@@ -12,6 +12,7 @@ interface InstallPromptEvent extends Event {
 export const useInstallPrompt = create<{ event: InstallPromptEvent | null }>(() => ({ event: null }))
 
 window.addEventListener('beforeinstallprompt', (e) => {
+  if (/PedreiraFlixDesktop/.test(navigator.userAgent)) return // ja e o app do Windows (Tauri): nada a instalar
   e.preventDefault() // o navegador nao mostra a propria faixa; o convite fica no menu da conta
   useInstallPrompt.setState({ event: e as InstallPromptEvent })
 })
