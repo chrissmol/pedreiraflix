@@ -6,6 +6,10 @@ import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { installErrorReporting } from './lib/errorReporting'
 // Cedo, antes do React: o navegador pode avisar que da para instalar logo no carregamento.
 import './lib/installPrompt'
+import { isTv } from './lib/device'
+
+// TV: letras e espacos um pouco maiores para ver do sofa (o Tailwind e todo em rem, entao escala junto).
+if (isTv) document.documentElement.classList.add('tv')
 import { ensureActiveProfile, refreshSession } from './lib/session'
 import { useAccountsStore } from './store/accounts'
 import { useAuthStore } from './store/auth'

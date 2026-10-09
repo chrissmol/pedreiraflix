@@ -42,3 +42,48 @@ export function moveFocusVertically(direction: 'up' | 'down'): boolean {
   best.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
   return true
 }
+
+// --- TV: as quatro setas andam por tudo que e clicavel (cabecalho, filtros, botoes, posteres) -----------------
+// No computador continua so o vertical acima: la as setas tambem rolam a pagina e o Tab existe. Na TV o controle
+// remoto so tem setas e OK, entao a primeira seta ja da o foco (nada comeca focado) e da para chegar em tudo.
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-spatial]'
+
+function visible(el: HTMLElement) {
+  const r = el.getBoundingClientRect()
+  if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > innerHeight * 3) return false
+  const cs = getComputedStyle(el)
+  return cs.visibility !== 'hidden' && cs.display !== 'none' && !el.closest('[aria-hidden="true"], .sr-only')
+}
+
+export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(visible)
+  const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
+  if (!active || !all.includes(active)) {
+    // Primeira seta: o primeiro item do conteudo (nao o logo do cabecalho).
+    const first = all.find((el) => el.closest('#main-content') && el.getBoundingClientRect().top >= 0) ?? all[0]
+    first?.focus()
+    first?.scrollIntoView({ block: 'center', inline: 'nearest' })
+    return !!first
+  }
+  const from = center(active)
+  const horizontal = direction === 'left' || direction === 'right'
+  const sign = direction === 'down' || direction === 'right' ? 1 : -1
+  let best: HTMLElement | null = null
+  let bestScore = Infinity
+  for (const el of all) {
+    if (el === active || el.contains(active) || active.contains(el)) continue
+    const to = center(el)
+    const main = (horizontal ? to.x - from.x : to.y - from.y) * sign
+    if (main <= 8) continue // so quem esta de fato naquela direcao
+    const cross = Math.abs(horizontal ? to.y - from.y : to.x - from.x)
+    const score = main + cross * 2 // alinhado vence: andar para o lado fica na mesma linha
+    if (score < bestScore) {
+      best = el
+      bestScore = score
+    }
+  }
+  if (!best) return false
+  best.focus()
+  best.scrollIntoView({ block: 'center', inline: 'nearest' })
+  return true
+}

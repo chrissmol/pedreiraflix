@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
-import { moveFocusVertically } from '../lib/spatialNav'
+import { isTv } from '../lib/device'
+import { moveFocusTv, moveFocusVertically } from '../lib/spatialNav'
 import MobileNav from './MobileNav'
 import TopNav from './TopNav'
 import UpdatePrompt from './UpdatePrompt'
@@ -55,8 +56,17 @@ export default function Layout() {
   // setas seguem rolando a pagina normalmente (ver lib/spatialNav).
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+      if (isTv) {
+        const dirs: Record<string, 'up' | 'down' | 'left' | 'right'> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
+        const dir = dirs[e.key]
+        if (!dir) return
+        // Digitando num campo (busca), esquerda/direita movem o cursor do texto.
+        const typing = document.activeElement instanceof HTMLInputElement && (dir === 'left' || dir === 'right')
+        if (!typing && moveFocusTv(dir)) e.preventDefault()
+        return
+      }
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
       if (moveFocusVertically(e.key === 'ArrowUp' ? 'up' : 'down')) e.preventDefault()
     }
     window.addEventListener('keydown', onKeyDown)
