@@ -106,7 +106,7 @@ export default function MovieDetailPage() {
                   )}&image=${encodeURIComponent(movie.streamIcon || '')}`,
                 )
               }
-              className="btn-primary w-full sm:w-auto"
+              className="btn-primary flex-1 sm:flex-none"
             >
               <Play className="h-5 w-5" /> Assistir
             </button>
@@ -134,7 +134,9 @@ export default function MovieDetailPage() {
                 download
                 title="Baixar o arquivo original (fora do app)"
                 aria-label="Baixar arquivo"
-                className="btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md"
+                // No celular so fica o "baixar para ver offline": dois botoes de download so com icone confundiam
+                // (estresse do APK, 08/10), e baixar o arquivo cru no celular raramente e o que se quer.
+                className="btn-icon hidden sm:inline-flex sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md"
               >
                 {/* Not the same glyph as the offline download beside it: with labels hidden on phones, two
                     identical arrows gave no way to tell "save into the app" from "save to the device". */}

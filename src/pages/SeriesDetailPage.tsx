@@ -119,7 +119,7 @@ export default function SeriesDetailPage() {
           <>
             {resume ? (
               <>
-                <button onClick={() => navigate(playUrl(resume.ep))} className="btn-primary w-full sm:w-auto">
+                <button onClick={() => navigate(playUrl(resume.ep))} className="btn-primary flex-1 sm:flex-none">
                   <Play className="h-5 w-5" />
                   <span className="text-left leading-tight">
                     Continuar {tag(resume.ep)}
@@ -136,7 +136,7 @@ export default function SeriesDetailPage() {
               </>
             ) : (
               first && (
-                <button onClick={() => navigate(playUrl(first))} className="btn-primary w-full sm:w-auto">
+                <button onClick={() => navigate(playUrl(first))} className="btn-primary flex-1 sm:flex-none">
                   <Play className="h-5 w-5" /> Assistir {tag(first)}
                 </button>
               )
