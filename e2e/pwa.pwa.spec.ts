@@ -88,3 +88,24 @@ test('a second visit serves the app shell from cache (stale-while-revalidate)', 
   })
   expect(fromCache).toBe(true)
 })
+
+// Todas as telas ficam guardadas ja na instalacao: sem internet, a tela de Downloads abre mesmo sem nunca ter
+// sido aberta com internet (o filme baixado no APK tem que ter onde ser assistido, 08/10).
+test('sem internet, uma tela nunca aberta (Downloads) abre do cache', async ({ page, context }) => {
+  await page.addInitScript((creds) => {
+    if (localStorage.getItem('iptv-session')) return
+    const user = { username: creds.username, status: 'Active', expDate: null, isTrial: false, activeConnections: '0', maxConnections: '2' }
+    const server = { url: 'localhost', serverName: 'Mock Panel', timezone: 'America/Sao_Paulo' }
+    localStorage.setItem('iptv-session', JSON.stringify({ state: { credentials: creds, user, server, sessionWarning: null }, version: 0 }))
+  }, MOCK)
+  await page.goto('/profiles')
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller)
+  await page.waitForFunction(async () => (await caches.keys()).length > 0 && (await (await caches.open((await caches.keys())[0])).keys()).some((r) => r.url.includes('DownloadsPage')))
+  await context.setOffline(true)
+  try {
+    await page.goto('/downloads')
+    await expect(page.getByRole('heading', { name: 'Downloads' })).toBeVisible()
+  } finally {
+    await context.setOffline(false)
+  }
+})
