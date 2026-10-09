@@ -153,7 +153,7 @@ export default function LivePage() {
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted" />
             <input
               type="search"
-              placeholder="Filtrar canais..."
+              placeholder="Filtrar canais…"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="brand-focus h-11 w-full rounded-full border border-outline-soft bg-surface-container pl-10 pr-4 text-body-md text-white placeholder-on-surface-muted transition-colors focus:border-brand-500/60"

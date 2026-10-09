@@ -147,7 +147,7 @@ export default function TopNav() {
               setSuggestionsOpen(e.target.value.trim().length >= 2)
             }}
             onFocus={() => setSuggestionsOpen(query.trim().length >= 2)}
-            placeholder="Buscar..."
+            placeholder="Buscar…"
             aria-label="Buscar"
             // Idle width shrinks to just the icon on phones (like Netflix/YouTube's mobile search) —
             // at the old fixed w-32, a narrow phone had no room left for the account avatar next to it
@@ -159,7 +159,7 @@ export default function TopNav() {
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
             // Em repouso no celular o recuo direito e zero e o texto de exemplo fica invisivel: com `pl-8 pr-3` +
             // borda o campo media 46px e nao cabia nos 40px do circulo (saia oval, lupa torta — video de 08/10).
-            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-all duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"
+            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
@@ -299,7 +299,7 @@ export default function TopNav() {
         <ConfirmDialog
           message={
             clearingCache
-              ? 'Limpando...'
+              ? 'Limpando…'
               : 'Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads — só o que pode ser rebaixado de novo do provedor. O app recarrega em seguida.'
           }
           confirmLabel="Limpar"

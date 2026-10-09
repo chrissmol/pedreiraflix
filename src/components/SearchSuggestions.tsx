@@ -88,7 +88,7 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
           </button>
         )
       })}
-      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-on-surface-variant">Buscando...</p>}
+      {results.length === 0 && stillLoading && <p className="px-3 py-3 text-on-surface-variant">Buscando…</p>}
     </div>
   )
 }
