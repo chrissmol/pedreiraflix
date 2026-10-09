@@ -29,6 +29,9 @@ O roteiro:
   rolagem visível no toque, alvo menor que 32 px para o dedo, título por baixo do cabeçalho, enfeite do
   provedor aparecendo (`[L]`, `★ GLOBO`, ano repetido);
 - macaco de toques aleatórios logado, girar a tela, segundo plano, sem internet, botão voltar, memória baixa;
+- por último, o **download nativo**: com a rede do emulador lenta, fecha o app no meio do download; o Android
+  tem que terminar sozinho (arquivo com o tamanho do vídeo do painel), o app reaberto mostra o filme em
+  Downloads e ele toca do arquivo local com o painel falso derrubado;
 - procura travamentos e ANRs no logcat e erros de JavaScript na página.
 
 Saída: `test-results/estresse-apk/relatorio.md`, capturas `0*-*.png` e `logcat.txt`. Ruído só de

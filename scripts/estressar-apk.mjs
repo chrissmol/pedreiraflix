@@ -4,7 +4,7 @@
 // test-results/estresse-apk/. Uso: `node scripts/estressar-apk.mjs [--sem-build] [--eventos 3000]`.
 // Pre-requisitos (Mac do Christian): JDK em ~/.local/jdk, Android SDK + emulador (AVD pf36) em ~/.local/android.
 import { execFileSync, spawn } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, statSync, writeFileSync } from 'node:fs'
 import net from 'node:net'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -32,6 +32,14 @@ const MOCK = { baseUrl: 'http://localhost:8790', username: 'demo', password: 'de
 const sh = (cmd, a, opts = {}) => execFileSync(cmd, a, { env: ENV, encoding: 'utf8', cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], ...opts })
 const adb = (...a) => sh('adb', a, { timeout: 120_000 }).trim()
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+// pidof sai com erro quando o processo nao existe — isso e resposta, nao falha.
+const appAberto = () => {
+  try {
+    return Boolean(adb('shell', 'pidof', PKG))
+  } catch {
+    return false
+  }
+}
 const portaLivre = (port) =>
   new Promise((resolve) => {
     const s = net.connect(port, '127.0.0.1')
@@ -107,11 +115,15 @@ try {
 
   // 4. Entrar e passear pelo app, de olho em erros do JavaScript
   const [device] = await _android.devices()
-  const webview = await device.webView({ pkg: PKG })
-  const page = await webview.page()
-  page.on('pageerror', (e) => anotar(`Erro de JavaScript: ${e.message}`))
-  page.on('console', (m) => m.type() === 'error' && anotar(`console.error: ${m.text().slice(0, 200)}`))
-  page.on('response', (r) => r.status() >= 400 && anotar(`HTTP ${r.status()}: ${r.url().replace(/[?&](s|p|url)=[^&]*/g, '').slice(0, 160)}`))
+  // Liga ao WebView do app; de novo depois que o app e fechado e reaberto (passo do download nativo).
+  const conectar = async () => {
+    const p = await (await device.webView({ pkg: PKG })).page()
+    p.on('pageerror', (e) => anotar(`Erro de JavaScript: ${e.message}`))
+    p.on('console', (m) => m.type() === 'error' && anotar(`console.error: ${m.text().slice(0, 200)}`))
+    p.on('response', (r) => r.status() >= 400 && anotar(`HTTP ${r.status()}: ${r.url().replace(/[?&](s|p|url)=[^&]*/g, '').slice(0, 160)}`))
+    return p
+  }
+  let page = await conectar()
   // A tela do emulador demora a refletir a pagina: sem a pausa a captura saia com a tela anterior.
   const foto = async (n) => (await sleep(1500), device.screenshot({ path: join(OUT, `${n}.png`) }))
 
@@ -225,10 +237,58 @@ try {
   })
   await passo('memoria baixa', async () => adb('shell', 'am', 'send-trim-memory', PKG, 'RUNNING_CRITICAL'))
   await passo('app continua vivo', async () => {
-    if (!adb('shell', 'pidof', PKG)) throw new Error('o processo do app morreu')
+    if (!appAberto()) throw new Error('o processo do app morreu')
   })
 
-  // 6. Log do Android
+  // 6. Por ultimo (derruba o provedor no fim): download pelo gerenciador do Android (APK 1.1+): com a rede lenta, fecha o app no meio do download; o
+  // Android tem que terminar sozinho, o app reaberto mostra o filme em Downloads e ele toca sem internet.
+  await passo('download nativo: termina com o app fechado e toca sem internet', async () => {
+    const pasta = `/sdcard/Android/data/${PKG}/files/Movies`
+    // Comeca do zero: o "voltar 10x" pode ter fechado a tela, e a conexao antiga com o WebView morre junto.
+    adb('shell', 'am', 'force-stop', PKG)
+    adb('shell', 'am', 'start', '-W', '-n', ACTIVITY)
+    await sleep(3000)
+    page = await conectar()
+    await page.evaluate(() => new Promise((r) => { const q = indexedDB.deleteDatabase('pedreiraflix-offline'); q.onsuccess = q.onerror = q.onblocked = r }))
+    adb('shell', 'rm', '-rf', pasta)
+    await page.goto('http://10.0.2.2:5173/movies/1')
+    adb('emu', 'network', 'speed', 'gprs')
+    await page.getByRole('button', { name: 'Baixar para ver offline', exact: true }).click()
+    await sleep(4000)
+    adb('shell', 'am', 'force-stop', PKG)
+    adb('emu', 'network', 'speed', 'full')
+    // Terminado = arquivo com o tamanho do video do painel falso (o Android cria o arquivo no comeco e vai enchendo).
+    const esperado = statSync(join(ROOT, 'e2e/fixtures/video.mp4')).size
+    let tamanho = 0
+    for (let i = 0; i < 60 && tamanho !== esperado; i++) {
+      await sleep(2000)
+      tamanho = Number(sh('adb', ['shell', `stat -c %s ${pasta}/* 2>/dev/null | head -1`]).trim()) || 0
+    }
+    if (tamanho !== esperado) throw new Error(`o Android nao terminou o download com o app fechado (${tamanho} de ${esperado} bytes)`)
+    if (appAberto()) throw new Error('o app ainda estava aberto — o teste nao provou o segundo plano')
+    adb('shell', 'am', 'start', '-W', '-n', ACTIVITY)
+    await sleep(3000)
+    page = await conectar()
+    await page.goto('http://10.0.2.2:5173/downloads')
+    const card = page.getByRole('button', { name: /Filme Explosivo/ }).first()
+    await card.waitFor({ timeout: 20_000 })
+    // "Sem internet" aqui = sem o provedor: derruba o painel falso e o proxy e toca o arquivo baixado. (Desligar o
+    // wi-fi tambem cortaria o site de desenvolvimento, que nao tem a copia offline do app publicado.)
+    semInternet = true
+    for (const f of filhos) if (/mock-xtream|server\/index/.test(f.spawnargs.join(' '))) f.kill()
+    try {
+      await card.click()
+      await page.waitForFunction(() => {
+        const v = document.querySelector('video')
+        return !!v && /_capacitor_file_/.test(v.currentSrc || v.src) && v.currentTime > 1
+      }, null, { timeout: 30_000 })
+      await foto('05-download-offline')
+    } finally {
+      semInternet = false
+    }
+  })
+
+  // 7. Log do Android
   const log = adb('logcat', '-d')
   for (const l of log.split('\n')) if (/FATAL EXCEPTION|ANR in .*pedreiraflix|Fatal signal|Process: com\.pedreiraflix/.test(l)) achados.push(`logcat: ${l.trim()}`)
   writeFileSync(join(OUT, 'logcat.txt'), log)

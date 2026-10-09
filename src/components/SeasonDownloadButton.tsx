@@ -3,6 +3,7 @@ import { isDownloaded, useDownloadsFor, useDownloadsStore } from '../store/downl
 import { useActiveProfileId } from '../store/profiles'
 import type { Episode } from '../types'
 import { Check, Download, X } from './icons'
+import { isTv } from '../lib/device'
 
 interface SeasonDownloadButtonProps {
   seriesId: number
@@ -26,7 +27,7 @@ export default function SeasonDownloadButton({ seriesId, seriesName, season, epi
   // HLS episodes can't be downloaded (see DownloadButton), so they don't count either way.
   const downloadable = episodes.filter((ep) => ep.containerExtension !== 'm3u8')
   const missing = downloadable.filter((ep) => !isDownloaded(profileId, 'series', ep.id, downloads))
-  if (downloadable.length === 0) return null
+  if (downloadable.length === 0 || isTv) return null
 
   if (running) {
     return (

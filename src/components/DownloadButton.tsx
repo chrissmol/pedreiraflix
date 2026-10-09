@@ -3,6 +3,7 @@ import { Check, Download } from './icons'
 import { useXtream } from '../hooks/useXtream'
 import { isDownloaded, useDownloadsFor, useDownloadsStore } from '../store/downloads'
 import { useActiveProfileId } from '../store/profiles'
+import { isTv } from '../lib/device'
 
 interface DownloadButtonProps {
   kind: 'movie' | 'series'
@@ -38,7 +39,7 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
   // HLS (.m3u8) is a manifest + many segments, not one file — fetch()-and-store-as-one-Blob doesn't
   // apply the way it does for a plain progressive mp4/webm. Xtream VOD is normally progressive, so this
   // rarely hides the button in practice.
-  if (ext === 'm3u8') return null
+  if (ext === 'm3u8' || isTv) return null
 
   if (done) {
     return (

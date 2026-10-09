@@ -10,6 +10,7 @@ import {
   putDownload,
   putPart,
 } from '../lib/offlineStore'
+import { nativeDownloads } from '../lib/nativeDownloads'
 import type { ProviderClient } from '../lib/provider'
 
 interface DownloadsState {
@@ -44,9 +45,15 @@ interface DownloadsState {
   ) => Promise<void>
   /** Stops the queue after the episode currently downloading (that one finishes normally). */
   stopSeason: (seasonKey: string) => void
+  /** Acompanha um download do Android ate terminar (progresso no botao). */
+  watchNative: (profileId: string, key: string, nativeId: number) => Promise<void>
 }
 
 const stopRequested = new Set<string>()
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+// Downloads do Android sendo acompanhados agora (para nao abrir dois acompanhamentos do mesmo).
+const watchingNative = new Set<string>()
 
 const EMPTY: DownloadMeta[] = []
 
@@ -88,9 +95,48 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
   },
   refresh: async (profileId) => {
     const meta = await listDownloadMeta(profileId)
-    set((state) => ({ items: { ...state.items, [profileId]: meta } }))
+    // Os que ainda baixam no Android (app foi fechado no meio) nao aparecem como baixados: voltam a ser
+    // acompanhados, com o progresso no botao.
+    for (const d of meta) if (d.pending && d.nativeId != null && !watchingNative.has(d.key)) void get().watchNative(profileId, d.key, d.nativeId)
+    set((state) => ({ items: { ...state.items, [profileId]: meta.filter((d) => !d.pending) } }))
+  },
+  watchNative: async (profileId, key, nativeId) => {
+    if (!nativeDownloads || watchingNative.has(key)) return
+    watchingNative.add(key)
+    try {
+      while (true) {
+        const [st] = (await nativeDownloads.status({ ids: [nativeId] })).downloads
+        if (st?.state === 'running') {
+          const pct = st.total && st.total > 0 ? Math.min(99, Math.round(((st.bytes ?? 0) / st.total) * 100)) : 0
+          set((state) => ({ progress: { ...state.progress, [key]: pct } }))
+          await sleep(1500)
+          continue
+        }
+        const record = await getDownload(key)
+        set((state) => {
+          const progress = { ...state.progress }
+          delete progress[key]
+          return { progress }
+        })
+        if (st?.state === 'done' && record) {
+          const done = { ...record, pending: false, sizeBytes: st.total || st.bytes || 0, downloadedAt: Date.now() }
+          await putDownload(done)
+          const { blob: _b, parts: _p, ...meta } = done
+          set((state) => ({ items: { ...state.items, [profileId]: [meta, ...(state.items[profileId] ?? EMPTY).filter((d) => d.key !== key)] } }))
+        } else {
+          // Falhou ou o Android perdeu o download (ex.: apagado pela notificacao): some o registro.
+          await deleteDownload(key)
+          set((state) => ({ failed: { ...state.failed, [key]: 'Falhou — toque para tentar de novo' } }))
+        }
+        return
+      }
+    } finally {
+      watchingNative.delete(key)
+    }
   },
   remove: async (profileId, key) => {
+    const record = await getDownload(key)
+    if (record?.nativeId != null) await nativeDownloads?.remove({ id: record.nativeId }).catch(() => {})
     await deleteDownload(key)
     set((state) => ({ items: { ...state.items, [profileId]: (state.items[profileId] ?? EMPTY).filter((d) => d.key !== key) } }))
   },
@@ -104,6 +150,23 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
     navigator.storage?.persist?.().catch(() => {})
 
     let failure = 'Falhou — toque para tentar de novo'
+    // No APK quem baixa e o Android: continua com o app fechado e mostra notificacao. Aqui so registra e
+    // acompanha ate terminar (a fila da temporada espera, um episodio por vez, por causa do limite de telas).
+    if (nativeDownloads) {
+      try {
+        const url = new URL(client.streamUrl(kind, id, ext), location.href).href
+        const { id: nativeId } = await nativeDownloads.start({ url, fileName: `${kind}-${id}-${Date.now()}.${ext}`, title: name })
+        await putDownload({ key, profileId, kind, id, name, image, seriesId, sizeBytes: 0, downloadedAt: Date.now(), nativeId, pending: true })
+        await get().watchNative(profileId, key, nativeId)
+      } catch {
+        set((state) => {
+          const progress = { ...state.progress }
+          delete progress[key]
+          return { progress, failed: { ...state.failed, [key]: failure } }
+        })
+      }
+      return
+    }
     try {
       const res = await fetch(client.streamUrl(kind, id, ext))
       if (!res.ok || !res.body) throw new Error(`download failed: ${res.status}`)
