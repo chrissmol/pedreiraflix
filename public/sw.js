@@ -6,7 +6,7 @@
 // Bump this on any change to the strategy below (not on every deploy — the HTML/JS/CSS themselves are
 // versioned by Vite's content-hashed filenames, and the network-first navigation handler below already
 // keeps index.html itself fresh on every load with a connection).
-const VERSION = 'v2'
+const VERSION = 'v3'
 const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 
 // No skipWaiting() on install, on purpose: a new worker waits until the page asks it to take over, so an
@@ -14,6 +14,20 @@ const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 // prompt that asks is UpdatePrompt.tsx — without it, an installed PWA could sit on an old build for days.
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting()
+})
+
+// Guarda todas as telas e arquivos do app ja na instalacao (lista gerada no build: precache.json), para o app
+// abrir qualquer tela sem internet — inclusive as que nunca foram abertas com internet. Melhor esforco: um
+// arquivo que falhar nao impede a instalacao (ele so fica para o cache normal, quando for usado).
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      const res = await fetch('/precache.json', { cache: 'no-store' }).catch(() => null)
+      if (!res?.ok) return
+      const cache = await caches.open(RUNTIME_CACHE)
+      await Promise.allSettled((await res.json()).map((url) => cache.add(url)))
+    })(),
+  )
 })
 
 self.addEventListener('activate', (event) => {
@@ -26,6 +40,11 @@ self.addEventListener('activate', (event) => {
   )
 })
 
+// ignoreVary: o servidor manda `Vary: Origin`, e o que foi guardado na instalacao (sem Origin) nao batia com o
+// pedido da pagina (com Origin) — sem internet o app abria em branco. Seguro aqui: so arquivos do proprio app,
+// com nome que muda a cada versao.
+const MATCH = { ignoreVary: true }
+
 async function networkFirst(request) {
   try {
     const response = await fetch(request)
@@ -35,9 +54,9 @@ async function networkFirst(request) {
     }
     return response
   } catch (err) {
-    const cached = await caches.match(request)
+    const cached = await caches.match(request, MATCH)
     if (cached) return cached
-    const shell = await caches.match('/index.html')
+    const shell = await caches.match('/index.html', MATCH)
     if (shell) return shell
     throw err
   }
@@ -45,7 +64,7 @@ async function networkFirst(request) {
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME_CACHE)
-  const cached = await cache.match(request)
+  const cached = await cache.match(request, MATCH)
   const networkPromise = fetch(request)
     .then((response) => {
       if (response.ok) cache.put(request, response.clone())
