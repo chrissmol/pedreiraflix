@@ -65,19 +65,29 @@ export default function DownloadButton({ kind, id, ext, name, image, seriesId, c
   }
 
   return (
-    <button
-      onClick={() => client && start(client, profileId, kind, String(id), ext, name, image, seriesId)}
-      disabled={!client}
-      title={failed || 'Baixar para ver offline'}
-      aria-label={failed ? `${failed}. Tentar de novo` : 'Baixar para ver offline'}
-      className={`${
-        compact
-          ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white'
-          : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'
-      } disabled:opacity-50 ${failed ? 'text-live' : ''}`}
-    >
-      <Download className="h-5 w-5" />
-      {!compact && <span className="hidden sm:inline">{failed ? (failed.startsWith('Sem espaço') ? 'Sem espaço' : 'Tentar de novo') : 'Baixar para ver offline'}</span>}
-    </button>
+    <>
+      <button
+        onClick={() => client && start(client, profileId, kind, String(id), ext, name, image, seriesId)}
+        disabled={!client}
+        title={failed || 'Baixar para ver offline'}
+        aria-label={failed ? `${failed}. Tentar de novo` : 'Baixar para ver offline'}
+        className={`${
+          compact
+            ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white'
+            : 'btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md'
+        } disabled:opacity-50 ${failed ? 'text-live' : ''}`}
+      >
+        <Download className="h-5 w-5" />
+        {!compact && <span className="hidden sm:inline">{failed ? (failed.startsWith('Sem espaço') ? 'Sem espaço' : 'Tentar de novo') : 'Baixar para ver offline'}</span>}
+      </button>
+      {/* O motivo da falha escrito, numa linha abaixo dos botoes (a linha de acoes quebra): sem ele so se via
+          "Tentar de novo" e ninguem sabia por que — foi o que impediu de entender o download do Windows do amigo do
+          Christian (09/10). */}
+      {failed && !compact && (
+        <span role="alert" className="w-full text-body-sm text-live">
+          {failed}
+        </span>
+      )}
+    </>
   )
 }

@@ -70,9 +70,12 @@ function writeSid(c: XtreamCredentials, sid: string | null) {
 
 export class XtreamApiError extends Error {
   status?: number
-  constructor(message: string, status?: number) {
+  /** 'html': o provedor (ou o Cloudflare na frente dele) respondeu uma pagina em vez dos dados. */
+  kind?: 'html'
+  constructor(message: string, status?: number, kind?: 'html') {
     super(message)
     this.status = status
+    this.kind = kind
   }
 }
 
@@ -81,6 +84,33 @@ export class XtreamClient implements ProviderClient {
 
   constructor(creds: XtreamCredentials) {
     this.creds = creds
+  }
+
+  /** Diagnostico (tela /diagnostico): uma chamada ao provedor SEM interpretar a resposta — status, tipo, tempo e o
+   * comeco do corpo, para ver o que um aparelho de verdade recebe. */
+  async probe(action: string | null, params: Record<string, string> = {}) {
+    const query = new URLSearchParams({ base: this.creds.baseUrl, path: 'player_api.php', ...(action ? { action } : {}), ...params })
+    const started = performance.now()
+    const res = await fetch(`/api/xtream?${query.toString()}`, {
+      headers: { 'x-xtream-username': this.creds.username, 'x-xtream-password': this.creds.password },
+    })
+    const text = await res.text()
+    return { status: res.status, type: res.headers.get('content-type') || '', ms: Math.round(performance.now() - started), bytes: text.length, text }
+  }
+
+  /** Diagnostico: os primeiros bytes do video (o mesmo pedido que o download faz). */
+  async probeStream(kind: 'movie' | 'series', id: number | string, ext: string) {
+    const started = performance.now()
+    const res = await fetch(this.streamUrl(kind, id, ext), { headers: { range: 'bytes=0-1023' } })
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return {
+      status: res.status,
+      type: res.headers.get('content-type') || '',
+      range: res.headers.get('content-range') || '',
+      ms: Math.round(performance.now() - started),
+      bytes: buf.length,
+      text: new TextDecoder().decode(buf.slice(0, 120)),
+    }
   }
 
   private async call<T>(action: string | null, params: Record<string, string> = {}): Promise<T> {
@@ -106,7 +136,11 @@ export class XtreamClient implements ProviderClient {
       xtreamQueue.reportSuccess()
     }
     if (!res.ok) throw new XtreamApiError(`Xtream request failed: ${res.status}`, res.status)
-    const data = await res.json()
+    const text = await res.text()
+    // Bloqueio/erro do provedor ou do Cloudflare dele vem como pagina com status 200: sem isto o app falhava em
+    // silencio e a tela ficava vazia (app do Windows do Christian, 09/10).
+    if (/^\s*</.test(text)) throw new XtreamApiError('O provedor respondeu uma página em vez dos dados', res.status, 'html')
+    const data = JSON.parse(text)
     if (data && typeof data === 'object' && 'user_info' in data) {
       const info = (data as { user_info?: { auth?: number } }).user_info
       if (info && info.auth === 0) throw new XtreamApiError('Credenciais inválidas')

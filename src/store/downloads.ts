@@ -3,13 +3,11 @@ import {
   deleteDownload,
   deleteParts,
   type DownloadMeta,
-  estimateStorage,
   getDownload,
   listDownloadMeta,
-  PART_BYTES,
   putDownload,
-  putPart,
 } from '../lib/offlineStore'
+import { DownloadError, downloadToParts } from '../lib/downloadFile'
 import { nativeDownloads } from '../lib/nativeDownloads'
 import type { ProviderClient } from '../lib/provider'
 
@@ -168,53 +166,9 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
       return
     }
     try {
-      const res = await fetch(client.streamUrl(kind, id, ext))
-      if (!res.ok || !res.body) throw new Error(`download failed: ${res.status}`)
-      const totalBytes = Number(res.headers.get('content-length')) || 0
-      const contentType = res.headers.get('content-type') || 'video/mp4'
-
-      const storage = await estimateStorage()
-      if (totalBytes > 0 && storage && totalBytes > storage.quotaBytes - storage.usageBytes) {
-        await res.body.cancel()
-        failure = 'Sem espaço no aparelho para este vídeo'
-        throw new Error('no space')
-      }
-
       await deleteParts(key) // leftovers of an earlier attempt that died midway
-      const reader = res.body.getReader()
-      let chunks: Uint8Array[] = []
-      let buffered = 0
-      let parts = 0
-      let received = 0
-      let lastReportedPct = -1
-      const flush = async () => {
-        if (!buffered) return
-        await putPart(key, parts++, new Blob(chunks as BlobPart[], { type: contentType }))
-        chunks = []
-        buffered = 0
-      }
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        received += value.length
-        // A single read can be bigger than a part (fast/local connections), so split it to keep parts bounded.
-        for (let rest = value; rest.length; ) {
-          const piece = rest.subarray(0, PART_BYTES - buffered)
-          chunks.push(piece)
-          buffered += piece.length
-          rest = rest.subarray(piece.length)
-          if (buffered >= PART_BYTES) await flush()
-        }
-        if (totalBytes > 0) {
-          const pct = Math.min(99, Math.round((received / totalBytes) * 100)) // 100 only once actually saved
-          if (pct !== lastReportedPct) {
-            lastReportedPct = pct
-            set((state) => ({ progress: { ...state.progress, [key]: pct } }))
-          }
-        }
-      }
-
-      await flush()
+      const onProgress = (pct: number) => set((state) => ({ progress: { ...state.progress, [key]: pct } }))
+      const { received, parts } = await downloadToParts(client.streamUrl(kind, id, ext), key, onProgress)
       await putDownload({ key, profileId, kind, id, name, image, seriesId, sizeBytes: received, downloadedAt: Date.now(), parts })
 
       set((state) => {
@@ -227,6 +181,10 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
     } catch (err) {
       // A full disk shows up as a QuotaExceededError while writing a piece, not up front.
       if (err instanceof DOMException && err.name === 'QuotaExceededError') failure = 'Sem espaço no aparelho para este vídeo'
+      // O motivo vai para o botao (e para o console, para diagnosticar num aparelho que nao e o nosso).
+      else if (err instanceof DownloadError) failure = err.message
+      else if (err instanceof TypeError) failure = 'Sem conexão com o servidor. Tente de novo.'
+      console.error('[download] falhou:', key, err)
       await deleteParts(key).catch(() => {})
       set((state) => {
         const nextProgress = { ...state.progress }

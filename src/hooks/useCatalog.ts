@@ -48,6 +48,7 @@ async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number,
  * object for debugging, it's just not what gets rendered. */
 export function friendlyCatalogError(err: unknown): string {
   if (err instanceof XtreamApiError) {
+    if (err.kind === 'html') return 'O provedor respondeu uma página em vez dos canais (bloqueio ou provedor fora do ar). Tente de novo em instantes.'
     if (err.status === 429) return 'O provedor está recebendo muitos pedidos agora. Espere alguns segundos e tente de novo.'
     if (err.status && err.status >= 500) return 'O provedor está instável no momento. Tente de novo em instantes.'
     if (err.status === 401 || err.status === 403) return 'Sessão expirada ou sem permissão. Tente entrar de novo.'
@@ -142,7 +143,16 @@ function useCategorizedCatalog<T>(
 
         // Just needs to be >= xtreamQueue's own concurrency so that queue is never left starved waiting
         // for this pool to hand it more work — the queue is what actually paces requests now.
-        runWithConcurrency(tasks, 8)
+        runWithConcurrency(tasks, 8).then(() => {
+          if (cancelled || myRequest !== requestId.current) return
+          // Todas as categorias falharam: sem isto a tela ficava vazia, sem dizer nada (erro por categoria e silencioso
+          // de proposito, mas todas juntas e um erro de verdade).
+          setState((s) =>
+            s.groups.length > 0 && s.groups.every((g) => g.error && g.items.length === 0)
+              ? { ...s, error: s.groups[0].error }
+              : s,
+          )
+        })
       })
       .catch((err) => {
         if (cancelled || myRequest !== requestId.current) return
