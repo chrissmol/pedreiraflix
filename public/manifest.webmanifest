@@ -17,7 +17,7 @@
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Ao Vivo", "url": "/live", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Canais", "url": "/live", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
     { "name": "Filmes", "url": "/movies", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
     { "name": "Séries", "url": "/series", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]

@@ -4,6 +4,8 @@ import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { installErrorReporting } from './lib/errorReporting'
+// Cedo, antes do React: o navegador pode avisar que da para instalar logo no carregamento.
+import './lib/installPrompt'
 import { ensureActiveProfile, refreshSession } from './lib/session'
 import { useAccountsStore } from './store/accounts'
 import { useAuthStore } from './store/auth'
