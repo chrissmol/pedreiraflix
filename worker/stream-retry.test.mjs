@@ -51,3 +51,22 @@ test('se o provedor falha em todas, o erro chega como 502', async () => {
   const res = await ask()
   assert.equal(res.status, 502)
 })
+
+// Teste na conta real (09/10): o canal redirecionava para http://64.31.31.150/... e o Worker recebia 403
+// "error code: 1003" da Cloudflare (Worker nao acessa IP puro).
+test('redirecionamento para IP puro e seguido pelo nome <ip>.nip.io', async () => {
+  const calls = stubFetch([
+    () => new Response(null, { status: 302, headers: { location: 'http://64.31.31.150/hls/canal.m3u8?t=1' } }),
+    () => new Response('#EXTM3U\nseg1.ts\n', { status: 200, headers: { 'content-type': 'application/vnd.apple.mpegurl' } }),
+  ])
+  const res = await ask()
+  assert.equal(res.status, 200)
+  assert.equal(calls[1].url, 'http://64.31.31.150.nip.io/hls/canal.m3u8?t=1')
+})
+
+test('redirecionamento para endereco interno e barrado', async () => {
+  const calls = stubFetch([() => new Response(null, { status: 302, headers: { location: 'http://169.254.169.254/latest' } })])
+  const res = await ask()
+  assert.equal(res.status, 403)
+  assert.equal(calls.length, 1)
+})
