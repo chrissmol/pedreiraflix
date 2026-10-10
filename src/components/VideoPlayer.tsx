@@ -10,6 +10,7 @@ import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
 import { VideoPlayerHeader } from './VideoPlayerHeader'
 import type { QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
+import { useMediaSession, useSleepTimer, useSubtitleOffset, useWakeLock } from './useVideoPlayerEffects'
 import {
   NEXT_UP_LEAD,
   SCREEN_LIMIT_MESSAGE,
@@ -497,38 +498,9 @@ export default function VideoPlayer({
     return () => document.removeEventListener('fullscreenchange', onFsChange)
   }, [])
 
-  // --- Sincronia da legenda: desloca as cues quando o provedor manda a legenda adiantada/atrasada. ---
-  // Mexer em `startTime`/`endTime` das cues e o unico jeito no navegador; e feito sobre o delta desde a
-  // ultima aplicacao para o ajuste ser cumulativo sem recarregar a faixa. O audio NAO tem equivalente:
-  // nao existe API para deslocar o audio de um <video> sem reencaminhar pelo Web Audio, o que quebraria
-  // AirPlay/Chromecast — por isso so a legenda e ajustavel aqui.
-  const appliedSubtitleOffset = useRef(0)
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    const delta = subtitleOffset - appliedSubtitleOffset.current
-    if (delta === 0) return
-    for (const track of Array.from(video.textTracks)) {
-      for (const cue of Array.from(track.cues ?? [])) {
-        cue.startTime = Math.max(0, cue.startTime + delta)
-        cue.endTime = Math.max(0, cue.endTime + delta)
-      }
-    }
-    appliedSubtitleOffset.current = subtitleOffset
-  }, [subtitleOffset, currentSubtitleTrack])
+  useSubtitleOffset(videoRef, subtitleOffset, currentSubtitleTrack)
 
-  // --- Sleep timer: pausa sozinho depois de N minutos, para dormir assistindo. ---
-  // Pausa em vez de fechar a tela: quem acordar no meio continua de onde parou, e o progresso ja foi
-  // salvo pelo fluxo normal de reproducao.
-  const [sleepMinutes, setSleepMinutes] = useState<number | null>(null)
-  useEffect(() => {
-    if (sleepMinutes == null) return
-    const timer = setTimeout(() => {
-      videoRef.current?.pause()
-      setSleepMinutes(null)
-    }, sleepMinutes * 60_000)
-    return () => clearTimeout(timer)
-  }, [sleepMinutes])
+  const [sleepMinutes, setSleepMinutes] = useSleepTimer(videoRef)
 
   // --- Auto-hide controls after inactivity while playing ---
   function wakeControls() {
@@ -661,78 +633,9 @@ export default function VideoPlayer({
     }
   }
 
-  // --- Wake Lock: keeps the screen on while actively playing (phones/tablets dim and lock otherwise). ---
-  useEffect(() => {
-    if (!isPlaying) return
-    let lock: WakeLockSentinel | null = null
-    let cancelled = false
-    navigator.wakeLock
-      ?.request('screen')
-      .then((sentinel) => {
-        if (cancelled) {
-          sentinel.release().catch(() => {})
-          return
-        }
-        lock = sentinel
-      })
-      .catch(() => {
-        // Unsupported browser, or the tab lost focus before the request resolved — playback still works either way.
-      })
-    return () => {
-      cancelled = true
-      lock?.release().catch(() => {})
-    }
-  }, [isPlaying])
+  useWakeLock(isPlaying)
 
-  // --- Media Session: lock-screen / notification-shade transport controls and metadata. ---
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: title || 'PedreiraFlix',
-      artist: subtitle || 'PedreiraFlix',
-      artwork: poster ? [{ src: poster, sizes: '512x512', type: 'image/png' }] : [],
-    })
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
-    navigator.mediaSession.setActionHandler('play', () => videoRef.current?.play().catch(() => {}))
-    navigator.mediaSession.setActionHandler('pause', () => videoRef.current?.pause())
-    if (isLive) {
-      navigator.mediaSession.setActionHandler('seekbackward', null)
-      navigator.mediaSession.setActionHandler('seekforward', null)
-      navigator.mediaSession.setActionHandler('seekto', null)
-    } else {
-      navigator.mediaSession.setActionHandler('seekbackward', () => skip(-SKIP_SECONDS))
-      navigator.mediaSession.setActionHandler('seekforward', () => skip(SKIP_SECONDS))
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (videoRef.current && details.seekTime != null) videoRef.current.currentTime = details.seekTime
-      })
-    }
-    navigator.mediaSession.setActionHandler('nexttrack', next ? next.onPlay : null)
-    navigator.mediaSession.setActionHandler('previoustrack', previous ? previous.onPlay : null)
-    return () => {
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
-      navigator.mediaSession.setActionHandler('seekbackward', null)
-      navigator.mediaSession.setActionHandler('seekforward', null)
-      navigator.mediaSession.setActionHandler('seekto', null)
-      navigator.mediaSession.setActionHandler('nexttrack', null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, subtitle, poster, isPlaying, isLive, next, previous])
-
-  // --- Media Session: keep the lock-screen scrubber in sync with playback position. ---
-  useEffect(() => {
-    if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession) || isLive) return
-    if (!Number.isFinite(duration) || duration <= 0) return
-    try {
-      navigator.mediaSession.setPositionState({
-        duration,
-        position: Math.min(currentTime, duration),
-        playbackRate,
-      })
-    } catch {
-      // Fires if position/duration briefly disagree (e.g. right after a seek); harmless to skip a frame.
-    }
-  }, [currentTime, duration, playbackRate, isLive])
+  useMediaSession({ videoRef, title, subtitle, poster, isPlaying, isLive, next, previous, skip, currentTime, duration, playbackRate })
 
   // --- Next episode: auto-advance prompt in the closing seconds of a VOD title. ---
   useEffect(() => {
