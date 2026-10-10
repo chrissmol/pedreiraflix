@@ -8,8 +8,17 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore: ['**/*.md', '.claude/**', '.agents/**', 'docs/**']
   pull_request:
     branches: [main]
+    paths-ignore: ['**/*.md', '.claude/**', '.agents/**', 'docs/**']
+
+# Push novo no mesmo PR (ou na main) cancela a execucao anterior: os minutos
+# gratis do GitHub Actions acabaram em 2026-10-10. O deploy.yml so roda com CI
+# verde, entao uma execucao cancelada nunca publica; a seguinte publica a main nova.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
