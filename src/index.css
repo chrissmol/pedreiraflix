@@ -1,4 +1,8 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+/* So o codigo do app gera utilitarios: sem isto o Tailwind 4 varre o repositorio inteiro (design/, android/, e2e/...)
+   e cria CSS para qualquer palavra que pareca uma classe. */
+@source '../src';
+@source '../index.html';
 
 /* Inter (variavel 400-700, subconjunto latin), do proprio app — ver index.html. */
 @font-face {
