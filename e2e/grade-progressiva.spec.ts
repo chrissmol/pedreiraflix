@@ -33,7 +33,11 @@ test('linha de categoria mostra uma previa e leva o resto para "Ver tudo"', asyn
   await page.goto('/movies')
   await expect(page.getByText('Titulo 5', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Ver tudo/ }).first()).toBeVisible()
-  const linhas = await page.getByRole('link', { name: /Ver tudo/ }).count()
-  // Cada linha mostra no maximo 40; sem o limite seriam 300 por linha.
-  expect(await page.locator('main button[data-spatial]').count()).toBeLessThanOrEqual(40 * linhas + 10)
+  // Por linha (secao), nao no total: as linhas chegam uma a uma e contar tudo contra os links ja visiveis era uma
+  // corrida (80 botoes para 1 link na CI). Sem o limite seriam 300 por linha.
+  const maiorLinha = () =>
+    page.evaluate(() => Math.max(...[...document.querySelectorAll('main section')].map((s) => s.querySelectorAll('button[data-spatial]').length)))
+  await expect.poll(maiorLinha).toBeGreaterThan(0)
+  await page.waitForTimeout(1500)
+  expect(await maiorLinha()).toBeLessThanOrEqual(40)
 })
