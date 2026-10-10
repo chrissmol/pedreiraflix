@@ -5,7 +5,11 @@ import { readFileSync } from 'node:fs'
 
 // [largura pt, altura pt, escala] — iPhones em pe (retrato).
 const TELAS = [
+  [440, 956, 3], // 16 Pro Max, 17 Pro Max
   [430, 932, 3], // 14 Pro Max, 15 Plus/Pro Max, 16 Plus
+  [428, 926, 3], // 12/13 Pro Max, 14 Plus
+  [420, 912, 3], // Air
+  [402, 874, 3], // 16 Pro, 17, 17 Pro
   [393, 852, 3], // 14 Pro, 15, 15 Pro, 16
   [390, 844, 3], // 12, 13, 14
   [375, 812, 3], // 11 Pro, X, XS, 12/13 mini
