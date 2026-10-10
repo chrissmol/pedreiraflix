@@ -120,7 +120,7 @@ export default function LoginPage() {
   return (
     // Rolavel por conta propria: o body do app nao rola (index.css) e o login fica fora do Layout, entao numa tela
     // baixa o "Entrar" ficava inalcancavel (APK no Motorola, 08/10). No celular o login e compacto para caber sem rolar.
-    <div className="flex h-full flex-col items-center overflow-y-auto bg-surface px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:justify-[safe_center] sm:pb-10 sm:pt-10">
+    <main className="flex h-full flex-col items-center overflow-y-auto bg-surface px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:justify-[safe_center] sm:pb-10 sm:pt-10">
       <span className="neon-text font-display mb-4 bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:mb-6">
         PedreiraFlix
       </span>
@@ -443,6 +443,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
