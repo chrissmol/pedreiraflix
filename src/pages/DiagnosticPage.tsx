@@ -93,6 +93,7 @@ export default function DiagnosticPage() {
       }
     }, false)
     let canalCat: string | null = null
+    let canalId: number | null = null
     await passo('Categorias de canais', async () => {
       const r = await client.probe('get_live_categories')
       const d = json(r.text)
@@ -103,7 +104,24 @@ export default function DiagnosticPage() {
       await passo('Canais da primeira categoria', async () => {
         const r = await client.probe('get_live_streams', { category_id: canalCat! })
         const d = json(r.text)
+        if (Array.isArray(d) && d[0]) canalId = Number(d[0].stream_id)
         return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} canais` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
+      })
+    }
+    if (canalId) {
+      const id = canalId
+      // O que o Christian viu em 09/10: canal que chega como aviso de bloqueio (lista fechada) ou recusado (403/404).
+      await passo('Início de um canal ao vivo (a lista do canal)', async () => {
+        const r = await client.probeLive(id)
+        const onde = r.host ? ` · via ${r.host}` : ''
+        if (r.status !== 200) {
+          const motivo = r.status === 403 ? 'RECUSADO (telas cheias, bloqueio do provedor ou do Cloudflare)' : r.status === 404 ? 'NÃO ENCONTRADO' : 'ERRO'
+          return { ok: false, detalhe: `HTTP ${r.status} · ${motivo} · ${r.ms} ms · ${r.text.slice(0, 80)}` }
+        }
+        if (r.closed || r.segments === 0) {
+          return { ok: false, detalhe: `HTTP 200 · BLOQUEADO: o provedor mandou um aviso no lugar do canal (${r.segments} trecho${r.segments === 1 ? '' : 's'}, lista fechada)${onde} · ${r.ms} ms` }
+        }
+        return { ok: true, detalhe: `HTTP 200 · ao vivo · ${r.segments} trechos${onde} · ${r.ms} ms` }
       })
     }
     let vodCat: string | null = null
