@@ -51,3 +51,28 @@ test('diagnostico mostra as telas em uso e acusa o limite cheio', async ({ page 
   await expect(page.getByText('✗ Telas em uso no provedor')).toBeVisible({ timeout: 30000 })
   await expect(page.getByText(/2 de 2 telas em uso.*LIMITE CHEIO/)).toBeVisible()
 })
+
+// O provedor manda alguns canais como lista "fechada" (1 trecho + ENDLIST) no lugar do canal (Record, 09/10): o
+// diagnostico tem que dizer que e bloqueio, nao "tudo ok".
+test('diagnostico acusa canal ao vivo bloqueado (lista fechada) e mostra o servidor', async ({ page }) => {
+  await page.route(/\/api\/stream\?.*%2Flive%2F/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/vnd.apple.mpegurl',
+      body: '#EXTM3U\n#EXT-X-TARGETDURATION:11\n#EXTINF:10.0,\n/api/stream?url=http%3A%2F%2Frzrblock.top%2Fauth%2Ftoken\n#EXT-X-ENDLIST\n',
+    }),
+  )
+  await login(page)
+  await page.goto('/diagnostico')
+  await page.getByRole('button', { name: 'Testar agora' }).click()
+  await expect(page.getByText('✗ Início de um canal ao vivo (a lista do canal)')).toBeVisible({ timeout: 30000 })
+  await expect(page.getByText(/BLOQUEADO.*via rzrblock\.top/)).toBeVisible()
+})
+
+test('diagnostico mostra a recusa do canal (403) com o texto do Cloudflare', async ({ page }) => {
+  await page.route(/\/api\/stream\?.*%2Flive%2F/, (route) => route.fulfill({ status: 403, body: 'error code: 1003' }))
+  await login(page)
+  await page.goto('/diagnostico')
+  await page.getByRole('button', { name: 'Testar agora' }).click()
+  await expect(page.getByText(/HTTP 403 · RECUSADO.*error code: 1003/)).toBeVisible({ timeout: 30000 })
+})

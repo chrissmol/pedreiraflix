@@ -115,6 +115,38 @@ export class XtreamClient implements ProviderClient {
     }
   }
 
+  /** Diagnostico: a lista de um canal ao vivo. Canal que o provedor bloqueia chega como lista "fechada" (1 trecho
+   * + #EXT-X-ENDLIST, no lugar do canal) ou como recusa (HTTP 403/404, ex.: "error code: 1003" da Cloudflare). */
+  async probeLive(id: number | string) {
+    const started = performance.now()
+    let res = await fetch(this.streamUrl('live', id, 'm3u8'))
+    let text = await res.text()
+    // Lista mestra: segue para a primeira variante, que e a que diz se o canal esta vivo.
+    if (res.ok && /#EXT-X-STREAM-INF/.test(text)) {
+      const next = text.split('\n').find((l) => l.trim() && !l.startsWith('#'))
+      if (next) {
+        res = await fetch(next.trim())
+        text = await res.text()
+      }
+    }
+    const media = text.split('\n').find((l) => l.trim() && !l.startsWith('#'))
+    let host: string | null = null
+    try {
+      const u = media ? new URL(media.trim(), location.origin) : null
+      host = u ? new URL(u.searchParams.get('url') || u.toString()).host : null
+    } catch {
+      // linha de trecho sem endereco legivel: so nao mostra o servidor
+    }
+    return {
+      status: res.status,
+      ms: Math.round(performance.now() - started),
+      closed: /#EXT-X-ENDLIST/.test(text),
+      segments: (text.match(/#EXTINF/g) || []).length,
+      host,
+      text: text.slice(0, 120),
+    }
+  }
+
   private async call<T>(action: string | null, params: Record<string, string> = {}): Promise<T> {
     // Usuario e senha vao em cabecalhos, nao na URL: a URL aparece no console, na aba Rede e em logs.
     const query = new URLSearchParams({
