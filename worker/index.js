@@ -25,11 +25,9 @@ const SECURITY_HEADERS = {
   'content-security-policy': [
     "default-src 'self'",
     "script-src 'self' https://www.gstatic.com",
-    // fonts.googleapis.com/gstatic.com voltaram: o design system adotado especifica a Inter, servida pelo
-    // Google Fonts (ver index.html). Sem estas duas origens a folha e o arquivo da fonte sao bloqueados e
-    // o app cai no fallback do sistema sem nenhum aviso.
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    // A Inter e do proprio app (/fonts, ver index.html): sem Google Fonts nem origem extra para estilo e fonte.
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
     "img-src 'self' data:",
     "connect-src 'self' https://www.gstatic.com",
     // blob: is hls.js's own delivery mechanism (MediaSource + a blob: object URL as video.src) for every
@@ -58,6 +56,8 @@ const SECURITY_HEADERS = {
 // purely-mechanical fix available for load time on repeat visits.
 function withCacheHeaders(headers, pathname) {
   if (pathname.startsWith('/assets/')) headers.set('cache-control', 'public, max-age=31536000, immutable')
+  // /fonts/ leva a versao no nome (inter-v20-latin): seguro cachear por um ano.
+  else if (pathname.startsWith('/fonts/')) headers.set('cache-control', 'public, max-age=31536000, immutable')
   else if (/\.(?:png|svg|ico)$/.test(pathname)) headers.set('cache-control', 'public, max-age=86400')
 }
 
