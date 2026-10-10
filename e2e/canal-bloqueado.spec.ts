@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { seedSession } from './helpers'
 
 // Conta real (09/10): no lugar do Record o provedor mandou uma lista "fechada" (1 trecho de 10 s + #EXT-X-ENDLIST,
-// no rzrblock.top) que nao toca, e o player ficava em "Conexao lenta... ainda carregando" para sempre.
+// no bloqueio.example) que nao toca, e o player ficava em "Conexao lenta... ainda carregando" para sempre.
 test('canal ao vivo que chega como video fechado avisa que o provedor bloqueou', async ({ page }) => {
   await page.route(/\/api\/stream\?.*%2Flive%2F/, (route) =>
     route.fulfill({

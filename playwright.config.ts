@@ -35,7 +35,7 @@ export default defineConfig({
       command: 'node server/index.js',
       port: 8787,
       reuseExistingServer: true,
-      env: { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'CIJftNzU3hhiG9CV99+iGV4xVn3CMuMWqOizVT0m2Z0=' },
+      env: { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'cGVkcmVpcmFmbGl4LWNoYXZlLWRlLXRlc3RlLTAxMjM=' },
     },
     { command: 'npx vite --port 5173 --strictPort', port: 5173, reuseExistingServer: true },
     // Rebuilds first so the PWA test exercises what would actually ship, not a stale dist/. Kill any

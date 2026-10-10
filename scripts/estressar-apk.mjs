@@ -81,7 +81,7 @@ const subir = (cmd, a, env = {}) => {
   filhos.push(p)
 }
 if (await portaLivre(8790)) subir('node', ['e2e/mock-xtream.mjs'])
-subir('node', ['server/index.js'], { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'CIJftNzU3hhiG9CV99+iGV4xVn3CMuMWqOizVT0m2Z0=', PORT: '8787' })
+subir('node', ['server/index.js'], { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'cGVkcmVpcmFmbGl4LWNoYXZlLWRlLXRlc3RlLTAxMjM=', PORT: '8787' })
 if (await portaLivre(5173)) subir('npx', ['vite', '--host', '127.0.0.1', '--port', '5173', '--strictPort'])
 const fim = () => filhos.forEach((p) => p.kill())
 process.on('exit', fim)
