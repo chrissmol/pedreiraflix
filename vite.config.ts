@@ -13,7 +13,7 @@ const precacheList = (): Plugin => ({
   generateBundle(_, bundle) {
     const files = Object.keys(bundle).filter((f) => /\.(js|css|html|png|svg|webmanifest|woff2?)$/.test(f) && f !== 'sw.js')
     // index.html (a pagina que o service worker usa sem internet) e os arquivos de public/ nao passam pelo bundle.
-    const extras = ['/index.html', '/manifest.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
+    const extras = ['/index.html', '/manifest.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/fonts/inter-v20-latin.woff2']
     this.emitFile({ type: 'asset', fileName: 'precache.json', source: JSON.stringify([...extras, ...files.map((f) => `/${f}`)]) })
   },
 })

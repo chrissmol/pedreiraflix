@@ -16,16 +16,10 @@
     <meta name="msapplication-TileColor" content="#06070c" />
     <meta name="msapplication-TileImage" content="/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- Inter: a fonte do design system "Cinematic Obsidian" (design/stitch/DESIGN.md). Substitui a
-         pilha de fonte do sistema que o app usava antes; por isso o CSP do Worker voltou a liberar
-         fonts.googleapis.com/fonts.gstatic.com (worker/index.js). A pilha do sistema segue como
-         fallback no --font-sans, para a tela nao ficar sem fonte se o Google estiver fora. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Inter (OFL), servida pelo proprio app: sem CSS de terceiros bloqueando a pintura, funciona offline no APK/
+         Windows/PWA e o CSP nao precisa liberar o Google. So o subconjunto latin (cobre todo o portugues); a pilha
+         do sistema segue como fallback no --font-sans. -->
+    <link rel="preload" href="/fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>PedreiraFlix</title>
   </head>
   <body>
