@@ -14,7 +14,7 @@ test('favorites and progress are separate per profile, on the same login', async
   await expect(page.getByRole('button', { name: 'Na lista' })).toBeVisible()
 
   // Create a second profile and switch to it.
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await expect(page).toHaveURL(/\/profiles$/)
   await page.getByRole('button', { name: 'Adicionar perfil' }).click()
@@ -33,7 +33,7 @@ test('favorites and progress are separate per profile, on the same login', async
 
   // Favoriting here doesn't affect the first profile.
   await page.getByRole('button', { name: 'Minha lista' }).click()
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: /Entrar como/ }).click() // back to the default profile
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
@@ -43,7 +43,7 @@ test('favorites and progress are separate per profile, on the same login', async
 
 test('profiles survive logout/login (tied to the account, not the session)', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await page.getByRole('button', { name: 'Adicionar perfil' }).click()
   await page.getByPlaceholder('Nome do perfil').fill('Segundo')
@@ -51,20 +51,20 @@ test('profiles survive logout/login (tied to the account, not the session)', asy
   await expect(page.getByText('Segundo')).toBeVisible()
 
   await page.goto('/')
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login$/)
 
   await page.getByRole('button', { name: /Entrar/ }).first().click()
   await expect(page).toHaveURL(/\/$/)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await expect(page.getByText('Segundo')).toBeVisible()
 })
 
 test('cannot delete the last remaining profile', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await expect(page.locator('.grid > div').filter({ hasText: /./ })).toHaveCount(1)
   // No delete option should render for the only profile (hover reveal is gated behind profiles.length > 1).

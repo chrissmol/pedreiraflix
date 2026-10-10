@@ -6,7 +6,7 @@ import { seedSession } from './helpers'
 test('menu da conta oferece "Instalar o app" quando o navegador permite', async ({ page }) => {
   await seedSession(page)
   await page.goto('/')
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Instalar o app' })).toHaveCount(0)
   await page.keyboard.press('Escape')
 
@@ -16,9 +16,9 @@ test('menu da conta oferece "Instalar o app" quando o navegador permite', async 
     e.userChoice = Promise.resolve({ outcome: 'accepted' })
     window.dispatchEvent(e)
   })
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Instalar o app' }).click()
   expect(await page.evaluate(() => (window as unknown as { __instalou?: boolean }).__instalou)).toBe(true)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Instalar o app' })).toHaveCount(0)
 })

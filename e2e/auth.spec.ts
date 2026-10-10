@@ -5,7 +5,7 @@ test('login persists across reloads and new browser sessions', async ({ page, br
   await login(page)
   await page.reload()
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('button', { name: 'Conta' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toBeVisible()
 
   // A brand-new tab/window with the same stored data (= closing and reopening the site).
   const state = await page.context().storageState()
@@ -13,13 +13,13 @@ test('login persists across reloads and new browser sessions', async ({ page, br
   const reopened = await ctx.newPage()
   await reopened.goto('http://localhost:5173/')
   await expect(reopened).toHaveURL('http://localhost:5173/')
-  await expect(reopened.getByRole('button', { name: 'Conta' })).toBeVisible()
+  await expect(reopened.getByRole('button', { name: 'Conta', exact: true })).toBeVisible()
   await ctx.close()
 })
 
 test('after logout the account stays saved and re-entry is one tap', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login$/)
 
@@ -30,7 +30,7 @@ test('after logout the account stays saved and re-entry is one tap', async ({ pa
   await expect(page).toHaveURL(/\/$/)
 
   // The form is prefilled with the last account too.
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   await page.getByRole('button', { name: 'Voltar às contas salvas' }).waitFor({ state: 'detached' }).catch(() => {})
   await page.getByRole('button', { name: '+ Usar outra conta' }).click()
@@ -55,7 +55,7 @@ test('unchecking "lembrar" does not keep the account after logout', async ({ pag
   await page.getByLabel(/Lembrar esses dados/).uncheck()
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page.getByTestId('saved-accounts')).toHaveCount(0)
   await expect(page.getByLabel('Usuário', { exact: true })).toHaveValue('')
@@ -68,11 +68,11 @@ test('an existing pre-upgrade session is migrated into saved accounts', async ({
     localStorage.setItem('iptv-session', JSON.stringify({ state: { credentials: creds, user: { username: 'demo', status: 'Active', expDate: null, isTrial: false, activeConnections: '0', maxConnections: '1' }, server: null, sessionWarning: null }, version: 0 }))
   }, MOCK)
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Conta' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toBeVisible()
   // Asserts through the app's own behavior (storage is obfuscated on disk — see lib/obfuscatedStorage.ts
   // — so reading it back out here would just be re-testing that implementation detail): logging out and
   // back in via the saved-accounts list proves the migrated account round-trips correctly end to end.
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   const saved = page.getByTestId('saved-accounts')
   await expect(saved).toContainText(MOCK.username)
@@ -89,7 +89,7 @@ test('a saved account can be given a custom name, shown instead of the username'
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
 
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
 
   const saved = page.getByTestId('saved-accounts')
@@ -101,7 +101,7 @@ test('a saved account can be given a custom name, shown instead of the username'
 
 test('an existing saved account can be renamed from the login screen', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
 
   await page.getByRole('button', { name: `Renomear conta ${MOCK.username}` }).click()

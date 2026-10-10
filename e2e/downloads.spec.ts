@@ -70,7 +70,7 @@ test('downloads are scoped per profile', async ({ page }) => {
   await expect(page.getByText('Baixado')).toBeVisible({ timeout: 15000 })
 
   // A second profile shouldn't see the first profile's download.
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await page.getByRole('button', { name: 'Adicionar perfil' }).click()
   await page.getByPlaceholder('Nome do perfil').fill('Outro')

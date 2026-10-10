@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 test('TV: letras maiores e o cabecalho cabe na tela', async ({ page }) => {
   await page.goto('/')
   expect(await page.evaluate(() => document.documentElement.classList.contains('tv'))).toBe(true)
-  const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+  const avatar = (await page.getByRole('button', { name: 'Conta', exact: true }).boundingBox())!
   expect(avatar.x + avatar.width).toBeLessThanOrEqual(960)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(960)
 })

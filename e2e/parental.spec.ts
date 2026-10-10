@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { login } from './helpers'
 
 async function markCurrentProfileKids(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await page.getByRole('button', { name: 'Ajustes' }).click()
   await page.getByLabel('Perfil infantil').check()
@@ -45,7 +45,7 @@ test('a non-kids profile still sees everything (filter is per profile)', async (
 
 test('a PIN-protected profile cannot be entered without the correct PIN', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
   await page.getByRole('button', { name: 'Adicionar perfil' }).click()
   await page.getByPlaceholder('Nome do perfil').fill('Pai')
