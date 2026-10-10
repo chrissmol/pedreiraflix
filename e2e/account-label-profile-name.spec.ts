@@ -13,8 +13,8 @@ test('a custom account name at login becomes the default profile name, shown in 
   await expect(page).toHaveURL(/\/$/)
 
   // Avatar initial and the account menu both read the profile name, which should now be the chosen label.
-  await expect(page.getByRole('button', { name: 'Conta' })).toHaveText('S')
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toHaveText('S')
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await expect(page.getByText('Sala de TV', { exact: false })).toBeVisible()
 
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
@@ -45,5 +45,5 @@ test('an account whose default profile was never renamed picks up a label set la
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
 
-  await expect(page.getByRole('button', { name: 'Conta' })).toHaveText('A')
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toHaveText('A')
 })

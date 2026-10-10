@@ -9,7 +9,7 @@ import { login } from './helpers'
 async function openAccountMenu(page: import('@playwright/test').Page) {
   const menu = page.getByRole('dialog', { name: 'Menu da conta' })
   await expect(async () => {
-    if (!(await menu.isVisible())) await page.getByRole('button', { name: 'Conta' }).click()
+    if (!(await menu.isVisible())) await page.getByRole('button', { name: 'Conta', exact: true }).click()
     await expect(menu).toBeVisible({ timeout: 1000 })
   }).toPass({ timeout: 15_000 })
 }

@@ -58,7 +58,7 @@ test('a plaintext pre-obfuscation session (from an older app version) still logs
   }, MOCK)
   await page.goto('/')
   await expect(page).toHaveURL('http://localhost:5173/')
-  await expect(page.getByRole('button', { name: 'Conta' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toBeVisible()
 
   // And it gets re-saved obfuscated going forward.
   const raw = await page.evaluate(() => localStorage.getItem('iptv-session'))

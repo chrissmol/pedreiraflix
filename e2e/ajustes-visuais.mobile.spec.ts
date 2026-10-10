@@ -10,7 +10,7 @@ test('cabecalho: busca redonda e o mesmo espaco entre busca e avatar', async ({ 
   const caixa = (await busca.boundingBox())!
   expect(Math.abs(caixa.width - caixa.height)).toBeLessThan(1)
   expect(await busca.evaluate((el) => getComputedStyle(el).appearance)).toBe('none')
-  const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+  const avatar = (await page.getByRole('button', { name: 'Conta', exact: true }).boundingBox())!
   expect(avatar.x - (caixa.x + caixa.width)).toBeCloseTo(12, 0)
   // Lupa no centro do circulo.
   const lupa = (await page.locator('header form svg').boundingBox())!
@@ -39,7 +39,7 @@ test('paisagem: o avatar do cabecalho fica dentro da tela', async ({ page }) => 
   await page.setViewportSize({ width: 852, height: 393 })
   await seedSession(page)
   await page.goto('/')
-  const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+  const avatar = (await page.getByRole('button', { name: 'Conta', exact: true }).boundingBox())!
   expect(avatar.x + avatar.width).toBeLessThanOrEqual(852 - 16)
 })
 
@@ -65,7 +65,7 @@ test('cabecalho cabe e ha navegacao em todas as larguras', async ({ page }) => {
   await page.goto('/movies')
   for (let w = 360; w <= 1100; w += 40) {
     await page.setViewportSize({ width: w, height: 800 })
-    const avatar = (await page.getByRole('button', { name: 'Conta' }).boundingBox())!
+    const avatar = (await page.getByRole('button', { name: 'Conta', exact: true }).boundingBox())!
     expect(avatar.x + avatar.width, `largura ${w}`).toBeLessThanOrEqual(w)
     const abas = await page.locator('header nav').isVisible()
     const menuDeBaixo = await page.locator('nav').filter({ hasText: 'Séries' }).last().isVisible()

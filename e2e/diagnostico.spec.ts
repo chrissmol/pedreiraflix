@@ -6,7 +6,7 @@ import { login } from './helpers'
 // aparelho recebe do servidor e do provedor.
 test('diagnostico: tudo ok contra o painel de teste', async ({ page }) => {
   await login(page)
-  await page.getByRole('button', { name: 'Conta' }).click()
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Diagnóstico' }).click()
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText('✓ Início de um filme (o pedido do download)')).toBeVisible({ timeout: 30000 })
