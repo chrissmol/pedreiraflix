@@ -6,7 +6,7 @@
 // Bump this on any change to the strategy below (not on every deploy — the HTML/JS/CSS themselves are
 // versioned by Vite's content-hashed filenames, and the network-first navigation handler below already
 // keeps index.html itself fresh on every load with a connection).
-const VERSION = 'v3'
+const VERSION = 'v4'
 const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 
 // No skipWaiting() on install, on purpose: a new worker waits until the page asks it to take over, so an
@@ -35,6 +35,17 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys()
       await Promise.all(keys.filter((k) => k.startsWith('pedreiraflix-') && k !== RUNTIME_CACHE).map((k) => caches.delete(k)))
+      // Cada deploy troca os nomes dos arquivos em /assets/ e os antigos ficavam para sempre no cache (so a troca de
+      // VERSION limpava). Fica o que a lista da versao nova conhece; sem a lista, nao apaga nada.
+      const list = await fetch('/precache.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      if (list) {
+        const keep = new Set(list)
+        const cache = await caches.open(RUNTIME_CACHE)
+        for (const req of await cache.keys()) {
+          const path = new URL(req.url).pathname
+          if (path.startsWith('/assets/') && !keep.has(path)) await cache.delete(req)
+        }
+      }
       await self.clients.claim()
     })(),
   )
@@ -45,20 +56,24 @@ self.addEventListener('activate', (event) => {
 // com nome que muda a cada versao.
 const MATCH = { ignoreVary: true }
 
+// Com sinal ruim ("lie-fi": conectado, mas a resposta nao vem) o fetch ficava pendurado ate o tempo limite do
+// navegador e o app, aberto pelo icone, parecia travado mesmo com a tela guardada no cache. Havendo copia
+// guardada, espera so um pouco pela rede e abre a copia; a resposta tardia ainda atualiza o cache.
+const NAV_TIMEOUT_MS = 4000
+
 async function networkFirst(request) {
-  try {
-    const response = await fetch(request)
-    if (response.ok) {
-      const cache = await caches.open(RUNTIME_CACHE)
-      cache.put(request, response.clone())
-    }
+  const cached = (await caches.match(request, MATCH)) ?? (await caches.match('/index.html', MATCH))
+  const network = fetch(request).then((response) => {
+    if (response.ok) caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()))
     return response
-  } catch (err) {
-    const cached = await caches.match(request, MATCH)
-    if (cached) return cached
-    const shell = await caches.match('/index.html', MATCH)
-    if (shell) return shell
-    throw err
+  })
+  if (!cached) return network
+  network.catch(() => {})
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NAV_TIMEOUT_MS))
+  try {
+    return await Promise.race([network, timeout])
+  } catch {
+    return cached
   }
 }
 
