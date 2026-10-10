@@ -121,7 +121,7 @@ function isAllowed(url) {
 }
 
 // O Worker nao acessa IP puro: a Cloudflare responde 403 "error code: 1003". Canais do provedor redirecionam
-// para http://64.31.31.150/... (teste na conta real do Christian, 09/10), entao os redirecionamentos sao seguidos
+// para http://203.0.113.7/... (visto numa conta real, 09/10), entao os redirecionamentos sao seguidos
 // aqui, cada salto passa pelo isAllowed, e o IP vira <ip>.nip.io (DNS publico que responde o proprio IP).
 // shortcut: depende do nip.io; se ele sair do ar, trocar por sslip.io (mesmo formato).
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/

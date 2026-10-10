@@ -64,7 +64,7 @@ export const REFUSED_MESSAGE =
   'O provedor recusou este vídeo (HTTP 403). Tente outro canal ou volte a tentar em alguns minutos.'
 
 // Canal ao vivo que chega como video fechado (#EXT-X-ENDLIST): o provedor manda um trecho de aviso no lugar do canal
-// (conta real, 09/10: lista de 1 trecho de 10 s no rzrblock.top, que nao toca) e o player ficava "carregando" para sempre.
+// (conta real, 09/10: lista de 1 trecho de 10 s no bloqueio.example, que nao toca) e o player ficava "carregando" para sempre.
 export const CHANNEL_BLOCKED_MESSAGE =
   'O provedor bloqueou este canal agora (mandou um aviso no lugar do vídeo). Tente de novo em alguns minutos.'
 

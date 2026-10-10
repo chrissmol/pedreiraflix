@@ -59,14 +59,14 @@ test('diagnostico acusa canal ao vivo bloqueado (lista fechada) e mostra o servi
     route.fulfill({
       status: 200,
       contentType: 'application/vnd.apple.mpegurl',
-      body: '#EXTM3U\n#EXT-X-TARGETDURATION:11\n#EXTINF:10.0,\n/api/stream?url=http%3A%2F%2Frzrblock.top%2Fauth%2Ftoken\n#EXT-X-ENDLIST\n',
+      body: '#EXTM3U\n#EXT-X-TARGETDURATION:11\n#EXTINF:10.0,\n/api/stream?url=http%3A%2F%2Fbloqueio.example%2Fauth%2Ftoken\n#EXT-X-ENDLIST\n',
     }),
   )
   await login(page)
   await page.goto('/diagnostico')
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText('✗ Início de um canal ao vivo (a lista do canal)')).toBeVisible({ timeout: 30000 })
-  await expect(page.getByText(/BLOQUEADO.*via rzrblock\.top/)).toBeVisible()
+  await expect(page.getByText(/BLOQUEADO.*via bloqueio\.example/)).toBeVisible()
 })
 
 test('diagnostico mostra a recusa do canal (403) com o texto do Cloudflare', async ({ page }) => {
