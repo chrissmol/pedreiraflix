@@ -109,3 +109,27 @@ test('sem internet, uma tela nunca aberta (Downloads) abre do cache', async ({ p
     await context.setOffline(false)
   }
 })
+
+// Cada deploy troca os nomes de /assets/*; os antigos ficavam no cache para sempre (so a troca de VERSION limpava).
+test('ao ativar uma versao nova, os arquivos antigos de /assets/ saem do cache', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller || navigator.serviceWorker.ready.then(() => true))
+  await page.reload()
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller)
+  await page.evaluate(async () => {
+    const [name] = (await caches.keys()).filter((k) => k.startsWith('pedreiraflix-'))
+    await (await caches.open(name)).put('/assets/antigo-deploy-abc123.js', new Response('//velho'))
+    for (const reg of await navigator.serviceWorker.getRegistrations()) await reg.unregister()
+  })
+  await page.reload()
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller)
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const [name] = (await caches.keys()).filter((k) => k.startsWith('pedreiraflix-'))
+        const urls = (await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname)
+        return { velho: urls.includes('/assets/antigo-deploy-abc123.js'), atuais: urls.filter((u) => u.startsWith('/assets/')).length }
+      }),
+    )
+    .toMatchObject({ velho: false })
+})
