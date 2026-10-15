@@ -22,8 +22,10 @@ O roteiro:
 - sobe o painel falso (`e2e/mock-xtream.mjs`), o proxy e o Vite locais, ou reaproveita o que já estiver nas
   portas 8790, 8787 e 5173;
 - abre cada tela (login, início, canais, guia, filmes, filme, séries, série, busca, downloads, perfis, diagnóstico
-  e player) em cada aparelho, tira uma captura e roda as checagens de layout de `scripts/auditar-layout.mjs`, as
-  mesmas do APK;
+  e player), mais os estados vazios e de erro (busca sem resultado, filme que não existe, provedor fora do ar), em
+  cada aparelho, tira uma captura e roda as checagens de `scripts/auditar-layout.mjs` (as mesmas do APK): algo
+  saindo da tela, rolagem para o lado, texto cortado sem reticências, botão coberto por outro elemento, título por
+  baixo do cabeçalho, enfeite do provedor e, no celular, alvo pequeno para o dedo;
 - tira o site da internet e devolve;
 - roda um macaco: cliques aleatórios no computador e no celular, e setas, OK e voltar na TV;
 - registra erro de JavaScript, `console.error` e resposta HTTP 4xx/5xx.
@@ -51,10 +53,26 @@ entre computador, celular e TV. Procure:
 - **Carregamento e erro**: tela vazia sem explicação, "Carregando..." solto, erro técnico na tela.
 
 Os pôsteres do painel falso não têm imagem, então o título escrito em cinza no fundo é do painel falso, e não do
-app. Já o checkbox de 20px no login fica dentro de uma linha clicável inteira, então não é alvo pequeno de verdade.
+app. Contraste não é checado automaticamente, porque o fundo real depende de camadas e imagens e dava alarme
+falso. Avalie o contraste na captura.
 
-## 3. Reportar
+## 3. Corrigir
 
-Em português simples, separado em **Erros**, **Layout e visual** (com o nome da captura) e **Ruído descartado**.
-Para cada item visual: o que está errado, por que destoa do projeto e a correção proposta. Não corrija sem o
-Christian pedir.
+O Christian quer que o agente **corrija** os problemas de CSS, UI, UX e usabilidade que achar, e não só liste.
+Para cada problema real:
+
+1. Guarde a captura de antes (`cp test-results/estresse-web/<aparelho>-<tela>.png` para outra pasta).
+2. Corrija com a menor mudança possível, nas classes Tailwind e nos componentes que já existem. Não mude a
+   paleta, o brand book nem a estrutura da tela sem ele pedir.
+3. Rode de novo só o aparelho afetado (`--aparelho`) e confira que o achado sumiu do relatório e que a captura de
+   depois ficou certa nos três aparelhos.
+4. Rode `npm run lint`, `npm run build` e os specs e2e da tela que mudou.
+5. Abra um PR (uma branch por rodada), com cada correção descrita com antes e depois. Não faça merge.
+
+Fica para o Christian decidir: mudanças de marca ou de cor (por exemplo, contraste do azul da marca), mudança de
+layout de uma tela inteira, e qualquer coisa que ele já tenha decidido de outro jeito.
+
+## 4. Reportar
+
+Em português simples, separado em **Corrigido** (com antes e depois), **Precisa da sua decisão**, **Erros** e
+**Ruído descartado**.

@@ -45,9 +45,15 @@ const TELAS = [
   ['perfis', '/profiles'],
   ['diagnostico', '/diagnostico'],
   ['player', '/watch/movie/1?ext=mp4&name=Filme%20Explosivo'],
+  // Estados vazios e de erro: tem que explicar o que houve, nao deixar tela vazia ou erro tecnico.
+  ['busca-sem-resultado', '/search?q=zzzzzz'],
+  ['filme-inexistente', '/movies/999999'],
+  ['filmes-provedor-fora', '/movies', { provedorFora: true }],
 ]
-// So existe no servidor de desenvolvimento: /api/tmdb e do Worker, e o WebSocket e a recarga do Vite.
-const RUIDO_DEV = [/\/api\/tmdb/, /WebSocket connection to 'ws:/, /\[vite\]/, /status of 404 \(Not Found\)/]
+// So existe no servidor de desenvolvimento: /api/tmdb e do Worker, e o WebSocket e a recarga do Vite. O 400 de
+// /api/xtream sem nada e a pagina Diagnostico testando o proxy de proposito. Os console.error genericos de 400/404
+// repetem uma resposta que o registro de HTTP ja mostra com o endereco.
+const RUIDO_DEV = [/\/api\/tmdb/, /WebSocket connection to 'ws:/, /\[vite\]/, /status of 40[04] \((Not Found|Bad Request)\)/, /HTTP 400: \S*\/api\/xtream$/]
 
 const so = opcao('--aparelho')
 if (so && !APARELHOS[so]) {
@@ -98,15 +104,24 @@ try {
     const ctx = await browser.newContext(cfg.contexto)
     const page = await ctx.newPage()
     let offline = false
+    let provedorFora = false
     const anotar = (a) => {
       if (RUIDO_DEV.some((r) => r.test(a)) || (offline && /ERR_|Failed to fetch|NetworkError/.test(a))) return
+      if (provedorFora && /HTTP 500|status of 500/.test(a)) return
       achados.push(`[${aparelho}] ${a}`)
     }
     page.on('pageerror', (e) => anotar(`Erro de JavaScript: ${e.message}`))
     page.on('console', (m) => m.type() === 'error' && anotar(`console.error: ${m.text().slice(0, 200)}`))
     page.on('response', (r) => r.status() >= 400 && anotar(`HTTP ${r.status()}: ${r.url().replace(/[?&](s|p|url)=[^&]*/g, '').slice(0, 160)}`))
 
-    const abrir = async (nome, rota) => {
+    const abrir = async (nome, rota, { provedorFora: fora } = {}) => {
+      // Provedor fora do ar: o painel responde 500 em tudo (o app deve mostrar o cartao de erro com "Tentar de novo").
+      provedorFora = !!fora
+      if (fora) {
+        await page.route('**/api/xtream**', (r) => r.fulfill({ status: 500, body: 'erro' }))
+        // Sem o cache do catalogo, senao a tela abre com os dados de antes e o erro nunca aparece.
+        await page.evaluate(() => new Promise((r) => { const q = indexedDB.deleteDatabase('pedreiraflix-cache'); q.onsuccess = q.onerror = q.onblocked = r }))
+      }
       await page.goto(BASE + rota)
       await page.locator('#main-content, video, form').first().waitFor({ timeout: 20_000 })
       await sleep(2500)
@@ -114,6 +129,8 @@ try {
       if (await page.getByText(/^Carregando/).first().isVisible().catch(() => false)) visual.push(`[${aparelho}/${nome}] ainda "Carregando..." depois da espera`)
       await page.screenshot({ path: join(OUT, `${aparelho}-${nome}.png`) })
       for (const p of await page.evaluate(auditarLayout, { toque: cfg.toque })) visual.push(`[${aparelho}/${nome}] ${p}`)
+      if (fora) await page.unroute('**/api/xtream**')
+      provedorFora = false
     }
 
     await passo(`${aparelho}: tela de login`, () => abrir('login', '/login'))
@@ -123,7 +140,7 @@ try {
       const server = { url: 'localhost', serverName: 'Mock Panel', timezone: 'America/Sao_Paulo' }
       localStorage.setItem('iptv-session', JSON.stringify({ state: { credentials: creds, user, server, sessionWarning: null }, version: 0 }))
     }, MOCK)
-    for (const [nome, rota] of TELAS.slice(1)) await passo(`${aparelho}: ${nome}`, () => abrir(nome, rota))
+    for (const [nome, rota, extra] of TELAS.slice(1)) await passo(`${aparelho}: ${nome}`, () => abrir(nome, rota, extra))
 
     await passo(`${aparelho}: sem internet e volta`, async () => {
       await page.goto(BASE + '/')

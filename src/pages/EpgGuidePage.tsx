@@ -153,7 +153,7 @@ export default function EpgGuidePage() {
                     className="sticky left-0 z-10 flex shrink-0 items-center gap-2.5 border-r border-outline-soft bg-surface-low px-3 py-3 text-left transition-colors hover:bg-surface-container"
                   >
                     {ch.streamIcon && <img src={ch.streamIcon} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-8 sm:w-8" />}
-                    <span className="line-clamp-2 text-body-sm font-medium text-white sm:text-label-md">{ch.name}</span>
+                    <span className="line-clamp-2 break-words text-body-sm font-medium text-white sm:text-label-md">{ch.name}</span>
                   </button>
 
                   <div className="relative flex-1" style={{ height: 68 }}>
@@ -199,8 +199,8 @@ export default function EpgGuidePage() {
                                 )}
                               </span>
                               {isPast && p.hasArchive && ch.hasArchive ? (
-                                <span className="mt-0.5 flex items-center gap-1 whitespace-nowrap text-label-badge text-brand-300">
-                                  <Clock className="h-3 w-3" /> Assistir de novo
+                                <span className="mt-0.5 flex items-center gap-1 text-label-badge text-brand-300">
+                                  <Clock className="h-3 w-3 shrink-0" /> <span className="truncate">Assistir de novo</span>
                                 </span>
                               ) : (
                                 <span className="mt-0.5 block truncate text-label-badge text-on-surface-muted">
