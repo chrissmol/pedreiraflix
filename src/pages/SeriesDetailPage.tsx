@@ -4,6 +4,7 @@ import BlockedByProfile from '../components/BlockedByProfile'
 import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import SeasonDownloadButton from '../components/SeasonDownloadButton'
+import SeriesZipButton from '../components/SeriesZipButton'
 import { Check, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
 import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
@@ -183,8 +184,11 @@ export default function SeriesDetailPage() {
         <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
           <h2 className="font-display text-headline-md text-white">Episódios</h2>
           <span className="text-body-sm text-on-surface-muted">{season?.episodes.length ?? 0} nesta temporada</span>
+          <div className="sm:ml-auto">
+            <SeriesZipButton series={series} />
+          </div>
           {season && (
-            <div className="sm:ml-auto">
+            <div>
               <SeasonDownloadButton
                 seriesId={series.seriesId}
                 seriesName={series.name}
