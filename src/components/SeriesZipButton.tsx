@@ -12,8 +12,8 @@ import { Download, X } from './icons'
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** "Baixar série inteira (ZIP)": baixa o que falta de todas as temporadas (um por vez, pela mesma fila da
- * temporada) e junta tudo num .zip com uma pasta por temporada. Fica fora do APK, onde o Android ja guarda
- * cada episodio como arquivo na pasta Downloads. */
+ * temporada) e junta tudo num .zip com uma pasta por temporada. No APK quem junta e o plugin nativo
+ * (BaixadorPlugin.zip), que le os arquivos do Android sem passar pela memoria do app. */
 export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
   const client = useXtream()
   const profileId = useActiveProfileId()
@@ -23,11 +23,12 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
   const startSeason = useDownloadsStore((s) => s.startSeason)
   const stopSeason = useDownloadsStore((s) => s.stopSeason)
   const [packing, setPacking] = useState(false)
+  const [zipProgress, setZipProgress] = useState('')
   const [message, setMessage] = useState<string | null>(null)
 
   // Episodios HLS (m3u8) nao baixam como arquivo (ver DownloadButton).
   const episodes = series.seasons.flatMap((s) => s.episodes).filter((ep) => ep.containerExtension !== 'm3u8')
-  if (episodes.length === 0 || isTv || nativeDownloads) return null
+  if (episodes.length === 0 || isTv) return null
 
   async function run() {
     if (!client) return
@@ -46,18 +47,30 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
     setPacking(true)
     try {
       const root = safeName(series.name)
-      const entries: ZipEntry[] = []
+      const entries: (ZipEntry & { nativeId?: number })[] = []
       for (const ep of episodes) {
         const record = await getDownload(`${profileId}:series-${ep.id}`)
         if (!record || record.pending) continue
-        const folder = `Temporada ${pad(ep.season)}`
-        entries.push({
-          path: `${root}/${folder}/${safeName(`E${pad(ep.episodeNum)} - ${ep.title}`)}.${ep.containerExtension || 'mp4'}`,
-          blob: await getDownloadBlob(record),
-        })
+        const path = `${root}/Temporada ${pad(ep.season)}/${safeName(`E${pad(ep.episodeNum)} - ${ep.title}`)}.${ep.containerExtension || 'mp4'}`
+        if (nativeDownloads) {
+          if (record.nativeId != null) entries.push({ path, blob: new Blob(), nativeId: record.nativeId })
+        } else {
+          entries.push({ path, blob: await getDownloadBlob(record) })
+        }
       }
       if (entries.length === 0) {
         setMessage('Nenhum episódio foi baixado. Tente de novo.')
+        return
+      }
+      if (nativeDownloads) {
+        const listener = await nativeDownloads.addListener('zipProgress', (p) => setZipProgress(`${p.done} de ${p.total}`))
+        try {
+          await nativeDownloads.zip({ ids: entries.map((e) => e.nativeId!), paths: entries.map((e) => e.path), fileName: `${root}.zip` })
+        } finally {
+          await listener.remove()
+          setZipProgress('')
+        }
+        setMessage(entries.length < episodes.length ? `ZIP salvo com ${entries.length} de ${episodes.length} episódios.` : 'ZIP salvo.')
         return
       }
       const zip = await buildZip(entries)
@@ -78,7 +91,8 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
       setMessage(entries.length < episodes.length ? `ZIP salvo com ${entries.length} de ${episodes.length} episódios.` : 'ZIP salvo.')
     } catch (err) {
       // Fechar a janela de "salvar como" nao e erro.
-      if (!(err instanceof DOMException && err.name === 'AbortError')) setMessage('Não deu para montar o ZIP (pouco espaço ou memória no aparelho).')
+      const cancelled = (err instanceof DOMException && err.name === 'AbortError') || (err as Error)?.message === 'cancelado'
+      if (!cancelled) setMessage('Não deu para montar o ZIP (pouco espaço ou memória no aparelho).')
     } finally {
       setPacking(false)
     }
@@ -89,7 +103,7 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span role="status" className="inline-flex items-center gap-2 text-label-md text-brand-300 tabular-nums">
           <Download className="h-4 w-4 animate-pulse motion-reduce:animate-none" />
-          {packing ? 'Montando o ZIP…' : `Baixando ${Math.min(running!.done + 1, running!.total)} de ${running!.total}`}
+          {packing ? `Montando o ZIP… ${zipProgress}` : `Baixando ${Math.min(running!.done + 1, running!.total)} de ${running!.total}`}
         </span>
         {!packing && (
           <button
