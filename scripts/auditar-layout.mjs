@@ -54,7 +54,7 @@ export function auditarLayout({ toque }) {
   for (const el of document.querySelectorAll('h1, h2, h3, h4, p, span, a, button, div')) {
     if (!visivel(el) || [...el.childNodes].every((n) => n.nodeType !== 3 || !n.textContent.trim())) continue
     const cs = getComputedStyle(el)
-    if (cs.textOverflow === 'ellipsis' || el.scrollWidth <= el.clientWidth + 1) continue
+    if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none' || el.scrollWidth <= el.clientWidth + 1) continue
     let corte = cs.overflowX !== 'visible' ? el : null
     for (let p = el.parentElement; !corte && p && p !== document.body; p = p.parentElement) {
       const ox = getComputedStyle(p).overflowX
@@ -79,7 +79,9 @@ export function auditarLayout({ toque }) {
       for (; n; n = n.parentElement) if (/fixed|sticky/.test(getComputedStyle(n).position)) return true
       return false
     }
-    if (topo && !el.contains(topo) && !topo.contains(el) && !(fixo(topo) && !fixo(el)) && getComputedStyle(topo).cursor !== 'pointer') {
+    // Menu/dialogo aberto e barras fora do conteudo (cabecalho, navegacao de baixo) cobrem o conteudo de proposito.
+    const sobreposto = topo?.closest('[role="dialog"], [role="menu"], [aria-modal="true"]') || (main?.contains(el) && !main.contains(topo))
+    if (topo && !el.contains(topo) && !topo.contains(el) && !(fixo(topo) && !fixo(el)) && !sobreposto && getComputedStyle(topo).cursor !== 'pointer') {
       out.push(`"${nome(el)}" esta coberto por "${nome(topo)}"`)
     }
   }

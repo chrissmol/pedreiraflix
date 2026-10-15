@@ -1,3 +1,4 @@
+import { displayTitle } from '../lib/displayTitle'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Calendar, ChevronLeft, Clock } from '../components/icons'
@@ -129,7 +130,7 @@ export default function EpgGuidePage() {
                   </span>
                 ))}
                 <span
-                  className="absolute top-0 flex h-full items-center gap-1.5 pl-2 text-label-badge font-semibold text-brand-400"
+                  className="absolute top-0 z-10 flex h-full items-center gap-1.5 bg-surface-lowest pl-2 pr-2 text-label-badge font-semibold text-brand-400"
                   style={{ left: xFor(now) }}
                 >
                   <span className="h-2 w-2 rounded-full bg-brand-500" /> Agora
@@ -152,8 +153,17 @@ export default function EpgGuidePage() {
                     style={{ width: CHANNEL_COL }}
                     className="sticky left-0 z-10 flex shrink-0 items-center gap-2.5 border-r border-outline-soft bg-surface-low px-3 py-3 text-left transition-colors hover:bg-surface-container"
                   >
-                    {ch.streamIcon && <img src={ch.streamIcon} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-8 sm:w-8" />}
-                    <span className="line-clamp-2 break-words text-body-sm font-medium text-white sm:text-label-md">{ch.name}</span>
+                    {ch.streamIcon && (
+                      <img
+                        src={ch.streamIcon}
+                        alt=""
+                        className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-8 sm:w-8"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    )}
+                    <span className="line-clamp-2 break-words text-body-sm font-medium text-white sm:text-label-md">{displayTitle(ch.name)}</span>
                   </button>
 
                   <div className="relative flex-1" style={{ height: 68 }}>

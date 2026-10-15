@@ -1,7 +1,8 @@
 // Estresse do site no navegador, irma do estressar-apk: painel falso dos testes (e2e/mock-xtream.mjs), proxy e
 // Vite locais; passeia por todas as telas como computador, celular e TV, tira uma captura de cada, roda as checagens
 // de layout e depois um macaco de cliques/teclas aleatorios. Relatorio em test-results/estresse-web/.
-// Uso: `node scripts/estressar-web.mjs [--cliques 150] [--aparelho celular]`.
+// Uso: `node scripts/estressar-web.mjs [--cliques 150] [--aparelho celular] [--feio]`. Com --feio o painel falso
+// devolve dados como os de um provedor real (nomes enormes e crus, centenas de itens, sem logo).
 import { spawn } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import net from 'node:net'
@@ -16,6 +17,7 @@ const BASE = 'http://localhost:5173'
 const args = process.argv.slice(2)
 const opcao = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : null)
 const CLIQUES = Number(opcao('--cliques')) || 150
+const FEIO = args.includes('--feio')
 const MOCK = { baseUrl: 'http://localhost:8790', username: 'demo', password: 'demo123' }
 
 const APARELHOS = {
@@ -49,6 +51,20 @@ const TELAS = [
   ['busca-sem-resultado', '/search?q=zzzzzz'],
   ['filme-inexistente', '/movies/999999'],
   ['filmes-provedor-fora', '/movies', { provedorFora: true }],
+  // So existem com --feio: categoria com 300 canais e 200 filmes de nome enorme, serie com 12 temporadas.
+  ...(FEIO
+    ? [['canais-feios', '/live'], ['guia-feio', '/guide?category=30'], ['filmes-feios', '/movies?category=12'], ['serie-feia', '/series/59'], ['busca-feia', '/search?q=sportv']]
+    : []),
+]
+// Menus e janelas abertos: [nome, rota, botoes clicados em ordem]. Botao que nao aparecer e pulado.
+const MENUS = [
+  ['menu-conta', '/', ['Conta']],
+  ['filtros', '/movies', ['Filtrar']],
+  ['ajustes-perfil', '/profiles', ['Ajustes']],
+  ['player-velocidade', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Velocidade']],
+  ['player-audio', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Áudio']],
+  ['player-legendas', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Legendas']],
+  ['player-exibicao', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Ajustes de exibição']],
 ]
 // So existe no servidor de desenvolvimento: /api/tmdb e do Worker, e o WebSocket e a recarga do Vite. O 400 de
 // /api/xtream sem nada e a pagina Diagnostico testando o proxy de proposito. Os console.error genericos de 400/404
@@ -73,7 +89,11 @@ mkdirSync(OUT, { recursive: true })
 const filhos = []
 const subir = (a, env = {}) => filhos.push(spawn(a[0], a.slice(1), { cwd: ROOT, env: { ...process.env, ...env }, stdio: 'ignore', shell: process.platform === 'win32' }))
 // Porta ja ocupada = reaproveita o que estiver rodando (npm run dev, outro teste).
-if (await portaLivre(8790)) subir(['node', 'e2e/mock-xtream.mjs'])
+if (await portaLivre(8790)) subir(['node', 'e2e/mock-xtream.mjs'], FEIO ? { MOCK_FEIO: '1' } : {})
+else if (FEIO) {
+  console.error('Porta 8790 ocupada por um painel falso normal: desligue-o para rodar com --feio.')
+  process.exit(1)
+}
 if (await portaLivre(8787)) subir(['node', 'server/index.js'], { ALLOW_PRIVATE_HOSTS: '1', STREAM_KEY: 'cGVkcmVpcmFmbGl4LWNoYXZlLWRlLXRlc3RlLTAxMjM=', PORT: '8787' })
 if (await portaLivre(5173)) subir(['npx', 'vite', '--port', '5173', '--strictPort'])
 const fim = () => filhos.forEach((p) => p.kill())
@@ -87,8 +107,8 @@ const passos = []
 const passo = async (nome, fn) => {
   const t = Date.now()
   try {
-    await fn()
-    passos.push(`- ok: ${nome} (${Math.round((Date.now() - t) / 1000)}s)`)
+    const pulado = await fn()
+    passos.push(typeof pulado === 'string' ? `- pulado: ${nome} (${pulado})` : `- ok: ${nome} (${Math.round((Date.now() - t) / 1000)}s)`)
   } catch (err) {
     const msg = String(err.message || err).split('\n')[0]
     passos.push(`- FALHOU: ${nome}: ${msg}`)
@@ -112,7 +132,8 @@ try {
     }
     page.on('pageerror', (e) => anotar(`Erro de JavaScript: ${e.message}`))
     page.on('console', (m) => m.type() === 'error' && anotar(`console.error: ${m.text().slice(0, 200)}`))
-    page.on('response', (r) => r.status() >= 400 && anotar(`HTTP ${r.status()}: ${r.url().replace(/[?&](s|p|url)=[^&]*/g, '').slice(0, 160)}`))
+    // O modo feio tem logos quebrados de proposito.
+    page.on('response', (r) => r.status() >= 400 && !r.url().includes('nao-existe') && anotar(`HTTP ${r.status()}: ${r.url().replace(/[?&](s|p|url)=[^&]*/g, '').slice(0, 160)}`))
 
     const abrir = async (nome, rota, { provedorFora: fora } = {}) => {
       // Provedor fora do ar: o painel responde 500 em tudo (o app deve mostrar o cartao de erro com "Tentar de novo").
@@ -141,6 +162,27 @@ try {
       localStorage.setItem('iptv-session', JSON.stringify({ state: { credentials: creds, user, server, sessionWarning: null }, version: 0 }))
     }, MOCK)
     for (const [nome, rota, extra] of TELAS.slice(1)) await passo(`${aparelho}: ${nome}`, () => abrir(nome, rota, extra))
+
+    for (const [nome, rota, botoes] of MENUS) {
+      await passo(`${aparelho}: ${nome}`, async () => {
+        await page.goto(BASE + rota)
+        await page.locator('#main-content, video').first().waitFor({ timeout: 20_000 })
+        await sleep(1500)
+        for (const b of botoes) {
+          const botao = page.getByRole('button', { name: b, exact: true }).first()
+          if (!(await botao.isVisible().catch(() => false))) {
+            // O player esconde os controles depois de um tempo parado: um movimento traz de volta.
+            await page.mouse.move(200, 200).catch(() => {})
+            if (!(await botao.isVisible().catch(() => false))) return `botao "${b}" nao aparece aqui`
+          }
+          await botao.click()
+          await sleep(800)
+        }
+        await page.screenshot({ path: join(OUT, `${aparelho}-${nome}.png`) })
+        for (const p of await page.evaluate(auditarLayout, { toque: cfg.toque })) visual.push(`[${aparelho}/${nome}] ${p}`)
+        await page.keyboard.press('Escape').catch(() => {})
+      })
+    }
 
     await passo(`${aparelho}: sem internet e volta`, async () => {
       await page.goto(BASE + '/')
@@ -177,6 +219,15 @@ try {
   }
 } finally {
   await browser.close()
+  // Mesma tela e mesmo tipo de problema viram uma linha so, com um exemplo e a contagem.
+  const agrupar = (linhas) => {
+    const grupos = new Map()
+    for (const l of new Set(linhas)) {
+      const k = l.replace(/"[^"]*"/g, '"…"').replace(/\d+/g, '#')
+      grupos.set(k, [...(grupos.get(k) || []), l])
+    }
+    return [...grupos.values()].map((g) => `- ${g[0]}${g.length > 1 ? ` (+${g.length - 1} parecidos)` : ''}`)
+  }
   const relatorio = [
     `# Estresse do site - ${new Date().toLocaleString('pt-BR')}`,
     '',
@@ -184,10 +235,10 @@ try {
     ...passos,
     '',
     '## Erros',
-    ...(achados.length ? [...new Set(achados)].map((a) => `- ${a}`) : ['- nenhum']),
+    ...(achados.length ? agrupar(achados) : ['- nenhum']),
     '',
     '## Layout (checagens automaticas)',
-    ...(visual.length ? [...new Set(visual)].map((a) => `- ${a}`) : ['- nenhum']),
+    ...(visual.length ? agrupar(visual) : ['- nenhum']),
     '',
     'Revisao visual das capturas: ver .claude/skills/estressar-web/SKILL.md.',
     '',

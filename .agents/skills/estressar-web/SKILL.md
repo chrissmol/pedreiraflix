@@ -16,6 +16,7 @@ npm ci                                              # se node_modules não exist
 npm run estressar-web                               # computador, celular e TV
 npm run estressar-web -- --aparelho celular         # um aparelho só (computador, celular ou tv)
 npm run estressar-web -- --cliques 500              # macaco mais longo (padrão 150)
+npm run estressar-web -- --feio                     # painel com dados feios (precisa da porta 8790 livre)
 ```
 
 O roteiro:
@@ -26,11 +27,17 @@ O roteiro:
   cada aparelho, tira uma captura e roda as checagens de `scripts/auditar-layout.mjs` (as mesmas do APK): algo
   saindo da tela, rolagem para o lado, texto cortado sem reticências, botão coberto por outro elemento, título por
   baixo do cabeçalho, enfeite do provedor e, no celular, alvo pequeno para o dedo;
+- abre os menus: conta, filtros, ajustes do perfil e, no player, velocidade, áudio, legendas e exibição (o
+  que não aparece naquele aparelho sai como "pulado");
+- com `--feio`, o painel falso traz o que provedor real manda: 300 canais com nomes crus (`[FHD] ★ ...`), logos
+  vazios e quebrados, 200 filmes com nome enorme ou em caixa alta e uma série de 12 temporadas com títulos
+  compridos; o roteiro abre também as telas com esses dados;
 - tira o site da internet e devolve;
 - roda um macaco: cliques aleatórios no computador e no celular, e setas, OK e voltar na TV;
 - registra erro de JavaScript, `console.error` e resposta HTTP 4xx/5xx.
 
-Saída: `test-results/estresse-web/relatorio.md` e as capturas `<aparelho>-<tela>.png`. Ruído só de
+Saída: `test-results/estresse-web/relatorio.md` (achados iguais na mesma tela viram uma linha com a contagem) e
+as capturas `<aparelho>-<tela>.png`. Ruído só de
 desenvolvimento já é ignorado: o `/api/tmdb` só existe no Worker, e o WebSocket do Vite também é descartado.
 
 Na sessão na nuvem o Chromium pré-instalado é de outra versão, e o vídeo pode não tocar nas capturas do player.

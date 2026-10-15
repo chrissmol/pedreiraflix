@@ -1,3 +1,4 @@
+import { displayTitle } from '../lib/displayTitle'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Film, Layers, Tv } from './icons'
@@ -83,7 +84,7 @@ export default function SearchSuggestions({ query, onNavigate }: SearchSuggestio
                 <Icon className="h-4 w-4 text-on-surface-muted" />
               )}
             </span>
-            <span className="min-w-0 flex-1 truncate text-white">{r.name}</span>
+            <span className="min-w-0 flex-1 truncate text-white">{displayTitle(r.name)}</span>
             <span className="shrink-0 rounded bg-surface-high px-1.5 py-0.5 text-label-badge font-semibold uppercase tracking-wide text-on-surface-variant">{KIND_LABEL[r.kind]}</span>
           </button>
         )
