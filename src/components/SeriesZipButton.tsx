@@ -44,6 +44,12 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
         series.cover,
       )
     }
+    // A fila para no primeiro "provedor recusou": diz o motivo em vez de montar um zip incompleto sem avisar.
+    const refused = missing.map((ep) => useDownloadsStore.getState().failed[`${profileId}:series-${ep.id}`]).find((m) => m?.startsWith('O provedor recusou'))
+    if (refused) {
+      setMessage(`${refused} Feche o canal ou outro aparelho com esta conta e toque de novo: o que já baixou fica guardado.`)
+      return
+    }
     setPacking(true)
     try {
       const root = safeName(series.name)
