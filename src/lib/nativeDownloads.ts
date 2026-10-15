@@ -14,6 +14,9 @@ interface BaixadorPlugin {
   start(opts: { url: string; fileName: string; title: string }): Promise<{ id: number }>
   status(opts: { ids: number[] }): Promise<{ downloads: NativeStatus[] }>
   remove(opts: { id: number }): Promise<void>
+  /** Junta downloads ja prontos num .zip no lugar que o usuario escolher (janela "Salvar como" do Android). */
+  zip(opts: { ids: number[]; paths: string[]; fileName: string }): Promise<{ bytes: number }>
+  addListener(event: 'zipProgress', cb: (p: { done: number; total: number }) => void): Promise<{ remove(): Promise<void> }>
 }
 
 export const nativeDownloads: BaixadorPlugin | null = Capacitor.isPluginAvailable('Baixador') ? registerPlugin<BaixadorPlugin>('Baixador') : null
