@@ -15,7 +15,8 @@
     "mock": "node e2e/mock-xtream.mjs",
     "claude-worker": "node tools/claude-worker/worker.ts",
     "test:proxy": "node --test worker/*.test.mjs tests/*.test.mjs",
-    "test:worker": "node --test tools/claude-worker/*.test.ts"
+    "test:worker": "node --test tools/claude-worker/*.test.ts",
+    "testar-tudo": "node scripts/testar-tudo.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

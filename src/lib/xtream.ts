@@ -1,5 +1,5 @@
 import type { ProviderClient } from './provider'
-import { xtreamQueue } from './requestQueue'
+import { xtreamQueue } from './requestQueue.ts'
 import type {
   Category,
   Episode,
