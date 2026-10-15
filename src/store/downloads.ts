@@ -75,7 +75,9 @@ export const useDownloadsStore = create<DownloadsState>()((set, get) => ({
         if (stopRequested.has(seasonKey)) break
         await get().start(client, profileId, 'series', ep.id, ep.ext, ep.name, image, seriesId)
         // No point trying the rest on a full disk.
-        if (get().failed[`${profileId}:series-${ep.id}`]?.startsWith('Sem espaço')) break
+        // Nem em disco cheio nem com o provedor recusando (limite de telas, 403): insistir nos outros so piora.
+        const why = get().failed[`${profileId}:series-${ep.id}`]
+        if (why?.startsWith('Sem espaço') || why?.startsWith('O provedor recusou')) break
         set((state) => ({ seasons: { ...state.seasons, [seasonKey]: { done: i + 1, total } } }))
       }
     } finally {
