@@ -10,8 +10,8 @@ import type {
   UserInfo,
 } from '../types'
 import type { ProviderClient } from './provider'
-import { proxyImage } from './xtream'
-import { loadXmltv } from './xmltv'
+import { proxyImage } from './xtream.ts'
+import { loadXmltv } from './xmltv.ts'
 
 // ponytail: name/group-title heuristic, not a real catalog API. It won't classify every provider's
 // naming convention correctly; upgrade path is a manual "mudar categoria" override in the UI if this

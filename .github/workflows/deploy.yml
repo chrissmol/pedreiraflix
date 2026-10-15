@@ -35,3 +35,7 @@ jobs:
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # Confere o site no ar (headers, PWA, proxy e se os secrets existem). Nao desfaz o deploy; so fica vermelho.
+      - name: Checar producao
+        run: node scripts/checar-producao.mjs
