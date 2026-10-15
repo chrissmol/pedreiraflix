@@ -69,8 +69,11 @@ Para cada problema real:
 4. Rode `npm run lint`, `npm run build` e os specs e2e da tela que mudou.
 5. Abra um PR (uma branch por rodada), com cada correção descrita com antes e depois. Não faça merge.
 
-Fica para o Christian decidir: mudanças de marca ou de cor (por exemplo, contraste do azul da marca), mudança de
-layout de uma tela inteira, e qualquer coisa que ele já tenha decidido de outro jeito.
+Fica para o Christian decidir: mudanças de marca ou de cor, mudança de layout de uma tela inteira, e qualquer
+coisa que ele já tenha decidido de outro jeito.
+
+Já decidido (não reportar de novo):
+- Botão da conta, com "D" branco sobre o azul da marca, tem contraste de 4.0:1: fica assim, para não mudar a cor da marca (15/10/2026).
 
 ## 4. Reportar
 
