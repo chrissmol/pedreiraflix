@@ -17,7 +17,8 @@
     "test:proxy": "node --test worker/*.test.mjs tests/*.test.mjs",
     "test:worker": "node --test tools/claude-worker/*.test.ts",
     "testar-tudo": "node scripts/testar-tudo.mjs",
-    "checar-producao": "node scripts/checar-producao.mjs"
+    "checar-producao": "node scripts/checar-producao.mjs",
+    "estressar-web": "node scripts/estressar-web.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
