@@ -238,15 +238,15 @@ export default function ProfilesPage() {
                         setRenamingId(p.id)
                         setRenameValue(p.name)
                       }}
-                      className="rounded-full px-2 py-1 hover:bg-surface-high hover:text-white"
+                      className="flex min-h-11 items-center rounded-full px-3 hover:bg-surface-high hover:text-white"
                     >
                       Renomear
                     </button>
-                    <button onClick={() => setSettingsId(p.id)} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-surface-high hover:text-white">
+                    <button onClick={() => setSettingsId(p.id)} className="flex min-h-11 items-center gap-1 rounded-full px-3 hover:bg-surface-high hover:text-white">
                       <Settings className="h-3 w-3" /> Ajustes
                     </button>
                     {profiles.length > 1 && (
-                      <button onClick={() => setDeleteTarget(p)} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-live/10 hover:text-live">
+                      <button onClick={() => setDeleteTarget(p)} className="flex min-h-11 items-center gap-1 rounded-full px-3 hover:bg-live/10 hover:text-live">
                         <Trash className="h-3 w-3" /> Excluir
                       </button>
                     )}

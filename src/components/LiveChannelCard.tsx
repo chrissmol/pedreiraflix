@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Plus } from './icons'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
+import { displayTitle } from '../lib/displayTitle'
 import { useMinuteClock } from '../lib/minuteClock'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
@@ -24,6 +25,8 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   const [program, setProgram] = useState<EpgProgram | null>(null)
+  const [logoFalhou, setLogoFalhou] = useState(false)
+  const nome = displayTitle(channel.name)
 
   // A lineup is routinely hundreds of channels and each one's "what's on" is its own request, so this
   // only asks for the handful actually on screen — scrolling fetches the rest, and `cached` keeps a
@@ -88,24 +91,22 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
     >
       <button data-spatial onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-surface-high">
-          {channel.streamIcon ? (
+          {channel.streamIcon && !logoFalhou ? (
             <img
               src={channel.streamIcon}
               alt=""
               loading="lazy"
               className="max-h-11 max-w-11 object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              onError={() => setLogoFalhou(true)}
             />
           ) : (
-            <span className="text-label-md font-bold text-on-surface-variant">{channel.name.slice(0, 2).toUpperCase()}</span>
+            <span className="text-label-md font-bold text-on-surface-variant">{nome.slice(0, 2).toUpperCase()}</span>
           )}
         </span>
 
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="truncate text-label-md text-white">{channel.name}</span>
+            <span className="truncate text-label-md text-white">{nome}</span>
             {channel.hasArchive && (
               <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-0.5 text-label-badge font-bold text-brand-300">REVER</span>
             )}
@@ -135,7 +136,7 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
         onClick={() =>
           toggleFavorite(profileId, { kind: 'live', id: channel.streamId, name: channel.name, image: channel.streamIcon })
         }
-        aria-label={isFavorite ? `Remover ${channel.name} dos favoritos` : `Favoritar ${channel.name}`}
+        aria-label={isFavorite ? `Remover ${nome} dos favoritos` : `Favoritar ${nome}`}
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
           isFavorite ? 'bg-brand-500/15 text-brand-300' : 'text-on-surface-muted hover:bg-surface-high hover:text-white'
         }`}

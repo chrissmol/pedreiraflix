@@ -200,7 +200,7 @@ export default function SeriesDetailPage() {
           )}
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {season?.episodes.map((ep) => {
             const key = `${profileId}:series-${ep.id}`
             const inProgress = episodeProgress[key]

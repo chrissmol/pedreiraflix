@@ -99,13 +99,45 @@ const series = [
   { series_id: 51, name: 'Outra Série', category_id: '20', rating: '6.0', genre: 'Drama', releaseDate: '2018-01-01', plot: 'Mais uma.' },
 ].map((s, i) => ({ ...s, cover: img(s.name.split(' ')[0], 120 + i * 40), backdrop_path: [], cast: 'Fulano, Beltrano', director: 'Diretor X' }))
 
+// MOCK_FEIO=1 (npm run estressar-web -- --feio): catalogo como o de um provedor real, para achar problema de interface
+// que dado limpo esconde: nomes enormes e crus ([FHD], ★, ⚽, CAIXA ALTA, ano repetido), sem logo ou com logo
+// quebrado, centenas de canais e filmes, serie com muitas temporadas. Os e2e nunca ligam isso.
+const FEIO = !!process.env.MOCK_FEIO
+if (FEIO) {
+  const quebrada = `http://localhost:${PORT}/nao-existe.png`
+  liveCategories.push({ category_id: '30', category_name: '★ CANAIS PREMIUM ★ | BR FHD/HD/SD ⚽ ESPORTES AO VIVO 24 HORAS' })
+  for (let i = 0; i < 300; i++) {
+    liveStreams.push({
+      stream_id: 3000 + i,
+      name: i % 3 ? `[FHD] ★ SPORTV ${i} ⚽ ALTERNATIVO H265 CAMPEONATO BRASILEIRO (2025) (2025)` : `Canal ${i}`,
+      category_id: '30', tv_archive: i % 2, tv_archive_duration: 3,
+      stream_icon: i % 5 ? '' : quebrada, epg_channel_id: `ch${3000 + i}`,
+    })
+  }
+  vodCategories.push({ category_id: '12', category_name: 'FILMES | LANÇAMENTOS 2025 ★ DUBLADO/LEGENDADO [4K] [HDR]' })
+  for (let i = 0; i < 200; i++) {
+    movies.push({
+      stream_id: 1000 + i, category_id: '12', added: String(1700001000 + i), container_extension: 'mp4',
+      name: i % 2 ? `O Título Extremamente Longo de Um Filme Que Não Cabe em Lugar Nenhum Parte ${i}: A Revanche do Retorno [L] (2024) (2024)` : `FILME ${i} EM CAIXA ALTA [4K]`,
+      rating: i % 4 ? String((i % 10) + 0.5) : '', year: i % 3 ? '2024' : '', genre: 'Ação, Aventura, Ficção Científica, Drama, Suspense, Comédia Romântica',
+      stream_icon: i % 4 ? '' : quebrada,
+    })
+  }
+  series.push({
+    series_id: 59, category_id: '20', rating: '', genre: 'Drama', releaseDate: '',
+    name: 'Uma Série Com Um Nome Gigante Que Ocupa Duas Linhas Inteiras No Celular [L] (2019) (2019)',
+    plot: 'Sinopse enorme. '.repeat(80), cover: '', backdrop_path: [], cast: 'Ator '.repeat(40), director: '',
+  })
+}
+
 function episodesFor(seriesId) {
   const out = {}
-  for (const season of [1, 2]) {
-    out[season] = [1, 2, 3].map((n) => ({
+  const temporadas = seriesId === 59 ? 12 : 2
+  for (let season = 1; season <= temporadas; season++) {
+    out[season] = Array.from({ length: seriesId === 59 ? 24 : 3 }, (_, k) => k + 1).map((n) => ({
       id: String(seriesId * 100 + season * 10 + n),
       episode_num: n,
-      title: `T${season}E${n} - Episódio ${n}`,
+      title: seriesId === 59 ? `T${season}E${n} - Um Episódio Com Título Comprido Demais Para Caber Numa Linha Só` : `T${season}E${n} - Episódio ${n}`,
       container_extension: 'mp4',
       info: { plot: `Plot ${season}x${n}`, duration: '00:00:20' },
     }))
@@ -132,7 +164,7 @@ function programs(streamId, fromMs, count) {
     return {
       id: `${streamId}-${start.getTime()}`,
       epg_id: `ch${streamId}`,
-      title: b64(`Programa ${start.getHours()}h${pad(start.getMinutes())} (${streamId})`),
+      title: b64(FEIO && streamId >= 3000 ? `AO VIVO ★ CAMPEONATO BRASILEIRO SÉRIE A 2025 - RODADA ${i} - PRÉ-JOGO, JOGO E PÓS-JOGO` : `Programa ${start.getHours()}h${pad(start.getMinutes())} (${streamId})`),
       description: b64(`Descrição do programa às ${pad(start.getHours())}:${pad(start.getMinutes())}.`),
       start: fmt(start),
       end: fmt(end),
@@ -188,7 +220,7 @@ app.get('/player_api.php', (req, res) => {
       if (!s) return res.json({ info: {}, episodes: {} })
       return res.json({
         info: { ...s, release_date: s.releaseDate },
-        seasons: [1, 2].map((n) => ({ season_number: n, name: `Temporada ${n}`, overview: null, cover: null })),
+        seasons: Object.keys(episodesFor(s.series_id)).map(Number).map((n) => ({ season_number: n, name: `Temporada ${n}`, overview: null, cover: null })),
         episodes: episodesFor(s.series_id),
       })
     }
