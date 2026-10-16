@@ -42,3 +42,33 @@ test('TV: sem botoes de download', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Filme Explosivo' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Baixar para ver offline' })).toHaveCount(0)
 })
+
+test('TV: no player o OK mostra os controles e as setas andam entre os botoes', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __toques: number }
+    w.__toques = 0
+    const { play, pause } = HTMLMediaElement.prototype
+    HTMLMediaElement.prototype.play = function () { w.__toques++; return play.call(this) }
+    HTMLMediaElement.prototype.pause = function () { w.__toques++; return pause.call(this) }
+  })
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/3/)
+  await expect(page.getByRole('button', { name: 'Play/Pause' })).toBeAttached()
+  const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
+
+  await page.keyboard.press('Enter') // OK sem nada focado: foca o Play/Pause
+  expect(await focado()).toBe('Play/Pause')
+
+  await page.keyboard.press('ArrowRight') // seta: proximo botao do player, nao pula 10 s
+  expect(await focado()).not.toBe('Play/Pause')
+  expect(await page.evaluate(() => !!document.activeElement?.closest('[data-controls]'))).toBe(true)
+
+  await page.keyboard.press('ArrowLeft')
+  expect(await focado()).toBe('Play/Pause')
+  // Conta play()/pause() em vez de olhar o video tocando: aqui o video pode nem carregar (codec do Chromium de teste).
+  const chamadas = () => page.evaluate(() => (window as unknown as { __toques: number }).__toques)
+  const antes = await chamadas()
+  await page.keyboard.press('Enter') // OK no botao: aperta (play/pause)
+  await expect.poll(chamadas).toBeGreaterThan(antes)
+})

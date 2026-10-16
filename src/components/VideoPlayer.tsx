@@ -2,7 +2,9 @@ import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
+import { isTv } from '../lib/device'
 import { connectionStatus, refreshSession } from '../lib/session'
+import { moveFocusTv } from '../lib/spatialNav'
 import { useAuthStore } from '../store/auth'
 import { usePlayerPrefs } from '../store/playerPrefs'
 import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
@@ -506,10 +508,18 @@ export default function VideoPlayer({
   function wakeControls() {
     setControlsVisible(true)
     if (hideControlsTimeout.current) clearTimeout(hideControlsTimeout.current)
+    // Le o video na hora, nao o `isPlaying` da closure: os atalhos de teclado (controle da TV) guardam uma
+    // closure antiga e, se ela era de quando estava pausado, os controles nunca mais sumiam.
     hideControlsTimeout.current = setTimeout(() => {
-      if (isPlaying) setControlsVisible(false)
+      if (videoRef.current && !videoRef.current.paused) setControlsVisible(false)
     }, 3000)
   }
+  // TV: controles sumiram com o foco num botao invisivel -> solta o foco, para as setas voltarem a pular/zapear.
+  useEffect(() => {
+    if (isTv && !controlsVisible && document.activeElement instanceof HTMLElement && containerRef.current?.contains(document.activeElement)) {
+      document.activeElement.blur()
+    }
+  }, [controlsVisible])
   useEffect(() => {
     if (!isPlaying) setControlsVisible(true)
     else wakeControls()
@@ -523,6 +533,31 @@ export default function VideoPlayer({
       if (!video) return
       if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) {
         return
+      }
+      // TV (controle remoto: so setas e OK). Com um botao do player focado, as setas andam entre os botoes e o OK
+      // aperta o botao (o navegador ja faz isso). Sem nada focado, o OK mostra os controles e foca o Play/Pause;
+      // fora do ao vivo subir/descer tambem (a TV tem volume proprio). Esquerda/direita seguem pulando 10 s e, no
+      // ao vivo, subir/descer seguem zapeando.
+      if (isTv) {
+        const dirs: Record<string, 'up' | 'down' | 'left' | 'right'> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
+        const dir = dirs[e.key]
+        const active = document.activeElement
+        if (active instanceof HTMLElement && active.closest('[data-controls]')) {
+          if (dir) {
+            e.preventDefault()
+            moveFocusTv(dir)
+          }
+          wakeControls()
+          return
+        }
+        if (e.key === 'Enter' || (!isLive && (dir === 'up' || dir === 'down'))) {
+          e.preventDefault()
+          wakeControls()
+          const playPause = containerRef.current?.querySelector<HTMLElement>('[aria-label="Play/Pause"]')
+          if (playPause) playPause.focus()
+          else togglePlay()
+          return
+        }
       }
       switch (e.key) {
         case ' ':
