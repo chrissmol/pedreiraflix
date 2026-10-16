@@ -107,7 +107,7 @@ export default function SearchPage() {
             <span className="h-4 w-1 rounded-full bg-brand-500" />
             Canais
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
             {results.live.slice(0, shown('live')).map((c) => (
               <LiveChannelCard
                 key={c.streamId}

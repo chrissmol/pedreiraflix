@@ -1,3 +1,4 @@
+import { isTv } from '../lib/device'
 import { displayTitle } from '../lib/displayTitle'
 import { Play } from './icons'
 
@@ -27,7 +28,7 @@ export default function PosterCard({ title: rawTitle, image, onClick, badge, sub
       // border/glow lighting up around it, unlike before.
       className={`brand-focus group relative aspect-2/3 overflow-hidden rounded-xl border border-outline-soft bg-surface-container text-left shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-300 ease-out active:scale-[0.97] hover:z-10 hover:-translate-y-1.5 hover:scale-[1.08] hover:border-outline-strong hover:shadow-[0_20px_45px_-12px_rgba(0,0,0,0.7)] focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.08] ${
         // Grade de categoria inteira (milhares de cartoes): o navegador nao desenha o que esta fora da tela.
-        fill ? 'w-full [content-visibility:auto]' : 'w-32 shrink-0 sm:w-40 md:w-44'
+        fill ? 'w-full [content-visibility:auto]' : isTv ? 'w-28 shrink-0' : 'w-32 shrink-0 sm:w-40 md:w-44'
       }`}
     >
       {image ? (

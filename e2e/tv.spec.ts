@@ -27,10 +27,13 @@ test('TV: so com as setas da para chegar nos posteres, no cabecalho e abrir um f
   await page.keyboard.press('ArrowDown') // primeira seta: o foco entra no conteudo
   expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 
-  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowUp') // sobe ate o cabecalho
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowLeft') // vai ate o menu lateral
   expect(await page.evaluate(() => !!document.activeElement?.closest('header'))).toBe(true)
+  await page.keyboard.press('ArrowRight') // e volta para o conteudo
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 
-  for (let i = 0; i < 12 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown') // filtros -> primeira fileira
+  await expect.poll(() => page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
   for (let i = 0; i < 6 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowLeft')
   expect(await focado()).toMatch(/Filme Explosivo/)
   await page.keyboard.press('Enter')
@@ -71,4 +74,19 @@ test('TV: no player o OK mostra os controles e as setas andam entre os botoes', 
   const antes = await chamadas()
   await page.keyboard.press('Enter') // OK no botao: aperta (play/pause)
   await expect.poll(chamadas).toBeGreaterThan(antes)
+})
+
+test('TV: menu na lateral; da seta para a esquerda no conteudo cai na secao aberta', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const menu = (await page.locator('header').boundingBox())!
+  expect(menu.x).toBe(0)
+  expect(menu.height).toBeGreaterThan(500) // ocupa a altura da tela, nao uma faixa no topo
+
+  await page.keyboard.press('ArrowDown')
+  for (let i = 0; i < 6 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowLeft')
+  await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
+  await expect(page.locator('header a[aria-current="page"]')).toHaveText('Filmes')
+  await page.keyboard.press('ArrowLeft') // borda esquerda: fica onde esta
+  await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
 })

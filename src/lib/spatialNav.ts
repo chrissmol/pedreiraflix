@@ -65,13 +65,20 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolea
     first?.scrollIntoView({ block: 'center', inline: 'nearest' })
     return !!first
   }
+  // Menu lateral e a borda esquerda: dali para a esquerda nao ha nada (sem isso caia no avatar, mais a esquerda).
+  if (direction === 'left' && active.closest('header')) return true
   const from = center(active)
   const horizontal = direction === 'left' || direction === 'right'
   const sign = direction === 'down' || direction === 'right' ? 1 : -1
   let best: HTMLElement | null = null
   let bestScore = Infinity
+  // O menu lateral fica ao lado do conteudo: do conteudo so se entra nele pela esquerda (subir/descer no fim da pagina
+  // nao cai no menu) e do menu a direita sempre vai para o conteudo (nao para a busca, que fica no proprio menu).
+  const fromContent = !!active.closest('#main-content')
+  const inMenu = !!active.closest('header')
   for (const el of all) {
     if (el === active || el.contains(active) || active.contains(el)) continue
+    if (el.closest('header') && (inMenu ? horizontal : fromContent && !horizontal)) continue
     const to = center(el)
     const main = (horizontal ? to.x - from.x : to.y - from.y) * sign
     if (main <= 8) continue // so quem esta de fato naquela direcao
@@ -83,6 +90,10 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolea
     }
   }
   if (!best) return false
+  // Do conteudo para o menu lateral (TopNav na TV): cai na secao aberta, nao no item do menu mais perto na altura.
+  if (horizontal && fromContent && best.closest('header')) {
+    best = document.querySelector<HTMLElement>('header [aria-current="page"]') ?? best
+  }
   best.focus()
   best.scrollIntoView({ block: 'center', inline: 'nearest' })
   return true

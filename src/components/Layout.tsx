@@ -175,7 +175,8 @@ export default function Layout() {
       <main
         id="main-content"
         ref={mainRef}
-        className="h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
+        // TV: o menu fica na lateral (TopNav), o conteudo comeca depois dele.
+        className={`h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 ${isTv ? 'pl-40' : ''}`}
       >
         <Outlet />
       </main>
