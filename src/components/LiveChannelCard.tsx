@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Plus } from './icons'
+import { Check, Plus, X } from './icons'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { displayTitle } from '../lib/displayTitle'
@@ -11,12 +11,14 @@ import type { EpgProgram, LiveChannel } from '../types'
 interface LiveChannelCardProps {
   channel: LiveChannel
   onOpen: () => void
+  /** So em Recentes: mostra um X que tira o canal da lista. */
+  onRemove?: () => void
 }
 
 /** Same parsing the rest of the app uses for EPG times: a string with no zone is read as local time. */
 const toDate = (value: string) => new Date(value.replace(' ', 'T'))
 
-export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProps) {
+export default function LiveChannelCard({ channel, onOpen, onRemove }: LiveChannelCardProps) {
   const client = useXtream()
   const profileId = useActiveProfileId()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
@@ -143,6 +145,16 @@ export default function LiveChannelCard({ channel, onOpen }: LiveChannelCardProp
       >
         {isFavorite ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
       </button>
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          aria-label={`Tirar ${nome} dos recentes`}
+          title="Tirar dos recentes"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-on-surface-muted transition-colors hover:bg-surface-high hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConfirmDialog from '../components/ConfirmDialog'
 import FilterBar from '../components/FilterBar'
 import { Calendar, ChevronDown, ChevronRight, Search } from '../components/icons'
 import LiveChannelCard from '../components/LiveChannelCard'
@@ -16,6 +17,8 @@ export default function LivePage() {
   const { groups, loading, error, retry } = useLiveCatalog()
   const profileId = useActiveProfileId()
   const recentIds = useLibraryStore((s) => s.recentLive[profileId])
+  const removeRecentLive = useLibraryStore((s) => s.removeRecentLive)
+  const [confirmClearRecent, setConfirmClearRecent] = useState(false)
   // O que esta escolhido: 'recent' | 'all' | `g:<grupo>` | `c:<categoria>`. Abre em Recentes (pedido do
   // Christian); sem canais recentes, em Todos.
   const [selection, setSelection] = useState(() => (recentIds?.length ? 'recent' : 'all'))
@@ -264,7 +267,25 @@ export default function LivePage() {
         </aside>
 
         <div className="min-w-0">
-      <h2 className="font-display mb-4 hidden text-headline-sm text-white md:block">{selectionTitle}</h2>
+      <div className={`mb-4 items-center gap-3 ${showingRecent ? 'flex' : 'hidden md:flex'}`}>
+        <h2 className="font-display hidden text-headline-sm text-white md:block">{selectionTitle}</h2>
+        {showingRecent && (
+          <button onClick={() => setConfirmClearRecent(true)} className="btn-secondary ml-auto h-11">
+            Limpar recentes
+          </button>
+        )}
+      </div>
+      {confirmClearRecent && (
+        <ConfirmDialog
+          message="Limpar todos os canais recentes?"
+          confirmLabel="Limpar"
+          onCancel={() => setConfirmClearRecent(false)}
+          onConfirm={() => {
+            removeRecentLive(profileId)
+            setConfirmClearRecent(false)
+          }}
+        />
+      )}
 
       {favoriteChannels.length > 0 && !filter.trim() && selectionTitle === 'Todos os canais' && !onlyArchive && (
         <section className="mb-8">
@@ -296,6 +317,7 @@ export default function LivePage() {
                 key={ch.streamId}
                 channel={ch}
                 onOpen={() => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`)}
+                onRemove={showingRecent && !filter.trim() ? () => removeRecentLive(profileId, ch.streamId) : undefined}
               />
             ))}
       </div>

@@ -34,6 +34,8 @@ interface LibraryState {
   /** Canais ao vivo abertos por ultimo, por perfil, mais recente primeiro (a tela de canais abre nele). */
   recentLive: Record<string, number[]>
   addRecentLive: (profileId: string, streamId: number) => void
+  /** Tira um canal dos recentes; sem streamId, limpa todos do perfil. */
+  removeRecentLive: (profileId: string, streamId?: number) => void
   toggleFavorite: (profileId: string, ref: FavoriteRef) => void
   isFavorite: (profileId: string, kind: FavoriteRef['kind'], id: number) => boolean
   setProgress: (profileId: string, entry: WatchProgress) => void
@@ -54,6 +56,13 @@ export const useLibraryStore = create<LibraryState>()(
           // ponytail: 20 fixos; mais que isso deixa de ser "recente"
           return { recentLive: { ...state.recentLive, [profileId]: [streamId, ...list.filter((id) => id !== streamId)].slice(0, 20) } }
         }),
+      removeRecentLive: (profileId, streamId) =>
+        set((state) => ({
+          recentLive: {
+            ...state.recentLive,
+            [profileId]: streamId == null ? [] : (state.recentLive[profileId] ?? []).filter((id) => id !== streamId),
+          },
+        })),
       toggleFavorite: (profileId, ref) =>
         set((state) => {
           const list = state.favorites[profileId] ?? []
