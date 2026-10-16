@@ -293,7 +293,7 @@ export default function LivePage() {
             <span className="h-4 w-1 rounded-full bg-brand-500" />
             Seus canais
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
             {favoriteChannels.map((ch) => (
               <LiveChannelCard
                 key={`fav-${ch.streamId}`}
@@ -309,7 +309,7 @@ export default function LivePage() {
 
       {/* A list, not a grid of logo tiles: a live channel's useful information is what's on right now,
           which needs a line of text and a progress bar — the shape every TV app uses for a lineup. */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {loading && groups.length === 0
           ? Array.from({ length: 12 }).map((_, i) => <div key={i} className="skeleton h-[88px] rounded-2xl bg-surface-container" />)
           : channels.map((ch) => (

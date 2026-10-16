@@ -107,7 +107,14 @@ export default function TopNav() {
       // Sombra fixa de cima para baixo, sempre igual: antes o fundo alternava entre transparente e uma faixa de
       // vidro escura conforme a rolagem passava de 10px, com transicao de 300ms — sobre um destaque claro isso
       // piscava (video do Christian, 08/10). A sombra deixa o logo e a busca legiveis sobre qualquer imagem.
-      className="absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-6 sm:px-10"
+      //
+      // TV: vira um menu lateral fixo (como Netflix e YouTube na TV). Libera a largura que o cabecalho comia, entao
+      // as letras podem crescer (index.css), e o controle chega no menu com a seta para a esquerda.
+      className={
+        isTv
+          ? 'absolute inset-y-0 left-0 z-50 flex w-40 flex-col gap-5 border-r border-outline-soft bg-surface-low/95 px-3 py-6'
+          : 'absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-6 sm:px-10'
+      }
     >
       <span className="neon-text font-display bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
         PedreiraFlix
@@ -116,7 +123,13 @@ export default function TopNav() {
       {/* Abas no topo so de md (768px) para cima, e a busca larga so de lg (1024px): entre 640 e ~830px o cabecalho
           "de computador" nao cabia e empurrava a busca e o avatar para fora da tela (painel de 654px, 08/10). Abaixo
           de md fica o menu flutuante de baixo (MobileNav), como no celular. */}
-      <nav className="hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md md:flex">
+      <nav
+        className={
+          isTv
+            ? 'flex flex-col gap-1 text-label-md text-on-surface-variant'
+            : 'hidden items-center gap-1 rounded-full border border-outline-soft bg-surface-low/70 p-1 text-label-md text-on-surface-variant backdrop-blur-md md:flex'
+        }
+      >
         {links.map((l) => (
           <NavLink
             key={l.to}
@@ -133,10 +146,10 @@ export default function TopNav() {
         ))}
       </nav>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className={isTv ? 'flex items-center gap-2' : 'ml-auto flex items-center gap-3'}>
       <LoadingRing />
-      <form ref={searchRef} onSubmit={handleSearch} className="group relative flex items-center">
-        <div className="relative">
+      <form ref={searchRef} onSubmit={handleSearch} className={`group relative flex items-center ${isTv ? 'min-w-0 flex-1' : ''}`}>
+        <div className={isTv ? 'relative w-full' : 'relative'}>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
             type="search"
@@ -159,14 +172,14 @@ export default function TopNav() {
             // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
             // Em repouso no celular o recuo direito e zero e o texto de exemplo fica invisivel: com `pl-8 pr-3` +
             // borda o campo media 46px e nao cabia nos 40px do circulo (saia oval, lupa torta — video de 08/10).
-            className="brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"
+            className={isTv ? 'brand-focus h-10 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-3 text-body-md text-white placeholder:text-on-surface-muted focus:border-brand-500/60' : "brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"}
           />
         </div>
         {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
       </form>
       </div>
 
-      <div ref={menuRef} className="relative">
+      <div ref={menuRef} className={isTv ? 'relative mt-auto' : 'relative'}>
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
@@ -181,7 +194,7 @@ export default function TopNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu da conta"
-            className="menu-panel absolute right-0 mt-2 w-64"
+            className={isTv ? 'menu-panel absolute bottom-full left-0 mb-2 w-64' : 'menu-panel absolute right-0 mt-2 w-64'}
           >
             <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
