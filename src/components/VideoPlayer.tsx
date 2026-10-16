@@ -57,6 +57,47 @@ interface SubtitleTrack {
   name: string
 }
 
+// AudioTrackList so existe no Safari; o lib.dom do TypeScript nao a declara.
+interface NativeAudioTrackList extends EventTarget {
+  readonly length: number
+  [index: number]: { label: string; language: string; enabled: boolean }
+}
+
+// Atraso (s) atras do ponto ao vivo a partir do qual o "Rápido" do HLS nativo pula de volta.
+const NATIVE_FAST_MAX_LAG = 6
+
+function nativeSubtitleTracks(video: HTMLVideoElement | null) {
+  return Array.from(video?.textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions')
+}
+
+function supportsNativeHls() {
+  // Safari (iOS and macOS) plays HLS natively — video.src = the .m3u8 directly, same as any other
+  // <video>, no MediaSource involved. This has to be checked and preferred *before* even asking
+  // hls.js whether it thinks the browser is supported: hls.js's own isSupported() checks for
+  // MediaSource Extensions, which Safari also has, so that check alone can never tell Safari apart
+  // from everyone else — every browser that can run hls.js at all was taking this branch, including
+  // Safari, despite a comment below (now moved) claiming otherwise. The real, user-visible cost: HLS
+  // delivered through MediaSource can only AirPlay as audio on iOS, not mirror actual video — a
+  // documented WebKit/hls.js interaction, confirmed against a real Apple TV. Native playback doesn't
+  // have that limit. The trade-off (accepted): no manual quality menu (Safari picks the level itself and
+  // doesn't expose it); audio/subtitle tracks come from video.audioTracks/textTracks instead of hls.js.
+  // Safari precisa tocar HLS nativamente, nao via hls.js, senao o video sai por MediaSource e o
+  // AirPlay manda so o audio — a TV fica preta. O teste era `=== 'probably'`, e e justamente ai que
+  // quebrava no iPhone: o Safari responde 'maybe' para este MIME em varias versoes, entao o app caia
+  // no hls.js e o ao vivo nao aparecia na TV (relatado com uma Samsung via AirPlay 2).
+  //
+  // So que aceitar qualquer resposta nao-vazia tambem nao serve: o Chromium responde 'maybe' sem ter
+  // HLS nativo nenhum. O desempate e por recurso, nao por string nem por user agent — as APIs de
+  // midia prefixadas do WebKit (`webkitShowPlaybackTargetPicker`, usada pelo proprio botao de
+  // AirPlay) existem no Safari e em nenhum outro lugar.
+  const video = document.createElement('video')
+  const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl')
+  const isWebKitMedia =
+    typeof (video as { webkitShowPlaybackTargetPicker?: unknown }).webkitShowPlaybackTargetPicker === 'function' ||
+    'webkitSupportsPresentationMode' in video
+  return canPlayHls === 'probably' || (canPlayHls !== '' && isWebKitMedia)
+}
+
 // 403 nem sempre e o limite de telas (09/10: era a Cloudflare barrando IP puro e o app culpava as telas).
 // So culpa as telas quando o provedor confirma, pelo numero de conexoes da conta.
 async function refusedMessage(fallback = REFUSED_MESSAGE): Promise<string> {
@@ -110,6 +151,8 @@ export default function VideoPlayer({
   // Whether this playback actually went through hls.js (vs. Safari's native HLS/plain <video src>) —
   // "Rápido" tunes hls.js's own buffer config, so it's hidden when there's no hls.js instance to tune.
   const [usingHlsJs, setUsingHlsJs] = useState(false)
+  // Fixo por navegador: decide se o HLS vai pelo player nativo (Safari) ou pelo hls.js.
+  const [nativeHls] = useState(supportsNativeHls)
   const [levels, setLevels] = useState<QualityLevel[]>([])
   const [currentLevel, setCurrentLevel] = useState(-1)
   const [autoPickedHeight, setAutoPickedHeight] = useState<number | null>(null)
@@ -171,6 +214,9 @@ export default function VideoPlayer({
     const t = setTimeout(() => setShowSlowHint(true), 4000)
     return () => clearTimeout(t)
   }, [buffering])
+
+  // No HLS nativo o "Rápido" nao reconfigura nada (ver os efeitos abaixo), entao nao recarrega o video.
+  const hlsJsFastLive = nativeHls ? false : fastLive
 
   // --- Source setup: hls.js for live m3u8, plain <video src> otherwise ---
   useEffect(() => {
@@ -309,32 +355,7 @@ export default function VideoPlayer({
 
     async function setup() {
       if (!video) return
-      // Safari (iOS and macOS) plays HLS natively — video.src = the .m3u8 directly, same as any other
-      // <video>, no MediaSource involved. This has to be checked and preferred *before* even asking
-      // hls.js whether it thinks the browser is supported: hls.js's own isSupported() checks for
-      // MediaSource Extensions, which Safari also has, so that check alone can never tell Safari apart
-      // from everyone else — every browser that can run hls.js at all was taking this branch, including
-      // Safari, despite a comment below (now moved) claiming otherwise. The real, user-visible cost: HLS
-      // delivered through MediaSource can only AirPlay as audio on iOS, not mirror actual video — a
-      // documented WebKit/hls.js interaction, confirmed against a real Apple TV. Native playback doesn't
-      // have that limit. The trade-off (accepted): the audio-track/subtitle-track/manual-quality menus
-      // below are populated from hls.js's own events, so they stay empty here — Safari's native player
-      // doesn't hand those to JS the same way. Most IPTV sources only carry one audio track anyway.
-      // Safari precisa tocar HLS nativamente, nao via hls.js, senao o video sai por MediaSource e o
-      // AirPlay manda so o audio — a TV fica preta. O teste era `=== 'probably'`, e e justamente ai que
-      // quebrava no iPhone: o Safari responde 'maybe' para este MIME em varias versoes, entao o app caia
-      // no hls.js e o ao vivo nao aparecia na TV (relatado com uma Samsung via AirPlay 2).
-      //
-      // So que aceitar qualquer resposta nao-vazia tambem nao serve: o Chromium responde 'maybe' sem ter
-      // HLS nativo nenhum. O desempate e por recurso, nao por string nem por user agent — as APIs de
-      // midia prefixadas do WebKit (`webkitShowPlaybackTargetPicker`, usada pelo proprio botao de
-      // AirPlay) existem no Safari e em nenhum outro lugar.
-      const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl')
-      const isWebKitMedia =
-        typeof (video as { webkitShowPlaybackTargetPicker?: unknown }).webkitShowPlaybackTargetPicker === 'function' ||
-        'webkitSupportsPresentationMode' in video
-      const nativeHlsSupported = canPlayHls === 'probably' || (canPlayHls !== '' && isWebKitMedia)
-      if (isHls && !nativeHlsSupported) {
+      if (isHls && !nativeHls) {
         // hls.js (~250KB) is only needed for live channels; VOD plays as
         // plain mp4/webm, so keep it out of the main bundle.
         const { default: HlsCtor } = await import('hls.js')
@@ -452,7 +473,7 @@ export default function VideoPlayer({
           video.src = src
         }
       } else {
-        // VOD, or a browser (Safari) with native HLS support — see the comment above `nativeHlsSupported`.
+        // VOD, or a browser (Safari) with native HLS support — see supportsNativeHls().
         video.src = src
       }
     }
@@ -485,7 +506,54 @@ export default function VideoPlayer({
       video.load()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, isHls, retryToken, fastLive])
+  }, [src, isHls, retryToken, hlsJsFastLive])
+
+  // --- Safari (HLS nativo): faixas de audio/legenda e o "Rápido" pelo proprio <video> ---
+  // Sem hls.js os menus ficavam vazios; o Safari expoe as faixas do manifesto em audioTracks/textTracks.
+  useEffect(() => {
+    const video = videoRef.current as (HTMLVideoElement & { audioTracks?: NativeAudioTrackList }) | null
+    if (!video || !isHls || !nativeHls) return
+    const audio = video.audioTracks
+    const text = video.textTracks
+    function syncAudio() {
+      if (!audio) return
+      const list = Array.from({ length: audio.length }, (_, i) => audio[i])
+      setAudioTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}` })))
+      setCurrentAudioTrack(list.findIndex((t) => t.enabled))
+    }
+    function syncText() {
+      const list = nativeSubtitleTracks(video)
+      setSubtitleTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}` })))
+      setCurrentSubtitleTrack(list.findIndex((t) => t.mode === 'showing'))
+    }
+    syncAudio()
+    syncText()
+    audio?.addEventListener('addtrack', syncAudio)
+    audio?.addEventListener('change', syncAudio)
+    text.addEventListener('addtrack', syncText)
+    text.addEventListener('change', syncText)
+    return () => {
+      audio?.removeEventListener('addtrack', syncAudio)
+      audio?.removeEventListener('change', syncAudio)
+      text.removeEventListener('addtrack', syncText)
+      text.removeEventListener('change', syncText)
+    }
+  }, [src, isHls, nativeHls, retryToken])
+
+  // O Safari nao deixa mexer no buffer do HLS nativo, entao aqui o "Rápido" segura o video no ponto ao vivo:
+  // quando ele fica para tras (travada, pausa), pula de volta para o fim da janela que o Safari considera tocavel.
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isLive || !nativeHls || !fastLive) return
+    function chase() {
+      if (!video || video.paused || !video.seekable.length) return
+      const edge = video.seekable.end(video.seekable.length - 1)
+      if (edge - video.currentTime > NATIVE_FAST_MAX_LAG) video.currentTime = edge
+    }
+    chase()
+    video.addEventListener('timeupdate', chase)
+    return () => video.removeEventListener('timeupdate', chase)
+  }, [isLive, nativeHls, fastLive, src])
 
   // --- Fullscreen tracking ---
   useEffect(() => {
@@ -746,12 +814,17 @@ export default function VideoPlayer({
 
   function selectAudioTrack(id: number) {
     if (hlsRef.current) hlsRef.current.audioTrack = id
+    const nativeAudio = (videoRef.current as { audioTracks?: NativeAudioTrackList } | null)?.audioTracks
+    if (!hlsRef.current && isHls && nativeHls && nativeAudio) {
+      for (let i = 0; i < nativeAudio.length; i++) nativeAudio[i].enabled = i === id
+    }
     setCurrentAudioTrack(id)
     setOpenMenu(null)
   }
 
   function selectSubtitleTrack(id: number) {
     if (hlsRef.current) hlsRef.current.subtitleTrack = id
+    else if (isHls && nativeHls) nativeSubtitleTracks(videoRef.current).forEach((t, i) => (t.mode = i === id ? 'showing' : 'disabled'))
     setCurrentSubtitleTrack(id)
     setOpenMenu(null)
   }
