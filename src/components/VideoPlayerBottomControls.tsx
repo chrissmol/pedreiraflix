@@ -63,16 +63,15 @@ export function VideoPlayerBottomControls({
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
             AO VIVO
           </span>
-          {usingHlsJs && (
-            <button
-              onClick={onToggleFastLive}
-              aria-pressed={fastLive}
-              title="Menos delay, mais risco de travar em picos do provedor"
-              className={`chip flex items-center gap-1 py-1 ${fastLive ? 'bg-brand-500/25 text-brand-300' : ''}`}
-            >
-              <Zap className="h-3 w-3" /> Rápido
-            </button>
-          )}
+          {/* No hls.js encurta o buffer; no HLS nativo do Safari so da para segurar no ponto ao vivo. */}
+          <button
+            onClick={onToggleFastLive}
+            aria-pressed={fastLive}
+            title={usingHlsJs ? 'Menos delay, mais risco de travar em picos do provedor' : 'Volta para o ponto ao vivo quando o vídeo atrasar'}
+            className={`chip flex items-center gap-1 py-1 ${fastLive ? 'bg-brand-500/25 text-brand-300' : ''}`}
+          >
+            <Zap className="h-3 w-3" /> Rápido
+          </button>
         </div>
       ) : (
         <input
