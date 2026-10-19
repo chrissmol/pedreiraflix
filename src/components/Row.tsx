@@ -28,11 +28,12 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
     const focusables = Array.from(scroller.querySelectorAll<HTMLElement>('button, [href], [tabindex]'))
     const currentIndex = focusables.indexOf(document.activeElement as HTMLElement)
     if (currentIndex === -1) return
+    const next = focusables[currentIndex + (e.key === 'ArrowRight' ? 1 : -1)]
+    // Na ponta da fileira a seta segue adiante: na TV, a esquerda do primeiro poster leva ao menu lateral.
+    if (!next) return
     e.preventDefault()
-    const nextIndex = currentIndex + (e.key === 'ArrowRight' ? 1 : -1)
-    const next = focusables[nextIndex]
-    next?.focus()
-    next?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    next.focus()
+    next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }
 
   return (
