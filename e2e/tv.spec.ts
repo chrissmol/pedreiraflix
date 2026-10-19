@@ -90,3 +90,48 @@ test('TV: menu na lateral; da seta para a esquerda no conteudo cai na secao aber
   await page.keyboard.press('ArrowLeft') // borda esquerda: fica onde esta
   await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
 })
+
+test('TV: passar pela busca com as setas nao abre o teclado; o OK abre e ai da para digitar', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const busca = page.getByRole('searchbox', { name: 'Buscar' })
+  await page.keyboard.press('ArrowDown')
+  for (let i = 0; i < 6 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowLeft')
+  for (let i = 0; i < 6 && !(await busca.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+  await expect(busca).toBeFocused()
+  // Campo so de leitura = o Android nao sobe o teclado da tela so por passar por ele.
+  expect(await busca.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true)
+
+  await page.keyboard.press('Enter') // OK: libera para digitar, sem buscar nada ainda
+  await expect(busca).toBeFocused()
+  expect(await busca.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(false)
+  await expect(page).toHaveURL(/\/movies$/)
+
+  await page.keyboard.type('Explosivo')
+  await expect(busca).toHaveValue('Explosivo')
+  // As capas aparecem enquanto digita, sem precisar confirmar, e o campo continua com o foco.
+  await expect(page).toHaveURL(/\/search\?q=Explosivo$/)
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ }).first()).toBeVisible()
+  await expect(busca).toBeFocused()
+})
+
+test('TV: o perfil aparece com nome no menu e cache/diagnostico ficam em Ajustes', async ({ page }) => {
+  await page.goto('/')
+  const conta = page.getByRole('button', { name: 'Conta', exact: true })
+  await expect(conta).not.toHaveText(/^.$/)
+  await conta.click()
+  await expect(page.getByRole('button', { name: 'Limpar cache' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Ajustes' }).click()
+  await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Limpar cache' })).toBeVisible()
+})
+
+test('TV: da seta para a esquerda no primeiro poster de uma fileira chega ao menu', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByText('Adicionados recentemente')).toBeVisible()
+  for (let i = 0; i < 6 && !(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))); i++) await page.keyboard.press('ArrowDown')
+  for (let i = 0; i < 12 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowLeft')
+  await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
+  // A tela nao desliza para o lado no caminho (cortava o menu na TV).
+  expect(await page.evaluate(() => [document.scrollingElement!.scrollLeft, document.getElementById('main-content')!.scrollLeft, document.getElementById('main-content')!.parentElement!.scrollLeft])).toEqual([0, 0, 0])
+})

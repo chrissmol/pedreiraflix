@@ -98,3 +98,61 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolea
   best.scrollIntoView({ block: 'center', inline: 'nearest' })
   return true
 }
+
+// --- TV: protecoes que so aparecem numa TV de verdade -----------------------------------------------------------
+const TEXT_INPUT = /^(text|search|email|password|number|tel|url)$/
+function editable(el: unknown): el is HTMLInputElement | HTMLTextAreaElement {
+  return (el instanceof HTMLInputElement && TEXT_INPUT.test(el.type)) || el instanceof HTMLTextAreaElement
+}
+
+export function installTvGuards() {
+  // Campo de texto so abre o teclado da TV quando se aperta OK nele. Antes, so de passar pela busca com as setas o
+  // teclado da tela subia, cobria metade da TV e empurrava a pagina (video do Christian numa TCL, 19/10).
+  let reopening = false
+  document.addEventListener('focusin', (e) => {
+    const el = e.target
+    if (reopening || !editable(el) || el.readOnly) return
+    el.readOnly = true
+    el.dataset.tvLock = ''
+  })
+  document.addEventListener('focusout', (e) => {
+    const el = e.target
+    if (reopening || !editable(el) || !('tvLock' in el.dataset)) return
+    el.readOnly = false
+    delete el.dataset.tvLock
+  })
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      const el = e.target
+      if (e.key !== 'Enter' || !editable(el) || !('tvLock' in el.dataset)) return
+      e.preventDefault() // este OK so libera o campo; nao envia o formulario
+      el.readOnly = false
+      delete el.dataset.tvLock
+      reopening = true // sai e volta o foco para o Android abrir o teclado agora que o campo e editavel
+      el.blur()
+      el.focus()
+      reopening = false
+    },
+    true,
+  )
+
+  // A casca do app e o documento nunca rolam (so o <main> rola na vertical), mas o scrollIntoView das fileiras e o
+  // teclado da TV conseguem rolar ate o que tem overflow hidden — e a tela inteira ficava deslocada, cortando o menu.
+  document.addEventListener(
+    'scroll',
+    (e) => {
+      const active = document.activeElement
+      if (editable(active) && !('tvLock' in active.dataset)) return // digitando: o teclado pode precisar empurrar a tela
+      const main = document.getElementById('main-content')
+      const t = e.target === document ? document.scrollingElement : e.target
+      if (!(t instanceof Element)) return
+      if (t === main) {
+        if (t.scrollLeft) t.scrollLeft = 0
+      } else if (t === document.scrollingElement || t === document.body || (main && t.contains(main))) {
+        if (t.scrollTop || t.scrollLeft) t.scrollTo(0, 0)
+      }
+    },
+    true,
+  )
+}

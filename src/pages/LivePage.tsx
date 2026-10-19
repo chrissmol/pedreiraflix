@@ -151,7 +151,7 @@ export default function LivePage() {
     <div className="min-h-screen px-4 pb-10 pt-[calc(5rem+env(safe-area-inset-top))] sm:px-10 sm:pt-24">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Canais ao vivo</h1>
-        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
           <div className="relative w-full sm:w-72">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted" />
             <input
