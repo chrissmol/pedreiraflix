@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { clearAllCaches } from '../lib/cache'
 import { connectionStatus, refreshSession } from '../lib/session'
@@ -28,6 +28,7 @@ export default function TopNav() {
   const menuPanelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLFormElement>(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
   const isXtream = useAuthStore((s) => s.credentials?.type === 'xtream')
@@ -157,9 +158,15 @@ export default function TopNav() {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
-              setSuggestionsOpen(e.target.value.trim().length >= 2)
+              const q = e.target.value.trim()
+              // TV: a grade de capas da busca aparece enquanto digita, em vez da listinha de sugestoes (pedido do Christian, 19/10).
+              if (isTv) {
+                if (q.length >= 2) navigate(`/search?q=${encodeURIComponent(q)}`, { replace: location.pathname === '/search' })
+                return
+              }
+              setSuggestionsOpen(q.length >= 2)
             }}
-            onFocus={() => setSuggestionsOpen(query.trim().length >= 2)}
+            onFocus={() => setSuggestionsOpen(!isTv && query.trim().length >= 2)}
             placeholder="Buscar…"
             aria-label="Buscar"
             // Idle width shrinks to just the icon on phones (like Netflix/YouTube's mobile search) —
@@ -183,10 +190,27 @@ export default function TopNav() {
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Conta"
-          style={activeProfile ? { background: activeProfile.color } : undefined}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-fill text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105"
+          style={activeProfile && !isTv ? { background: activeProfile.color } : undefined}
+          className={
+            isTv
+              ? 'flex w-full items-center gap-2 rounded-full p-1 pr-3 text-label-md text-on-surface-variant'
+              : 'flex h-10 w-10 items-center justify-center rounded-full bg-brand-fill text-label-md font-bold text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)] transition-transform hover:scale-105'
+          }
         >
-          {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
+          {/* TV: a inicial sozinha no pe do menu parecia um "X" de fechar (video do Christian, 19/10); com o nome vira o perfil. */}
+          {isTv ? (
+            <>
+              <span
+                style={activeProfile ? { background: activeProfile.color } : undefined}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-fill font-bold text-white"
+              >
+                {(activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'}
+              </span>
+              <span className="truncate">{activeProfile?.name || user?.username}</span>
+            </>
+          ) : (
+            (activeProfile?.name || user?.username)?.[0]?.toUpperCase() ?? '?'
+          )}
         </button>
         {menuOpen && (
           <div
@@ -269,15 +293,18 @@ export default function TopNav() {
                 <Plus className="h-4 w-4 text-on-surface-variant" /> Instalar o app
               </button>
             )}
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                setConfirmClearCache(true)
-              }}
-              className="menu-option"
-            >
-              <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
-            </button>
+            {/* TV: cache e diagnostico ficam dentro de Ajustes, longe de um OK por engano (video do Christian, 19/10). */}
+            {!isTv && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  setConfirmClearCache(true)
+                }}
+                className="menu-option"
+              >
+                <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
+              </button>
+            )}
             <button
               onClick={() => {
                 setMenuOpen(false)
@@ -285,7 +312,7 @@ export default function TopNav() {
               }}
               className="menu-option"
             >
-              <Settings className="h-4 w-4 text-on-surface-variant" /> Diagnóstico
+              <Settings className="h-4 w-4 text-on-surface-variant" /> {isTv ? 'Ajustes' : 'Diagnóstico'}
             </button>
             <button
               onClick={logout}

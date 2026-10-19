@@ -1,6 +1,7 @@
 import { type KeyboardEvent, type ReactNode, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from './icons'
+import { isTv } from '../lib/device'
 
 interface RowProps {
   title: string
@@ -51,13 +52,14 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         )}
       </h2>
       <div className="relative">
-        <button
+        {/* TV: as setas de rolar sao para mouse; no controle o foco caia nelas em vez de no poster. */}
+        {!isTv && <button
           onClick={() => scrollBy(-600)}
           aria-label={`Rolar "${title}" para a esquerda`}
           className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-surface to-transparent transition-opacity sm:flex"
         >
           <ChevronLeft className="h-8 w-8 text-white" />
-        </button>
+        </button>}
 
         <div
           ref={scrollerRef}
@@ -74,13 +76,13 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
             : children}
         </div>
 
-        <button
+        {!isTv && <button
           onClick={() => scrollBy(600)}
           aria-label={`Rolar "${title}" para a direita`}
           className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-surface to-transparent transition-opacity sm:flex"
         >
           <ChevronRight className="h-8 w-8 text-white" />
-        </button>
+        </button>}
       </div>
     </section>
   )

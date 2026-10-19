@@ -29,7 +29,7 @@ export default function FilterBar({ active, children }: FilterBarProps) {
           </span>
         )}
       </button>
-      <div className={`${open ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 sm:flex sm:w-auto sm:flex-1`}>
+      <div className={`${open ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 sm:flex sm:w-auto sm:flex-auto`}>
         {children}
       </div>
     </>

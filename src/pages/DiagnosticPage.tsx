@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { XtreamClient } from '../lib/xtream'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { clearAllCaches } from '../lib/cache'
+import { isTv } from '../lib/device'
 
 // Diagnostico de conexao (menu da conta): roda as mesmas chamadas que o app faz e mostra o que ESTE aparelho recebe,
 // linha por linha. Existe porque o app do Windows do Christian nao carregava canais nem baixava e nao havia como ver
@@ -28,6 +31,7 @@ export default function DiagnosticPage() {
   const client = useXtream()
   const [linhas, setLinhas] = useState<Linha[]>([])
   const [rodando, setRodando] = useState(false)
+  const [limpar, setLimpar] = useState(false)
 
   async function rodar() {
     if (!(client instanceof XtreamClient)) {
@@ -153,14 +157,33 @@ export default function DiagnosticPage() {
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
-      <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Diagnóstico de conexão</h1>
+      <h1 className="font-display text-headline-md text-white sm:text-headline-lg">{isTv ? 'Ajustes' : 'Diagnóstico de conexão'}</h1>
       <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">
         Roda as mesmas chamadas que o app faz e mostra o que este aparelho recebe do servidor e do provedor. Se algo não
         carrega ou não baixa, rode e mande uma captura desta tela.
       </p>
-      <button onClick={rodar} disabled={rodando} className="btn-primary mb-6">
-        {rodando ? 'Testando…' : linhas.length ? 'Testar de novo' : 'Testar agora'}
-      </button>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <button onClick={rodar} disabled={rodando} className="btn-primary">
+          {rodando ? 'Testando…' : linhas.length ? 'Testar de novo' : 'Testar agora'}
+        </button>
+        {/* TV: o "Limpar cache" saiu do menu da conta e mora aqui, em Ajustes (TopNav.tsx). */}
+        {isTv && (
+          <button onClick={() => setLimpar(true)} className="btn-secondary">
+            Limpar cache
+          </button>
+        )}
+      </div>
+      {limpar && (
+        <ConfirmDialog
+          message="Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads. O app recarrega em seguida."
+          confirmLabel="Limpar"
+          onCancel={() => setLimpar(false)}
+          onConfirm={async () => {
+            await clearAllCaches()
+            window.location.reload()
+          }}
+        />
+      )}
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
           <li key={l.nome} className="rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm">

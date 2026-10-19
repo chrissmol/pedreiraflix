@@ -109,8 +109,21 @@ test('TV: passar pela busca com as setas nao abre o teclado; o OK abre e ai da p
 
   await page.keyboard.type('Explosivo')
   await expect(busca).toHaveValue('Explosivo')
-  await page.keyboard.press('Enter') // busca (ou abre a primeira sugestao, como no computador)
-  await expect(page).toHaveURL(/\/(search\?q=Explosivo|movies\/1)$/)
+  // As capas aparecem enquanto digita, sem precisar confirmar, e o campo continua com o foco.
+  await expect(page).toHaveURL(/\/search\?q=Explosivo$/)
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ }).first()).toBeVisible()
+  await expect(busca).toBeFocused()
+})
+
+test('TV: o perfil aparece com nome no menu e cache/diagnostico ficam em Ajustes', async ({ page }) => {
+  await page.goto('/')
+  const conta = page.getByRole('button', { name: 'Conta', exact: true })
+  await expect(conta).not.toHaveText(/^.$/)
+  await conta.click()
+  await expect(page.getByRole('button', { name: 'Limpar cache' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Ajustes' }).click()
+  await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Limpar cache' })).toBeVisible()
 })
 
 test('TV: da seta para a esquerda no primeiro poster de uma fileira chega ao menu', async ({ page }) => {

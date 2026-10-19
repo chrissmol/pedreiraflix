@@ -333,22 +333,30 @@ input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
-/* TV (main.tsx): tudo 25% maior, para ler do sofa a uns 3 metros (os tamanhos de texto do tema sao em rem para isso).
-   A TV se anuncia com 960, 1280 ou 1920 px CSS de largura (depende da densidade, nao das polegadas); a letra base
-   acompanha para a tela ficar igual em todas: sempre 48rem de largura. Nao `zoom`: ele desencontra a altura medida
+/* TV (main.tsx): a TV se anuncia com 960, 1280 ou 1920 px CSS de largura (depende da densidade, nao das polegadas);
+   a letra base acompanha para a tela ficar igual em todas: sempre 60rem de largura, como um notebook. Era 48rem (25%
+   maior) e na TV ficou com "zoom gigante" (video do Christian, 19/10). Nao `zoom`: ele desencontra a altura medida
    em px (--app-h, Layout.tsx) e a pagina inteira rolava. */
 html.tv {
-  font-size: 125%;
+  font-size: 100%;
 }
 @media (min-width: 1280px) {
   html.tv {
-    font-size: 166.67%;
+    font-size: 133.33%;
   }
 }
 @media (min-width: 1920px) {
   html.tv {
-    font-size: 250%;
+    font-size: 200%;
   }
+}
+
+/* TV: o foco e a unica forma de saber onde se esta, entao anel branco e grosso em tudo (o azul translucido de
+   `.brand-focus` sumia de longe, na tela de Canais). */
+html.tv :focus-visible,
+html.tv .brand-focus:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
 /* Accessibility: honors the OS-level "reduce motion" setting everywhere at once — hover/focus
