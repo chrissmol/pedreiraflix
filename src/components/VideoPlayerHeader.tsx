@@ -113,7 +113,7 @@ export function VideoPlayerHeader({
           <ChevronLeft className="h-6 w-6" />
         </button>
       )}
-      <div className="min-w-0 flex-1 pt-1">
+      <div className="min-w-0 flex-1 self-center">
         {title && <h1 className="font-display truncate text-label-md text-white sm:text-headline-sm">{title}</h1>}
         {subtitle && <p className="truncate text-body-sm text-on-surface-variant">{subtitle}</p>}
       </div>
