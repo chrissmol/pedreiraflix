@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { clearAllCaches } from '../lib/cache'
 import { connectionStatus, refreshSession } from '../lib/session'
 import { useAuthStore } from '../store/auth'
-import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
+import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Plus, RefreshCw, Search, Settings, User } from './icons'
+import { Download, Plus, RefreshCw, Search, Settings, User, X } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 import { isTv } from '../lib/device'
+import { loadRecentSearches, saveRecentSearch } from '../lib/search'
 import { installApp, useInstallPrompt } from '../lib/installPrompt'
 
 const links = [
@@ -28,6 +29,7 @@ export default function TopNav() {
   const menuRef = useRef<HTMLDivElement>(null)
   const menuPanelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLFormElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const logout = useAuthStore((s) => s.logout)
@@ -42,6 +44,16 @@ export default function TopNav() {
   const [confirmClearCache, setConfirmClearCache] = useState(false)
   const [clearingCache, setClearingCache] = useState(false)
   const canInstall = useInstallPrompt((s) => s.event !== null)
+  const profileId = useActiveProfileId()
+  const [recent, setRecent] = useState<string[]>([])
+
+  // Na pagina de busca o campo mostra o que esta sendo buscado (voltar, recarregar ou abrir um link /search?q=...).
+  const urlQuery = location.pathname === '/search' ? new URLSearchParams(location.search).get('q') ?? '' : null
+  const [syncedUrlQuery, setSyncedUrlQuery] = useState<string | null | undefined>(undefined)
+  if (urlQuery !== syncedUrlQuery) {
+    setSyncedUrlQuery(urlQuery)
+    if (urlQuery !== null) setQuery(urlQuery)
+  }
 
   function switchTo(p: Profile) {
     if (p.pin) {
@@ -79,12 +91,41 @@ export default function TopNav() {
     return () => document.removeEventListener('pointerdown', close)
   }, [suggestionsOpen])
 
+  function openSuggestions() {
+    setRecent(loadRecentSearches(profileId))
+    setSuggestionsOpen(true)
+  }
+
+  function searchFor(raw: string) {
+    const q = raw.trim()
+    if (!q) return
+    saveRecentSearch(profileId, q)
+    setQuery(q)
+    setSuggestionsOpen(false)
+    searchInputRef.current?.blur()
+    navigate(`/search?q=${encodeURIComponent(q)}`, { replace: location.pathname === '/search' })
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    searchFor(query)
+  }
+
+  // Setas percorrem as sugestoes e Esc fecha a lista (no computador; a TV usa a pagina de busca).
+  function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault() // o Chrome apagaria o texto de um campo type=search; o Esc so fecha a lista
       setSuggestionsOpen(false)
+      searchInputRef.current?.focus()
+      return
     }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    const items = Array.from(searchRef.current?.querySelectorAll<HTMLElement>('[data-suggestion]') ?? [])
+    if (items.length === 0) return
+    e.preventDefault()
+    const next = items.indexOf(document.activeElement as HTMLElement) + (e.key === 'ArrowDown' ? 1 : -1)
+    if (next < 0) searchInputRef.current?.focus()
+    else items[Math.min(next, items.length - 1)].focus()
   }
 
   return (
@@ -150,41 +191,71 @@ export default function TopNav() {
 
       <div className={isTv ? 'flex items-center gap-2' : 'ml-auto flex items-center gap-3'}>
       <LoadingRing />
-      <form ref={searchRef} onSubmit={handleSearch} className={`group relative flex items-center ${isTv ? 'min-w-0 flex-1' : ''}`}>
-        <div className={isTv ? 'relative w-full' : 'relative'}>
+      {/* Celular, tablet e TV: a lupa leva para a pagina de busca, que tem o campo grande com X (o campo do cabecalho no
+          celular era um circulo de 40px que abria so 112px). No computador fica o campo com sugestoes. */}
+      {isTv ? (
+        <NavLink
+          to="/search"
+          className={({ isActive }) =>
+            `flex min-w-0 flex-1 items-center gap-2 rounded-full px-4 py-1.5 text-label-md transition-colors ${isActive ? 'bg-surface-high text-white' : 'text-on-surface-variant hover:text-white'}`
+          }
+        >
+          <Search className="h-4 w-4" /> Buscar
+        </NavLink>
+      ) : (
+        <Link
+          to="/search"
+          aria-label="Buscar"
+          className="brand-focus flex h-10 w-10 items-center justify-center rounded-full border border-outline-soft bg-surface-container text-on-surface-muted lg:hidden"
+        >
+          <Search className="h-4 w-4" />
+        </Link>
+      )}
+      {!isTv && (
+      <form ref={searchRef} role="search" onSubmit={handleSearch} onKeyDown={handleSearchKeyDown} className="group relative hidden items-center lg:flex">
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted transition-colors group-focus-within:text-brand-400" />
           <input
+            ref={searchInputRef}
             type="search"
             enterKeyHint="search"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
-              const q = e.target.value.trim()
-              // TV: a grade de capas da busca aparece enquanto digita, em vez da listinha de sugestoes (pedido do Christian, 19/10).
-              if (isTv) {
-                if (q.length >= 2) navigate(`/search?q=${encodeURIComponent(q)}`, { replace: location.pathname === '/search' })
-                return
-              }
-              setSuggestionsOpen(q.length >= 2)
+              if (!suggestionsOpen) openSuggestions()
             }}
-            onFocus={() => setSuggestionsOpen(!isTv && query.trim().length >= 2)}
+            onFocus={openSuggestions}
             placeholder="Buscar…"
             aria-label="Buscar"
-            // Idle width shrinks to just the icon on phones (like Netflix/YouTube's mobile search) —
-            // at the old fixed w-32, a narrow phone had no room left for the account avatar next to it
-            // (it got pushed off the edge entirely below ~340px, unreachable). Typing still expands the
-            // field via focus expanding, it's only the resting state that got more compact. The focused
-            // width is `min(12rem, 60vw)`, not a flat `w-48` — on a genuinely narrow phone (~320px) the
-            // logo + avatar + gaps alone eat most of the header, and a flat 12rem input pushed the whole
-            // header (and anything anchored to the search box, like its suggestions dropdown) past the
-            // right edge of the screen; scaling with the viewport keeps it inside no matter how narrow.
-            // Em repouso no celular o recuo direito e zero e o texto de exemplo fica invisivel: com `pl-8 pr-3` +
-            // borda o campo media 46px e nao cabia nos 40px do circulo (saia oval, lupa torta — video de 08/10).
-            className={isTv ? 'brand-focus h-10 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-3 text-body-md text-white placeholder:text-on-surface-muted focus:border-brand-500/60' : "brand-focus h-10 w-10 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-0 text-body-md text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-300 placeholder:text-transparent focus:w-28 focus:border-brand-500/60 focus:pr-3 focus:placeholder:text-on-surface-muted lg:w-44 lg:pr-3 lg:placeholder:text-on-surface-muted lg:focus:w-64"}
+            className="brand-focus h-10 w-44 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-8 text-body-md text-white transition-[width,border-color] duration-300 placeholder:text-on-surface-muted focus:w-64 focus:border-brand-500/60"
           />
+          {query && (
+            <button
+              type="button"
+              aria-label="Limpar busca"
+              onClick={() => {
+                setQuery('')
+                searchInputRef.current?.focus()
+              }}
+              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
-        {suggestionsOpen && <SearchSuggestions query={query.trim()} onNavigate={() => setSuggestionsOpen(false)} />}
+        {suggestionsOpen && (
+          <SearchSuggestions
+            query={query.trim()}
+            recent={recent}
+            onNavigate={() => {
+              saveRecentSearch(profileId, query)
+              setSuggestionsOpen(false)
+            }}
+            onSearch={searchFor}
+          />
+        )}
       </form>
+      )}
       </div>
 
       <div ref={menuRef} className={isTv ? 'relative mt-auto' : 'relative'}>

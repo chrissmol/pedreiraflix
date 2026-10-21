@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
+import { Clock, Search, X } from '../components/icons'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
-import { matchesQuery } from '../lib/search'
+import { useDebounced } from '../hooks/useDebounced'
+import { isTv } from '../lib/device'
+import { clearRecentSearches, loadRecentSearches, saveRecentSearch, searchCatalog } from '../lib/search'
+import { useActiveProfileId } from '../store/profiles'
 import PageLoading from '../components/PageLoading'
 
 // Buscar "a" no painel do Christian dava ~29 mil cartoes montados de uma vez (209 mil nos do DOM). Cada secao
@@ -13,37 +17,59 @@ const BLOCK = 60
 type Section = 'movies' | 'series' | 'live'
 
 export default function SearchPage() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const query = (params.get('q') || '').trim()
   const navigate = useNavigate()
+  const profileId = useActiveProfileId()
+  const inputRef = useRef<HTMLInputElement>(null)
   // O quanto cada secao ja foi ampliada pertence a uma busca: outra busca volta ao primeiro bloco.
   const [extra, setExtra] = useState({ q: query, movies: 0, series: 0, live: 0 })
   const added = extra.q === query ? extra : { q: query, movies: 0, series: 0, live: 0 }
   const more = (section: Section) => setExtra({ ...added, [section]: added[section] + BLOCK })
   const shown = (section: Section) => BLOCK + added[section]
 
+  // Campo da pagina (celular, tablet e TV): o texto e local e a URL so muda depois de uma pausa na digitacao, sempre
+  // trocando a entrada do historico — o Voltar sai da busca com um toque, e a TV nao refaz a busca a cada letra.
+  const [text, setText] = useState(query)
+  const pushed = useRef(query)
+  const typed = useDebounced(text.trim(), 300)
+  function commit(q: string) {
+    pushed.current = q
+    setParams(q ? { q } : {}, { replace: true })
+  }
+  useEffect(() => {
+    if (typed !== pushed.current) commit(typed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typed])
+  // A URL mudou por fora (busca do cabecalho, Voltar): o campo acompanha.
+  useEffect(() => {
+    if (query !== pushed.current) {
+      pushed.current = query
+      setText(query)
+    }
+  }, [query])
+
+  const [recentCleared, setRecentCleared] = useState(0)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const recent = useMemo(() => loadRecentSearches(profileId), [profileId, query, recentCleared])
+  function open(path: string) {
+    saveRecentSearch(profileId, query)
+    navigate(path)
+  }
+
   const movies = useMovieCatalog()
   const series = useSeriesCatalog()
   const live = useLiveCatalog()
 
-  // Matches on the item's own name OR its category name, so searching a
-  // genre/category like "futebol" finds channels inside it even when the
-  // channel's own name doesn't contain that word.
-  function searchGroups<T extends { name: string }>(groups: { category: { categoryName: string }; items: T[] }[]): T[] {
-    return groups.flatMap((g) => {
-      const categoryMatches = matchesQuery(g.category.categoryName, query)
-      return g.items.filter((item) => categoryMatches || matchesQuery(item.name, query))
-    })
-  }
-
+  // Mesma regra das sugestoes do cabecalho: nome por relevancia, depois o que so bate pela categoria.
   const results = useMemo(() => {
-    if (!query) return { movies: [], series: [], live: [] }
+    if (query.length < 2) return { movies: [], series: [], live: [] }
+    const items = <T,>(hits: { item: T }[]) => hits.map((h) => h.item)
     return {
-      movies: searchGroups(movies.groups),
-      series: searchGroups(series.groups),
-      live: searchGroups(live.groups),
+      movies: items(searchCatalog(movies.groups, query)),
+      series: items(searchCatalog(series.groups, query)),
+      live: items(searchCatalog(live.groups, query)),
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, movies.groups, series.groups, live.groups])
 
   const anyGroupLoading = (g: { loading: boolean }[]) => g.some((group) => group.loading)
@@ -58,10 +84,75 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
-      <h1 className="font-display text-headline-md text-white sm:text-headline-lg mb-8">Resultados para "{query}"</h1>
+      <form
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault()
+          commit(text.trim())
+          saveRecentSearch(profileId, text)
+          inputRef.current?.blur() // fecha o teclado do celular/TV para mostrar os resultados
+        }}
+        className={`relative mb-6 ${isTv ? '' : 'lg:hidden'}`}
+      >
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-muted" />
+        <input
+          ref={inputRef}
+          type="search"
+          enterKeyHint="search"
+          autoFocus={!query}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Filmes, séries e canais"
+          aria-label="Buscar no catálogo"
+          className="brand-focus h-12 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-12 pr-12 text-body-lg text-white placeholder:text-on-surface-muted focus:border-brand-500/60"
+        />
+        {text && (
+          <button
+            type="button"
+            aria-label="Limpar busca"
+            onClick={() => {
+              setText('')
+              commit('')
+              inputRef.current?.focus()
+            }}
+            className="brand-focus absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </form>
 
-      {loading && <PageLoading label="Carregando catálogo" className="py-8" />}
-      {!loading && total === 0 && <p className="text-on-surface-variant">Nenhum resultado encontrado.</p>}
+      {query.length >= 2 && <h1 className="font-display text-headline-md text-white sm:text-headline-lg mb-8">Resultados para "{query}"</h1>}
+
+      {query.length === 0 && recent.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="font-display text-headline-sm text-white">Buscas recentes</h2>
+            <button
+              type="button"
+              onClick={() => {
+                clearRecentSearches(profileId)
+                setRecentCleared((n) => n + 1)
+              }}
+              className="text-label-md text-on-surface-variant hover:text-white"
+            >
+              Limpar
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((q) => (
+              <button key={q} type="button" onClick={() => commit(q)} className="btn-secondary flex items-center gap-2">
+                <Clock className="h-4 w-4" /> {q}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {query.length === 0 && recent.length === 0 && <p className="text-on-surface-variant">Digite o nome de um filme, série ou canal.</p>}
+      {query.length === 1 && <p className="text-on-surface-variant">Digite pelo menos 2 letras.</p>}
+
+      {query.length >= 2 && loading && <PageLoading label="Carregando catálogo" className="py-8" />}
+      {query.length >= 2 && !loading && total === 0 && <p className="text-on-surface-variant">Nada encontrado para "{query}". Confira se o nome está certo.</p>}
 
       {results.movies.length > 0 && (
         <section className="mb-8">
@@ -71,7 +162,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.movies.slice(0, shown('movies')).map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => navigate(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => open(`/movies/${m.streamId}`)} />
             ))}
           </div>
           {results.movies.length > shown('movies') && (
@@ -90,7 +181,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.series.slice(0, shown('series')).map((s) => (
-              <PosterCard key={s.seriesId} title={s.name} image={s.cover} badge={Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null} onClick={() => navigate(`/series/${s.seriesId}`)} />
+              <PosterCard key={s.seriesId} title={s.name} image={s.cover} badge={Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null} onClick={() => open(`/series/${s.seriesId}`)} />
             ))}
           </div>
           {results.series.length > shown('series') && (
@@ -112,7 +203,7 @@ export default function SearchPage() {
               <LiveChannelCard
                 key={c.streamId}
                 channel={c}
-                onOpen={() => navigate(`/watch/live/${c.streamId}?name=${encodeURIComponent(c.name)}`)}
+                onOpen={() => open(`/watch/live/${c.streamId}?name=${encodeURIComponent(c.name)}`)}
               />
             ))}
           </div>

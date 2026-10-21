@@ -91,28 +91,35 @@ test('TV: menu na lateral; da seta para a esquerda no conteudo cai na secao aber
   await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
 })
 
-test('TV: passar pela busca com as setas nao abre o teclado; o OK abre e ai da para digitar', async ({ page }) => {
+test('TV: Buscar no menu abre a pagina de busca; passar pelo campo nao abre o teclado, o OK abre e da para digitar', async ({ page }) => {
   await page.goto('/movies')
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
-  const busca = page.getByRole('searchbox', { name: 'Buscar' })
+  const buscar = page.getByRole('link', { name: 'Buscar' })
   await page.keyboard.press('ArrowDown')
   for (let i = 0; i < 6 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowLeft')
-  for (let i = 0; i < 6 && !(await busca.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
-  await expect(busca).toBeFocused()
-  // Campo so de leitura = o Android nao sobe o teclado da tela so por passar por ele.
-  expect(await busca.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true)
+  for (let i = 0; i < 8 && !(await buscar.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+  await expect(buscar).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/search$/)
 
-  await page.keyboard.press('Enter') // OK: libera para digitar, sem buscar nada ainda
-  await expect(busca).toBeFocused()
-  expect(await busca.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(false)
-  await expect(page).toHaveURL(/\/movies$/)
+  const campo = page.getByRole('searchbox', { name: 'Buscar no catálogo' })
+  await expect(campo).toBeFocused()
+  // Campo so de leitura = o Android nao sobe o teclado da tela so por chegar nele.
+  expect(await campo.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true)
+  await page.keyboard.press('Enter') // OK: libera para digitar
+  expect(await campo.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(false)
 
   await page.keyboard.type('Explosivo')
-  await expect(busca).toHaveValue('Explosivo')
-  // As capas aparecem enquanto digita, sem precisar confirmar, e o campo continua com o foco.
+  await expect(campo).toHaveValue('Explosivo')
+  // As capas aparecem enquanto digita (depois de uma pausa), e o campo continua com o foco.
   await expect(page).toHaveURL(/\/search\?q=Explosivo$/)
   await expect(page.getByRole('button', { name: /Filme Explosivo/ }).first()).toBeVisible()
-  await expect(busca).toBeFocused()
+  await expect(campo).toBeFocused()
+  // Confirmar no teclado da TV nao empilha historico: um Voltar sai da busca.
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/search\?q=Explosivo$/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/movies$/)
 })
 
 test('TV: o perfil aparece com nome no menu e cache/diagnostico ficam em Ajustes', async ({ page }) => {
