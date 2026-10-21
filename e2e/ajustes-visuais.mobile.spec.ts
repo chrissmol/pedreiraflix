@@ -6,19 +6,26 @@ import { seedSession } from './helpers'
 test('cabecalho: busca redonda e o mesmo espaco entre busca e avatar', async ({ page }) => {
   await seedSession(page)
   await page.goto('/')
-  const busca = page.getByRole('searchbox', { name: 'Buscar' })
+  const busca = page.getByRole('link', { name: 'Buscar' })
   const caixa = (await busca.boundingBox())!
   expect(Math.abs(caixa.width - caixa.height)).toBeLessThan(1)
-  expect(await busca.evaluate((el) => getComputedStyle(el).appearance)).toBe('none')
   const avatar = (await page.getByRole('button', { name: 'Conta', exact: true }).boundingBox())!
   expect(avatar.x - (caixa.x + caixa.width)).toBeCloseTo(12, 0)
   // Lupa no centro do circulo.
-  const lupa = (await page.locator('header form svg').boundingBox())!
+  const lupa = (await busca.locator('svg').boundingBox())!
   expect(Math.abs(lupa.x + lupa.width / 2 - (caixa.x + caixa.width / 2))).toBeLessThan(1.5)
-  // Ao tocar, o campo abre e mostra o texto de exemplo.
-  await busca.focus()
-  await expect.poll(async () => (await busca.boundingBox())!.width).toBeGreaterThan(100)
-  expect(await busca.evaluate((el) => getComputedStyle(el, '::placeholder').color)).not.toBe('rgba(0, 0, 0, 0)')
+  // Ao tocar, abre a pagina de busca com um campo largo, com foco e texto de exemplo (antes o campo abria so 112px).
+  await busca.click()
+  await expect(page).toHaveURL(/\/search$/)
+  const campo = page.getByRole('searchbox', { name: 'Buscar no catálogo' })
+  await expect(campo).toBeFocused()
+  expect((await campo.boundingBox())!.width).toBeGreaterThan(300)
+  await campo.fill('filme')
+  await expect(page).toHaveURL(/\/search\?q=filme$/)
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Limpar busca' }).click()
+  await expect(campo).toHaveValue('')
+  await expect(page).toHaveURL(/\/search$/)
 })
 
 test('destaque mostra o esqueleto enquanto carrega e depois o titulo', async ({ page }) => {
