@@ -2,6 +2,8 @@
   "name": "pedreiraflix",
   "main": "worker/index.js",
   "compatibility_date": "2026-01-01",
+  // "Times favoritos": the Mol TV API Worker (same Cloudflare account), reached via /api/moltv/*.
+  "services": [{ "binding": "MOLTV", "service": "mol-tv-api" }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

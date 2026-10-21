@@ -2,6 +2,7 @@ import dns from 'node:dns/promises'
 import net from 'node:net'
 import cors from 'cors'
 import express from 'express'
+import { molTv } from '../worker/moltv.js'
 import { openSession, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
 
 const app = express()
@@ -125,6 +126,13 @@ async function assertPublicHost(hostname) {
 }
 
 // Proxies Xtream Codes JSON API calls (player_api.php, xmltv.php, etc).
+// Same handler as the Worker; without the service binding it calls the public Mol TV URL.
+app.get('/api/moltv/*path', async (req, res) => {
+  if (isRateLimited(req.ip, 'moltv', 60, 10_000)) return res.status(429).send('rate limited')
+  const out = await molTv(new URL(req.originalUrl, 'http://localhost'))
+  res.status(out.status).type('json').set('cache-control', out.headers.get('cache-control')).send(await out.text())
+})
+
 app.get('/api/xtream', async (req, res) => {
   const { base, path, ...rest } = req.query
   // Mesmo contrato do Worker: usuario e senha so em cabecalhos; a query com credenciais e descartada.

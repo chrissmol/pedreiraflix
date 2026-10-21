@@ -24,6 +24,12 @@ export interface WatchProgress {
 // Every record below is keyed by `${profileId}:${...}` — favorites, resume points and watched
 // history are "who's watching" data (like Netflix profiles), separate per profile even though every
 // profile shares the same Xtream login/subscription.
+/** A team from the Mol TV API ("Times favoritos"): its slug is what /api/moltv/v1/teams/{slug}/next takes. */
+export interface FavoriteTeam {
+  slug: string
+  name: string
+}
+
 interface LibraryState {
   favorites: Record<string, FavoriteRef[]>
   progress: Record<string, WatchProgress>
@@ -34,6 +40,8 @@ interface LibraryState {
   /** Canais ao vivo abertos por ultimo, por perfil, mais recente primeiro (a tela de canais abre nele). */
   recentLive: Record<string, number[]>
   addRecentLive: (profileId: string, streamId: number) => void
+  favoriteTeams: Record<string, FavoriteTeam[]>
+  toggleTeam: (profileId: string, team: FavoriteTeam) => void
   /** Tira um canal dos recentes; sem streamId, limpa todos do perfil. */
   removeRecentLive: (profileId: string, streamId?: number) => void
   toggleFavorite: (profileId: string, ref: FavoriteRef) => void
@@ -50,6 +58,13 @@ export const useLibraryStore = create<LibraryState>()(
       progress: {},
       watched: {},
       recentLive: {},
+      favoriteTeams: {},
+      toggleTeam: (profileId, team) =>
+        set((state) => {
+          const list = state.favoriteTeams[profileId] ?? []
+          const next = list.some((t) => t.slug === team.slug) ? list.filter((t) => t.slug !== team.slug) : [...list, team]
+          return { favoriteTeams: { ...state.favoriteTeams, [profileId]: next } }
+        }),
       addRecentLive: (profileId, streamId) =>
         set((state) => {
           const list = state.recentLive[profileId] ?? []
@@ -108,6 +123,7 @@ export const useLibraryStore = create<LibraryState>()(
 )
 
 const EMPTY_FAVORITES: FavoriteRef[] = []
+const EMPTY_TEAMS: FavoriteTeam[] = []
 
 // These take the raw record (not the zustand selector's `state`) and are meant to be called from a
 // `useMemo` keyed on that record, never directly inside a `useLibraryStore(...)` selector: a selector
@@ -116,6 +132,9 @@ const EMPTY_FAVORITES: FavoriteRef[] = []
 // "changes" on every check and React's external-store subscription re-renders forever chasing it.
 export function favoritesFor(favorites: LibraryState['favorites'], profileId: string): FavoriteRef[] {
   return favorites[profileId] ?? EMPTY_FAVORITES
+}
+export function teamsFor(favoriteTeams: LibraryState['favoriteTeams'], profileId: string): FavoriteTeam[] {
+  return favoriteTeams[profileId] ?? EMPTY_TEAMS
 }
 export function progressFor(progress: LibraryState['progress'], profileId: string): WatchProgress[] {
   const prefix = `${profileId}:`

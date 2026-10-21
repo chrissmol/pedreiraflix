@@ -20,6 +20,7 @@ const ProfilesPage = lazy(() => import('./pages/ProfilesPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const SeriesDetailPage = lazy(() => import('./pages/SeriesDetailPage'))
 const SeriesPage = lazy(() => import('./pages/SeriesPage'))
+const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const WatchPage = lazy(() => import('./pages/WatchPage'))
 
 function RouteFallback() {
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/series" element={<SeriesPage />} />
             <Route path="/series/:id" element={<SeriesDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/times" element={<TeamsPage />} />
             <Route path="/profiles" element={<ProfilesPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/diagnostico" element={<DiagnosticPage />} />

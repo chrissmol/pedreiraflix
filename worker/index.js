@@ -6,6 +6,7 @@
 // always target the single host the user typed at login, so this is no less safe for those; images
 // just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
+import { molTv } from './moltv.js'
 import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
 // Workers send no User-Agent by default and Xtream panels commonly answer 404 to that.
@@ -415,6 +416,10 @@ export default {
     if (url.pathname === '/api/tmdb') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await tmdb(url, env))
+    }
+    if (url.pathname.startsWith('/api/moltv/')) {
+      if (isRateLimited(ip, 'moltv', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await molTv(url, env))
     }
     if (url.pathname === '/api/stream') {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
