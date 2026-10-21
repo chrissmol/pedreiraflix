@@ -36,6 +36,22 @@ export function connectionStatus(user: UserInfo | null): { active: number; max: 
   return { active, max, full: active >= max }
 }
 
+/** Quanto falta para a assinatura do provedor vencer, para o menu da conta. exp_date vem do login do Xtream em
+ * segundos; nulo ou 0 e conta sem vencimento. */
+export function subscriptionStatus(user: UserInfo | null, now = Date.now()): { title: string; detail: string; tone: 'ok' | 'soon' | 'expired' } | null {
+  if (!user) return null
+  const exp = Number(user.expDate) * 1000
+  if (!user.expDate || !Number.isFinite(exp) || exp <= 0) return { title: 'Assinatura sem vencimento', detail: 'O provedor não informa data de fim.', tone: 'ok' }
+  const date = new Date(exp).toLocaleDateString('pt-BR')
+  const days = Math.ceil((exp - now) / 86_400_000)
+  if (days <= 0) return { title: 'Assinatura vencida', detail: `Venceu em ${date}. Fale com o provedor para renovar.`, tone: 'expired' }
+  return {
+    title: days === 1 ? 'Assinatura: falta 1 dia' : `Assinatura: faltam ${days} dias`,
+    detail: `Vence em ${date}.${days <= 7 ? ' Renove com o provedor para não ficar sem.' : ''}`,
+    tone: days <= 7 ? 'soon' : 'ok',
+  }
+}
+
 /** Moves the pre-profiles "legacy" favorites/progress/watched bucket onto an account's real first
  * profile, the first time that profile exists. Safe to call on every login/launch — once the legacy
  * bucket is empty, it's a no-op forever after. */

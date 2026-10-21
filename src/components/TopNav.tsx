@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { clearAllCaches } from '../lib/cache'
-import { connectionStatus, refreshSession } from '../lib/session'
+import { connectionStatus, refreshSession, subscriptionStatus } from '../lib/session'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
@@ -36,6 +36,7 @@ export default function TopNav() {
   const user = useAuthStore((s) => s.user)
   const isXtream = useAuthStore((s) => s.credentials?.type === 'xtream')
   const connections = isXtream ? connectionStatus(user) : null
+  const subscription = isXtream ? subscriptionStatus(user) : null
   const accId = useActiveAccountId()
   const activeProfile = useActiveProfile()
   const profiles = useProfiles()
@@ -311,6 +312,18 @@ export default function TopNav() {
                     ? 'Limite cheio: o provedor vai recusar novos vídeos. Feche em outro aparelho ou espere uns minutos.'
                     : 'Inclui este aparelho se estiver tocando.'}
                 </p>
+              </div>
+            )}
+            {subscription && (
+              <div
+                data-testid="assinatura"
+                className={`mx-1.5 mb-1 rounded-xl px-3 py-2 text-body-sm ${subscription.tone === 'expired' ? 'bg-live/10 text-red-200' : subscription.tone === 'soon' ? 'bg-amber-500/10 text-amber-200' : 'bg-surface-container text-on-surface-variant'}`}
+              >
+                <p className="flex items-center gap-2 text-label-md text-white">
+                  <span className={`h-2 w-2 rounded-full ${subscription.tone === 'expired' ? 'bg-live' : subscription.tone === 'soon' ? 'bg-amber-400' : 'bg-done'}`} />
+                  {subscription.title}
+                </p>
+                <p className="mt-0.5">{subscription.detail}</p>
               </div>
             )}
             {profiles.length > 1 && (
