@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { displayTitle } from '../lib/displayTitle'
 
 interface DetailHeroProps {
@@ -23,6 +23,9 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, rating, 
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
+  const [plotOpen, setPlotOpen] = useState(false)
+  // shortcut: estima pelo tamanho em vez de medir o corte; troque por medicao se sobrar botao em sinopse curta.
+  const longPlot = (plot?.length ?? 0) > 280
   return (
     <section className="relative overflow-hidden">
       {backdrop && <img src={backdrop} alt="" className="absolute inset-0 h-full max-h-[720px] w-full object-cover opacity-60" />}
@@ -50,7 +53,21 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, rating, 
           </div>
           {genre && <p className="mb-2 text-label-badge uppercase tracking-wider text-brand-400">{genre}</p>}
           <h1 className="font-display text-headline-lg text-white sm:text-display-hero">{title}</h1>
-          {plot && <p className="mt-4 max-w-2xl text-body-md text-on-surface-variant sm:text-body-lg">{plot}</p>}
+          {plot && (
+            <p className={`mt-4 max-w-2xl text-body-md text-on-surface-variant sm:text-body-lg ${longPlot && !plotOpen ? 'line-clamp-4' : ''}`}>
+              {plot}
+            </p>
+          )}
+          {longPlot && (
+            <button
+              type="button"
+              aria-expanded={plotOpen}
+              onClick={() => setPlotOpen((o) => !o)}
+              className="mt-1 min-h-11 text-label-md font-semibold text-white hover:text-brand-400"
+            >
+              {plotOpen ? 'Ler menos' : 'Ler mais'}
+            </button>
+          )}
           {shownCredits.length > 0 && (
             <dl className="mt-4 grid max-w-2xl gap-x-6 gap-y-1 text-body-sm sm:grid-cols-[auto_1fr]">
               {shownCredits.map((c) => (
