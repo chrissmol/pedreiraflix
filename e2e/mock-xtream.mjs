@@ -247,11 +247,14 @@ function checkCreds(req, res) {
 }
 
 // Live: a sliding 5-segment window that loops the 10 fixture segments forever.
+// Discontinuity counted from server start: hls.js walks an array up to that number on every playlist reload, and
+// counting from 1970 (~88 million) froze the page with two players at once (mosaico).
+const LIVE_SEQ0 = Math.floor(Date.now() / 2000)
 app.get('/live/:u/:p/:file', (req, res) => {
   if (!checkCreds(req, res)) return
   const seq = Math.floor(Date.now() / 2000)
   const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:2', `#EXT-X-MEDIA-SEQUENCE:${seq}`,
-    `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor(seq / liveSegments.length)}`]
+    `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor((seq - LIVE_SEQ0) / liveSegments.length)}`]
   for (let k = 0; k < 5; k++) {
     const n = seq + k
     if (k > 0 && n % liveSegments.length === 0) lines.push('#EXT-X-DISCONTINUITY')

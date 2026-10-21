@@ -1,3 +1,6 @@
+import { connectionStatus, refreshSession } from '../lib/session'
+import { useAuthStore } from '../store/auth'
+
 export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 // Auto-advance countdown, in seconds before the episode ends.
 export const NEXT_UP_LEAD = 12
@@ -70,3 +73,39 @@ export const CHANNEL_BLOCKED_MESSAGE =
 
 export const CHANNEL_NOT_FOUND_MESSAGE =
   'O provedor não entregou este canal (HTTP 404). Ele pode estar fora do ar ou a sua tela ainda ocupada: espere alguns minutos e tente de novo.'
+
+export function supportsNativeHls() {
+  // Safari (iOS and macOS) plays HLS natively — video.src = the .m3u8 directly, same as any other
+  // <video>, no MediaSource involved. This has to be checked and preferred *before* even asking
+  // hls.js whether it thinks the browser is supported: hls.js's own isSupported() checks for
+  // MediaSource Extensions, which Safari also has, so that check alone can never tell Safari apart
+  // from everyone else — every browser that can run hls.js at all was taking this branch, including
+  // Safari, despite a comment below (now moved) claiming otherwise. The real, user-visible cost: HLS
+  // delivered through MediaSource can only AirPlay as audio on iOS, not mirror actual video — a
+  // documented WebKit/hls.js interaction, confirmed against a real Apple TV. Native playback doesn't
+  // have that limit. The trade-off (accepted): no manual quality menu (Safari picks the level itself and
+  // doesn't expose it); audio/subtitle tracks come from video.audioTracks/textTracks instead of hls.js.
+  // Safari precisa tocar HLS nativamente, nao via hls.js, senao o video sai por MediaSource e o
+  // AirPlay manda so o audio — a TV fica preta. O teste era `=== 'probably'`, e e justamente ai que
+  // quebrava no iPhone: o Safari responde 'maybe' para este MIME em varias versoes, entao o app caia
+  // no hls.js e o ao vivo nao aparecia na TV (relatado com uma Samsung via AirPlay 2).
+  //
+  // So que aceitar qualquer resposta nao-vazia tambem nao serve: o Chromium responde 'maybe' sem ter
+  // HLS nativo nenhum. O desempate e por recurso, nao por string nem por user agent — as APIs de
+  // midia prefixadas do WebKit (`webkitShowPlaybackTargetPicker`, usada pelo proprio botao de
+  // AirPlay) existem no Safari e em nenhum outro lugar.
+  const video = document.createElement('video')
+  const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl')
+  const isWebKitMedia =
+    typeof (video as { webkitShowPlaybackTargetPicker?: unknown }).webkitShowPlaybackTargetPicker === 'function' ||
+    'webkitSupportsPresentationMode' in video
+  return canPlayHls === 'probably' || (canPlayHls !== '' && isWebKitMedia)
+}
+
+// 403 nem sempre e o limite de telas (09/10: era a Cloudflare barrando IP puro e o app culpava as telas).
+// So culpa as telas quando o provedor confirma, pelo numero de conexoes da conta.
+export async function refusedMessage(fallback = REFUSED_MESSAGE): Promise<string> {
+  if (useAuthStore.getState().credentials?.type !== 'xtream') return fallback
+  await refreshSession()
+  return connectionStatus(useAuthStore.getState().user)?.full ? SCREEN_LIMIT_MESSAGE : fallback
+}

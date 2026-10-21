@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog'
 import FilterBar from '../components/FilterBar'
-import { Calendar, ChevronDown, ChevronRight, Search } from '../components/icons'
+import { Calendar, ChevronDown, ChevronRight, Grid, Search } from '../components/icons'
 import LiveChannelCard from '../components/LiveChannelCard'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { CHAMPIONSHIPS, CHANNEL_GROUPS, type ChannelGroup, channelGroupOf, cleanCategoryName, matchesChampionship } from '../lib/channelGroups'
@@ -190,6 +190,9 @@ export default function LivePage() {
               Com catch-up
             </button>
           </FilterBar>
+          <button onClick={() => navigate(`/mosaico?n=2&c=${(recentIds ?? []).slice(0, 2).join(',')}`)} className="btn-secondary h-11">
+            <Grid className="h-4 w-4" /> Mosaico
+          </button>
         </div>
       </div>
 
