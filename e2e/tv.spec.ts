@@ -171,3 +171,22 @@ test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page 
   await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
 })
+
+test('TV: "Ver tudo" de uma fileira em Filmes e Series abre a categoria inteira so com setas e OK', async ({ page }) => {
+  // Suporte 21/10: o link so trocava o ?category= da propria pagina, que lia isso uma vez ao montar.
+  const itens = (campo: string) => Array.from({ length: 60 }, (_, i) => ({ [campo]: 9000 + i, name: `Titulo ${i}`, category_id: '10', rating: '7.0', cover: '', stream_icon: '' }))
+  await page.route(/action=get_vod_streams/, (r) => r.fulfill({ json: itens('stream_id') }))
+  await page.route(/action=get_series(&|$)/, (r) => r.fulfill({ json: itens('series_id') }))
+  for (const rota of ['/movies', '/series']) {
+    await page.goto(rota)
+    await page.getByRole('button', { name: /Titulo 0/ }).first().focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(page.locator(':focus')).toHaveText('Ver tudo')
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/category=\d+/)
+    await expect(page.getByRole('button', { name: /Titulo 59/ })).toBeAttached()
+    await page.goBack()
+    await expect(page).not.toHaveURL(/category=/)
+    await expect(page.getByRole('link', { name: 'Ver tudo' }).first()).toBeVisible()
+  }
+})
