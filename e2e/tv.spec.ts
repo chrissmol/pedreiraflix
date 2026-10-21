@@ -150,3 +150,24 @@ test('TV: suporte so com setas e OK', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(page.getByRole('heading', { name: 'Recebido, valeu!' })).toBeVisible()
 })
+
+test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const escolher = async (filtro: string, opcao: string) => {
+    const botao = page.getByRole('button', { name: filtro, exact: true })
+    for (let i = 0; i < 8 && !(await botao.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowRight')
+    await expect(botao).toBeFocused()
+    await page.keyboard.press('Enter')
+    const item = page.getByRole('option', { name: opcao, exact: true })
+    for (let i = 0; i < 10 && !(await item.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+    await expect(item).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(botao).toBeFocused()
+  }
+  await page.keyboard.press('ArrowDown') // o foco entra no conteudo, nos filtros
+  await escolher('Ano', '2019')
+  await escolher('Categoria', 'Ação')
+  await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
+})
