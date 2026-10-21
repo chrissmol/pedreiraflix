@@ -5,7 +5,7 @@ import FilterBar from '../components/FilterBar'
 import { Calendar, ChevronDown, ChevronRight, Search } from '../components/icons'
 import LiveChannelCard from '../components/LiveChannelCard'
 import { useLiveCatalog } from '../hooks/useCatalog'
-import { CHANNEL_GROUPS, type ChannelGroup, channelGroupOf, cleanCategoryName } from '../lib/channelGroups'
+import { CHAMPIONSHIPS, CHANNEL_GROUPS, type ChannelGroup, channelGroupOf, cleanCategoryName, matchesChampionship } from '../lib/channelGroups'
 import { matchesQuery } from '../lib/search'
 import { favoritesFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
@@ -19,10 +19,11 @@ export default function LivePage() {
   const recentIds = useLibraryStore((s) => s.recentLive[profileId])
   const removeRecentLive = useLibraryStore((s) => s.removeRecentLive)
   const [confirmClearRecent, setConfirmClearRecent] = useState(false)
-  // O que esta escolhido: 'recent' | 'all' | `g:<grupo>` | `c:<categoria>`. Abre em Recentes (pedido do
+  // O que esta escolhido: 'recent' | 'all' | `g:<grupo>` | `c:<categoria>` | `k:<campeonato>`. Abre em Recentes (pedido do
   // Christian); sem canais recentes, em Todos.
   const [selection, setSelection] = useState(() => (recentIds?.length ? 'recent' : 'all'))
   const activeCategory = selection.startsWith('c:') ? selection.slice(2) : null
+  const activeChampionship = selection.startsWith('k:') ? selection.slice(2) : null
   const [filter, setFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   // Live channels have none of movies/series' catalog metadata (no genre/year/rating from the provider)
@@ -43,8 +44,19 @@ export default function LivePage() {
     }
     return CHANNEL_GROUPS.flatMap((group) => (map.has(group) ? [[group, map.get(group)!] as const] : []))
   }, [visibleCategories])
+  // Campeonatos com pelo menos um canal, na ordem fixa da lista.
+  const channelsByChampionship = useMemo(
+    () =>
+      CHAMPIONSHIPS.flatMap(([name, pattern]) => {
+        const items = visibleCategories.flatMap((g) => g.items.filter((c) => matchesChampionship(pattern, g.category.categoryName, c.name)))
+        return items.length ? [[name, items] as const] : []
+      }),
+    [visibleCategories],
+  )
   const groupOfSelection =
-    selection.startsWith('g:')
+    activeChampionship
+      ? 'Campeonatos'
+      : selection.startsWith('g:')
       ? selection.slice(2)
       : activeCategory
         ? channelGroupOf(visibleCategories.find((g) => g.category.categoryId === activeCategory)?.category.categoryName ?? '')
@@ -83,6 +95,11 @@ export default function LivePage() {
         ? visibleCategories.filter((g) => channelGroupOf(g.category.categoryName) === selection.slice(2))
         : visibleCategories
     if (showingRecent && !filter.trim()) return onlyArchive ? recentChannels.filter((c) => c.hasArchive) : recentChannels
+    if (activeChampionship) {
+      const items = channelsByChampionship.find(([name]) => name === activeChampionship)?.[1] ?? []
+      const flat = filter.trim() ? items.filter((c) => matchesQuery(c.name, filter)) : items
+      return onlyArchive ? flat.filter((c) => c.hasArchive) : flat
+    }
 
     let flat: typeof scopedGroups[number]['items']
     if (!filter.trim()) {
@@ -97,7 +114,7 @@ export default function LivePage() {
       })
     }
     return onlyArchive ? flat.filter((c) => c.hasArchive) : flat
-  }, [visibleCategories, activeCategory, selection, showingRecent, recentChannels, filter, onlyArchive])
+  }, [visibleCategories, activeCategory, activeChampionship, channelsByChampionship, selection, showingRecent, recentChannels, filter, onlyArchive])
 
   const channels = allChannels.slice(0, visibleCount)
 
@@ -143,7 +160,7 @@ export default function LivePage() {
       ? 'Recentes'
       : activeCategory
         ? cleanCategoryName(visibleCategories.find((g) => g.category.categoryId === activeCategory)?.category.categoryName ?? '')
-        : selection.startsWith('g:')
+        : selection.startsWith('g:') || activeChampionship
           ? selection.slice(2)
           : 'Todos os canais'
 
@@ -188,13 +205,27 @@ export default function LivePage() {
           <button role="tab" aria-selected={selection === 'all'} onClick={() => setSelection('all')} className={tab(selection === 'all' || (selection === 'recent' && !showingRecent))}>
             Todos
           </button>
+          {channelsByChampionship.length > 0 && (
+            <button role="tab" aria-selected={groupOfSelection === 'Campeonatos'} onClick={() => setSelection(`k:${channelsByChampionship[0][0]}`)} className={tab(groupOfSelection === 'Campeonatos')}>
+              Campeonatos
+            </button>
+          )}
           {categoriesByGroup.map(([group]) => (
             <button key={group} role="tab" aria-selected={groupOfSelection === group} onClick={() => setSelection(`g:${group}`)} className={tab(groupOfSelection === group)}>
               {group}
             </button>
           ))}
         </div>
-        {groupOfSelection && (
+        {activeChampionship && (
+          <div className="no-scrollbar -mx-4 mb-6 flex gap-2 overflow-x-auto px-4">
+            {channelsByChampionship.map(([name]) => (
+              <button key={name} onClick={() => setSelection(`k:${name}`)} aria-pressed={activeChampionship === name} className={pill(activeChampionship === name)}>
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+        {groupOfSelection && !activeChampionship && (
           <div className="no-scrollbar -mx-4 mb-6 flex gap-2 overflow-x-auto px-4">
             <button onClick={() => setSelection(`g:${groupOfSelection}`)} aria-pressed={selection === `g:${groupOfSelection}`} className={pill(selection === `g:${groupOfSelection}`)}>
               Tudo
@@ -235,6 +266,30 @@ export default function LivePage() {
               Recentes <span className="text-label-badge text-on-surface-muted">{recentChannels.length}</span>
             </button>
           )}
+          {(() => {
+            const shown = channelsByChampionship.filter(([name]) => matchesCategoryFilter(name))
+            if (shown.length === 0) return null
+            const open = isOpen('Campeonatos')
+            return (
+              <div className="mt-2">
+                <button
+                  onClick={() => toggleGroup('Campeonatos')}
+                  aria-expanded={open}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-label-badge uppercase tracking-wider text-on-surface-muted hover:text-white"
+                >
+                  Campeonatos
+                  {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+                {open &&
+                  shown.map(([name, items]) => (
+                    <button key={name} onClick={() => setSelection(`k:${name}`)} aria-pressed={activeChampionship === name} className={`${sideItem(activeChampionship === name)} pl-5`}>
+                      <span className="truncate">{name}</span>
+                      <span className="text-label-badge text-on-surface-muted">{items.length}</span>
+                    </button>
+                  ))}
+              </div>
+            )
+          })()}
           {categoriesByGroup.map(([group, categories]) => {
             const shown = categories.filter((g) => matchesCategoryFilter(g.category.categoryName))
             if (shown.length === 0) return null

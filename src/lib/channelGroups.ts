@@ -42,3 +42,26 @@ export function channelGroupOf(raw: string): ChannelGroup {
   if (/filme|serie|telecine|hbo|\bmax\b|prime video|netflix|disney|paramount|star\+|cinema|megapix|apple tv/.test(n)) return 'Filmes e séries'
   return 'Outros'
 }
+
+/** Campeonatos (sugestao de um amigo pelo Suporte, 21/10): atalho para os canais cujo nome ou categoria cita o
+ * campeonato, ex.: categoria "⚽ CHAMPIONS LEAGUE" ou canal "ESPN 4 - CHAMPIONS". So aparece campeonato com
+ * canal achado; nada e inventado.
+ * shortcut: olha so nomes, nao a programacao (EPG) — o canal que passa o jogo sem citar o campeonato no nome
+ * nao entra. Para isso, cruzar com a grade ou com a API do Mol TV. */
+export const CHAMPIONSHIPS: readonly (readonly [name: string, pattern: RegExp])[] = [
+  ['Champions League', /champions|liga dos campeoes|\bucl\b/],
+  ['Libertadores', /libertadores/],
+  ['Sul-Americana', /sul-?americana|sudamericana/],
+  ['Brasileirão', /brasileir/],
+  ['Copa do Brasil', /copa do brasil/],
+  ['Premier League', /premier league/],
+  ['La Liga', /\bla ?liga\b/],
+  ['Bundesliga', /bundesliga/],
+  ['Europa League', /europa league|liga europa/],
+  ['NBA', /\bnba\b/],
+  ['NFL', /\bnfl\b/],
+  ['Fórmula 1', /formula ?1|\bf1\b/],
+  ['UFC', /\bufc\b/],
+]
+
+export const matchesChampionship = (pattern: RegExp, ...names: string[]) => names.some((n) => pattern.test(norm(n)))

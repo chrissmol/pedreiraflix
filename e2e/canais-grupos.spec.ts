@@ -54,3 +54,20 @@ test('tira um canal dos Recentes e limpa a lista', async ({ page }) => {
   await expect(lateral.getByRole('button', { name: /Recentes/ })).toHaveCount(0)
   await expect(lateral.getByRole('button', { name: /Todos os canais/ })).toHaveAttribute('aria-pressed', 'true')
 })
+
+// Sugestao pelo Suporte (21/10): campeonatos juntam os canais que citam o campeonato no nome ou na categoria.
+test('campeonatos: Champions junta os canais que citam a Champions', async ({ page }) => {
+  await page.route(/action=get_live_streams.*category_id=2/, async (route) => {
+    const streams = await (await route.fetch()).json()
+    await route.fulfill({ json: [...streams, { ...streams[0], stream_id: 203, name: 'ESPN 4 - Champions League' }] })
+  })
+  await seedSession(page)
+  await page.goto('/live')
+  const lateral = page.getByRole('complementary', { name: 'Categorias' })
+  await lateral.getByRole('button', { name: 'Campeonatos', exact: true }).click()
+  await lateral.getByRole('button', { name: /^Champions League 1/ }).click()
+  await expect(page.getByText('ESPN 4 - Champions League')).toBeVisible()
+  await expect(page.getByText('Futebol HD')).toHaveCount(0)
+  // Campeonato sem canal nenhum nao aparece.
+  await expect(lateral.getByRole('button', { name: /Libertadores/ })).toHaveCount(0)
+})
