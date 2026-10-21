@@ -15,6 +15,7 @@ const EpgGuidePage = lazy(() => import('./pages/EpgGuidePage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LivePage = lazy(() => import('./pages/LivePage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
+const MosaicPage = lazy(() => import('./pages/MosaicPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const ProfilesPage = lazy(() => import('./pages/ProfilesPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
@@ -47,6 +48,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <WatchPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/mosaico"
+            element={
+              <RequireAuth>
+                <MosaicPage />
               </RequireAuth>
             }
           />
