@@ -18,6 +18,7 @@ const links = [
   { to: '/live', label: 'Canais' },
   { to: '/movies', label: 'Filmes' },
   { to: '/series', label: 'Séries' },
+  { to: '/times', label: 'Times' },
 ]
 
 export default function TopNav() {
