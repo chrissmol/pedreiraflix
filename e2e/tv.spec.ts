@@ -135,3 +135,18 @@ test('TV: da seta para a esquerda no primeiro poster de uma fileira chega ao men
   // A tela nao desliza para o lado no caminho (cortava o menu na TV).
   expect(await page.evaluate(() => [document.scrollingElement!.scrollLeft, document.getElementById('main-content')!.scrollLeft, document.getElementById('main-content')!.parentElement!.scrollLeft])).toEqual([0, 0, 0])
 })
+
+test('TV: suporte so com setas e OK', async ({ page }) => {
+  await page.route('**/api/feedback', (route) => route.fulfill({ status: 204 }))
+  await page.goto('/suporte')
+  await expect(page.getByRole('heading', { name: 'Suporte' })).toBeVisible()
+  const campo = page.getByPlaceholder('O que está acontecendo?')
+  for (let i = 0; i < 6 && !(await campo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+  await expect(campo).toBeFocused()
+  await page.keyboard.press('Enter') // OK libera o teclado da TV
+  await page.keyboard.type('Travou no canal')
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('button', { name: 'Enviar' })).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Recebido, valeu!' })).toBeVisible()
+})

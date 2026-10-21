@@ -4,6 +4,9 @@
   "compatibility_date": "2026-01-01",
   // "Times favoritos": the Mol TV API Worker (same Cloudflare account), reached via /api/moltv/*.
   "services": [{ "binding": "MOLTV", "service": "mol-tv-api" }],
+  // Suporte: feedbacks dos amigos (/api/feedback). Sem id de proposito: o `wrangler deploy` cria o namespace sozinho
+  // na primeira vez (provisionamento automatico) e reaproveita depois.
+  "kv_namespaces": [{ "binding": "FEEDBACK" }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
