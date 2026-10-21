@@ -76,3 +76,22 @@ test('diagnostico mostra a recusa do canal (403) com o texto do Cloudflare', asy
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText(/HTTP 403 · RECUSADO.*error code: 1003/)).toBeVisible({ timeout: 30000 })
 })
+
+// 21/10: o 1o canal da 1a categoria veio bloqueado e o diagnostico deu ✗, mas o provedor bloqueia canal por canal:
+// com outro canal ao vivo, nao e a conta nem o app.
+test('diagnostico: um canal bloqueado com outros ao vivo nao acusa erro', async ({ page }) => {
+  await page.route(/\/api\/stream\?.*%2Flive%2F/, (route) =>
+    /101\.m3u8/.test(decodeURIComponent(route.request().url()))
+      ? route.fulfill({
+          status: 200,
+          contentType: 'application/vnd.apple.mpegurl',
+          body: '#EXTM3U\n#EXT-X-TARGETDURATION:11\n#EXTINF:10.0,\n/api/stream?url=http%3A%2F%2Fbloqueio.example%2Fauth%2Ftoken\n#EXT-X-ENDLIST\n',
+        })
+      : route.continue(),
+  )
+  await login(page)
+  await page.goto('/diagnostico')
+  await page.getByRole('button', { name: 'Testar agora' }).click()
+  await expect(page.getByText('✓ Início de um canal ao vivo (a lista do canal)')).toBeVisible({ timeout: 30000 })
+  await expect(page.getByText(/2 de 3 canais ao vivo.*bloqueou só naquele canal.*Canal 1: HTTP 200 · BLOQUEADO/)).toBeVisible()
+})
