@@ -19,6 +19,13 @@ test('seguir um time mostra os proximos jogos com o canal', async ({ page }) => 
             match: { id: 'fd:2', home: 'Palmeiras', away: 'Flamengo', kickoff: '2030-11-02T19:00:00Z', competition: 'Copa do Brasil', status: 'scheduled' },
             broadcasts: [],
           },
+          {
+            match: { id: 'fd:3', home: 'Flamengo', away: 'Bahia', kickoff: '2030-11-09T21:00:00Z', competition: 'Brasileirão', status: 'scheduled' },
+            broadcasts: [
+              { channel: 'Globo', slug: 'globo', confidence: 'confirmada' },
+              { channel: 'SporTV', slug: 'sportv', confidence: 'provavel' },
+            ],
+          },
         ],
       },
     }),
@@ -36,6 +43,9 @@ test('seguir um time mostra os proximos jogos com o canal', async ({ page }) => 
   await expect(card.getByText('Flamengo × Vasco')).toBeVisible()
   await expect(card.getByText('Premiere · provável')).toBeVisible()
   await expect(card.getByText('Canal a confirmar')).toBeVisible()
+  // Com canal confirmado, os provaveis somem daquele jogo
+  await expect(card.getByText('Globo', { exact: true })).toBeVisible()
+  await expect(card.getByText('SporTV')).toHaveCount(0)
 
   // Fica salvo no perfil: recarregar mantem o time
   await page.reload()

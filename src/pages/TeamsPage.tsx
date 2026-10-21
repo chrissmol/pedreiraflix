@@ -64,7 +64,11 @@ function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => v
         <p className="text-body-sm text-on-surface-variant">Nenhum jogo marcado por enquanto.</p>
       ) : (
         <ul className="divide-y divide-outline-soft">
-          {matches.map(({ match, broadcasts }) => (
+          {matches.map(({ match, broadcasts: all }) => {
+            // Once a channel is confirmed, the probable guesses are noise: show only the confirmed ones.
+            const confirmed = all.filter((b) => b.confidence === 'confirmada')
+            const broadcasts = confirmed.length ? confirmed : all
+            return (
             <li key={match.id} className="flex flex-col gap-2 py-3">
               <div>
                 <p className="text-body-md font-semibold text-white">
@@ -87,7 +91,8 @@ function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => v
                 )}
               </ul>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </section>
