@@ -54,6 +54,8 @@ export interface Movie {
   rating: string | null
   added: string | null
   containerExtension: string
+  /** Só alguns painéis mandam o ano na lista; os outros põem no nome ("Duna (2024)"), ver movieYear. */
+  year?: string | null
 }
 
 export interface MovieDetails extends Movie {

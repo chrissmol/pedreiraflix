@@ -11,6 +11,7 @@ import Select from '../components/Select'
 import { useMovieCatalog } from '../hooks/useCatalog'
 import type { Movie } from '../types'
 import ErrorCard from '../components/ErrorCard'
+import { movieYear } from '../lib/displayTitle'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
 
@@ -32,6 +33,7 @@ export default function MoviesPage() {
   const [searchParams] = useSearchParams()
   // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
+  const [activeYear, setActiveYear] = useState<number | null>(null)
   const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState<SortKey>('default')
 
@@ -40,10 +42,20 @@ export default function MoviesPage() {
   // category whose data hasn't changed keeps the exact same `items` array reference across re-renders —
   // which is what lets CategoryRow's memoization actually skip re-rendering it.
   //
-  // No genre/year filter here on purpose: Xtream only gives those on a per-title detail call, not the
-  // base catalog listing, so filtering by them would mean fetching details for every movie — the same
-  // provider-hammering cost the catalog's caching/pacing was built to avoid. Category already works as a
-  // free genre proxy (providers commonly name categories like "Filmes - Terror").
+  // No genre filter here on purpose: Xtream only gives it on a per-title detail call, not the base catalog
+  // listing, so filtering by it would mean fetching details for every movie — the same provider-hammering
+  // cost the catalog's caching/pacing was built to avoid. Category already works as a free genre proxy
+  // (providers commonly name categories like "Filmes - Terror"). Year is free: see movieYear.
+  // Todos os filtros somam (categoria + ano + nota), pedido no Suporte em 21/10.
+  const allYears = useMemo(() => {
+    const set = new Set<number>()
+    for (const g of groups) for (const m of g.items) {
+      const y = movieYear(m)
+      if (y) set.add(y)
+    }
+    return [...set].sort((a, b) => b - a)
+  }, [groups])
+
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
@@ -51,18 +63,22 @@ export default function MoviesPage() {
         category: g.category,
         loading: g.loading,
         items: sortMovies(
-          minRating > 0 ? g.items.filter((m) => Number(m.rating) >= minRating) : g.items,
+          minRating > 0 || activeYear
+            ? g.items.filter((m) => (!activeYear || movieYear(m) === activeYear) && (minRating === 0 || Number(m.rating) >= minRating))
+            : g.items,
           sort,
         ),
       }))
       .filter((g) => g.items.length > 0 || g.loading)
-  }, [groups, activeCategory, minRating, sort])
+  }, [groups, activeCategory, activeYear, minRating, sort])
 
   return (
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Filmes</h1>
-        <FilterBar active={[sort !== 'default', minRating > 0, activeCategory != null].filter(Boolean).length}>
+        <FilterBar
+          active={[sort !== 'default', minRating > 0, activeYear != null, activeCategory != null].filter(Boolean).length}
+        >
         <Select
           label="Ordenar"
           value={sort}
@@ -75,6 +91,14 @@ export default function MoviesPage() {
           ]}
         />
         <RatingFilter value={minRating} onChange={setMinRating} />
+        {allYears.length > 0 && (
+          <Select
+            label="Ano"
+            value={activeYear != null ? String(activeYear) : ''}
+            onChange={(v) => setActiveYear(v ? Number(v) : null)}
+            options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+          />
+        )}
         <Select
           label="Categoria"
           className="ml-auto max-w-56"
