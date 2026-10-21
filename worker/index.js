@@ -308,6 +308,37 @@ async function streamSession(request, env) {
 // not a real observability stack (no retention, no alerting, no dashboards), but it's a genuine step up
 // from "no signal at all", and swapping in a real error-tracking service later only means changing this
 // one function, not the frontend's reporting call site.
+// Suporte (src/pages/SupportPage.tsx): guarda cada feedback no KV FEEDBACK para o Christian ler depois no painel da
+// Cloudflare (Workers KV) ou com `npx wrangler kv key list --binding FEEDBACK --remote`. Tambem vai para o log.
+async function feedback(request, env) {
+  let body
+  try {
+    const text = await request.text()
+    if (text.length > 8_000) return new Response('payload too large', { status: 413 })
+    body = JSON.parse(text)
+  } catch {
+    return new Response('invalid json', { status: 400 })
+  }
+  const str = (v, max) => (typeof v === 'string' ? v.slice(0, max) : undefined)
+  const texto = str(body?.texto, 2000)?.trim()
+  if (!texto) return new Response('missing texto', { status: 400 })
+  const ts = new Date().toISOString()
+  const item = {
+    tipo: str(body.tipo, 20),
+    texto,
+    perfil: str(body.perfil, 60),
+    conta: str(body.conta, 60),
+    aparelho: str(body.aparelho, 30),
+    userAgent: str(body.userAgent, 300),
+    pagina: str(body.pagina, 300),
+    ts,
+  }
+  console.log(JSON.stringify({ source: 'feedback', ...item }))
+  if (!env.FEEDBACK) return new Response('feedback storage not configured', { status: 503 })
+  await env.FEEDBACK.put(`${ts}-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(item))
+  return new Response(null, { status: 204 })
+}
+
 async function logError(request) {
   let body
   try {
@@ -403,6 +434,10 @@ export default {
       // low enough to still block someone trying to use this as a flood/spam vector.
       if (isRateLimited(ip, 'log-error', 20, 10_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await logError(request))
+    }
+    if (url.pathname === '/api/feedback' && request.method === 'POST') {
+      if (isRateLimited(ip, 'feedback', 5, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await feedback(request, env))
     }
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.

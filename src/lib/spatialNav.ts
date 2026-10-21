@@ -46,7 +46,7 @@ export function moveFocusVertically(direction: 'up' | 'down'): boolean {
 // --- TV: as quatro setas andam por tudo que e clicavel (cabecalho, filtros, botoes, posteres) -----------------
 // No computador continua so o vertical acima: la as setas tambem rolam a pagina e o Tab existe. Na TV o controle
 // remoto so tem setas e OK, entao a primeira seta ja da o foco (nada comeca focado) e da para chegar em tudo.
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-spatial]'
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-spatial]'
 
 function visible(el: HTMLElement) {
   const r = el.getBoundingClientRect()

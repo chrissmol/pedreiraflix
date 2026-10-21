@@ -6,7 +6,7 @@ import { connectionStatus, refreshSession } from '../lib/session'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Plus, RefreshCw, Search, Settings, User } from './icons'
+import { Download, Info, Plus, RefreshCw, Search, Settings, User } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
@@ -314,6 +314,15 @@ export default function TopNav() {
               className="menu-option"
             >
               <Settings className="h-4 w-4 text-on-surface-variant" /> {isTv ? 'Ajustes' : 'Diagnóstico'}
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/suporte', { state: { from: location.pathname + location.search } })
+              }}
+              className="menu-option"
+            >
+              <Info className="h-4 w-4 text-on-surface-variant" /> Suporte
             </button>
             <button
               onClick={logout}
