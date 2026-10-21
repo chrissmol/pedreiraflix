@@ -60,9 +60,11 @@ const ROW_LIMIT = 40
 
 export default function SeriesPage() {
   const { groups, loading, error, retry } = useSeriesCatalog()
-  const [searchParams] = useSearchParams()
-  // Preset by the "Ver tudo" link on a Home category row — read once on mount, same as a bookmark/deep link.
-  const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'))
+  const [searchParams, setSearchParams] = useSearchParams()
+  // A categoria mora na URL: o "Ver tudo" das fileiras desta mesma pagina so troca o ?category= (sem remontar a
+  // pagina), e ler isso uma vez na montagem fazia o link nao abrir nada (Suporte, 21/10). Voltar sai da grade.
+  const activeCategory = searchParams.get('category')
+  const setActiveCategory = (id: string | null) => setSearchParams(id ? { category: id } : {}, { replace: true })
   const [activeGenre, setActiveGenre] = useState<string | null>(null)
   const [activeYear, setActiveYear] = useState<number | null>(null)
   const [minRating, setMinRating] = useState(0)
