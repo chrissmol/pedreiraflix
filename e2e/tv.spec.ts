@@ -217,3 +217,31 @@ test('TV: "Ver tudo" de uma fileira em Filmes e Series abre a categoria inteira 
     await expect(page.getByRole('link', { name: 'Ver tudo' }).first()).toBeVisible()
   }
 })
+
+test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre a busca dele', async ({ page }) => {
+  await page.route('**/api/moltv/v1/search?*', (route) => route.fulfill({ json: { results: [{ type: 'team', slug: 'flamengo', name: 'Flamengo' }] } }))
+  await page.route('**/api/moltv/v1/teams/flamengo/next', (route) =>
+    route.fulfill({
+      json: {
+        matches: [
+          {
+            match: { id: 'fd:1', home: 'Flamengo', away: 'Vasco', kickoff: '2030-10-26T23:00:00Z', competition: 'Brasileirão', status: 'scheduled' },
+            broadcasts: [{ channel: 'Premiere', slug: 'premiere', confidence: 'confirmada' }],
+          },
+        ],
+      },
+    }),
+  )
+  await page.goto('/times')
+  await page.getByLabel('Seguir um time').focus()
+  await page.keyboard.press('Enter') // na TV o OK abre o teclado do campo
+  await page.keyboard.type('flam')
+  await page.getByRole('button', { name: 'Flamengo', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'Premiere: procurar o canal' })).toBeVisible()
+
+  const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') || '')
+  for (let i = 0; i < 8 && !/^Premiere/.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+  expect(await focado()).toMatch(/^Premiere/)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/search\?q=Premiere$/)
+})
