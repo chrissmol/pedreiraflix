@@ -171,3 +171,23 @@ test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page 
   await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
 })
+
+test('TV: so com as setas e OK da para abrir um campeonato nos canais', async ({ page }) => {
+  await page.route(/action=get_live_streams.*category_id=2/, async (route) => {
+    const streams = await (await route.fetch()).json()
+    await route.fulfill({ json: [...streams, { ...streams[0], stream_id: 203, name: 'ESPN 4 - Champions League' }] })
+  })
+  await page.goto('/live')
+  await expect(page.getByText('Futebol HD')).toBeVisible()
+  const focado = () => page.evaluate(() => (document.activeElement?.textContent || '').trim())
+  const ate = async (texto: RegExp) => {
+    for (let i = 0; i < 15 && !texto.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+    expect(await focado()).toMatch(texto)
+  }
+  await ate(/^Campeonatos$/)
+  await page.keyboard.press('Enter')
+  await ate(/^Champions League/)
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('ESPN 4 - Champions League')).toBeVisible()
+  await expect(page.getByText('Futebol HD')).toHaveCount(0)
+})
