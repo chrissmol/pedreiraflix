@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import ErrorCard from '../components/ErrorCard'
-import { Check, Plus, Trophy, X } from '../components/icons'
+import { Link } from 'react-router-dom'
+import { Check, Plus, Trophy, Tv, X } from '../components/icons'
+import { useMinuteClock } from '../lib/minuteClock'
+import { matchWhen } from '../lib/matchTime'
 import { type FavoriteTeam, teamsFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 
@@ -10,12 +13,10 @@ interface Broadcast {
   slug: string
   confidence: 'confirmada' | 'provavel' | string
 }
-interface NextMatch {
+interface NextMatchData {
   match: { id: string; home: string; away: string; kickoff: string; competition: string; status: string }
   broadcasts: Broadcast[]
 }
-
-const kickoffFormat = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`/api/moltv${path}`)
@@ -24,14 +25,14 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => void }) {
-  const [matches, setMatches] = useState<NextMatch[] | null>(null)
+  const [matches, setMatches] = useState<NextMatchData[] | null>(null)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
   // Fetched on every visit: the Mol TV API refreshes channels itself (cron + on-demand after 6 h, 10 min cache).
   useEffect(() => {
     let alive = true
-    getJson<{ matches: NextMatch[] }>(`/v1/teams/${team.slug}/next`)
+    getJson<{ matches: NextMatchData[] }>(`/v1/teams/${team.slug}/next`)
       .then((d) => alive && setMatches(d.matches))
       .catch(() => alive && setFailed(true))
     return () => {
@@ -39,10 +40,20 @@ function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => v
     }
   }, [team.slug, attempt])
 
+  const now = useMinuteClock(Boolean(matches?.length))
+  const [next, ...later] = matches ?? []
+
   return (
     <section aria-labelledby={`team-${team.slug}`} className="rounded-2xl border border-outline-soft bg-surface-low p-4 sm:p-5">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 id={`team-${team.slug}`} className="font-display text-headline-sm text-white">
+      <div className="mb-4 flex items-center gap-3">
+        <span
+          aria-hidden
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-label-md font-bold text-white"
+          style={{ background: teamColor(team.slug) }}
+        >
+          {initials(team.name)}
+        </span>
+        <h2 id={`team-${team.slug}`} className="min-w-0 flex-1 truncate font-display text-headline-sm text-white">
           {team.name}
         </h2>
         <button
@@ -60,43 +71,122 @@ function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => v
           }} />
       ) : matches === null ? (
         <p className="text-body-sm text-on-surface-variant">Buscando próximos jogos…</p>
-      ) : matches.length === 0 ? (
+      ) : !next ? (
         <p className="text-body-sm text-on-surface-variant">Nenhum jogo marcado por enquanto.</p>
       ) : (
-        <ul className="divide-y divide-outline-soft">
-          {matches.map(({ match, broadcasts: all }) => {
-            // Once a channel is confirmed, the probable guesses are noise: show only the confirmed ones.
-            const confirmed = all.filter((b) => b.confidence === 'confirmada')
-            const broadcasts = confirmed.length ? confirmed : all
-            return (
-            <li key={match.id} className="flex flex-col gap-2 py-3">
-              <div>
-                <p className="text-body-md font-semibold text-white">
-                  {match.home} × {match.away}
-                </p>
-                <p className="text-body-sm capitalize text-on-surface-variant">
-                  {kickoffFormat.format(new Date(match.kickoff))} · {match.competition}
-                </p>
-              </div>
-              <ul aria-label="Onde passa" className="flex flex-wrap gap-1.5">
-                {broadcasts.length === 0 ? (
-                  <li className="rounded-full border border-outline-soft px-3 py-1 text-label-md text-on-surface-variant">Canal a confirmar</li>
-                ) : (
-                  broadcasts.map((b) => (
-                    <li key={b.slug} className="rounded-full bg-surface-high px-3 py-1 text-label-md text-white">
-                      {b.channel}
-                      {b.confidence !== 'confirmada' && <span className="text-on-surface-variant"> · provável</span>}
-                    </li>
-                  ))
-                )}
-              </ul>
-            </li>
-            )
-          })}
-        </ul>
+        <>
+          <NextMatch item={next} now={now} />
+          {later.length > 0 && (
+            <ul aria-label="Depois" className="mt-2 divide-y divide-outline-soft">
+              {later.map((item) => (
+                <LaterMatch key={item.match.id} item={item} now={now} />
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </section>
   )
+}
+
+// Once a channel is confirmed, the probable guesses are noise: show only the confirmed ones.
+function shownBroadcasts(all: Broadcast[]) {
+  const confirmed = all.filter((b) => b.confidence === 'confirmada')
+  return confirmed.length ? confirmed : all
+}
+
+/** Each channel opens the search with its name: the IPTV list may carry it as "Globo SP HD" or several variants. */
+function Channels({ broadcasts }: { broadcasts: Broadcast[] }) {
+  const shown = shownBroadcasts(broadcasts)
+  return (
+    <ul aria-label="Onde passa" className="flex flex-wrap gap-1.5">
+      {shown.length === 0 ? (
+        <li className="rounded-full border border-dashed border-outline-soft px-3 py-1 text-label-md text-on-surface-variant">Canal a confirmar</li>
+      ) : (
+        shown.map((b) => {
+          const sure = b.confidence === 'confirmada'
+          return (
+            <li key={b.slug}>
+              <Link
+                to={`/search?${new URLSearchParams({ q: b.channel })}`}
+                aria-label={`${b.channel}${sure ? '' : ', provável'}: procurar o canal`}
+                className={`brand-focus inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label-md transition-colors pointer-coarse:min-h-9 ${
+                  sure ? 'bg-brand-500/15 text-brand-300 hover:bg-brand-500/25' : 'border border-outline-soft text-white hover:bg-surface-high'
+                }`}
+              >
+                <Tv className="h-3.5 w-3.5" />
+                {b.channel}
+                {!sure && <span className="text-on-surface-variant">· provável</span>}
+              </Link>
+            </li>
+          )
+        })
+      )}
+    </ul>
+  )
+}
+
+function Teams({ match, className }: { match: NextMatchData['match']; className: string }) {
+  return (
+    <p className={className}>
+      {match.home} <span className="text-on-surface-variant">×</span> {match.away}
+    </p>
+  )
+}
+
+function NextMatch({ item: { match, broadcasts }, now }: { item: NextMatchData; now: number }) {
+  const when = matchWhen(match.kickoff, match.status, now)
+  return (
+    <div className={`rounded-xl bg-surface-container p-4 ${when.live ? 'ring-1 ring-live/50' : ''}`}>
+      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md">
+        {when.live ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-live px-2.5 py-0.5 font-semibold text-white">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            Ao vivo
+          </span>
+        ) : (
+          <span className="font-semibold text-brand-300">
+            {when.day} · {when.time}
+          </span>
+        )}
+        {when.countdown && <span className="text-on-surface-variant">{when.countdown}</span>}
+        <span className="ml-auto text-on-surface-variant">{match.competition}</span>
+      </div>
+      <Teams match={match} className="mb-3 text-body-lg font-semibold text-white" />
+      <Channels broadcasts={broadcasts} />
+    </div>
+  )
+}
+
+function LaterMatch({ item: { match, broadcasts }, now }: { item: NextMatchData; now: number }) {
+  const when = matchWhen(match.kickoff, match.status, now)
+  return (
+    <li className="flex gap-3 py-3">
+      <div className="w-16 shrink-0 text-label-md">
+        <p className={`font-semibold capitalize ${when.live ? 'text-live' : 'text-white'}`}>{when.live ? 'Ao vivo' : when.day}</p>
+        <p className="text-on-surface-variant">{when.time}</p>
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <div>
+          <Teams match={match} className="text-body-md font-semibold text-white" />
+          <p className="text-body-sm text-on-surface-variant">{match.competition}</p>
+        </div>
+        <Channels broadcasts={broadcasts} />
+      </div>
+    </li>
+  )
+}
+
+function initials(name: string) {
+  const words = name.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w))
+  return (words.length > 1 ? words[0][0] + words[1][0] : name.slice(0, 2)).toUpperCase()
+}
+
+/** A steady colour per team (not its real colours — the API doesn't send those), so cards are told apart at a glance. */
+function teamColor(slug: string) {
+  let hash = 0
+  for (const ch of slug) hash = (hash * 31 + ch.charCodeAt(0)) | 0
+  return `hsl(${Math.abs(hash) % 360} 55% 36%)`
 }
 
 export default function TeamsPage() {
