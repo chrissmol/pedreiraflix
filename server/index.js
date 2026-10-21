@@ -63,6 +63,13 @@ app.post('/api/log-error', express.json({ limit: '8kb' }), (req, res) => {
   res.status(204).end()
 })
 
+// Dev-only mirror of the Worker's /api/feedback: no KV here, just prints it.
+app.post('/api/feedback', express.json({ limit: '8kb' }), (req, res) => {
+  if (typeof req.body?.texto !== 'string' || !req.body.texto.trim()) return res.status(400).send('missing texto')
+  console.log('[feedback]', JSON.stringify({ ...req.body, ts: new Date().toISOString() }, null, 2))
+  res.status(204).end()
+})
+
 const PORT = process.env.PORT || 8787
 
 function sanitizeBaseUrl(raw) {

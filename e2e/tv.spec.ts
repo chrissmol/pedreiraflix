@@ -142,3 +142,78 @@ test('TV: da seta para a esquerda no primeiro poster de uma fileira chega ao men
   // A tela nao desliza para o lado no caminho (cortava o menu na TV).
   expect(await page.evaluate(() => [document.scrollingElement!.scrollLeft, document.getElementById('main-content')!.scrollLeft, document.getElementById('main-content')!.parentElement!.scrollLeft])).toEqual([0, 0, 0])
 })
+
+test('TV: suporte so com setas e OK', async ({ page }) => {
+  await page.route('**/api/feedback', (route) => route.fulfill({ status: 204 }))
+  await page.goto('/suporte')
+  await expect(page.getByRole('heading', { name: 'Suporte' })).toBeVisible()
+  const campo = page.getByPlaceholder('O que está acontecendo?')
+  for (let i = 0; i < 6 && !(await campo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+  await expect(campo).toBeFocused()
+  await page.keyboard.press('Enter') // OK libera o teclado da TV
+  await page.keyboard.type('Travou no canal')
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('button', { name: 'Enviar' })).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Recebido, valeu!' })).toBeVisible()
+})
+
+test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const escolher = async (filtro: string, opcao: string) => {
+    const botao = page.getByRole('button', { name: filtro, exact: true })
+    for (let i = 0; i < 8 && !(await botao.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowRight')
+    await expect(botao).toBeFocused()
+    await page.keyboard.press('Enter')
+    const item = page.getByRole('option', { name: opcao, exact: true })
+    for (let i = 0; i < 10 && !(await item.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+    await expect(item).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(botao).toBeFocused()
+  }
+  await page.keyboard.press('ArrowDown') // o foco entra no conteudo, nos filtros
+  await escolher('Ano', '2019')
+  await escolher('Categoria', 'Ação')
+  await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
+})
+
+test('TV: so com as setas e OK da para abrir um campeonato nos canais', async ({ page }) => {
+  await page.route(/action=get_live_streams.*category_id=2/, async (route) => {
+    const streams = await (await route.fetch()).json()
+    await route.fulfill({ json: [...streams, { ...streams[0], stream_id: 203, name: 'ESPN 4 - Champions League' }] })
+  })
+  await page.goto('/live')
+  await expect(page.getByText('Futebol HD')).toBeVisible()
+  const focado = () => page.evaluate(() => (document.activeElement?.textContent || '').trim())
+  const ate = async (texto: RegExp) => {
+    for (let i = 0; i < 15 && !texto.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+    expect(await focado()).toMatch(texto)
+  }
+  await ate(/^Campeonatos$/)
+  await page.keyboard.press('Enter')
+  await ate(/^Champions League/)
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('ESPN 4 - Champions League')).toBeVisible()
+  await expect(page.getByText('Futebol HD')).toHaveCount(0)
+})
+
+test('TV: "Ver tudo" de uma fileira em Filmes e Series abre a categoria inteira so com setas e OK', async ({ page }) => {
+  // Suporte 21/10: o link so trocava o ?category= da propria pagina, que lia isso uma vez ao montar.
+  const itens = (campo: string) => Array.from({ length: 60 }, (_, i) => ({ [campo]: 9000 + i, name: `Titulo ${i}`, category_id: '10', rating: '7.0', cover: '', stream_icon: '' }))
+  await page.route(/action=get_vod_streams/, (r) => r.fulfill({ json: itens('stream_id') }))
+  await page.route(/action=get_series(&|$)/, (r) => r.fulfill({ json: itens('series_id') }))
+  for (const rota of ['/movies', '/series']) {
+    await page.goto(rota)
+    await page.getByRole('button', { name: /Titulo 0/ }).first().focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(page.locator(':focus')).toHaveText('Ver tudo')
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/category=\d+/)
+    await expect(page.getByRole('button', { name: /Titulo 59/ })).toBeAttached()
+    await page.goBack()
+    await expect(page).not.toHaveURL(/category=/)
+    await expect(page.getByRole('link', { name: 'Ver tudo' }).first()).toBeVisible()
+  }
+})

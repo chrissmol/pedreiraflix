@@ -29,7 +29,7 @@ const SPECS = {
   conta: ['auth', 'autologout', 'app-pin', 'account-label-profile-name', 'profiles', 'parental', 'credenciais', 'm3u-login', 'conexoes', 'limite-telas'],
   downloads: ['downloads', 'downloads-erros', 'downloads-partes', 'baixar-temporada', 'fila-para-no-403', 'serie-zip', 'sem-internet'],
   pwa: ['pwa.pwa', 'pwa-css', 'entrar-offline.pwa', 'instalar-app', 'update-prompt', 'fonte-propria'],
-  proxy: ['security', 'respeita-429', 'diagnostico', 'error-reporting'],
+  proxy: ['security', 'respeita-429', 'diagnostico', 'error-reporting', 'suporte'],
   telas: ['a11y', 'achados-estresse.mobile', 'ajustes-visuais.mobile', 'altura-iphone.mobile', 'iphone-shell', 'login-cabe.mobile', 'ui-mobile', 'foco-tv', 'navegacao-tv', 'tv', 'plataformas', 'lighthouse-login', 'anel'],
 }
 

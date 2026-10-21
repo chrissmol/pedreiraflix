@@ -119,13 +119,15 @@ export class XtreamClient implements ProviderClient {
    * + #EXT-X-ENDLIST, no lugar do canal) ou como recusa (HTTP 403/404, ex.: "error code: 1003" da Cloudflare). */
   async probeLive(id: number | string) {
     const started = performance.now()
-    let res = await fetch(this.streamUrl('live', id, 'm3u8'))
+    // Canal de evento fora do horario fica sem responder (10/10: 12-15 s+); o diagnostico nao pode travar nele.
+    const signal = AbortSignal.timeout(15_000)
+    let res = await fetch(this.streamUrl('live', id, 'm3u8'), { signal })
     let text = await res.text()
     // Lista mestra: segue para a primeira variante, que e a que diz se o canal esta vivo.
     if (res.ok && /#EXT-X-STREAM-INF/.test(text)) {
       const next = text.split('\n').find((l) => l.trim() && !l.startsWith('#'))
       if (next) {
-        res = await fetch(next.trim())
+        res = await fetch(next.trim(), { signal })
         text = await res.text()
       }
     }
@@ -271,6 +273,7 @@ export class XtreamClient implements ProviderClient {
         rating: string | null
         added: string | null
         container_extension: string
+        year?: string | null
       }[]
     >('get_vod_streams', categoryId ? { category_id: categoryId } : {})
     return raw.map((s) => ({
@@ -282,6 +285,7 @@ export class XtreamClient implements ProviderClient {
       rating: s.rating,
       added: s.added,
       containerExtension: s.container_extension || 'mp4',
+      year: s.year,
     }))
   }
 

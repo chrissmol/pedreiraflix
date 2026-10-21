@@ -97,7 +97,7 @@ export default function DiagnosticPage() {
       }
     }, false)
     let canalCat: string | null = null
-    let canalId: number | null = null
+    let canalIds: number[] = []
     await passo('Categorias de canais', async () => {
       const r = await client.probe('get_live_categories')
       const d = json(r.text)
@@ -108,24 +108,39 @@ export default function DiagnosticPage() {
       await passo('Canais da primeira categoria', async () => {
         const r = await client.probe('get_live_streams', { category_id: canalCat! })
         const d = json(r.text)
-        if (Array.isArray(d) && d[0]) canalId = Number(d[0].stream_id)
+        if (Array.isArray(d)) canalIds = d.slice(0, 3).map((c) => Number(c.stream_id))
         return { ok: r.status === 200 && Array.isArray(d), detalhe: `${resumo(r)} · ${Array.isArray(d) ? `${d.length} canais` : (r.status === 429 ? 'sem dados (limite do provedor)' : `PÁGINA: ${r.text.slice(0, 80)}`)}` }
       })
     }
-    if (canalId) {
-      const id = canalId
+    if (canalIds.length) {
       // O que o Christian viu em 09/10: canal que chega como aviso de bloqueio (lista fechada) ou recusado (403/404).
+      // O provedor bloqueia canal por canal (Record bloqueado com Globo e Sportv ao vivo no mesmo minuto), entao um
+      // canal so nao diz nada: testa ate 3 e so acusa erro se nenhum abrir (21/10: o 1o canal veio bloqueado).
       await passo('Início de um canal ao vivo (a lista do canal)', async () => {
-        const r = await client.probeLive(id)
-        const onde = r.host ? ` · via ${r.host}` : ''
-        if (r.status !== 200) {
-          const motivo = r.status === 403 ? 'RECUSADO (telas cheias, bloqueio do provedor ou do Cloudflare)' : r.status === 404 ? 'NÃO ENCONTRADO' : 'ERRO'
-          return { ok: false, detalhe: `HTTP ${r.status} · ${motivo} · ${r.ms} ms · ${r.text.slice(0, 80)}` }
+        const res: { ok: boolean; detalhe: string }[] = []
+        for (const [i, id] of canalIds.entries()) {
+          if (i) await sleep(window.__DIAG_GAP_MS__ ?? 1300)
+          try {
+            const r = await client.probeLive(id)
+            const onde = r.host ? ` · via ${r.host}` : ''
+            if (r.status !== 200) {
+              const motivo = r.status === 403 ? 'RECUSADO (telas cheias, bloqueio do provedor ou do Cloudflare)' : r.status === 404 ? 'NÃO ENCONTRADO' : 'ERRO'
+              res.push({ ok: false, detalhe: `HTTP ${r.status} · ${motivo} · ${r.ms} ms · ${r.text.slice(0, 80)}` })
+            } else if (r.closed || r.segments === 0) {
+              res.push({ ok: false, detalhe: `HTTP 200 · BLOQUEADO: o provedor mandou um aviso no lugar do canal (${r.segments} trecho${r.segments === 1 ? '' : 's'}, lista fechada)${onde} · ${r.ms} ms` })
+            } else {
+              res.push({ ok: true, detalhe: `HTTP 200 · ao vivo · ${r.segments} trechos${onde} · ${r.ms} ms` })
+            }
+          } catch (err) {
+            res.push({ ok: false, detalhe: `Sem resposta: ${err instanceof Error ? err.message : String(err)}` })
+          }
         }
-        if (r.closed || r.segments === 0) {
-          return { ok: false, detalhe: `HTTP 200 · BLOQUEADO: o provedor mandou um aviso no lugar do canal (${r.segments} trecho${r.segments === 1 ? '' : 's'}, lista fechada)${onde} · ${r.ms} ms` }
-        }
-        return { ok: true, detalhe: `HTTP 200 · ao vivo · ${r.segments} trechos${onde} · ${r.ms} ms` }
+        const vivos = res.filter((r) => r.ok).length
+        const lista = res.map((r, i) => `Canal ${i + 1}: ${r.detalhe}`).join(' | ')
+        if (res.length === 1) return res[0]
+        if (vivos === res.length) return { ok: true, detalhe: `${vivos} de ${res.length} canais ao vivo · ${lista}` }
+        if (vivos) return { ok: true, detalhe: `${vivos} de ${res.length} canais ao vivo · os outros o provedor bloqueou só naquele canal (não é a conta nem o app) · ${lista}` }
+        return { ok: false, detalhe: `Nenhum dos ${res.length} canais abriu · ${lista}` }
       })
     }
     let vodCat: string | null = null

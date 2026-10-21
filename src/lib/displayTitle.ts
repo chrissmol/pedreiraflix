@@ -9,3 +9,9 @@ export function displayTitle(name: string): string {
     .replace(/\s*[-–]\s*$/, '')
     .trim()
 }
+
+/** Ano do filme para o filtro: o campo `year` quando o painel manda, senao o "(2024)" do nome. */
+export function movieYear(m: { name: string; year?: string | null }): number | null {
+  const y = Number(m.year || m.name.match(/\(((?:19|20)\d{2})\)/)?.[1])
+  return y > 1900 ? y : null
+}

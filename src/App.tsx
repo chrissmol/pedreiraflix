@@ -20,6 +20,7 @@ const ProfilesPage = lazy(() => import('./pages/ProfilesPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const SeriesDetailPage = lazy(() => import('./pages/SeriesDetailPage'))
 const SeriesPage = lazy(() => import('./pages/SeriesPage'))
+const SupportPage = lazy(() => import('./pages/SupportPage'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const WatchPage = lazy(() => import('./pages/WatchPage'))
 
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="/profiles" element={<ProfilesPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/diagnostico" element={<DiagnosticPage />} />
+            <Route path="/suporte" element={<SupportPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
