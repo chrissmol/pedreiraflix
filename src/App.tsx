@@ -9,6 +9,7 @@ import RequireAuth from './components/RequireAuth'
 // bundles, and vice versa. LoginPage stays eager (it's what everyone hits first, unauthenticated;
 // lazy-loading it would just add a network round trip before the very first screen can paint).
 import LoginPage from './pages/LoginPage'
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
 const DiagnosticPage = lazy(() => import('./pages/DiagnosticPage'))
 const DownloadsPage = lazy(() => import('./pages/DownloadsPage'))
 const EpgGuidePage = lazy(() => import('./pages/EpgGuidePage'))
@@ -79,6 +80,7 @@ export default function App() {
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/diagnostico" element={<DiagnosticPage />} />
             <Route path="/suporte" element={<SupportPage />} />
+            <Route path="/categorias" element={<CategoriesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

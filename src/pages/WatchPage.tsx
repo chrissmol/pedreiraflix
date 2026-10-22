@@ -5,6 +5,7 @@ import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
+import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
@@ -34,7 +35,10 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const client = useXtream()
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
-  const isKids = Boolean(useActiveProfile()?.isKids)
+  const profile = useActiveProfile()
+  const isKids = Boolean(profile?.isKids)
+  const hiddenCategories = profile?.hiddenCategories
+  const categoryOrder = profile?.categoryOrder
   const setProgress = useLibraryStore((s) => s.setProgress)
   const removeProgress = useLibraryStore((s) => s.removeProgress)
   const markWatched = useLibraryStore((s) => s.markWatched)
@@ -97,7 +101,8 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     if (!client || kind !== 'live') return
     let cancelled = false
     async function load() {
-      const categories = await cached('live:categories', () => client!.getLiveCategories())
+      // Mesma ordem e categorias escondidas da tela de canais, para o zapping nao cair numa categoria escondida.
+      const categories = arrangeCategories('live', await cached('live:categories', () => client!.getLiveCategories()), hiddenCategories, categoryOrder)
       const lists = await Promise.all(
         categories.map((c) => cached(`live:items:${c.categoryId}`, () => client!.getLiveStreams(c.categoryId))),
       )
@@ -107,7 +112,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     return () => {
       cancelled = true
     }
-  }, [client, kind])
+  }, [client, kind, hiddenCategories, categoryOrder])
 
   // Memoized so identity stays stable across renders: VideoPlayer's keydown effect depends on these
   // callbacks and re-subscribes whenever they change, and a fresh closure on every render opened a

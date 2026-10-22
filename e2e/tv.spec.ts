@@ -245,3 +245,16 @@ test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre a
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/search\?q=Premiere$/)
 })
+
+test('TV: Organizar categorias funciona so com setas e OK e cabe na tela', async ({ page }) => {
+  await page.goto('/categorias')
+  await expect(page.getByRole('button', { name: 'Esconder Notícias' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(960)
+  const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
+
+  await page.keyboard.press('ArrowDown') // primeira seta: o foco entra no conteudo
+  for (let i = 0; i < 12 && (await focado()) !== 'Esconder Notícias'; i++) await page.keyboard.press('ArrowDown')
+  expect(await focado()).toBe('Esconder Notícias')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Mostrar Notícias' })).toBeFocused()
+})
