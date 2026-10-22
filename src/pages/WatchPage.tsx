@@ -5,6 +5,7 @@ import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
+import { isFinished } from '../lib/finished'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { useLibraryStore } from '../store/library'
@@ -203,11 +204,24 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     const now = Date.now()
     if (now - lastSaved.current < 5000) return
     lastSaved.current = now
-    // Treat anything past 95% as finished so it drops out of "continue watching"
-    // instead of lingering at "100%" forever.
-    if (current / duration > 0.95) {
+    if (isFinished(kind, current, duration)) {
       removeProgress(profileId, `${kind}-${id}`)
       markWatched(profileId, `${kind}-${id}`)
+      // A serie continua em "Continuar assistindo" pelo proximo episodio (como o "Next Up" do Plex/Jellyfin),
+      // sem apagar o progresso se ele ja foi comecado.
+      if (nextEpisode && seriesDetails && !useLibraryStore.getState().progress[`${profileId}:series-${nextEpisode.id}`]) {
+        setProgress(profileId, {
+          kind: 'series',
+          id: nextEpisode.id,
+          name: `${seriesDetails.name} - ${nextEpisode.title}`,
+          image: seriesDetails.cover || null,
+          ext: nextEpisode.containerExtension,
+          positionSeconds: 0,
+          durationSeconds: 0,
+          updatedAt: now,
+          seriesId: seriesDetails.seriesId,
+        })
+      }
       return
     }
     setProgress(profileId, {
