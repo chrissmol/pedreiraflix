@@ -211,7 +211,8 @@ app.get('/player_api.php', (req, res) => {
       if (!m) return res.json({ info: [], movie_data: {} })
       return res.json({
         info: { name: m.name, plot: `Sinopse de ${m.name}.`, cast: 'Ator A, Atriz B', director: 'Diretora C', genre: m.genre,
-          releasedate: `${m.year}-05-01`, duration: '00:00:20', rating: m.rating, movie_image: m.stream_icon, backdrop_path: [] },
+          releasedate: `${m.year}-05-01`, duration: '00:00:20', rating: m.rating, movie_image: m.stream_icon, backdrop_path: [],
+          audio: { codec_name: 'ac3', channels: 6, channel_layout: '5.1(side)' } },
         movie_data: { stream_id: m.stream_id, category_id: m.category_id, container_extension: m.container_extension },
       })
     }

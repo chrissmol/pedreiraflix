@@ -10,6 +10,7 @@ test('diagnostico: tudo ok contra o painel de teste', async ({ page }) => {
   await page.getByRole('button', { name: 'Diagnóstico' }).click()
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText('✓ Início de um filme (o pedido do download)')).toBeVisible({ timeout: 30000 })
+  await expect(page.getByText('ac3 · 6 canais (5.1(side))')).toBeVisible({ timeout: 10000 })
   await expect(page.getByText(/✗/)).toHaveCount(0)
 })
 

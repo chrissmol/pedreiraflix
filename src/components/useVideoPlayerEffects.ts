@@ -135,3 +135,32 @@ export function useMediaSession(o: MediaSessionOptions) {
     }
   }, [currentTime, duration, playbackRate, isLive])
 }
+
+// --- Audio 5.1 misturado em estereo ---
+// Suspeita (Chris, 22/10): filme 5.1 na TV sai sem a voz dos atores, porque a voz fica no canal central e a TV de
+// dois alto-falantes o descartaria. Passar o som pelo Web Audio forca a mistura: a saida tem 2 canais e a regra
+// "speakers" soma o central na esquerda e na direita. Por enquanto so o teste de som dos Ajustes usa; o player so
+// liga depois de confirmado numa TV real (e so na TV: no celular/PC o Web Audio quebraria AirPlay/Chromecast).
+let audioCtx: AudioContext | null = null
+const routed = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>()
+
+/** Liga o som do elemento na mistura estereo; true se o som passou a sair por ela. */
+export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
+  if (typeof AudioContext === 'undefined') return false
+  const node = routed.get(el)
+  if (node && audioCtx) {
+    node.connect(audioCtx.destination) // repetir a mesma ligacao nao faz nada
+    await audioCtx.resume().catch(() => {}) // volta de segundo plano com o contexto suspenso
+    return true
+  }
+  // Midia de outra origem sem CORS sai muda pelo Web Audio; o proxy /api/stream e o blob: do hls.js sao daqui.
+  if (!el.currentSrc.startsWith('blob:') && new URL(el.currentSrc, location.href).origin !== location.origin) return false
+  audioCtx ??= new AudioContext()
+  await audioCtx.resume().catch(() => {})
+  // Contexto parado (sem toque do usuario) deixaria o filme mudo: so desvia o som com ele rodando.
+  if (audioCtx.state !== 'running' || routed.has(el)) return routed.has(el)
+  const source = audioCtx.createMediaElementSource(el)
+  source.connect(audioCtx.destination)
+  routed.set(el, source)
+  return true
+}

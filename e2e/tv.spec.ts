@@ -271,3 +271,18 @@ test('TV: no ao vivo a seta abre a lista de canais e o OK troca de canal', async
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/watch\/live\/102/)
 })
+
+test('TV: o teste de som dos Ajustes toca a voz do canal central com e sem a mistura em estereo', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __mixados: number }
+    w.__mixados = 0
+    const original = AudioContext.prototype.createMediaElementSource
+    AudioContext.prototype.createMediaElementSource = function (el) { w.__mixados++; return original.call(this, el) }
+  })
+  await page.goto('/diagnostico')
+  const tocado = page.waitForRequest(/voz-centro-5\.1-aac\.mp4/)
+  await page.getByRole('button', { name: 'AAC normal' }).click()
+  await tocado
+  await page.getByRole('button', { name: 'AAC com mistura' }).click()
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __mixados: number }).__mixados)).toBe(1)
+})
