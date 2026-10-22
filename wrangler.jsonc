@@ -10,6 +10,8 @@
   // Favoritos e progresso entre aparelhos (/api/sync). Mesmo esquema do KV: o deploy cria o banco D1 sozinho, e a
   // tabela e criada pelo proprio Worker na primeira chamada.
   "d1_databases": [{ "binding": "SYNC", "database_name": "pedreiraflix-sync" }],
+  // Busca por frase e "parecidos" (/api/sugestoes). Plano gratis: 10 mil neurons/dia; passou disso, o app usa so a busca normal.
+  "ai": { "binding": "AI" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

@@ -13,10 +13,12 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
+import SimilarRow from '../components/SimilarRow'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
-import { getTmdbInfo } from '../lib/tmdb'
+import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
+import { proxyImage } from '../lib/xtream'
 
 export default function SeriesDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -61,12 +63,13 @@ export default function SeriesDetailPage() {
     }
   }, [client, id, isKids, attempt])
 
-  // So a nota do IMDb (via /api/tmdb, kind=tv); genero/sinopse da serie continuam vindo so do provedor.
-  const [imdbRating, setImdbRating] = useState<string | null>(null)
+  // Nota do IMDb e, do TVmaze, elenco/miniaturas que faltarem (via /api/tmdb, kind=tv); genero/sinopse da
+  // serie continuam vindo so do provedor.
+  const [tmdb, setTmdb] = useState<TmdbInfo | null>(null)
   useEffect(() => {
     if (!series) return
     let cancelled = false
-    getTmdbInfo(series.name, series.releaseDate, 'tv').then((info) => !cancelled && setImdbRating(info?.imdbRating ?? null))
+    getTmdbInfo(series.name, series.releaseDate, 'tv').then((info) => !cancelled && setTmdb(info))
     return () => {
       cancelled = true
     }
@@ -100,6 +103,11 @@ export default function SeriesDetailPage() {
     .sort((a, b) => b.p.updatedAt - a.p.updatedAt)[0]
   const first = allEpisodes[0]
   const tag = (ep: Episode) => `T${ep.season}:E${ep.episodeNum}`
+  const tvmaze = tmdb?.tvmaze
+  const tvmazeImage = (ep: Episode) => proxyImage(tvmaze?.episodeImages[`${ep.season}x${ep.episodeNum}`])
+  const cast = series.cast || tvmaze?.cast || null
+  // Licenca CC BY-SA do TVmaze: credito so quando algo dele aparece na tela.
+  const usesTvmaze = Boolean((!series.cast && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
 
   return (
     <div className="min-h-screen pb-16">
@@ -108,12 +116,12 @@ export default function SeriesDetailPage() {
         backdrop={backdrop}
         poster={series.cover}
         rating={rating}
-        imdbRating={imdbRating}
+        imdbRating={tmdb?.imdbRating ?? null}
         chips={chips}
         genre={series.genre}
         plot={series.plot}
         credits={[
-          { label: 'Elenco', value: series.cast },
+          { label: 'Elenco', value: cast },
           { label: 'Direção', value: series.director },
         ]}
         actions={
@@ -211,7 +219,7 @@ export default function SeriesDetailPage() {
               : isWatched
                 ? 100
                 : 0
-            const thumb = ep.image || season.cover || backdrop
+            const thumb = ep.image || tvmazeImage(ep) || season.cover || backdrop
 
             return (
               <div
@@ -321,7 +329,11 @@ export default function SeriesDetailPage() {
             )
           })}
         </div>
+        {usesTvmaze && (
+          <p className="mt-6 text-body-sm text-on-surface-muted">Elenco e imagens de episódios: TVmaze.com (CC BY-SA)</p>
+        )}
       </div>
+      <SimilarRow kind="series" name={series.name} id={series.seriesId} />
     </div>
   )
 }

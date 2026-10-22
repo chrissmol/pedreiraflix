@@ -414,6 +414,29 @@ async function imdbRating(imdbId, env) {
   }
 }
 
+// Series cast and episode thumbnails from TVmaze (free, no key; CC BY-SA, so the app credits it), keyed by
+// the IMDb id TMDB already gives us so a same-name show never fills in the wrong pictures. Only plugs gaps
+// the provider leaves; English summaries/titles are left out on purpose (the app is pt-BR). cf.cacheTtl
+// caches the subrequests at Cloudflare's edge, keeping us far under TVmaze's 20 calls/10s limit.
+async function tvmaze(imdbId) {
+  if (!/^tt\d+$/.test(imdbId || '')) return null
+  try {
+    const get = (path) => fetch(`https://api.tvmaze.com${path}`, { cf: { cacheTtl: 86400 }, signal: AbortSignal.timeout(5000) })
+    const found = await get(`/lookup/shows?imdb=${imdbId}`)
+    const id = found.ok ? (await found.json()).id : null
+    if (!id) return null
+    const show = await get(`/shows/${id}?embed[]=episodes&embed[]=cast`)
+    if (!show.ok) return null
+    const { episodes = [], cast = [] } = (await show.json())._embedded || {}
+    const episodeImages = {}
+    for (const e of episodes) if (e.image?.medium) episodeImages[`${e.season}x${e.number}`] = e.image.medium
+    const names = cast.slice(0, 8).map((c) => c.person?.name).filter(Boolean)
+    return { cast: names.length ? names.join(', ') : null, episodeImages }
+  } catch {
+    return null
+  }
+}
+
 // Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
 // Needs the TMDB_TOKEN secret (v4 "API Read Access Token"); without it, or with no match, answers 204 and
 // the app just shows what the provider sent. The token stays server-side — never reaches the browser.
@@ -451,13 +474,72 @@ async function tmdb(url, env) {
       rating: d.vote_average || null,
       overview: d.overview || null,
       imdbRating: await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env),
+      ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
     },
     { headers: { 'cache-control': 'public, max-age=86400' } },
   )
 }
 
+// Busca por frase ("comedia anos 90") e "parecidos com este" via Workers AI: o modelo so devolve nomes de titulos,
+// e o app procura esses nomes no proprio catalogo (cada amigo tem o seu). Plano gratis = 10 mil neurons/dia; cada
+// pergunta gasta ~25, e a resposta fica uma semana no cache da Cloudflare (a mesma frase nao gasta de novo). Passou
+// do limite, sem binding ou qualquer erro: 204 e o app fica so com a busca normal.
+const AI_MODEL = '@cf/meta/llama-4-scout-17b-16e-instruct'
+async function aiSuggest(request, url, env, ctx) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-ia': why } })
+  const q = (url.searchParams.get('q') || '').trim().slice(0, 120)
+  const like = (url.searchParams.get('like') || '').trim().slice(0, 120)
+  const tv = url.searchParams.get('kind') === 'tv'
+  if (!q && !like) return none('vazio')
+  if (!env.AI) return none('sem-ai')
+  const cacheKey = new Request(`https://ia.cache/v1?${new URLSearchParams({ q, like, tv: String(tv) })}`)
+  const cache = globalThis.caches?.default
+  const hit = cache && (await cache.match(cacheKey))
+  if (hit) return hit
+
+  const ask = like
+    ? `Liste 15 ${tv ? 'séries' : 'filmes'} parecidos com ${tv ? 'a série' : 'o filme'} "${like}" (sem incluir ${tv ? 'ela' : 'ele'}).`
+    : `Liste 15 filmes ou séries que combinam com esta busca: "${q}".`
+  let text = ''
+  try {
+    const out = await env.AI.run(AI_MODEL, {
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Você ajuda a achar filmes e séries num catálogo brasileiro. Responda SÓ com um array JSON de objetos ' +
+            '{"br": título usado no Brasil, "original": título original}. Só títulos que existem de verdade, sem comentários.',
+        },
+        { role: 'user', content: ask },
+      ],
+      max_tokens: 400,
+    })
+    text = typeof out?.response === 'string' ? out.response : out?.choices?.[0]?.message?.content || ''
+  } catch {
+    return none('erro-ai') // inclui o limite diario do plano gratis
+  }
+  let list = []
+  try {
+    list = JSON.parse(text.match(/\[[\s\S]*\]/)?.[0] || '[]')
+  } catch {
+    return none('json')
+  }
+  const titles = [
+    ...new Set(
+      (Array.isArray(list) ? list : [])
+        .flatMap((t) => [t?.br, t?.original])
+        .filter((t) => typeof t === 'string' && t.trim())
+        .map((t) => t.trim().slice(0, 120)),
+    ),
+  ].slice(0, 40)
+  if (titles.length === 0) return none('sem-titulos')
+  const res = Response.json({ titles }, { headers: { 'cache-control': 'public, max-age=604800' } })
+  if (cache) ctx?.waitUntil?.(cache.put(cacheKey, res.clone()))
+  return res
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url)
     // CF-Connecting-IP is set by Cloudflare's edge itself, not forwardable by a client — safe to trust.
     const ip = request.headers.get('cf-connecting-ip') || 'unknown'
@@ -488,6 +570,11 @@ export default {
     if (url.pathname === '/api/tmdb') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await tmdb(url, env))
+    }
+    if (url.pathname === '/api/sugestoes') {
+      // Cada pergunta nova gasta a cota diaria de IA de todo mundo: bem mais apertado que o TMDB.
+      if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await aiSuggest(request, url, env, ctx))
     }
     if (url.pathname.startsWith('/api/moltv/')) {
       if (isRateLimited(ip, 'moltv', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
