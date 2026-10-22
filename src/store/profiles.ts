@@ -11,6 +11,9 @@ export interface Profile {
   isKids?: boolean
   /** 4-digit PIN required to switch into this profile, if set. Household-level friction, not real security. */
   pin?: string
+  /** Categorias que o perfil escondeu e a ordem que escolheu (tela /categorias), por chave `${tipo}:${categoryId}`. */
+  hiddenCategories?: string[]
+  categoryOrder?: string[]
 }
 
 interface AccountProfiles {
@@ -31,6 +34,7 @@ interface ProfilesState {
   setActiveProfile: (accId: string, profileId: string) => void
   setKids: (accId: string, profileId: string, isKids: boolean) => void
   setPin: (accId: string, profileId: string, pin: string | null) => void
+  setCategoryPrefs: (accId: string, profileId: string, prefs: Pick<Profile, 'hiddenCategories' | 'categoryOrder'>) => void
 }
 
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
@@ -92,6 +96,7 @@ export const useProfilesStore = create<ProfilesState>()(
         }),
       setKids: (accId, profileId, isKids) => set((state) => updateProfile(state, accId, profileId, { isKids })),
       setPin: (accId, profileId, pin) => set((state) => updateProfile(state, accId, profileId, { pin: pin || undefined })),
+      setCategoryPrefs: (accId, profileId, prefs) => set((state) => updateProfile(state, accId, profileId, prefs)),
     }),
     { name: 'iptv-profiles' },
   ),

@@ -45,6 +45,8 @@ interface VideoPlayerProps {
   /** Live only: zapping to the previous/next channel — arrow keys, on-screen buttons, and a vertical swipe on touch. */
   onChannelUp?: () => void
   onChannelDown?: () => void
+  /** Live only: abre a lista de canais por cima do video (botao e setas esquerda/direita). */
+  onShowChannels?: () => void
 }
 
 interface AudioTrack {
@@ -86,6 +88,7 @@ export default function VideoPlayer({
   previous,
   onChannelUp,
   onChannelDown,
+  onShowChannels,
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -595,11 +598,14 @@ export default function VideoPlayer({
           e.preventDefault()
           togglePlay()
           break
+        // No ao vivo nao ha o que pular: esquerda/direita abrem a lista de canais (como o TiviMate).
         case 'ArrowLeft':
+          if (isLive && onShowChannels) return onShowChannels()
           if (!isLive) video.currentTime = Math.max(0, video.currentTime - 10)
           wakeControls()
           break
         case 'ArrowRight':
+          if (isLive && onShowChannels) return onShowChannels()
           if (!isLive) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10)
           wakeControls()
           break
@@ -644,7 +650,7 @@ export default function VideoPlayer({
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLive, onChannelUp, onChannelDown])
+  }, [isLive, onChannelUp, onChannelDown, onShowChannels])
 
   // --- Picture-in-Picture support + state tracking ---
   useEffect(() => {
@@ -932,6 +938,7 @@ export default function VideoPlayer({
         error={error}
         onChannelUp={onChannelUp}
         onChannelDown={onChannelDown}
+        onShowChannels={onShowChannels}
       />
 
       <VideoPlayerCenterOverlays

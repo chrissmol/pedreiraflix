@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from './icons'
+import { ChevronDown, ChevronUp, ListIcon } from './icons'
 
 interface VideoPlayerZappingControlsProps {
   isLive: boolean
@@ -6,6 +6,7 @@ interface VideoPlayerZappingControlsProps {
   error: string | null
   onChannelUp?: () => void
   onChannelDown?: () => void
+  onShowChannels?: () => void
 }
 
 export function VideoPlayerZappingControls({
@@ -14,8 +15,11 @@ export function VideoPlayerZappingControls({
   error,
   onChannelUp,
   onChannelDown,
+  onShowChannels,
 }: VideoPlayerZappingControlsProps) {
-  if (!isLive || (!onChannelUp && !onChannelDown) || error) return null
+  if (!isLive || (!onChannelUp && !onChannelDown && !onShowChannels)) return null
+  // Com erro (canal fora do ar) so a lista fica: e por ela que se sai de um canal quebrado.
+  const zap = !error && (onChannelUp || onChannelDown)
 
   return (
     <div
@@ -24,6 +28,7 @@ export function VideoPlayerZappingControls({
         controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
+      {zap && (
       <button
         onClick={onChannelUp}
         disabled={!onChannelUp}
@@ -33,6 +38,13 @@ export function VideoPlayerZappingControls({
       >
         <ChevronUp className="h-5 w-5" />
       </button>
+      )}
+      {onShowChannels && (
+        <button onClick={onShowChannels} aria-label="Lista de canais" title="Lista de canais (← →)" className="player-btn h-11 w-11">
+          <ListIcon className="h-5 w-5" />
+        </button>
+      )}
+      {zap && (
       <button
         onClick={onChannelDown}
         disabled={!onChannelDown}
@@ -42,6 +54,7 @@ export function VideoPlayerZappingControls({
       >
         <ChevronDown className="h-5 w-5" />
       </button>
+      )}
     </div>
   )
 }

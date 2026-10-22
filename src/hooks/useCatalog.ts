@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cached } from '../lib/cache'
+import { arrangeCategories } from '../lib/categoryPrefs'
 import { isAdultCategoryName } from '../lib/parentalControl'
 import type { ProviderClient } from '../lib/provider'
 import { NOT_AVAILABLE, XtreamApiError } from '../lib/xtream'
@@ -85,6 +86,8 @@ function useCategorizedCatalog<T>(
   loadCategories: (client: ProviderClient) => Promise<Category[]>,
   loadItemsForCategory: (client: ProviderClient, categoryId: string) => Promise<T[]>,
   hideAdultCategories: boolean,
+  hiddenCategories: string[] | undefined,
+  categoryOrder: string[] | undefined,
 ): CatalogState<T> {
   const [state, setState] = useState<CategorizedCatalogState<T>>({
     categories: [],
@@ -109,7 +112,8 @@ function useCategorizedCatalog<T>(
         if (cancelled || myRequest !== requestId.current) return
         // Applied on every read (not cached), so toggling "Perfil infantil" takes effect immediately
         // without needing to refetch — the raw category list itself is never filtered in the cache.
-        const categories = hideAdultCategories ? allCategories.filter((c) => !isAdultCategoryName(c.categoryName)) : allCategories
+        const allowed = hideAdultCategories ? allCategories.filter((c) => !isAdultCategoryName(c.categoryName)) : allCategories
+        const categories = arrangeCategories(kind, allowed, hiddenCategories, categoryOrder)
         const groups: CategoryGroup<T>[] = categories.map((category) => ({
           category,
           items: [],
@@ -168,33 +172,36 @@ function useCategorizedCatalog<T>(
     return () => {
       cancelled = true
     }
-  }, [kind, client, loadCategories, loadItemsForCategory, hideAdultCategories, attempt])
+  }, [kind, client, loadCategories, loadItemsForCategory, hideAdultCategories, hiddenCategories, categoryOrder, attempt])
 
   return { ...state, retry }
 }
 
 export function useLiveCatalog() {
   const client = useXtream()
-  const hideAdult = Boolean(useActiveProfile()?.isKids)
+  const profile = useActiveProfile()
+  const hideAdult = Boolean(profile?.isKids)
   const loadCategories = useCallback((c: ProviderClient) => c.getLiveCategories(), [])
   const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getLiveStreams(categoryId), [])
-  return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems, hideAdult)
+  return useCategorizedCatalog<LiveChannel>('live', client, loadCategories, loadItems, hideAdult, profile?.hiddenCategories, profile?.categoryOrder)
 }
 
 export function useMovieCatalog() {
   const client = useXtream()
-  const hideAdult = Boolean(useActiveProfile()?.isKids)
+  const profile = useActiveProfile()
+  const hideAdult = Boolean(profile?.isKids)
   const loadCategories = useCallback((c: ProviderClient) => c.getVodCategories(), [])
   const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getVodStreams(categoryId), [])
-  return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems, hideAdult)
+  return useCategorizedCatalog<Movie>('movie', client, loadCategories, loadItems, hideAdult, profile?.hiddenCategories, profile?.categoryOrder)
 }
 
 export function useSeriesCatalog() {
   const client = useXtream()
-  const hideAdult = Boolean(useActiveProfile()?.isKids)
+  const profile = useActiveProfile()
+  const hideAdult = Boolean(profile?.isKids)
   const loadCategories = useCallback((c: ProviderClient) => c.getSeriesCategories(), [])
   const loadItems = useCallback((c: ProviderClient, categoryId: string) => c.getSeries(categoryId), [])
-  return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems, hideAdult)
+  return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems, hideAdult, profile?.hiddenCategories, profile?.categoryOrder)
 }
 
 /** Flattens every loaded item across all category groups, deduped by id. Useful for search/home rails. */

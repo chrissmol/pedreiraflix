@@ -30,8 +30,10 @@ export function formatRuntime(raw: string | null): string | null {
 
 /** "Faltam 18 min" diz mais do que "68% assistido" na hora de escolher o que ver agora. */
 export function formatRemaining(positionSeconds: number, durationSeconds: number): string {
+  // Sem duracao = episodio que a serie pos em "Continuar assistindo" quando o anterior acabou (WatchPage).
+  if (!durationSeconds) return 'Próximo episódio'
   const left = Math.max(0, Math.round((durationSeconds - positionSeconds) / 60))
-  if (!durationSeconds || left === 0) return 'Quase no fim'
+  if (left === 0) return 'Quase no fim'
   return left >= 60 ? `Faltam ${Math.floor(left / 60)}h ${left % 60}min` : `Faltam ${left} min`
 }
 

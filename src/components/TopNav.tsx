@@ -6,7 +6,7 @@ import { connectionStatus, refreshSession, subscriptionStatus } from '../lib/ses
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Info, Plus, RefreshCw, Search, Settings, User, X } from './icons'
+import { Download, Info, ListIcon, Plus, RefreshCw, Search, Settings, User, X } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
@@ -355,6 +355,15 @@ export default function TopNav() {
               className="menu-option"
             >
               <User className="h-4 w-4 text-on-surface-variant" /> Gerenciar perfis
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/categorias')
+              }}
+              className="menu-option"
+            >
+              <ListIcon className="h-4 w-4 text-on-surface-variant" /> Organizar categorias
             </button>
             {!isTv && (
               <button

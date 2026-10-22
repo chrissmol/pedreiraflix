@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import LiveChannelPanel from '../components/LiveChannelPanel'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
+import { arrangeCategories } from '../lib/categoryPrefs'
+import { isFinished } from '../lib/finished'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
-import type { Episode, LiveChannel, SeriesDetails } from '../types'
+import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
@@ -29,11 +32,14 @@ export default function WatchPage() {
 }
 
 function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'offline'; id?: string }) {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const client = useXtream()
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
-  const isKids = Boolean(useActiveProfile()?.isKids)
+  const profile = useActiveProfile()
+  const isKids = Boolean(profile?.isKids)
+  const hiddenCategories = profile?.hiddenCategories
+  const categoryOrder = profile?.categoryOrder
   const setProgress = useLibraryStore((s) => s.setProgress)
   const removeProgress = useLibraryStore((s) => s.removeProgress)
   const markWatched = useLibraryStore((s) => s.markWatched)
@@ -92,21 +98,25 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   // Live: the full channel list (every category, in catalog order) so arrow keys/swipe/buttons can zap.
   // Reuses the same cache keys as useLiveCatalog, so this is instant if Canais was already visited.
   const [liveChannels, setLiveChannels] = useState<LiveChannel[]>([])
+  const [liveCategories, setLiveCategories] = useState<Category[]>([])
   useEffect(() => {
     if (!client || kind !== 'live') return
     let cancelled = false
     async function load() {
-      const categories = await cached('live:categories', () => client!.getLiveCategories())
+      // Mesma ordem e categorias escondidas da tela de canais, para o zapping nao cair numa categoria escondida.
+      const categories = arrangeCategories('live', await cached('live:categories', () => client!.getLiveCategories()), hiddenCategories, categoryOrder)
       const lists = await Promise.all(
         categories.map((c) => cached(`live:items:${c.categoryId}`, () => client!.getLiveStreams(c.categoryId))),
       )
-      if (!cancelled) setLiveChannels(lists.flat())
+      if (cancelled) return
+      setLiveCategories(categories)
+      setLiveChannels(lists.flat())
     }
     load().catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [client, kind])
+  }, [client, kind, hiddenCategories, categoryOrder])
 
   // Memoized so identity stays stable across renders: VideoPlayer's keydown effect depends on these
   // callbacks and re-subscribes whenever they change, and a fresh closure on every render opened a
@@ -120,6 +130,19 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     },
     [liveChannels, id, navigate],
   )
+  // Lista de canais por cima do video: aberta fica na URL (`canais=1`), para o Voltar do Android e da TV fechar a
+  // lista em vez de sair do player (mesmo jeito do seletor do mosaico). Escolher um canal troca essa entrada.
+  const showChannels = params.get('canais') === '1'
+  const openChannels = useCallback(
+    () =>
+      setParams((p) => {
+        const next = new URLSearchParams(p)
+        next.set('canais', '1')
+        return next
+      }),
+    [setParams],
+  )
+  const closeChannels = useCallback(() => navigate(-1), [navigate])
   const zapNext = useCallback(() => zap(1), [zap])
   const zapPrev = useCallback(() => zap(-1), [zap])
 
@@ -198,16 +221,35 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     )
   }
 
+  // O player registra o onProgress uma vez por video, entao a funcao abaixo e a do primeiro render, quando a serie
+  // ainda nao tinha carregado. O proximo episodio vem por ref para estar sempre atualizado.
+  const nextUp = useRef({ nextEpisode, seriesDetails })
+  nextUp.current = { nextEpisode, seriesDetails }
+
   function handleProgress(current: number, duration: number) {
     if (!id || (kind !== 'movie' && kind !== 'series') || !duration) return
     const now = Date.now()
     if (now - lastSaved.current < 5000) return
     lastSaved.current = now
-    // Treat anything past 95% as finished so it drops out of "continue watching"
-    // instead of lingering at "100%" forever.
-    if (current / duration > 0.95) {
+    if (isFinished(kind, current, duration)) {
       removeProgress(profileId, `${kind}-${id}`)
       markWatched(profileId, `${kind}-${id}`)
+      // A serie continua em "Continuar assistindo" pelo proximo episodio (como o "Next Up" do Plex/Jellyfin),
+      // sem apagar o progresso se ele ja foi comecado.
+      const { nextEpisode, seriesDetails } = nextUp.current
+      if (nextEpisode && seriesDetails && !useLibraryStore.getState().progress[`${profileId}:series-${nextEpisode.id}`]) {
+        setProgress(profileId, {
+          kind: 'series',
+          id: nextEpisode.id,
+          name: `${seriesDetails.name} - ${nextEpisode.title}`,
+          image: seriesDetails.cover || null,
+          ext: nextEpisode.containerExtension,
+          positionSeconds: 0,
+          durationSeconds: 0,
+          updatedAt: now,
+          seriesId: seriesDetails.seriesId,
+        })
+      }
       return
     }
     setProgress(profileId, {
@@ -256,7 +298,17 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         previous={previousEpisode ? { label: previousEpisode.title, onPlay: () => goToEpisode(previousEpisode) } : null}
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
+        onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
       />
+      {showChannels && kind === 'live' && liveChannels.length > 0 && (
+        <LiveChannelPanel
+          categories={liveCategories}
+          channels={liveChannels}
+          currentId={Number(id)}
+          onClose={closeChannels}
+          onPick={(ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true })}
+        />
+      )}
     </div>
   )
 }
