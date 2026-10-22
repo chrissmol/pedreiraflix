@@ -17,6 +17,13 @@ Closes #
 - [ ] Testes e2e relevantes:
 - [ ] Verificação manual necessária:
 
+## Plataformas
+
+- Site no celular:
+- Site no computador:
+- APK (celular e Fire Stick):
+- TV (setas e OK):
+
 ## Riscos / observações
 
 - 
@@ -27,4 +34,4 @@ Closes #
 - [ ] PR pequeno e revisável.
 - [ ] Sem segredos em código, logs ou prints.
 - [ ] Obsidian/roadmap atualizado quando a mudança for aprovada/mergeada.
-- [ ] Não fazer merge nem deploy sem autorização explícita.
+- [ ] Merge por squash só com o CI verde (o merge na `main` faz o deploy).
