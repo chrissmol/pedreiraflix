@@ -14,6 +14,10 @@ export interface Profile {
   /** Categorias que o perfil escondeu e a ordem que escolheu (tela /categorias), por chave `${tipo}:${categoryId}`. */
   hiddenCategories?: string[]
   categoryOrder?: string[]
+  /** Sincronizacao entre aparelhos (components/LibrarySync.tsx): a chave do perfil na nuvem, que e a mesma em todo
+   * aparelho, e quando ele foi editado por ultimo aqui (sem data = nunca editado desde que o sync existe). */
+  syncId?: string
+  updatedAt?: number
 }
 
 interface AccountProfiles {
@@ -25,6 +29,8 @@ interface ProfilesState {
   // Keyed by account (server+username), not globally: profiles are "who's watching" on one
   // subscription, and switching to a different Xtream account is a different license entirely.
   byAccount: Record<string, AccountProfiles>
+  /** Perfis apagados aqui, pela chave da nuvem, para o sync apagar nos outros aparelhos tambem. */
+  deletedSync: Record<string, number>
   /** Creates a first profile named after the account's username if this account has none yet, and
    * always returns a valid active profile id. Safe to call on every login. */
   ensureProfile: (accId: string, defaultName: string) => string
@@ -55,7 +61,7 @@ function updateProfile(
   return {
     byAccount: {
       ...state.byAccount,
-      [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? { ...p, ...patch } : p)) },
+      [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? { ...p, ...patch, updatedAt: Date.now() } : p)) },
     },
   }
 }
@@ -64,6 +70,7 @@ export const useProfilesStore = create<ProfilesState>()(
   persist(
     (set, get) => ({
       byAccount: {},
+      deletedSync: {},
       ensureProfile: (accId, defaultName) => {
         const existing = get().byAccount[accId]
         if (existing && existing.profiles.length > 0) return existing.activeId
@@ -83,9 +90,13 @@ export const useProfilesStore = create<ProfilesState>()(
         set((state) => {
           const account = state.byAccount[accId]
           if (!account || account.profiles.length <= 1) return state // always keep at least one
+          const removed = account.profiles.find((p) => p.id === profileId)
           const profiles = account.profiles.filter((p) => p.id !== profileId)
           const activeId = account.activeId === profileId ? profiles[0].id : account.activeId
-          return { byAccount: { ...state.byAccount, [accId]: { profiles, activeId } } }
+          return {
+            byAccount: { ...state.byAccount, [accId]: { profiles, activeId } },
+            deletedSync: removed ? { ...state.deletedSync, [removed.syncId ?? removed.id]: Date.now() } : state.deletedSync,
+          }
         }),
       renameProfile: (accId, profileId, name) => set((state) => updateProfile(state, accId, profileId, { name })),
       setActiveProfile: (accId, profileId) =>

@@ -100,35 +100,3 @@ export function searchCatalog<T extends { name: string; streamId?: number; serie
   // sort e estavel: dentro do mesmo nivel fica a ordem do catalogo.
   return [...best.values()].sort((a, b) => a.rank - b.rank)
 }
-
-// --- Buscas recentes, uma lista por perfil (o perfil infantil nao ve o que o adulto buscou) ---
-const MAX_RECENT = 8
-const recentStorageKey = (profileId: string) => `pf-buscas-recentes:${profileId}`
-
-export function loadRecentSearches(profileId: string): string[] {
-  try {
-    const list = JSON.parse(localStorage.getItem(recentStorageKey(profileId)) || '[]')
-    return Array.isArray(list) ? list.filter((q): q is string => typeof q === 'string') : []
-  } catch {
-    return []
-  }
-}
-
-export function saveRecentSearch(profileId: string, query: string): void {
-  const q = query.trim()
-  if (q.length < 2) return
-  const list = [q, ...loadRecentSearches(profileId).filter((old) => searchKey(old) !== searchKey(q))].slice(0, MAX_RECENT)
-  try {
-    localStorage.setItem(recentStorageKey(profileId), JSON.stringify(list))
-  } catch {
-    // sem armazenamento (aba anonima): so nao lembra
-  }
-}
-
-export function clearRecentSearches(profileId: string): void {
-  try {
-    localStorage.removeItem(recentStorageKey(profileId))
-  } catch {
-    // idem
-  }
-}

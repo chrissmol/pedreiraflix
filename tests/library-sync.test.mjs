@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { applyProfile, extractProfile, mergeProfile } from '../src/lib/librarySync.ts'
+import { applyProfile, claimKeys, extractProfile, mergeProfile } from '../src/lib/librarySync.ts'
 
 const empty = { favorites: [], favoritesAt: 0, teams: [], teamsAt: 0, progress: {}, removed: {}, watched: [] }
 const fav = (id) => ({ kind: 'movie', id, name: `f${id}`, image: null })
@@ -41,6 +41,10 @@ test('extrai e aplica so as chaves do perfil, sem mexer no outro', () => {
     progress: { 'p1:movie-a': prog('a', 1), 'p2:movie-z': prog('z', 1) },
     progressRemoved: {},
     watched: { 'p1:movie-x': true, 'p2:movie-y': true },
+    recentLive: {},
+    recentLiveAt: {},
+    searches: {},
+    searchesAt: {},
   }
   const p1 = extractProfile(state, 'p1')
   assert.deepEqual(Object.keys(p1.progress), ['movie-a'])
@@ -49,4 +53,44 @@ test('extrai e aplica so as chaves do perfil, sem mexer no outro', () => {
   assert.deepEqual(Object.keys(next.watched).sort(), ['p1:movie-w', 'p1:movie-x', 'p2:movie-y'])
   assert.deepEqual(Object.keys(next.progress), ['p2:movie-z'])
   assert.deepEqual(next.favorites.p2, [fav(9)])
+})
+
+const ana = { name: 'Ana', color: '#fff' }
+
+test('perfil: aparelho que nunca sincronizou junta pelo lado seguro (infantil, PIN e categorias escondidas)', () => {
+  const local = { ...empty, settings: { ...ana, isKids: true, hiddenCategories: ['live:1'] }, settingsAt: 0 }
+  const remote = { ...empty, settings: { ...ana, color: '#000', pin: '1234', hiddenCategories: ['vod:2'] }, settingsAt: now - 1000 }
+  const { settings } = mergeProfile(local, remote)
+  assert.equal(settings.isKids, true)
+  assert.equal(settings.pin, '1234')
+  assert.equal(settings.color, '#000')
+  assert.deepEqual(settings.hiddenCategories.sort(), ['live:1', 'vod:2'])
+})
+
+test('perfil: depois disso a edicao mais recente vence (tirar o infantil vale)', () => {
+  const local = { ...empty, settings: { ...ana, isKids: true }, settingsAt: now - 5000 }
+  const remote = { ...empty, settings: { ...ana, name: 'Ana Clara' }, settingsAt: now }
+  const { settings } = mergeProfile(local, remote)
+  assert.equal(settings.name, 'Ana Clara')
+  assert.equal(settings.isKids, undefined)
+})
+
+test('canais e buscas recentes seguem a mesma regra de lista', () => {
+  const merged = mergeProfile({ ...empty, recentLive: [3], searches: ['gol'] }, { ...empty, recentLive: [5], recentLiveAt: now - 10, searches: ['novela'], searchesAt: now - 10 })
+  assert.deepEqual(merged.recentLive, [5, 3])
+  assert.deepEqual(merged.searches, ['novela', 'gol'])
+})
+
+test('cada perfil daqui acha o seu na nuvem: chave guardada, depois nome, senao perfil novo', () => {
+  const remote = { demo: { ...empty }, k2: { ...empty, settings: { name: 'Ana', color: '#f00' } }, k3: { ...empty, settings: { name: 'Bia', color: '#f00' }, deletedAt: now } }
+  const claims = claimKeys(
+    [
+      { id: 'a', name: 'Demo' },
+      { id: 'b', name: 'ana' },
+      { id: 'c', name: 'Bia' },
+      { id: 'd', name: 'Zé', syncId: 'k9' },
+    ],
+    remote,
+  )
+  assert.deepEqual(claims, { a: 'demo', b: 'k2', c: 'c', d: 'k9' })
 })

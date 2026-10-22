@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
-import { applyProfile, extractProfile, mergeProfile, profileSyncName, type LibraryRecords, type SyncBlob } from '../lib/librarySync'
+import { applyProfile, claimKeys, extractProfile, mergeProfile, type LibraryRecords, type SyncBlob } from '../lib/librarySync'
 import { accountId } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
-import { useLibraryStore } from '../store/library'
-import { useProfilesStore } from '../store/profiles'
+import { loadRecentSearches, useLibraryStore } from '../store/library'
+import { useProfilesStore, type Profile } from '../store/profiles'
 import type { ProviderCredentials } from '../types'
 
-// Favoritos e progresso iguais em todos os aparelhos da mesma conta (/api/sync, D1 no Worker). A chave e um hash
+// Perfis, favoritos, progresso, canais e buscas recentes iguais em todos os aparelhos da mesma conta (/api/sync, D1 no Worker). A chave e um hash
 // de servidor+usuario+senha: o Worker nao ve a senha e so quem tem o login le os dados. Playlist de arquivo nao
 // tem segredo nenhum, entao fica so no aparelho.
 async function syncKey(creds: ProviderCredentials): Promise<string | null> {
@@ -29,14 +29,50 @@ async function syncOnce(): Promise<void> {
   if (!res.ok) return
   const remote = (await res.json()) as SyncBlob
   // Junta agora, de forma sincrona, com o estado atual: o que mudou durante o fetch nao se perde.
-  const profiles = useProfilesStore.getState().byAccount[accountId(creds)]?.profiles ?? []
+  const accId = accountId(creds)
+  const profilesState = useProfilesStore.getState()
+  const account = profilesState.byAccount[accId]
+  if (!account) return
+  const claims = claimKeys(account.profiles, remote)
   let records: LibraryRecords = useLibraryStore.getState()
   const out: SyncBlob = { ...remote }
-  for (const profile of profiles) {
-    const name = profileSyncName(profile.name)
-    const merged = mergeProfile(extractProfile(records, profile.id), out[name])
-    out[name] = merged
+  const profiles: Profile[] = []
+  let deleted = 0
+  for (const profile of account.profiles) {
+    const k = claims[profile.id]
+    const r = remote[k]
+    // Apagado em outro aparelho depois da ultima mudanca daqui. O ultimo perfil nunca some (a conta sempre tem um).
+    if (r?.deletedAt && r.deletedAt > (profile.updatedAt ?? 0) && deleted < account.profiles.length - 1) {
+      deleted++
+      continue
+    }
+    records = { ...records, searches: { ...records.searches, [profile.id]: loadRecentSearches(profile.id) } }
+    const merged = mergeProfile(extractProfile(records, profile.id, profile), r?.deletedAt ? undefined : r)
+    out[k] = merged
     records = applyProfile(records, profile.id, merged)
+    profiles.push({ ...profile, ...merged.settings, syncId: k, updatedAt: merged.settingsAt || undefined })
+  }
+  // Apagados aqui: marca na nuvem, a nao ser que outro aparelho tenha mexido no perfil depois.
+  const claimed = new Set(profiles.map((p) => p.syncId))
+  for (const [k, at] of Object.entries(profilesState.deletedSync)) {
+    if (!claimed.has(k) && (remote[k]?.settingsAt ?? 0) <= at) out[k] = { favorites: [], favoritesAt: 0, teams: [], teamsAt: 0, progress: {}, removed: {}, watched: [], deletedAt: Math.max(at, remote[k]?.deletedAt ?? 0) }
+  }
+  // Perfis criados em outro aparelho.
+  for (const [k, entry] of Object.entries(out)) {
+    if (claimed.has(k) || entry.deletedAt) continue
+    const id = `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
+    profiles.push({ id, color: '#0f7bff', ...entry.settings, name: entry.settings?.name ?? k, syncId: k, updatedAt: entry.settingsAt || undefined })
+    records = applyProfile(records, id, entry)
+    claimed.add(k)
+  }
+  if (JSON.stringify(profiles) !== JSON.stringify(account.profiles)) {
+    applying = true
+    useProfilesStore.setState((state) => {
+      const current = state.byAccount[accId]
+      const activeId = profiles.some((p) => p.id === current?.activeId) ? current.activeId : profiles[0].id
+      return { byAccount: { ...state.byAccount, [accId]: { profiles, activeId } } }
+    })
+    applying = false
   }
   const before = useLibraryStore.getState()
   const changed = (Object.keys(records) as (keyof LibraryRecords)[]).filter((k) => JSON.stringify(records[k]) !== JSON.stringify(before[k]))
@@ -84,7 +120,7 @@ export default function LibrarySync() {
     })
     // Perfil novo ou renomeado (ex.: o primeiro perfil, criado logo depois do login) ja puxa o que esta na nuvem.
     const unsubscribeProfiles = useProfilesStore.subscribe((state, prev) => {
-      if (state.byAccount !== prev.byAccount) syncNow()
+      if (!applying && state.byAccount !== prev.byAccount) syncNow()
     })
     const onVisibility = () => {
       if (document.visibilityState === 'visible') syncNow()

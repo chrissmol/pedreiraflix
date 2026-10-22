@@ -59,3 +59,39 @@ test('favorito feito no celular aparece na TV da mesma conta, e o favorito antig
   await celular.close()
   await tv.close()
 })
+
+test('perfil criado e perfil marcado como infantil no computador chegam na TV', async ({ browser }) => {
+  const store = new Map<string, string>()
+  const computador = await browser.newContext()
+  const tv = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7633) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36',
+    viewport: { width: 960, height: 540 },
+  })
+  await sharedSync(computador, store)
+  await sharedSync(tv, store)
+
+  const pc = await computador.newPage()
+  await login(pc)
+  await pc.getByRole('button', { name: 'Conta', exact: true }).click()
+  await pc.getByRole('button', { name: 'Gerenciar perfis' }).click()
+  await pc.getByRole('button', { name: 'Ajustes' }).click()
+  await pc.getByLabel('Perfil infantil').check()
+  await pc.getByRole('button', { name: 'Fechar' }).click()
+  await pc.getByRole('button', { name: 'Adicionar perfil' }).click()
+  await pc.getByPlaceholder('Nome do perfil').fill('Vovó')
+  await pc.getByRole('button', { name: 'Criar' }).click()
+  await expect(pc.getByText('Vovó')).toBeVisible()
+  // Perfil mexido sincroniza na hora; espera chegar a versao com os dois perfis.
+  await expect.poll(() => [...store.values()].join('')).toContain('Vovó')
+
+  const tvPage = await tv.newPage()
+  await seedSession(tvPage)
+  await tvPage.goto('/movies')
+  await expect(tvPage.getByText('Filme Explosivo').first()).toBeVisible()
+  await expect(tvPage.getByText('Filme Adulto')).toHaveCount(0)
+  await tvPage.goto('/profiles')
+  await expect(tvPage.getByText('Vovó')).toBeVisible()
+
+  await computador.close()
+  await tv.close()
+})
