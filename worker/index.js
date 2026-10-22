@@ -366,18 +366,22 @@ async function logError(request) {
 }
 
 // IMDb's own rating (far more votes than TMDB's) via OMDb, keyed by the IMDb id TMDB already returns.
-// Optional like TMDB: needs the OMDB_KEY secret (free tier, 1,000 lookups/day — the daily cache on the
-// /api/tmdb response keeps us well under it). Any failure just means no IMDb badge, never a broken page.
+// Optional like TMDB: needs the OMDB_KEY secret (free tier, 1,000 lookups/day — the posters ask for it too,
+// so tmdb() below keeps each answer in the NOTAS KV and every title costs one lookup a month, not one per
+// person per day). Any failure just means no IMDb badge, never a broken page. null = the title has no IMDb
+// rating; undefined = we couldn't ask (no key, OMDb down or over its daily limit), so nothing gets cached.
 async function imdbRating(imdbId, env) {
-  if (!env.OMDB_KEY || !/^tt\d+$/.test(imdbId || '')) return null
+  if (!env.OMDB_KEY) return undefined
+  if (!/^tt\d+$/.test(imdbId || '')) return null
   try {
     const res = await fetch(`https://www.omdbapi.com/?${new URLSearchParams({ i: imdbId, apikey: String(env.OMDB_KEY).trim() })}`, {
       signal: AbortSignal.timeout(5000),
     })
-    const rating = res.ok ? (await res.json()).imdbRating : null
-    return /^\d+(\.\d)?$/.test(rating || '') ? rating : null
+    const data = res.ok ? await res.json() : null
+    if (!data || data.Response === 'False') return undefined
+    return /^\d+(\.\d)?$/.test(data.imdbRating || '') ? data.imdbRating : null
   } catch {
-    return null
+    return undefined
   }
 }
 
@@ -403,6 +407,10 @@ async function tmdb(url, env) {
   // kind=tv: series. TMDB names the same things differently there (first_air_date, first_air_date_year) and
   // only hands out the IMDb id through external_ids.
   const tv = url.searchParams.get('kind') === 'tv'
+  const cacheKey = `tmdb:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
+  const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
+  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  if (saved) return answer(saved)
   const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
   const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
   const hit = search.ok ? (await search.json()).results?.[0] : null
@@ -411,16 +419,17 @@ async function tmdb(url, env) {
   if (!details.ok) return none(`details-${details.status}`)
   const d = await details.json()
   const firstDate = tv ? d.first_air_date : d.release_date
-  return Response.json(
-    {
-      genres: (d.genres || []).map((g) => g.name),
-      year: firstDate ? firstDate.slice(0, 4) : null,
-      rating: d.vote_average || null,
-      overview: d.overview || null,
-      imdbRating: await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env),
-    },
-    { headers: { 'cache-control': 'public, max-age=86400' } },
-  )
+  const imdb = await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
+  const body = {
+    genres: (d.genres || []).map((g) => g.name),
+    year: firstDate ? firstDate.slice(0, 4) : null,
+    rating: d.vote_average || null,
+    overview: d.overview || null,
+    imdbRating: imdb ?? null,
+  }
+  // shortcut: a nota fica 30 dias sem atualizar; encurte o prazo se alguem reclamar de nota velha.
+  if (imdb !== undefined) await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  return answer(body)
 }
 
 export default {

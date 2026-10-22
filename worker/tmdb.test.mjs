@@ -65,6 +65,31 @@ test('series (kind=tv): busca em /search/tv e pega o codigo IMDb dos external_id
   assert.ok(calls.some((u) => u.includes('i=tt0903747')))
 })
 
+// Os posteres tambem pedem a nota: cada titulo fica guardado no KV NOTAS para nao estourar as 1.000
+// consultas/dia do OMDb. Falha do OMDb (limite do dia, fora do ar) nao fica guardada.
+function memoryKv() {
+  const data = new Map()
+  return { data, get: async (k) => (data.has(k) ? JSON.parse(data.get(k)) : null), put: async (k, v) => void data.set(k, v) }
+}
+
+test('nota guardada no KV: a segunda pergunta nao chama TMDB nem OMDb', async () => {
+  const NOTAS = memoryKv()
+  stubFetch(() => Response.json({ imdbRating: '8.7' }))
+  await ask({ ...ENV, NOTAS })
+  const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
+  const body = await (await ask({ ...ENV, NOTAS })).json()
+  assert.equal(body.imdbRating, '8.7')
+  assert.equal(calls.length, 0)
+})
+
+test('OMDb no limite do dia: responde sem nota e nao guarda no KV', async () => {
+  const NOTAS = memoryKv()
+  stubFetch(() => Response.json({ Response: 'False', Error: 'Request limit reached!' }))
+  const body = await (await ask({ ...ENV, NOTAS })).json()
+  assert.equal(body.imdbRating, null)
+  assert.equal(NOTAS.data.size, 0)
+})
+
 // O Retry-After do provedor no 429 tem que chegar no app (ele para de pedir pelo tempo certo) — Worker de verdade.
 test('429 do provedor: /api/xtream repassa o Retry-After', async () => {
   globalThis.fetch = async () => new Response('', { status: 429, headers: { 'content-type': 'text/html', 'retry-after': '7' } })

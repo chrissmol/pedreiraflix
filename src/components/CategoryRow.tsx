@@ -1,3 +1,4 @@
+import { movieYear } from '../lib/displayTitle'
 import { memo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PosterCard from './PosterCard'
@@ -49,7 +50,7 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
             key={(item as Movie).streamId}
             title={item.name}
             image={(item as Movie).streamIcon}
-            badge={item.rating && Number(item.rating) > 0 ? `★ ${Number(item.rating).toFixed(1)}` : null}
+            imdb={{ title: item.name, year: movieYear(item as Movie), kind: 'movie' }}
             onClick={() => navigate(`/movies/${(item as Movie).streamId}`)}
           />
         ) : (
@@ -57,7 +58,7 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
             key={(item as SeriesItem).seriesId}
             title={item.name}
             image={(item as SeriesItem).cover}
-            badge={item.rating && Number(item.rating) > 0 ? `★ ${Number(item.rating).toFixed(1)}` : null}
+            imdb={{ title: item.name, year: (item as SeriesItem).releaseDate, kind: 'tv' }}
             onClick={() => navigate(`/series/${(item as SeriesItem).seriesId}`)}
           />
         ),

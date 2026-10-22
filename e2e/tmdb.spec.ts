@@ -43,3 +43,17 @@ test('serie mostra a nota do IMDb (busca com kind=tv)', async ({ page }) => {
   await expect(page.getByText('IMDb 9.1')).toBeVisible()
   expect(pedido).toContain('kind=tv')
 })
+
+// Pedido do Chris (22/10): as estrelas dos posteres e do destaque mostram a nota do IMDb, nao a do provedor.
+test('posteres mostram a nota do IMDb no lugar da nota do provedor', async ({ page }) => {
+  await page.route('**/api/tmdb?*', (route) => {
+    const title = new URL(route.request().url()).searchParams.get('title')
+    return route.fulfill({ json: { genres: [], year: null, overview: null, imdbRating: title === 'Filme Explosivo' ? '6.6' : null } })
+  })
+  await login(page)
+  await page.goto('/movies')
+  await expect(page.getByText('★ 6.6').first()).toBeVisible()
+  // 8.1 e 9.0 sao notas do provedor no mock: nao aparecem mais.
+  await expect(page.getByText('★ 8.1')).toHaveCount(0)
+  await expect(page.getByText('★ 9.0')).toHaveCount(0)
+})

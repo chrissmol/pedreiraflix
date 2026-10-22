@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+import { useImdbRating, type ImdbQuery } from '../hooks/useImdbRating'
 import { isTv } from '../lib/device'
 import { displayTitle } from '../lib/displayTitle'
 import { Play } from './icons'
@@ -6,7 +8,8 @@ interface PosterCardProps {
   title: string
   image: string | null
   onClick: () => void
-  badge?: string | null
+  /** Mostra a nota do IMDb do titulo (so ela, a pedido do Chris), buscada quando o poster aparece na tela. */
+  imdb?: ImdbQuery
   subtitle?: string | null
   /** 0–100. Renders a thin progress bar across the bottom of the poster, always visible (not just on
    * hover) — the same at-a-glance "how far in am I" cue Netflix shows in Continue Watching rows. */
@@ -17,11 +20,22 @@ interface PosterCardProps {
   fill?: boolean
 }
 
-export default function PosterCard({ title: rawTitle, image, onClick, badge, subtitle, progressPct, fill }: PosterCardProps) {
+export default function PosterCard({ title: rawTitle, image, onClick, imdb, subtitle, progressPct, fill }: PosterCardProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido) em todo poster do app — mesma limpeza do destaque (#86).
   const title = displayTitle(rawTitle)
+  const ref = useRef<HTMLButtonElement>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!imdb || seen || !el) return
+    const io = new IntersectionObserver(([entry]) => entry.isIntersecting && setSeen(true), { rootMargin: '200px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [imdb, seen])
+  const rating = useImdbRating(imdb, seen)
   return (
     <button
+      ref={ref}
       data-spatial
       onClick={onClick}
       // Apple-style hover: the card itself lifts and deepens its own (neutral) shadow — no colored
@@ -54,9 +68,9 @@ export default function PosterCard({ title: rawTitle, image, onClick, badge, sub
       </div>
 
 
-      {badge && (
-        <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
-          {badge}
+      {rating && (
+        <span title="Nota do IMDb" className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
+          ★ {rating}
         </span>
       )}
 

@@ -1,3 +1,4 @@
+import { movieYear } from '../lib/displayTitle'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
@@ -189,7 +190,7 @@ export default function HomePage() {
         {recentMovies.length > 0 && (
           <Row title="Adicionados recentemente">
             {recentMovies.map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => navigate(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} onClick={() => navigate(`/movies/${m.streamId}`)} />
             ))}
           </Row>
         )}
@@ -201,7 +202,7 @@ export default function HomePage() {
                 key={`${r.kind}-${r.id}`}
                 title={r.name}
                 image={r.image}
-                badge={r.rating > 0 ? `★ ${r.rating.toFixed(1)}` : null}
+                imdb={{ title: r.name, kind: r.kind === 'movie' ? 'movie' : 'tv' }}
                 onClick={() => navigate(r.kind === 'movie' ? `/movies/${r.id}` : `/series/${r.id}`)}
               />
             ))}

@@ -6,7 +6,7 @@
   "services": [{ "binding": "MOLTV", "service": "mol-tv-api" }],
   // Suporte: feedbacks dos amigos (/api/feedback). Sem id de proposito: o `wrangler deploy` cria o namespace sozinho
   // na primeira vez (provisionamento automatico) e reaproveita depois.
-  "kv_namespaces": [{ "binding": "FEEDBACK" }],
+  "kv_namespaces": [{ "binding": "FEEDBACK" }, { "binding": "NOTAS" }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
