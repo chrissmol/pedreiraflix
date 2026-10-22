@@ -4,6 +4,7 @@ import { XtreamClient } from '../lib/xtream'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { clearAllCaches } from '../lib/cache'
 import { isTv } from '../lib/device'
+import { routeToStereo } from '../components/useVideoPlayerEffects'
 
 // Diagnostico de conexao (menu da conta): roda as mesmas chamadas que o app faz e mostra o que ESTE aparelho recebe,
 // linha por linha. Existe porque o app do Windows do Christian nao carregava canais nem baixava e nao havia como ver
@@ -165,6 +166,12 @@ export default function DiagnosticPage() {
           const video = (r.status === 206 || r.status === 200) && !pagina(r.text, r.type)
           return { ok: video, detalhe: `HTTP ${r.status} · ${r.type.split(';')[0] || 'sem tipo'} · ${r.range ? `${r.range} · ` : ''}${r.ms} ms · ${r.bytes} bytes${video ? '' : ` · NÃO É VÍDEO: ${r.text.slice(0, 80)}`}` }
         })
+        // Canais do audio que o painel informa (ex.: ac3 6 canais = 5.1, a voz fica no canal central).
+        await passo('Áudio de um filme', async () => {
+          const r = await client.probe('get_vod_info', { vod_id: String(f.id) })
+          const a = json(r.text)?.info?.audio as { codec_name?: string; channels?: number; channel_layout?: string } | undefined
+          return { ok: r.status === 200, detalhe: a ? `${a.codec_name ?? '?'} · ${a.channels ?? '?'} canais${a.channel_layout ? ` (${a.channel_layout})` : ''}` : 'o provedor não informa' }
+        })
       }
     }
     setRodando(false)
@@ -199,6 +206,7 @@ export default function DiagnosticPage() {
           }}
         />
       )}
+      <TesteDeSom />
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
           <li key={l.nome} className="rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm">
@@ -210,5 +218,39 @@ export default function DiagnosticPage() {
         ))}
       </ul>
     </div>
+  )
+}
+
+// Teste de som 5.1: musica nos lados e voz so no canal central, como nos filmes. Se a voz some no "Normal" e
+// volta no "Com mistura", o aparelho descarta o canal central e misturar no player resolve.
+function TesteDeSom() {
+  const [tocando, setTocando] = useState<HTMLAudioElement | null>(null)
+  const [aviso, setAviso] = useState('')
+  async function tocar(codec: 'aac' | 'ac3', misturar: boolean) {
+    tocando?.pause()
+    // Elemento novo a cada toque: depois de ligado no Web Audio, o som dele nao volta para a saida normal.
+    const el = new Audio(`/teste-som/voz-centro-5.1-${codec}.mp4`)
+    setTocando(el)
+    try {
+      await el.play()
+      setAviso(misturar && !(await routeToStereo(el)) ? 'A mistura não ligou neste aparelho.' : '')
+    } catch {
+      setAviso(`Este aparelho não toca ${codec.toUpperCase()}.`)
+    }
+  }
+  return (
+    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
+      <h2 className="text-label-md text-white">Teste de som (voz dos atores)</h2>
+      <p className="mt-1 text-body-sm text-on-surface-variant">
+        Toca 8 segundos com música nos lados e uma voz só no canal central. Você ouve a voz em cada botão?
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button onClick={() => tocar('aac', false)} className="chip">AAC normal</button>
+        <button onClick={() => tocar('aac', true)} className="chip">AAC com mistura</button>
+        <button onClick={() => tocar('ac3', false)} className="chip">AC3 normal</button>
+        <button onClick={() => tocar('ac3', true)} className="chip">AC3 com mistura</button>
+      </div>
+      {aviso && <p className="mt-2 text-body-sm text-live">{aviso}</p>}
+    </section>
   )
 }

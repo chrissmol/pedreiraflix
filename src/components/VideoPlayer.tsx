@@ -10,7 +10,7 @@ import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
 import { VideoPlayerHeader } from './VideoPlayerHeader'
 import type { QualityLevel } from './VideoPlayerQualityMenu'
 import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
-import { useMediaSession, useSleepTimer, useStereoDownmix, useSubtitleOffset, useWakeLock } from './useVideoPlayerEffects'
+import { useMediaSession, useSleepTimer, useSubtitleOffset, useWakeLock } from './useVideoPlayerEffects'
 import {
   NEXT_UP_LEAD,
   CHANNEL_BLOCKED_MESSAGE,
@@ -534,7 +534,6 @@ export default function VideoPlayer({
   }, [])
 
   useSubtitleOffset(videoRef, subtitleOffset, currentSubtitleTrack)
-  useStereoDownmix(videoRef, isTv)
 
   const [sleepMinutes, setSleepMinutes] = useSleepTimer(videoRef)
 

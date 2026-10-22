@@ -136,39 +136,31 @@ export function useMediaSession(o: MediaSessionOptions) {
   }, [currentTime, duration, playbackRate, isLive])
 }
 
-// --- TV: audio 5.1 misturado em estereo ---
-// Filme com audio 5.1 na WebView do Android TV saia sem a voz dos atores (Chris, 22/10): a voz fica no canal
-// central, que a TV de dois alto-falantes descartava, enquanto o PC mistura sozinho. Passar o <video> pelo Web
-// Audio forca a mistura: a saida tem 2 canais e a regra "speakers" soma o central na esquerda e na direita. So
-// na TV, porque no celular/PC o Web Audio quebraria AirPlay/Chromecast (ver useSubtitleOffset).
+// --- Audio 5.1 misturado em estereo ---
+// Suspeita (Chris, 22/10): filme 5.1 na TV sai sem a voz dos atores, porque a voz fica no canal central e a TV de
+// dois alto-falantes o descartaria. Passar o som pelo Web Audio forca a mistura: a saida tem 2 canais e a regra
+// "speakers" soma o central na esquerda e na direita. Por enquanto so o teste de som dos Ajustes usa; o player so
+// liga depois de confirmado numa TV real (e so na TV: no celular/PC o Web Audio quebraria AirPlay/Chromecast).
 let audioCtx: AudioContext | null = null
-const routed = new WeakMap<HTMLVideoElement, MediaElementAudioSourceNode>()
-export function useStereoDownmix(videoRef: RefObject<HTMLVideoElement | null>, enabled: boolean) {
-  useEffect(() => {
-    const video = videoRef.current
-    if (!enabled || !video || typeof AudioContext === 'undefined') return
-    const el = video
-    async function route() {
-      const node = routed.get(el)
-      if (node && audioCtx) {
-        node.connect(audioCtx.destination) // repetir a mesma ligacao nao faz nada
-        void audioCtx.resume().catch(() => {}) // volta de segundo plano com o contexto suspenso
-        return
-      }
-      // Midia de outra origem sem CORS sai muda pelo Web Audio; o proxy /api/stream e o blob: do hls.js sao daqui.
-      if (!el.currentSrc.startsWith('blob:') && new URL(el.currentSrc, location.href).origin !== location.origin) return
-      audioCtx ??= new AudioContext()
-      await audioCtx.resume().catch(() => {})
-      // Contexto parado (sem toque do usuario) deixaria o filme mudo: so desvia o som com ele rodando.
-      if (audioCtx.state !== 'running' || routed.has(el)) return
-      const source = audioCtx.createMediaElementSource(el)
-      source.connect(audioCtx.destination)
-      routed.set(el, source)
-    }
-    el.addEventListener('playing', route)
-    return () => {
-      el.removeEventListener('playing', route)
-      routed.get(el)?.disconnect() // o contexto e um so para o app inteiro: solta o video que saiu da tela
-    }
-  }, [videoRef, enabled])
+const routed = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>()
+
+/** Liga o som do elemento na mistura estereo; true se o som passou a sair por ela. */
+export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
+  if (typeof AudioContext === 'undefined') return false
+  const node = routed.get(el)
+  if (node && audioCtx) {
+    node.connect(audioCtx.destination) // repetir a mesma ligacao nao faz nada
+    await audioCtx.resume().catch(() => {}) // volta de segundo plano com o contexto suspenso
+    return true
+  }
+  // Midia de outra origem sem CORS sai muda pelo Web Audio; o proxy /api/stream e o blob: do hls.js sao daqui.
+  if (!el.currentSrc.startsWith('blob:') && new URL(el.currentSrc, location.href).origin !== location.origin) return false
+  audioCtx ??= new AudioContext()
+  await audioCtx.resume().catch(() => {})
+  // Contexto parado (sem toque do usuario) deixaria o filme mudo: so desvia o som com ele rodando.
+  if (audioCtx.state !== 'running' || routed.has(el)) return routed.has(el)
+  const source = audioCtx.createMediaElementSource(el)
+  source.connect(audioCtx.destination)
+  routed.set(el, source)
+  return true
 }
