@@ -221,6 +221,11 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     )
   }
 
+  // O player registra o onProgress uma vez por video, entao a funcao abaixo e a do primeiro render, quando a serie
+  // ainda nao tinha carregado. O proximo episodio vem por ref para estar sempre atualizado.
+  const nextUp = useRef({ nextEpisode, seriesDetails })
+  nextUp.current = { nextEpisode, seriesDetails }
+
   function handleProgress(current: number, duration: number) {
     if (!id || (kind !== 'movie' && kind !== 'series') || !duration) return
     const now = Date.now()
@@ -231,6 +236,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       markWatched(profileId, `${kind}-${id}`)
       // A serie continua em "Continuar assistindo" pelo proximo episodio (como o "Next Up" do Plex/Jellyfin),
       // sem apagar o progresso se ele ja foi comecado.
+      const { nextEpisode, seriesDetails } = nextUp.current
       if (nextEpisode && seriesDetails && !useLibraryStore.getState().progress[`${profileId}:series-${nextEpisode.id}`]) {
         setProgress(profileId, {
           kind: 'series',
