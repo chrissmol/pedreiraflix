@@ -1,3 +1,4 @@
+import { movieYear } from '../lib/displayTitle'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import LiveChannelCard from '../components/LiveChannelCard'
@@ -198,7 +199,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.movies.slice(0, shown('movies')).map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} badge={Number(m.rating) > 0 ? `★ ${Number(m.rating).toFixed(1)}` : null} onClick={() => open(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} onClick={() => open(`/movies/${m.streamId}`)} />
             ))}
           </div>
           {results.movies.length > shown('movies') && (
@@ -217,7 +218,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.series.slice(0, shown('series')).map((s) => (
-              <PosterCard key={s.seriesId} title={s.name} image={s.cover} badge={Number(s.rating) > 0 ? `★ ${Number(s.rating).toFixed(1)}` : null} onClick={() => open(`/series/${s.seriesId}`)} />
+              <PosterCard key={s.seriesId} title={s.name} image={s.cover} imdb={{ title: s.name, year: s.releaseDate, kind: 'tv' }} onClick={() => open(`/series/${s.seriesId}`)} />
             ))}
           </div>
           {results.series.length > shown('series') && (

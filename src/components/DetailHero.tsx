@@ -5,10 +5,9 @@ interface DetailHeroProps {
   title: string
   backdrop: string | null
   poster: string | null
-  rating?: number | null
   /** Selos curtos ao lado da nota: ano, duracao, "3 temporadas"... */
   chips: string[]
-  /** IMDb's rating, shown beside the provider/TMDB star when available. */
+  /** Unica nota exibida (o Chris preferiu so o IMDb); sem ela, nenhuma nota aparece. */
   imdbRating?: string | null
   genre?: string | null
   plot?: string | null
@@ -19,7 +18,7 @@ interface DetailHeroProps {
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title: rawTitle, backdrop, poster, rating, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
@@ -35,11 +34,6 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, rating, 
       <div className="relative z-10 flex items-end gap-10 px-4 pb-10 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10 sm:pt-32">
         <div className="min-w-0 max-w-3xl flex-1">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            {rating ? (
-              <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge font-semibold text-rating">
-                ★ {rating.toFixed(1)}
-              </span>
-            ) : null}
             {imdbRating && (
               <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-white">
                 <span className="font-extrabold text-rating">IMDb</span> {imdbRating}

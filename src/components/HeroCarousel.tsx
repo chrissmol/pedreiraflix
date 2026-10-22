@@ -3,6 +3,7 @@ import { Check, Info, Play, Plus } from './icons'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import { displayTitle } from '../lib/displayTitle'
+import { useImdbRating } from '../hooks/useImdbRating'
 
 export interface FeaturedCandidate {
   key: string
@@ -62,6 +63,8 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
   const timeSlot = playable.length > 0 ? Math.floor(now / slotMs) % playable.length : 0
   const index = timeSlot % Math.max(1, playable.length)
   const current = playable[index]
+  // O destaque escolhe pela nota do provedor, mas mostra so a do IMDb.
+  const imdbRating = useImdbRating(current && { title: current.title, kind: current.kind === 'movie' ? 'movie' : 'tv' })
   const profileId = useActiveProfileId()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => (current ? s.isFavorite(profileId, current.kind, current.id) : false))
@@ -117,7 +120,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
           {displayTitle(current.title)}
         </h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">
-          {current.rating > 0 && <span className="font-semibold text-rating">★ {current.rating.toFixed(1)}</span>}
+          {imdbRating && <span title="Nota do IMDb" className="font-semibold text-rating">★ {imdbRating}</span>}
           {[current.kind === 'movie' ? 'Filme' : 'Série', ...current.meta].map((m) => (
             <span key={m} className="before:pr-2 before:text-on-surface-muted before:content-['·'] first:before:content-none">
               {m}

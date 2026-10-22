@@ -27,3 +27,10 @@ test('suporte: avisa quando nao deu para enviar', async ({ page }) => {
   await page.getByRole('button', { name: 'Enviar' }).click()
   await expect(page.getByRole('alert')).toContainText('Não deu para enviar')
 })
+
+test('suporte mostra o credito do TMDB com o logo', async ({ page }) => {
+  await login(page)
+  await page.goto('/suporte')
+  await expect(page.getByAltText('TMDB')).toBeVisible()
+  await expect(page.getByText(/não é endossado nem certificado pelo TMDB/)).toBeVisible()
+})

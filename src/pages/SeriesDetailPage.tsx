@@ -81,7 +81,6 @@ export default function SeriesDetailPage() {
   if (!series) return <ErrorCard message="Série não encontrada." className="mt-32" />
 
   const backdrop = series.backdropPath[0] || series.cover
-  const rating = Number(series.rating) > 0 ? Number(series.rating) : null
   const chips = [
     series.releaseDate?.slice(0, 4),
     `${series.seasons.length} temporada${series.seasons.length > 1 ? 's' : ''}`,
@@ -115,7 +114,6 @@ export default function SeriesDetailPage() {
         title={series.name}
         backdrop={backdrop}
         poster={series.cover}
-        rating={rating}
         imdbRating={tmdb?.imdbRating ?? null}
         chips={chips}
         genre={series.genre}

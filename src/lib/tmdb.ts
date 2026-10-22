@@ -3,7 +3,6 @@ import { cached } from './cache'
 export interface TmdbInfo {
   genres: string[]
   year: string | null
-  rating: number | null
   overview: string | null
   /** IMDb's rating ("7.8"), via OMDb in the Worker; absent/null when OMDB_KEY isn't set or there's no match. */
   imdbRating?: string | null
@@ -14,7 +13,7 @@ export interface TmdbInfo {
 // "Filme (2023)" / "[L] Filme" -> "Filme": providers decorate titles, TMDB's search wants the bare name.
 const cleanTitle = (name: string) => name.replace(/\[[^\]]*\]|\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()
 
-/** Fills gaps Xtream leaves in movie details (genre/year/rating/plot) via the Worker's optional /api/tmdb.
+/** Fills gaps Xtream leaves in movie details (genre/year/plot) via the Worker's optional /api/tmdb.
  * Resolves null when TMDB isn't configured or has no match; nulls aren't cached, so adding the secret later
  * takes effect immediately. */
 export function getTmdbInfo(name: string, releaseDate: string | null, kind: 'movie' | 'tv' = 'movie'): Promise<TmdbInfo | null> {
