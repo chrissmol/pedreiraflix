@@ -11,7 +11,7 @@ import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 import { isTv } from '../lib/device'
-import { loadRecentSearches, saveRecentSearch } from '../lib/search'
+import { loadRecentSearches, saveRecentSearch } from '../store/library'
 import { installApp, useInstallPrompt } from '../lib/installPrompt'
 
 const links = [

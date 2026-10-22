@@ -90,6 +90,32 @@ test('OMDb no limite do dia: responde sem nota e nao guarda no KV', async () => 
   assert.equal(NOTAS.data.size, 0)
 })
 
+test('series: elenco e miniaturas de episodio do TVmaze pelo codigo IMDb; TVmaze fora do ar nao quebra', async () => {
+  const tvmazeUp = async (url) => {
+    if (url.includes('/lookup/shows?imdb=tt0903747')) return Response.json({ id: 169 })
+    if (url.includes('/shows/169?')) return Response.json({ _embedded: {
+      episodes: [{ season: 1, number: 1, image: { medium: 'https://static.tvmaze.com/e1.jpg' } }, { season: 1, number: 2, image: null }],
+      cast: [{ person: { name: 'Bryan Cranston' } }, { person: { name: 'Aaron Paul' } }],
+    } })
+    throw new Error('rede')
+  }
+  for (const [tvmaze, expected] of [
+    [tvmazeUp, { cast: 'Bryan Cranston, Aaron Paul', episodeImages: { '1x1': 'https://static.tvmaze.com/e1.jpg' } }],
+    [async () => { throw new Error('rede') }, null],
+  ]) {
+    globalThis.fetch = async (url) => {
+      url = String(url)
+      if (url.includes('/search/tv')) return Response.json({ results: [{ id: 1396 }] })
+      if (url.includes('/tv/1396')) return Response.json({ genres: [], first_air_date: '2008-01-20', external_ids: { imdb_id: 'tt0903747' } })
+      if (url.includes('tvmaze.com')) return tvmaze(url)
+      throw new Error(`fetch inesperado: ${url}`)
+    }
+    const res = await worker.fetch(new Request('http://app/api/tmdb?title=Breaking+Bad&kind=tv', { headers: { 'cf-connecting-ip': String(Math.random()) } }), ENV)
+    assert.equal(res.status, 200)
+    assert.deepEqual((await res.json()).tvmaze, expected)
+  }
+})
+
 // O Retry-After do provedor no 429 tem que chegar no app (ele para de pedir pelo tempo certo) — Worker de verdade.
 test('429 do provedor: /api/xtream repassa o Retry-After', async () => {
   globalThis.fetch = async () => new Response('', { status: 429, headers: { 'content-type': 'text/html', 'retry-after': '7' } })

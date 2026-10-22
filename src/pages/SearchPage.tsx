@@ -7,9 +7,11 @@ import { Clock, Search, X } from '../components/icons'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { useDebounced } from '../hooks/useDebounced'
 import { isTv } from '../lib/device'
-import { clearRecentSearches, loadRecentSearches, saveRecentSearch, searchCatalog } from '../lib/search'
+import { searchCatalog } from '../lib/search'
+import { clearRecentSearches, loadRecentSearches, saveRecentSearch } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import PageLoading from '../components/PageLoading'
+import { aiTitles, findInCatalog } from '../lib/sugestoes'
 
 // Buscar "a" no painel do Christian dava ~29 mil cartoes montados de uma vez (209 mil nos do DOM). Cada secao
 // mostra um bloco e o resto vem em "Mostrar mais".
@@ -83,6 +85,26 @@ export default function SearchPage() {
     anyGroupLoading(live.groups)
   const total = results.movies.length + results.series.length + results.live.length
 
+  // Busca por frase ("comedia anos 90", "filme de tubarao"): a IA sugere titulos e mostramos os que existem no catalogo.
+  // So pergunta com 3+ palavras ou quando o nome nao achou nada, para nao gastar a cota diaria em cada nome digitado.
+  const askAi = query.length >= 3 && (query.split(/\s+/).length >= 3 || (!loading && total === 0))
+  const [ai, setAi] = useState({ q: '', titles: [] as string[] })
+  useEffect(() => {
+    if (!askAi) return
+    let cancelled = false
+    aiTitles({ q: query }).then((titles) => !cancelled && setAi({ q: query, titles }))
+    return () => {
+      cancelled = true
+    }
+  }, [askAi, query])
+  const picks = useMemo(() => {
+    const aiTitlesNow = ai.q === query ? ai.titles : []
+    return [
+      ...findInCatalog(movies.groups, aiTitlesNow).map((m) => ({ key: `m${m.streamId}`, name: m.name, image: m.streamIcon, path: `/movies/${m.streamId}` })),
+      ...findInCatalog(series.groups, aiTitlesNow).map((s) => ({ key: `s${s.seriesId}`, name: s.name, image: s.cover, path: `/series/${s.seriesId}` })),
+    ]
+  }, [movies.groups, series.groups, ai, query])
+
   return (
     <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <form
@@ -153,7 +175,21 @@ export default function SearchPage() {
       {query.length === 1 && <p className="text-on-surface-variant">Digite pelo menos 2 letras.</p>}
 
       {query.length >= 2 && loading && <PageLoading label="Carregando catálogo" className="py-8" />}
-      {query.length >= 2 && !loading && total === 0 && <p className="text-on-surface-variant">Nada encontrado para "{query}". Confira se o nome está certo.</p>}
+      {query.length >= 2 && !loading && total === 0 && picks.length === 0 && <p className="text-on-surface-variant">Nada encontrado para "{query}". Confira se o nome está certo.</p>}
+
+      {picks.length > 0 && (
+        <section className="mb-8">
+          <h2 className="font-display mb-3 flex items-center gap-2 text-headline-sm text-white">
+            <span className="h-4 w-1 rounded-full bg-brand-500" />
+            Combina com a sua busca
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {picks.map((p) => (
+              <PosterCard key={p.key} title={p.name} image={p.image} onClick={() => open(p.path)} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {results.movies.length > 0 && (
         <section className="mb-8">

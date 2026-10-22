@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { searchKey } from '../lib/search'
 
 export interface FavoriteRef {
   kind: 'live' | 'movie' | 'series'
@@ -49,6 +50,15 @@ interface LibraryState {
   setProgress: (profileId: string, entry: WatchProgress) => void
   removeProgress: (profileId: string, key: string) => void
   markWatched: (profileId: string, key: string) => void
+  // Para sincronizar entre aparelhos (lib/librarySync.ts): quando cada lista mudou por ultimo e quando cada
+  // progresso foi tirado, para o "ultimo vence" nao ressuscitar o que outro aparelho apagou.
+  favoritesAt: Record<string, number>
+  teamsAt: Record<string, number>
+  progressRemoved: Record<string, number>
+  recentLiveAt: Record<string, number>
+  /** Buscas recentes por perfil, mais nova primeiro (lib/search.ts). */
+  searches: Record<string, string[]>
+  searchesAt: Record<string, number>
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -59,17 +69,26 @@ export const useLibraryStore = create<LibraryState>()(
       watched: {},
       recentLive: {},
       favoriteTeams: {},
+      favoritesAt: {},
+      teamsAt: {},
+      progressRemoved: {},
+      recentLiveAt: {},
+      searches: {},
+      searchesAt: {},
       toggleTeam: (profileId, team) =>
         set((state) => {
           const list = state.favoriteTeams[profileId] ?? []
           const next = list.some((t) => t.slug === team.slug) ? list.filter((t) => t.slug !== team.slug) : [...list, team]
-          return { favoriteTeams: { ...state.favoriteTeams, [profileId]: next } }
+          return { favoriteTeams: { ...state.favoriteTeams, [profileId]: next }, teamsAt: { ...state.teamsAt, [profileId]: Date.now() } }
         }),
       addRecentLive: (profileId, streamId) =>
         set((state) => {
           const list = state.recentLive[profileId] ?? []
           // ponytail: 20 fixos; mais que isso deixa de ser "recente"
-          return { recentLive: { ...state.recentLive, [profileId]: [streamId, ...list.filter((id) => id !== streamId)].slice(0, 20) } }
+          return {
+            recentLive: { ...state.recentLive, [profileId]: [streamId, ...list.filter((id) => id !== streamId)].slice(0, 20) },
+            recentLiveAt: { ...state.recentLiveAt, [profileId]: Date.now() },
+          }
         }),
       removeRecentLive: (profileId, streamId) =>
         set((state) => ({
@@ -77,13 +96,14 @@ export const useLibraryStore = create<LibraryState>()(
             ...state.recentLive,
             [profileId]: streamId == null ? [] : (state.recentLive[profileId] ?? []).filter((id) => id !== streamId),
           },
+          recentLiveAt: { ...state.recentLiveAt, [profileId]: Date.now() },
         })),
       toggleFavorite: (profileId, ref) =>
         set((state) => {
           const list = state.favorites[profileId] ?? []
           const exists = list.some((f) => f.kind === ref.kind && f.id === ref.id)
           const next = exists ? list.filter((f) => !(f.kind === ref.kind && f.id === ref.id)) : [ref, ...list]
-          return { favorites: { ...state.favorites, [profileId]: next } }
+          return { favorites: { ...state.favorites, [profileId]: next }, favoritesAt: { ...state.favoritesAt, [profileId]: Date.now() } }
         }),
       isFavorite: (profileId, kind, id) => (get().favorites[profileId] ?? []).some((f) => f.kind === kind && f.id === id),
       setProgress: (profileId, entry) =>
@@ -92,7 +112,7 @@ export const useLibraryStore = create<LibraryState>()(
         set((state) => {
           const next = { ...state.progress }
           delete next[`${profileId}:${key}`]
-          return { progress: next }
+          return { progress: next, progressRemoved: { ...state.progressRemoved, [`${profileId}:${key}`]: Date.now() } }
         }),
       markWatched: (profileId, key) => set((state) => ({ watched: { ...state.watched, [`${profileId}:${key}`]: true } })),
     }),
@@ -144,4 +164,36 @@ export function progressFor(progress: LibraryState['progress'], profileId: strin
 }
 export function isWatchedFor(watched: LibraryState['watched'], profileId: string, key: string): boolean {
   return Boolean(watched[`${profileId}:${key}`])
+}
+
+// --- Buscas recentes, uma lista por perfil (o perfil infantil nao ve o que o adulto buscou) ---
+const MAX_RECENT = 8
+
+export function loadRecentSearches(profileId: string): string[] {
+  const saved = useLibraryStore.getState().searches[profileId]
+  if (saved) return saved
+  // Antes ficavam numa chave propria do localStorage: le de la ate a primeira busca nova gravar aqui.
+  try {
+    const list = JSON.parse(localStorage.getItem(`pf-buscas-recentes:${profileId}`) || '[]')
+    return Array.isArray(list) ? list.filter((q): q is string => typeof q === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function setSearches(profileId: string, list: string[]) {
+  useLibraryStore.setState((state) => ({
+    searches: { ...state.searches, [profileId]: list },
+    searchesAt: { ...state.searchesAt, [profileId]: Date.now() },
+  }))
+}
+
+export function saveRecentSearch(profileId: string, query: string): void {
+  const q = query.trim()
+  if (q.length < 2) return
+  setSearches(profileId, [q, ...loadRecentSearches(profileId).filter((old) => searchKey(old) !== searchKey(q))].slice(0, MAX_RECENT))
+}
+
+export function clearRecentSearches(profileId: string): void {
+  setSearches(profileId, [])
 }

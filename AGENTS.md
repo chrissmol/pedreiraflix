@@ -6,7 +6,7 @@ Separação central de papéis:
 
 - Codex/ChatGPT **não deve virar o executor padrão de feature work**. Seu papel padrão é transformar a vontade do Christian em issues pequenas, prompts/instruções precisas para Claude Code, revisão de PR, checagem de CI/testes, decisão operacional e atualização do Obsidian.
 - Claude Code é o executor preferencial para implementação: pega uma issue pronta, trabalha em branch própria, testa, abre PR e para.
-- Christian decide prioridade, aprova escopo, autoriza merge e publicação.
+- Christian decide prioridade e aprova escopo. Merge e publicação seguem a regra do passo 6 do fluxo abaixo.
 
 ## Antes de qualquer alteração
 
@@ -22,15 +22,12 @@ Separação central de papéis:
 
 ## Fluxo obrigatório
 
-1. Issue clara com escopo, fora de escopo e validação.
-2. Branch própria a partir da `main`, preferencialmente:
-   ```text
-   codex/<descricao-curta>
-   ```
+1. Issue clara com escopo, fora de escopo e validação (ou o pedido do Christian no chat do projeto).
+2. Branch própria a partir da `main`: `codex/<descricao-curta>` para o Codex, `claude/<descricao-curta>` para o Claude Code.
 3. Mudanças mínimas para cumprir a issue.
 4. Testes relevantes antes do PR.
-5. Abrir PR e marcar como pronto para revisão.
-6. Não fazer merge, não publicar/deployar e não fechar issue sem autorização explícita do Christian/Codex coordenador.
+5. Abrir PR dizendo, na seção **Plataformas**, como cada uma foi coberta: site no celular, site no computador, APK e TV (setas e OK). Toda melhoria ou correção precisa servir nas quatro.
+6. Merge automático (regra do Christian de 22/10/2026): com o CI verde, o PR pode ser mesclado por squash sem pedir ok. O merge na `main` dispara o deploy, então avise o Christian quando o deploy terminar. Com o CI vermelho, nunca mescle.
 
 ## Labels de fila
 
@@ -92,7 +89,7 @@ Para mudanças pequenas, rode pelo menos `npm run lint` e `npm run build`, mais 
 ## Deploy e produção
 
 - O deploy automático roda pelo GitHub Actions somente depois do CI verde em `main`.
-- `npm run deploy` manual só deve ser usado quando o Christian pedir explicitamente.
+- `npm run deploy` manual só deve ser usado quando o Christian pedir explicitamente. O caminho normal é o merge na `main`.
 - Correções dependentes de headers/Worker precisam de verificação em produção depois do deploy (por exemplo `curl -I` para CSP).
 
 ## Obsidian

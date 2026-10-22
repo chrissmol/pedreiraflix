@@ -1,0 +1,20 @@
+# Mensal e agrupado: um PR por mes para cada ecossistema, para nao gastar os minutos do GitHub Actions
+# (o CI roda em cada PR). Alertas de seguranca continuam chegando na hora, fora deste agendamento.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      npm:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
