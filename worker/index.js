@@ -381,6 +381,29 @@ async function imdbRating(imdbId, env) {
   }
 }
 
+// Series cast and episode thumbnails from TVmaze (free, no key; CC BY-SA, so the app credits it), keyed by
+// the IMDb id TMDB already gives us so a same-name show never fills in the wrong pictures. Only plugs gaps
+// the provider leaves; English summaries/titles are left out on purpose (the app is pt-BR). cf.cacheTtl
+// caches the subrequests at Cloudflare's edge, keeping us far under TVmaze's 20 calls/10s limit.
+async function tvmaze(imdbId) {
+  if (!/^tt\d+$/.test(imdbId || '')) return null
+  try {
+    const get = (path) => fetch(`https://api.tvmaze.com${path}`, { cf: { cacheTtl: 86400 }, signal: AbortSignal.timeout(5000) })
+    const found = await get(`/lookup/shows?imdb=${imdbId}`)
+    const id = found.ok ? (await found.json()).id : null
+    if (!id) return null
+    const show = await get(`/shows/${id}?embed[]=episodes&embed[]=cast`)
+    if (!show.ok) return null
+    const { episodes = [], cast = [] } = (await show.json())._embedded || {}
+    const episodeImages = {}
+    for (const e of episodes) if (e.image?.medium) episodeImages[`${e.season}x${e.number}`] = e.image.medium
+    const names = cast.slice(0, 8).map((c) => c.person?.name).filter(Boolean)
+    return { cast: names.length ? names.join(', ') : null, episodeImages }
+  } catch {
+    return null
+  }
+}
+
 // Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
 // Needs the TMDB_TOKEN secret (v4 "API Read Access Token"); without it, or with no match, answers 204 and
 // the app just shows what the provider sent. The token stays server-side — never reaches the browser.
@@ -418,6 +441,7 @@ async function tmdb(url, env) {
       rating: d.vote_average || null,
       overview: d.overview || null,
       imdbRating: await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env),
+      ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
     },
     { headers: { 'cache-control': 'public, max-age=86400' } },
   )
