@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import LiveChannelPanel from '../components/LiveChannelPanel'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
@@ -11,7 +12,7 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
-import type { Episode, LiveChannel, SeriesDetails } from '../types'
+import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
@@ -31,7 +32,7 @@ export default function WatchPage() {
 }
 
 function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'offline'; id?: string }) {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const client = useXtream()
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
@@ -97,6 +98,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   // Live: the full channel list (every category, in catalog order) so arrow keys/swipe/buttons can zap.
   // Reuses the same cache keys as useLiveCatalog, so this is instant if Canais was already visited.
   const [liveChannels, setLiveChannels] = useState<LiveChannel[]>([])
+  const [liveCategories, setLiveCategories] = useState<Category[]>([])
   useEffect(() => {
     if (!client || kind !== 'live') return
     let cancelled = false
@@ -106,7 +108,9 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       const lists = await Promise.all(
         categories.map((c) => cached(`live:items:${c.categoryId}`, () => client!.getLiveStreams(c.categoryId))),
       )
-      if (!cancelled) setLiveChannels(lists.flat())
+      if (cancelled) return
+      setLiveCategories(categories)
+      setLiveChannels(lists.flat())
     }
     load().catch(() => {})
     return () => {
@@ -126,6 +130,19 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     },
     [liveChannels, id, navigate],
   )
+  // Lista de canais por cima do video: aberta fica na URL (`canais=1`), para o Voltar do Android e da TV fechar a
+  // lista em vez de sair do player (mesmo jeito do seletor do mosaico). Escolher um canal troca essa entrada.
+  const showChannels = params.get('canais') === '1'
+  const openChannels = useCallback(
+    () =>
+      setParams((p) => {
+        const next = new URLSearchParams(p)
+        next.set('canais', '1')
+        return next
+      }),
+    [setParams],
+  )
+  const closeChannels = useCallback(() => navigate(-1), [navigate])
   const zapNext = useCallback(() => zap(1), [zap])
   const zapPrev = useCallback(() => zap(-1), [zap])
 
@@ -275,7 +292,17 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         previous={previousEpisode ? { label: previousEpisode.title, onPlay: () => goToEpisode(previousEpisode) } : null}
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
+        onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
       />
+      {showChannels && kind === 'live' && liveChannels.length > 0 && (
+        <LiveChannelPanel
+          categories={liveCategories}
+          channels={liveChannels}
+          currentId={Number(id)}
+          onClose={closeChannels}
+          onPick={(ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true })}
+        />
+      )}
     </div>
   )
 }

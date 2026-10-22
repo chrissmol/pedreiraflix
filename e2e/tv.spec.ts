@@ -258,3 +258,16 @@ test('TV: Organizar categorias funciona so com setas e OK e cabe na tela', async
   await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Mostrar Notícias' })).toBeFocused()
 })
+
+test('TV: no ao vivo a seta abre a lista de canais e o OK troca de canal', async ({ page }) => {
+  await page.goto('/watch/live/101?name=Canal')
+  const lista = page.getByRole('dialog', { name: 'Lista de canais' })
+  // A lista de canais do zapping carrega depois do player; a seta so abre a lista quando ela existe.
+  await expect(async () => {
+    await page.keyboard.press('ArrowRight')
+    await expect(lista).toBeVisible({ timeout: 1000 })
+  }).toPass()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/watch\/live\/102/)
+})
