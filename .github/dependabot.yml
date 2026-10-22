@@ -7,6 +7,10 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
+    ignore:
+      # Os tipos acompanham o Node do CI e do deploy (22); subir de major junto com o Node.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
     groups:
       npm:
         patterns: ["*"]
