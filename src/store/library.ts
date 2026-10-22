@@ -49,6 +49,11 @@ interface LibraryState {
   setProgress: (profileId: string, entry: WatchProgress) => void
   removeProgress: (profileId: string, key: string) => void
   markWatched: (profileId: string, key: string) => void
+  // Para sincronizar entre aparelhos (lib/librarySync.ts): quando cada lista mudou por ultimo e quando cada
+  // progresso foi tirado, para o "ultimo vence" nao ressuscitar o que outro aparelho apagou.
+  favoritesAt: Record<string, number>
+  teamsAt: Record<string, number>
+  progressRemoved: Record<string, number>
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -59,11 +64,14 @@ export const useLibraryStore = create<LibraryState>()(
       watched: {},
       recentLive: {},
       favoriteTeams: {},
+      favoritesAt: {},
+      teamsAt: {},
+      progressRemoved: {},
       toggleTeam: (profileId, team) =>
         set((state) => {
           const list = state.favoriteTeams[profileId] ?? []
           const next = list.some((t) => t.slug === team.slug) ? list.filter((t) => t.slug !== team.slug) : [...list, team]
-          return { favoriteTeams: { ...state.favoriteTeams, [profileId]: next } }
+          return { favoriteTeams: { ...state.favoriteTeams, [profileId]: next }, teamsAt: { ...state.teamsAt, [profileId]: Date.now() } }
         }),
       addRecentLive: (profileId, streamId) =>
         set((state) => {
@@ -83,7 +91,7 @@ export const useLibraryStore = create<LibraryState>()(
           const list = state.favorites[profileId] ?? []
           const exists = list.some((f) => f.kind === ref.kind && f.id === ref.id)
           const next = exists ? list.filter((f) => !(f.kind === ref.kind && f.id === ref.id)) : [ref, ...list]
-          return { favorites: { ...state.favorites, [profileId]: next } }
+          return { favorites: { ...state.favorites, [profileId]: next }, favoritesAt: { ...state.favoritesAt, [profileId]: Date.now() } }
         }),
       isFavorite: (profileId, kind, id) => (get().favorites[profileId] ?? []).some((f) => f.kind === kind && f.id === id),
       setProgress: (profileId, entry) =>
@@ -92,7 +100,7 @@ export const useLibraryStore = create<LibraryState>()(
         set((state) => {
           const next = { ...state.progress }
           delete next[`${profileId}:${key}`]
-          return { progress: next }
+          return { progress: next, progressRemoved: { ...state.progressRemoved, [`${profileId}:${key}`]: Date.now() } }
         }),
       markWatched: (profileId, key) => set((state) => ({ watched: { ...state.watched, [`${profileId}:${key}`]: true } })),
     }),

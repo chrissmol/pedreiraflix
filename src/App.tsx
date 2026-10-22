@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLockGate from './components/AppLockGate'
 import AutoLogout from './components/AutoLogout'
 import Layout from './components/Layout'
+import LibrarySync from './components/LibrarySync'
 import RequireAuth from './components/RequireAuth'
 
 // Code-split per route: nobody navigating straight to /watch needs the movies/series/profiles
@@ -41,6 +42,7 @@ export default function App() {
     <BrowserRouter>
       <AppLockGate />
       <AutoLogout />
+      <LibrarySync />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
