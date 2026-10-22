@@ -339,6 +339,39 @@ async function feedback(request, env) {
   return new Response(null, { status: 204 })
 }
 
+// Favoritos e progresso iguais em todos os aparelhos (src/components/LibrarySync.tsx). A chave e um hash que o app
+// faz de servidor+usuario+senha: aqui nunca chega login nenhum, e sem o login nao da para adivinhar a chave.
+// O app junta os dados (ultimo vence) e manda o resultado inteiro; isto so guarda e devolve.
+let syncTable
+async function sync(request, env) {
+  const key = request.headers.get('x-sync-key') || ''
+  if (!/^[0-9a-f]{64}$/.test(key)) return new Response('invalid key', { status: 400 })
+  if (!env.SYNC) return new Response('sync storage not configured', { status: 503 })
+  syncTable ??= env.SYNC.prepare('CREATE TABLE IF NOT EXISTS library (key TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL)')
+    .run()
+    .catch((err) => {
+      syncTable = undefined
+      throw err
+    })
+  await syncTable
+  if (request.method === 'GET') {
+    const row = await env.SYNC.prepare('SELECT data FROM library WHERE key = ?').bind(key).first()
+    return new Response(row?.data ?? '{}', { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
+  }
+  const text = await request.text()
+  if (text.length > 512_000) return new Response('payload too large', { status: 413 })
+  try {
+    const body = JSON.parse(text)
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error()
+  } catch {
+    return new Response('invalid json', { status: 400 })
+  }
+  await env.SYNC.prepare('INSERT INTO library (key, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
+    .bind(key, text, Date.now())
+    .run()
+  return new Response(null, { status: 204 })
+}
+
 async function logError(request) {
   let body
   try {
@@ -520,6 +553,10 @@ export default {
     if (url.pathname === '/api/feedback' && request.method === 'POST') {
       if (isRateLimited(ip, 'feedback', 5, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await feedback(request, env))
+    }
+    if (url.pathname === '/api/sync' && (request.method === 'GET' || request.method === 'PUT')) {
+      if (isRateLimited(ip, 'sync', 30, 10_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await sync(request, env))
     }
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
