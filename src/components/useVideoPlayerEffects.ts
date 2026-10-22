@@ -135,3 +135,40 @@ export function useMediaSession(o: MediaSessionOptions) {
     }
   }, [currentTime, duration, playbackRate, isLive])
 }
+
+// --- TV: audio 5.1 misturado em estereo ---
+// Filme com audio 5.1 na WebView do Android TV saia sem a voz dos atores (Chris, 22/10): a voz fica no canal
+// central, que a TV de dois alto-falantes descartava, enquanto o PC mistura sozinho. Passar o <video> pelo Web
+// Audio forca a mistura: a saida tem 2 canais e a regra "speakers" soma o central na esquerda e na direita. So
+// na TV, porque no celular/PC o Web Audio quebraria AirPlay/Chromecast (ver useSubtitleOffset).
+let audioCtx: AudioContext | null = null
+const routed = new WeakMap<HTMLVideoElement, MediaElementAudioSourceNode>()
+export function useStereoDownmix(videoRef: RefObject<HTMLVideoElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const video = videoRef.current
+    if (!enabled || !video || typeof AudioContext === 'undefined') return
+    const el = video
+    async function route() {
+      const node = routed.get(el)
+      if (node && audioCtx) {
+        node.connect(audioCtx.destination) // repetir a mesma ligacao nao faz nada
+        void audioCtx.resume().catch(() => {}) // volta de segundo plano com o contexto suspenso
+        return
+      }
+      // Midia de outra origem sem CORS sai muda pelo Web Audio; o proxy /api/stream e o blob: do hls.js sao daqui.
+      if (!el.currentSrc.startsWith('blob:') && new URL(el.currentSrc, location.href).origin !== location.origin) return
+      audioCtx ??= new AudioContext()
+      await audioCtx.resume().catch(() => {})
+      // Contexto parado (sem toque do usuario) deixaria o filme mudo: so desvia o som com ele rodando.
+      if (audioCtx.state !== 'running' || routed.has(el)) return
+      const source = audioCtx.createMediaElementSource(el)
+      source.connect(audioCtx.destination)
+      routed.set(el, source)
+    }
+    el.addEventListener('playing', route)
+    return () => {
+      el.removeEventListener('playing', route)
+      routed.get(el)?.disconnect() // o contexto e um so para o app inteiro: solta o video que saiu da tela
+    }
+  }, [videoRef, enabled])
+}

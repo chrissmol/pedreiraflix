@@ -271,3 +271,19 @@ test('TV: no ao vivo a seta abre a lista de canais e o OK troca de canal', async
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/watch\/live\/102/)
 })
+
+test('TV: o som do filme passa pelo Web Audio para o 5.1 sair em estereo (com a voz do canal central)', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __mixados: number }
+    w.__mixados = 0
+    const original = AudioContext.prototype.createMediaElementSource
+    AudioContext.prototype.createMediaElementSource = function (el) { w.__mixados++; return original.call(this, el) }
+  })
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/3/)
+  // O Chromium de teste pode nao decodificar o video: dispara o "playing" na mao.
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')?.currentSrc ?? '')).not.toBe('')
+  await page.evaluate(() => document.querySelector('video')!.dispatchEvent(new Event('playing')))
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __mixados: number }).__mixados)).toBe(1)
+})
