@@ -74,7 +74,6 @@ export default function MovieDetailPage() {
   const backdrop = movie.backdropPath[0] || movie.streamIcon
   // The provider's own data wins; TMDB only fills what it left empty.
   const year = movie.releaseDate?.slice(0, 4) || tmdb?.year
-  const rating = Number(movie.rating) > 0 ? Number(movie.rating) : tmdb?.rating
   const genre = movie.genre || tmdb?.genres.join(', ')
   const plot = movie.plot || tmdb?.overview
   // Xtream hands duration over as a raw clock string ("01:32:00"), which reads like a timestamp rather
@@ -87,7 +86,6 @@ export default function MovieDetailPage() {
         title={movie.name}
         backdrop={backdrop}
         poster={movie.streamIcon}
-        rating={rating}
         imdbRating={tmdb?.imdbRating}
         chips={chips}
         genre={genre}
@@ -147,7 +145,8 @@ export default function MovieDetailPage() {
         }
         footnote={
           tmdb && (
-            <p className="mt-6 text-body-sm text-on-surface-muted">
+            <p className="mt-6 flex items-center gap-2 text-body-sm text-on-surface-muted">
+              <img src="/tmdb.svg" alt="TMDB" className="h-6 w-6 shrink-0" />
               Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.
             </p>
           )

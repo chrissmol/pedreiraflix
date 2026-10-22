@@ -101,6 +101,11 @@ export default function SupportPage() {
           {estado === 'enviando' ? 'Enviando…' : 'Enviar'}
         </button>
       </form>
+      {/* Atribuicao exigida pelos termos da API do TMDB (logo + aviso de nao endosso). */}
+      <footer className="mt-12 flex max-w-2xl items-center gap-3 border-t border-outline-soft pt-6 text-body-sm text-on-surface-muted">
+        <img src="/tmdb.svg" alt="TMDB" className="h-8 w-8 shrink-0" />
+        <p>Sinopses, gêneros e imagens extras vêm do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p>
+      </footer>
     </div>
   )
 }

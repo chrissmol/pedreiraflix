@@ -3,7 +3,7 @@ import { login } from './helpers'
 
 // Provider sends a movie with no genre/year/rating/plot; TMDB (mocked) fills the gaps. The provider's
 // own values must win when present, which smoke.spec.ts already exercises with the plain mock data.
-test('movie detail fills missing genre, year, rating and plot from /api/tmdb', async ({ page }) => {
+test('movie detail fills missing genre, year and plot from /api/tmdb and shows only the IMDb rating', async ({ page }) => {
   await page.route(/\/api\/xtream\?.*action=get_vod_info/, async (route) => {
     const res = await route.fetch()
     const json = await res.json()
@@ -18,7 +18,7 @@ test('movie detail fills missing genre, year, rating and plot from /api/tmdb', a
   await page.goto('/movies/1')
   await expect(page.getByText('Ficção científica, Aventura')).toBeVisible()
   await expect(page.getByText('2014')).toBeVisible()
-  await expect(page.getByText('★ 7.4')).toBeVisible()
+  await expect(page.getByText('★ 7.4')).toHaveCount(0)
   await expect(page.getByText('IMDb 7.8')).toBeVisible()
   await expect(page.getByText('Sinopse vinda do TMDB.')).toBeVisible()
   await expect(page.getByText(/Dados complementares do TMDB/)).toBeVisible()
