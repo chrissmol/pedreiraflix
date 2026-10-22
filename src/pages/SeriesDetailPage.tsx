@@ -13,6 +13,7 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
+import SimilarRow from '../components/SimilarRow'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
@@ -332,6 +333,7 @@ export default function SeriesDetailPage() {
           <p className="mt-6 text-body-sm text-on-surface-muted">Elenco e imagens de episódios: TVmaze.com (CC BY-SA)</p>
         )}
       </div>
+      <SimilarRow kind="series" name={series.name} id={series.seriesId} />
     </div>
   )
 }

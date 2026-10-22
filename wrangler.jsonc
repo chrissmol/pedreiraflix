@@ -7,6 +7,8 @@
   // Suporte: feedbacks dos amigos (/api/feedback). Sem id de proposito: o `wrangler deploy` cria o namespace sozinho
   // na primeira vez (provisionamento automatico) e reaproveita depois.
   "kv_namespaces": [{ "binding": "FEEDBACK" }],
+  // Busca por frase e "parecidos" (/api/sugestoes). Plano gratis: 10 mil neurons/dia; passou disso, o app usa so a busca normal.
+  "ai": { "binding": "AI" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
