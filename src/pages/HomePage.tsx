@@ -8,6 +8,7 @@ import HeroCarousel, { type FeaturedCandidate } from '../components/HeroCarousel
 import { Shuffle } from '../components/icons'
 import PosterCard from '../components/PosterCard'
 import Row from '../components/Row'
+import TrendingRow from '../components/TrendingRow'
 import { flattenGroups, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { favoritesFor, progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
@@ -194,6 +195,8 @@ export default function HomePage() {
             ))}
           </Row>
         )}
+
+        <TrendingRow />
 
         {recommended.length > 0 && (
           <Row title="Recomendado pra você">

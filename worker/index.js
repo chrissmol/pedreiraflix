@@ -489,6 +489,23 @@ async function tmdb(url, env) {
   return answer(body)
 }
 
+// "Em alta": a lista de tendencias da semana do TMDB (mundial; o TMDB nao tem uma so do Brasil). So nomes: o app
+// mostra o que existir no catalogo de cada um. Sem token ou com erro: 204 e a fileira nao aparece.
+async function trending(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const tv = url.searchParams.get('kind') === 'tv'
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const pages = await Promise.all(
+    [1, 2].map((page) => fetch(`https://api.themoviedb.org/3/trending/${tv ? 'tv' : 'movie'}/week?language=pt-BR&page=${page}`, { headers })),
+  )
+  if (!pages[0].ok) return none(`trending-${pages[0].status}`)
+  const results = (await Promise.all(pages.filter((r) => r.ok).map((r) => r.json()))).flatMap((d) => d.results || [])
+  // Nome em portugues e o original, nessa ordem: o provedor usa um ou outro.
+  const titles = [...new Set(results.flatMap((r) => (tv ? [r.name, r.original_name] : [r.title, r.original_title])).filter(Boolean))]
+  return Response.json({ titles }, { headers: { 'cache-control': 'public, max-age=21600' } })
+}
+
 // Busca por frase ("comedia anos 90") e "parecidos com este" via Workers AI: o modelo so devolve nomes de titulos,
 // e o app procura esses nomes no proprio catalogo (cada amigo tem o seu). Plano gratis = 10 mil neurons/dia; cada
 // pergunta gasta ~25, e a resposta fica uma semana no cache da Cloudflare (a mesma frase nao gasta de novo). Passou
@@ -579,6 +596,10 @@ export default {
     if (url.pathname === '/api/tmdb') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await tmdb(url, env))
+    }
+    if (url.pathname === '/api/em-alta') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await trending(url, env))
     }
     if (url.pathname === '/api/sugestoes') {
       // Cada pergunta nova gasta a cota diaria de IA de todo mundo: bem mais apertado que o TMDB.
