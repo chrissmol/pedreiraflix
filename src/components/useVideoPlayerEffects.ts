@@ -144,12 +144,44 @@ export function useMediaSession(o: MediaSessionOptions) {
 let audioCtx: AudioContext | null = null
 const routed = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>()
 
+// "Voz mais alta": realce na faixa da fala e compressor que segura explosao e levanta dialogo baixo, como o
+// "volume estavel" do YouTube. O compressor tem 2 canais, entao o 5.1 continua misturado em estereo antes dele.
+let voiceChain: AudioNode | null = null
+let voiceOn = false
+function voiceInput(ctx: AudioContext): AudioNode {
+  if (voiceChain) return voiceChain
+  const speech = new BiquadFilterNode(ctx, { type: 'peaking', frequency: 2500, Q: 1, gain: 4 })
+  const comp = new DynamicsCompressorNode(ctx, { threshold: -30, knee: 20, ratio: 4, attack: 0.003, release: 0.25 })
+  const makeup = new GainNode(ctx, { gain: 1.4 }) // medido: fala a -26 dB sai ~5x mais alta e som no maximo fica abaixo de 1
+  speech.connect(comp).connect(makeup).connect(ctx.destination)
+  voiceChain = speech
+  return speech
+}
+function connectOut(source: MediaElementAudioSourceNode) {
+  source.connect(voiceOn ? voiceInput(source.context as AudioContext) : source.context.destination)
+}
+
+/** Liga ou desliga a "voz mais alta" no som que ja passa pela mistura (so na TV). */
+export function setVoiceBoost(el: HTMLMediaElement | null, on: boolean): void {
+  voiceOn = on
+  const source = el && routed.get(el)
+  if (!source) return
+  for (const out of [source.context.destination, voiceChain]) {
+    try {
+      if (out) source.disconnect(out)
+    } catch {
+      // nao estava ligado nesse destino
+    }
+  }
+  connectOut(source)
+}
+
 /** Liga o som do elemento na mistura estereo; true se o som passou a sair por ela. */
 export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
   if (typeof AudioContext === 'undefined') return false
   const node = routed.get(el)
   if (node && audioCtx) {
-    node.connect(audioCtx.destination) // repetir a mesma ligacao nao faz nada
+    connectOut(node) // repetir a mesma ligacao nao faz nada
     await audioCtx.resume().catch(() => {}) // volta de segundo plano com o contexto suspenso
     return true
   }
@@ -160,7 +192,7 @@ export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
   // Contexto parado (sem toque do usuario) deixaria o filme mudo: so desvia o som com ele rodando.
   if (audioCtx.state !== 'running' || routed.has(el)) return routed.has(el)
   const source = audioCtx.createMediaElementSource(el)
-  source.connect(audioCtx.destination)
+  connectOut(source)
   routed.set(el, source)
   return true
 }
@@ -170,7 +202,10 @@ export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
 const SEM_MISTURA = 'pf-sem-mistura'
 const SILENCIO_MAX_S = 20 // 20 s de zero absoluto tocando nao acontece num filme com som
 
-export function useStereoDownmix(videoRef: RefObject<HTMLVideoElement | null>, enabled: boolean) {
+export function useStereoDownmix(videoRef: RefObject<HTMLVideoElement | null>, enabled: boolean, voiceBoost = false) {
+  useEffect(() => {
+    setVoiceBoost(videoRef.current, enabled && voiceBoost)
+  }, [videoRef, enabled, voiceBoost])
   useEffect(() => {
     const el = videoRef.current
     let desligada = false

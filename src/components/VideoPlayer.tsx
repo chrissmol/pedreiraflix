@@ -546,7 +546,8 @@ export default function VideoPlayer({
   }, [])
 
   useSubtitleOffset(videoRef, subtitleOffset, currentSubtitleTrack)
-  useStereoDownmix(videoRef, isTv)
+  const voiceBoost = usePlayerPrefs((s) => s.voiceBoost)
+  useStereoDownmix(videoRef, isTv, voiceBoost)
 
   const [sleepMinutes, setSleepMinutes] = useSleepTimer(videoRef)
 

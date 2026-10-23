@@ -23,7 +23,7 @@ const PILARES = {
   telas: 'Celular, iPhone, TV e acessibilidade',
 }
 const SPECS = {
-  player: ['smoke', 'player', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'libera-conexao'],
+  player: ['smoke', 'player', 'voz-tv', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'libera-conexao'],
   'ao-vivo': ['live-epg', 'live-404', 'canal-bloqueado', 'canais-grupos', 'canais-grupos.mobile', 'epg', 'epg-manual', 'xmltv', 'xmltv-real', 'relogio', 'zap.mobile'],
   catalogo: ['busca-grande', 'concluido', 'visto-e-em-alta', 'search-suggestions', 'serie-detalhe', 'titulos', 'titulo-removido', 'tmdb', 'hero', 'grade-progressiva', 'scroll-restore', 'cache', 'prioridade', 'perf', 'erro-tentar'],
   conta: ['auth', 'autologout', 'app-pin', 'account-label-profile-name', 'profiles', 'parental', 'credenciais', 'm3u-login', 'conexoes', 'limite-telas'],

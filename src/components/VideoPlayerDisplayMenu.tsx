@@ -1,5 +1,6 @@
 import { Sliders } from './icons'
-import type { VideoFit } from '../store/playerPrefs'
+import { isTv } from '../lib/device'
+import { usePlayerPrefs, type VideoFit } from '../store/playerPrefs'
 
 const FITS: { value: VideoFit; label: string; hint: string }[] = [
   { value: 'contain', label: 'Ajustar', hint: 'Imagem inteira, com tarjas se precisar' },
@@ -30,6 +31,8 @@ export function VideoPlayerDisplayMenu({
   sleepRemaining,
   onSelectSleep,
 }: VideoPlayerDisplayMenuProps) {
+  const voiceBoost = usePlayerPrefs((s) => s.voiceBoost)
+  const setVoiceBoost = usePlayerPrefs((s) => s.setVoiceBoost)
   return (
     <div className="relative">
       <button
@@ -55,6 +58,20 @@ export function VideoPlayerDisplayMenu({
               </span>
             </button>
           ))}
+
+          {/* So na TV: no celular/PC passar o som pelo Web Audio quebraria AirPlay e Chromecast. */}
+          {isTv && (
+            <button
+              onClick={() => setVoiceBoost(!voiceBoost)}
+              aria-pressed={voiceBoost}
+              className={`menu-option mt-1 border-t border-outline-soft ${voiceBoost ? 'menu-option-active' : ''}`}
+            >
+              <span>
+                Voz mais alta {voiceBoost ? '(ligada)' : '(desligada)'}
+                <span className="block text-body-sm font-normal text-on-surface-variant">Realça a fala e segura as explosões</span>
+              </span>
+            </button>
+          )}
 
           <p className="menu-label mt-1 border-t border-outline-soft">
             Desligar em

@@ -21,6 +21,9 @@ interface PlayerPrefsState {
   setSubtitleOffset: (seconds: number) => void
   /** Ultimo idioma de audio e de legenda que cada perfil escolheu (codigo ou nome da faixa, em minusculas; legenda
    * null = desligada). O player abre direto nele quando o video tem essa faixa, como a Netflix. */
+  /** "Voz mais alta" (so na TV, onde o som ja passa pelo Web Audio). */
+  voiceBoost: boolean
+  setVoiceBoost: (on: boolean) => void
   trackLang: Record<string, { audio?: string; subtitle?: string | null }>
   setTrackLang: (profileId: string, pref: { audio?: string; subtitle?: string | null }) => void
 }
@@ -39,6 +42,8 @@ export const usePlayerPrefs = create<PlayerPrefsState>()(
       setVideoFit: (videoFit) => set({ videoFit }),
       subtitleOffset: 0,
       setSubtitleOffset: (subtitleOffset) => set({ subtitleOffset }),
+      voiceBoost: false,
+      setVoiceBoost: (voiceBoost) => set({ voiceBoost }),
       trackLang: {},
       setTrackLang: (profileId, pref) => set((s) => ({ trackLang: { ...s.trackLang, [profileId]: { ...s.trackLang[profileId], ...pref } } })),
     }),
