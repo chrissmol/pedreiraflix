@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { clearCache } from '../lib/cache'
+import { clearCache, setCacheScope } from '../lib/cache'
 import { type M3uEntry } from '../lib/m3u'
 import { obfuscatedStorage } from '../lib/obfuscatedStorage'
+import { accountId } from './accounts'
 import type { ProviderCredentials, ServerInfo, UserInfo } from '../types'
 
 interface AuthState {
@@ -61,3 +62,7 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 )
+
+const scopeCache = (s: AuthState) => setCacheScope(s.credentials ? accountId(s.credentials) : '')
+scopeCache(useAuthStore.getState())
+useAuthStore.subscribe(scopeCache)

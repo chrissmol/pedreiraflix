@@ -4,14 +4,30 @@ import { useAuthStore } from '../store/auth'
 import { useLibraryStore } from '../store/library'
 import { useProfilesStore } from '../store/profiles'
 import type { ProviderCredentials, UserInfo, XtreamCredentials } from '../types'
-import { clearCache } from './cache'
 import { XtreamClient } from './xtream'
 
 export function normalizeCredentials(creds: XtreamCredentials): XtreamCredentials {
   let baseUrl = creds.baseUrl.trim().replace(/\/+$/, '')
   // People often paste just "host:port"; panels are plain http far more often than https.
   if (baseUrl && !/^https?:\/\//i.test(baseUrl)) baseUrl = `http://${baseUrl}`
-  return { baseUrl, username: creds.username.trim(), password: creds.password }
+  let { username, password } = creds
+  try {
+    // So o endereco do painel conta (o Worker ja usa so a origem): quem cola o link inteiro que o provedor mandou
+    // (".../get.php?username=...&password=..." ou ".../player_api.php") tambem entra, com usuario e senha do link.
+    const url = new URL(baseUrl)
+    baseUrl = url.origin
+    if (!username.trim()) username = url.searchParams.get('username') ?? ''
+    if (!password) password = url.searchParams.get('password') ?? ''
+  } catch {
+    // endereco que nem vira URL: segue como foi digitado e o login mostra o erro do provedor
+  }
+  return { baseUrl, username: username.trim(), password }
+}
+
+/** Link M3U colado com espaco ou sem "http://" (como o endereco do Xtream acima). */
+function m3uLink(raw: string): string {
+  const url = raw.trim()
+  return /^https?:\/\//i.test(url) ? url : `http://${url}`
 }
 
 /** The name a fresh profile gets when the account provides no custom label. */
@@ -109,17 +125,10 @@ export function ensureActiveProfile(creds: ProviderCredentials): void {
   }
 }
 
-function switchedAccount(previous: ProviderCredentials | null, next: ProviderCredentials): boolean {
-  return !previous || accountId(previous) !== accountId(next)
-}
-
 /** Validates the credentials against the panel, starts the session and (optionally) remembers the account. */
 export async function signIn(raw: XtreamCredentials, remember = true, label?: string): Promise<void> {
   const creds: ProviderCredentials = { type: 'xtream', ...normalizeCredentials(raw) }
   const { user, server } = await new XtreamClient(creds).login()
-  const previous = useAuthStore.getState().credentials
-  // Switching accounts: the in-memory catalog belongs to the old server.
-  if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user))
   if (remember) useAccountsStore.getState().saveAccount(creds, label)
   ensureActiveProfile(creds)
@@ -135,7 +144,7 @@ export async function signInM3u(
 ): Promise<void> {
   const text =
     source.kind === 'url'
-      ? await fetch(`/api/stream?raw=1&url=${encodeURIComponent(source.url)}`).then((r) => {
+      ? await fetch(`/api/stream?raw=1&url=${encodeURIComponent(m3uLink(source.url))}`).then((r) => {
           if (!r.ok) throw new Error(`Falha ao baixar a playlist: ${r.status}`)
           return r.text()
         })
@@ -150,12 +159,10 @@ export async function signInM3u(
   const epgUrl = parseM3uEpgUrl(text) ?? (typed && /^https?:\/\//i.test(typed) ? typed : undefined)
   const creds: ProviderCredentials =
     source.kind === 'url'
-      ? { type: 'm3u', source: 'url', url: source.url, epgUrl }
+      ? { type: 'm3u', source: 'url', url: m3uLink(source.url), epgUrl }
       : { type: 'm3u', source: 'file', fileName: source.file.name, epgUrl }
 
   const { user, server } = await new M3uClient(entries, epgUrl).login()
-  const previous = useAuthStore.getState().credentials
-  if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user), entries)
   if (remember) useAccountsStore.getState().saveAccount(creds, label, entries)
   ensureActiveProfile(creds)
@@ -175,8 +182,6 @@ export async function signInSavedAccount(account: SavedAccount): Promise<void> {
       // ou conta vencida continuam barrando.
       if (navigator.onLine && !(err instanceof TypeError)) throw err
       const creds = account.credentials
-      const previous = useAuthStore.getState().credentials
-      if (switchedAccount(previous, creds)) clearCache()
       const user: UserInfo = { username: creds.username, status: 'Active', expDate: null, isTrial: false, activeConnections: '', maxConnections: '' }
       useAuthStore.getState().setSession(creds, user, { url: '', serverName: '', timezone: '' }, 'Sem internet: dá para assistir os seus downloads. O resto volta quando a conexão voltar.')
       ensureActiveProfile(creds)
@@ -186,8 +191,6 @@ export async function signInSavedAccount(account: SavedAccount): Promise<void> {
   if (!account.entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
   const creds = account.credentials
   const { user, server } = await new M3uClient(account.entries, creds.epgUrl).login()
-  const previous = useAuthStore.getState().credentials
-  if (switchedAccount(previous, creds)) clearCache()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user), account.entries)
   useAccountsStore.getState().saveAccount(creds, account.label, account.entries)
   ensureActiveProfile(creds)

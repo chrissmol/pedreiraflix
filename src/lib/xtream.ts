@@ -28,6 +28,12 @@ function toStringArray(value: unknown): string[] {
   return []
 }
 
+// Painel fora do padrao manda lista vazia como null/{} ou a lista como objeto { "0": {...} }: tudo vira array.
+function asList<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw
+  return raw && typeof raw === 'object' ? (Object.values(raw) as T[]) : []
+}
+
 // Many Xtream panels serve poster/thumbnail images over plain HTTP, or with a TLS certificate that
 // doesn't match the image host (common on smaller/shadier providers). Loading them directly from the
 // browser either gets silently upgraded-and-blocked as mixed content, or fails outright with
@@ -183,7 +189,7 @@ export class XtreamClient implements ProviderClient {
     const data = JSON.parse(text)
     if (data && typeof data === 'object' && 'user_info' in data) {
       const info = (data as { user_info?: { auth?: number } }).user_info
-      if (info && info.auth === 0) throw new XtreamApiError('Credenciais inválidas')
+      if (info && Number(info.auth) === 0) throw new XtreamApiError('Credenciais inválidas')
     }
     return data as T
   }
@@ -197,12 +203,13 @@ export class XtreamClient implements ProviderClient {
         is_trial: string
         active_cons: string
         max_connections: string
-        auth: number
+        // Numero na maioria dos paineis, texto ("1") em alguns.
+        auth: number | string
       }
-      server_info: { url: string; server_protocol?: string; server_name?: string; timezone: string }
+      server_info?: { url: string; server_protocol?: string; server_name?: string; timezone: string }
     }>(null)
 
-    if (!data.user_info || data.user_info.auth !== 1) {
+    if (!data.user_info || Number(data.user_info.auth) !== 1) {
       throw new XtreamApiError('Credenciais inválidas ou servidor indisponível')
     }
     await this.refreshStreamSession()
@@ -216,27 +223,28 @@ export class XtreamClient implements ProviderClient {
         activeConnections: data.user_info.active_cons,
         maxConnections: data.user_info.max_connections,
       },
+      // Sem server_info (painel que nao manda) o login seguia ate aqui e quebrava.
       server: {
-        url: data.server_info.url,
-        serverName: data.server_info.server_name || data.server_info.url,
-        timezone: data.server_info.timezone,
+        url: data.server_info?.url ?? '',
+        serverName: data.server_info?.server_name || data.server_info?.url || '',
+        timezone: data.server_info?.timezone ?? '',
       },
     }
   }
 
   async getLiveCategories(): Promise<Category[]> {
     const raw = await this.call<{ category_id: string; category_name: string }[]>('get_live_categories')
-    return raw.map((c) => ({ categoryId: c.category_id, categoryName: c.category_name }))
+    return asList<typeof raw[number]>(raw).map((c) => ({ categoryId: String(c.category_id), categoryName: c.category_name }))
   }
 
   async getVodCategories(): Promise<Category[]> {
     const raw = await this.call<{ category_id: string; category_name: string }[]>('get_vod_categories')
-    return raw.map((c) => ({ categoryId: c.category_id, categoryName: c.category_name }))
+    return asList<typeof raw[number]>(raw).map((c) => ({ categoryId: String(c.category_id), categoryName: c.category_name }))
   }
 
   async getSeriesCategories(): Promise<Category[]> {
     const raw = await this.call<{ category_id: string; category_name: string }[]>('get_series_categories')
-    return raw.map((c) => ({ categoryId: c.category_id, categoryName: c.category_name }))
+    return asList<typeof raw[number]>(raw).map((c) => ({ categoryId: String(c.category_id), categoryName: c.category_name }))
   }
 
   async getLiveStreams(categoryId?: string): Promise<LiveChannel[]> {
@@ -251,12 +259,12 @@ export class XtreamClient implements ProviderClient {
         tv_archive_duration?: number | string
       }[]
     >('get_live_streams', categoryId ? { category_id: categoryId } : {})
-    return raw.map((s) => ({
+    return asList<typeof raw[number]>(raw).map((s) => ({
       kind: 'live',
-      streamId: s.stream_id,
+      streamId: Number(s.stream_id),
       name: s.name,
       streamIcon: proxyImage(s.stream_icon),
-      categoryId: s.category_id,
+      categoryId: String(s.category_id),
       epgChannelId: s.epg_channel_id,
       hasArchive: Number(s.tv_archive) === 1,
       archiveDurationHours: Number(s.tv_archive_duration) || 0,
@@ -276,12 +284,12 @@ export class XtreamClient implements ProviderClient {
         year?: string | null
       }[]
     >('get_vod_streams', categoryId ? { category_id: categoryId } : {})
-    return raw.map((s) => ({
+    return asList<typeof raw[number]>(raw).map((s) => ({
       kind: 'movie',
-      streamId: s.stream_id,
+      streamId: Number(s.stream_id),
       name: s.name,
       streamIcon: proxyImage(s.stream_icon),
-      categoryId: s.category_id,
+      categoryId: String(s.category_id),
       rating: s.rating,
       added: s.added,
       containerExtension: s.container_extension || 'mp4',
@@ -345,12 +353,12 @@ export class XtreamClient implements ProviderClient {
         director: string | null
       }[]
     >('get_series', categoryId ? { category_id: categoryId } : {})
-    return raw.map((s) => ({
+    return asList<typeof raw[number]>(raw).map((s) => ({
       kind: 'series',
-      seriesId: s.series_id,
+      seriesId: Number(s.series_id),
       name: s.name,
       cover: proxyImage(s.cover),
-      categoryId: s.category_id,
+      categoryId: String(s.category_id),
       rating: s.rating,
       plot: s.plot,
       genre: s.genre,
@@ -394,9 +402,9 @@ export class XtreamClient implements ProviderClient {
     const seasons = Object.entries(data.episodes || {}).map(([seasonNumStr, episodes]) => {
       const seasonNumber = Number(seasonNumStr)
       const meta = seasonMeta.get(seasonNumber)
-      const mappedEpisodes: Episode[] = episodes.map((e) => ({
-        id: e.id,
-        episodeNum: e.episode_num,
+      const mappedEpisodes: Episode[] = asList<(typeof episodes)[number]>(episodes).map((e) => ({
+        id: String(e.id),
+        episodeNum: Number(e.episode_num),
         title: e.title,
         containerExtension: e.container_extension || 'mp4',
         plot: e.info?.plot || null,

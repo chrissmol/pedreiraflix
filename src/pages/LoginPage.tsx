@@ -1,7 +1,7 @@
 import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Calendar, Eye, EyeOff, FileArrowDown, ListIcon, Lock, Pencil, Shield, Trash, Tv, User } from '../components/icons'
-import { signIn, signInM3u, signInSavedAccount } from '../lib/session'
+import { normalizeCredentials, signIn, signInM3u, signInSavedAccount } from '../lib/session'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
 
@@ -58,6 +58,8 @@ const methods: { id: LoginMethod; label: string; short: string; icon: ReactNode 
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  // "Trocar conta" no menu: mostra as contas salvas sem sair da atual (voltar continua nela).
+  const switching = Boolean((useLocation().state as { switching?: boolean } | null)?.switching)
   const hasSession = useAuthStore((s) => Boolean(s.credentials))
   const accounts = useAccountsStore((s) => s.accounts)
   const removeAccount = useAccountsStore((s) => s.removeAccount)
@@ -81,7 +83,7 @@ export default function LoginPage() {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
-  if (hasSession && !busyId) return <Navigate to="/" replace />
+  if (hasSession && !busyId && !switching) return <Navigate to="/" replace />
 
   async function run(id: string, action: () => Promise<void>) {
     setError(null)
@@ -108,6 +110,15 @@ export default function LoginPage() {
 
   function enterSaved(account: SavedAccount) {
     run(account.id, () => signInSavedAccount(account))
+  }
+
+  // Colou o link que o provedor mandou (com usuario e senha dentro): separa nos tres campos.
+  function changeServer(value: string) {
+    const fromLink = normalizeCredentials({ baseUrl: value, username: '', password: '' })
+    if (!fromLink.username || !fromLink.password) return setBaseUrl(value)
+    setBaseUrl(fromLink.baseUrl)
+    setUsername(fromLink.username)
+    setPassword(fromLink.password)
   }
 
   function saveRename(id: string) {
@@ -228,6 +239,14 @@ export default function LoginPage() {
             >
               + Usar outra conta
             </button>
+            {switching && (
+              <button
+                onClick={() => navigate(-1)}
+                className="h-12 w-full rounded-full text-label-md text-on-surface-variant transition-colors hover:text-white"
+              >
+                Continuar na conta atual
+              </button>
+            )}
           </div>
         )}
 
@@ -270,7 +289,7 @@ export default function LoginPage() {
                       required
                       placeholder="http://seuservidor.com:8080"
                       value={baseUrl}
-                      onChange={(e) => setBaseUrl(e.target.value)}
+                      onChange={(e) => changeServer(e.target.value)}
                       className={inputClass}
                     />
                   </Field>
