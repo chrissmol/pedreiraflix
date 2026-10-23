@@ -581,9 +581,11 @@ export default function VideoPlayer({
           if (dir) {
             e.preventDefault()
             // Na barra de progresso, esquerda/direita pulam 10 s (a previa mostra o tempo); subir/descer saem dela.
-            if (!isLive && active.getAttribute('aria-label') === 'Progresso' && (dir === 'left' || dir === 'right')) {
-              skip(dir === 'left' ? -SKIP_SECONDS : SKIP_SECONDS)
-            } else moveFocusTv(dir)
+            // Dos botoes de baixo, subir vai para a barra: pelo centro, a barra larga perdia para o Voltar do topo.
+            const bar = containerRef.current?.querySelector<HTMLElement>('[aria-label="Progresso"]')
+            if (active === bar && (dir === 'left' || dir === 'right')) skip(dir === 'left' ? -SKIP_SECONDS : SKIP_SECONDS)
+            else if (bar && dir === 'up' && active !== bar && active.closest('[data-controls]') === bar.closest('[data-controls]')) bar.focus()
+            else moveFocusTv(dir)
           }
           wakeControls()
           return

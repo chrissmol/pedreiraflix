@@ -82,11 +82,7 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolea
     const to = center(el)
     const main = (horizontal ? to.x - from.x : to.y - from.y) * sign
     if (main <= 8) continue // so quem esta de fato naquela direcao
-    // Distancia ate a borda, nao ate o centro: senao uma barra larga (a de progresso do player) perde para um botao
-    // la longe so porque o centro dela fica no meio da tela.
-    const cross = horizontal
-      ? Math.max(0, to.rect.top - from.y, from.y - to.rect.bottom)
-      : Math.max(0, to.rect.left - from.x, from.x - to.rect.right)
+    const cross = Math.abs(horizontal ? to.y - from.y : to.x - from.x)
     const score = main + cross * 2 // alinhado vence: andar para o lado fica na mesma linha
     if (score < bestScore) {
       best = el
