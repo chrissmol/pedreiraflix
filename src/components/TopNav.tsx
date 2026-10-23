@@ -418,6 +418,15 @@ export default function TopNav() {
               <Info className="h-4 w-4 text-on-surface-variant" /> Suporte
             </button>
             <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/login', { state: { switching: true } })
+              }}
+              className="menu-option"
+            >
+              <User className="h-4 w-4 text-on-surface-variant" /> Trocar conta
+            </button>
+            <button
               onClick={logout}
               className="menu-option mt-1 text-live hover:bg-live/10 active:bg-live/10"
             >

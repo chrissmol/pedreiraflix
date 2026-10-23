@@ -18,6 +18,15 @@ const TTL_MS = 15 * 60 * 1000
 // even briefly would be more likely to confuse than help (e.g. a whole day-old catalog).
 const STALE_MS = 24 * 60 * 60 * 1000
 
+// Cada conta guarda o proprio catalogo: trocar de conta e voltar nao recarrega tudo do zero.
+// shortcut: entradas de uma conta que nunca mais e aberta so saem com "Limpar cache"/Sair; varrer o banco se pesar.
+let scope = ''
+
+/** A conta cujo catalogo `cached` le e grava (store/auth.ts chama a cada sessao nova). */
+export function setCacheScope(accountKey: string) {
+  scope = accountKey
+}
+
 const DB_NAME = 'pedreiraflix-cache'
 const DB_VERSION = 1
 const OBJECT_STORE = 'entries'
@@ -97,7 +106,8 @@ function refresh<T>(key: string, loader: () => Promise<T>): Promise<T> {
  * stale value — there's no subscriber list to push an update to an already-rendered page — but the next
  * `cached()` call for this key (next remount, next visit to the tab) picks up the refreshed data instead
  * of repeating the wait. */
-export async function cached<T>(key: string, loader: () => Promise<T>): Promise<T> {
+export async function cached<T>(rawKey: string, loader: () => Promise<T>): Promise<T> {
+  const key = `${scope}|${rawKey}`
   if (store.has(key)) return store.get(key) as T
   if (inFlight.has(key)) return inFlight.get(key) as Promise<T>
 
