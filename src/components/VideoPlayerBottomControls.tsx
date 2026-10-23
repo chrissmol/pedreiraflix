@@ -1,4 +1,5 @@
 import { Maximize, Minimize, Pause, Play, SkipNext, SkipPrevious, SkipSeconds, VolumeHigh, VolumeMute, Zap } from './icons'
+import { useState } from 'react'
 import { SKIP_SECONDS, formatTime } from './videoPlayerUtils'
 
 interface VideoPlayerBottomControlsProps {
@@ -50,6 +51,10 @@ export function VideoPlayerBottomControls({
   isFullscreen,
   onToggleFullscreen,
 }: VideoPlayerBottomControlsProps) {
+  const [hoverTime, setHoverTime] = useState<number | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const [keyFocus, setKeyFocus] = useState(false)
+  const preview = hoverTime ?? (dragging || keyFocus ? currentTime : null)
   return (
     <div
       data-controls
@@ -74,16 +79,40 @@ export function VideoPlayerBottomControls({
           </button>
         </div>
       ) : (
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          value={currentTime}
-          onChange={onSeek}
-          aria-label="Progresso"
-          style={{ '--pct': `${duration ? (currentTime / duration) * 100 : 0}%` } as React.CSSProperties}
-          className="player-range mb-2 w-full"
-        />
+        <div className="relative mb-2">
+          {preview !== null && duration > 0 && (
+            <span
+              data-testid="previa-tempo"
+              className="pointer-events-none absolute bottom-full mb-2 -translate-x-1/2 rounded-md bg-black/85 px-2 py-1 text-body-sm font-semibold tabular-nums text-white shadow-lg"
+              style={{ left: `clamp(2rem, ${(preview / duration) * 100}%, calc(100% - 2rem))` }}
+            >
+              {formatTime(preview)}
+            </span>
+          )}
+          {/* Previa do tempo, como no YouTube: o mouse mostra onde ele esta; o dedo (arrastando) e o foco do teclado/TV
+              mostram para onde a barra vai. Imagem nao: precisaria de uma segunda conexao com o provedor. */}
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            value={currentTime}
+            onChange={onSeek}
+            onPointerMove={(e) => {
+              if (e.pointerType !== 'mouse') return
+              const r = e.currentTarget.getBoundingClientRect()
+              setHoverTime(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * duration)
+            }}
+            onPointerLeave={() => setHoverTime(null)}
+            onTouchStart={() => setDragging(true)}
+            onTouchEnd={() => setDragging(false)}
+            onTouchCancel={() => setDragging(false)}
+            onFocus={(e) => setKeyFocus(e.currentTarget.matches(':focus-visible'))}
+            onBlur={() => setKeyFocus(false)}
+            aria-label="Progresso"
+            style={{ '--pct': `${duration ? (currentTime / duration) * 100 : 0}%` } as React.CSSProperties}
+            className="player-range w-full"
+          />
+        </div>
       )}
 
       {/* Touch hides the buttons the center cluster already has, and the volume (phones use the hardware keys). */}

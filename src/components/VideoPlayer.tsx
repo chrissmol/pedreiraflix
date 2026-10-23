@@ -564,7 +564,9 @@ export default function VideoPlayer({
     function onKeyDown(e: KeyboardEvent) {
       const video = videoRef.current
       if (!video) return
-      if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) {
+      const focused = document.activeElement
+      // Na TV a barra de progresso tambem e um <input>, mas as setas nela sao do player (abaixo), nao do navegador.
+      if ((focused instanceof HTMLInputElement && !(isTv && focused.type === 'range')) || focused instanceof HTMLTextAreaElement) {
         return
       }
       // TV (controle remoto: so setas e OK). Com um botao do player focado, as setas andam entre os botoes e o OK
@@ -578,7 +580,12 @@ export default function VideoPlayer({
         if (active instanceof HTMLElement && active.closest('[data-controls]')) {
           if (dir) {
             e.preventDefault()
-            moveFocusTv(dir)
+            // Na barra de progresso, esquerda/direita pulam 10 s (a previa mostra o tempo); subir/descer saem dela.
+            // Dos botoes de baixo, subir vai para a barra: pelo centro, a barra larga perdia para o Voltar do topo.
+            const bar = containerRef.current?.querySelector<HTMLElement>('[aria-label="Progresso"]')
+            if (active === bar && (dir === 'left' || dir === 'right')) skip(dir === 'left' ? -SKIP_SECONDS : SKIP_SECONDS)
+            else if (bar && dir === 'up' && active !== bar && active.closest('[data-controls]') === bar.closest('[data-controls]')) bar.focus()
+            else moveFocusTv(dir)
           }
           wakeControls()
           return
@@ -586,7 +593,8 @@ export default function VideoPlayer({
         if (e.key === 'Enter' || (!isLive && (dir === 'up' || dir === 'down'))) {
           e.preventDefault()
           wakeControls()
-          const playPause = containerRef.current?.querySelector<HTMLElement>('[aria-label="Play/Pause"]')
+          // Ha dois Play/Pause (o do centro so aparece no toque); o primeiro do DOM pode estar escondido e nao pega foco.
+          const playPause = Array.from(containerRef.current?.querySelectorAll<HTMLElement>('[aria-label="Play/Pause"]') ?? []).find((el) => el.offsetParent)
           if (playPause) playPause.focus()
           else togglePlay()
           return
