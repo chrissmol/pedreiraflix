@@ -30,7 +30,7 @@ function MovieMatches({ titles, id }: { titles: string[]; id: number }) {
   return (
     <Row title="Parecidos com este">
       {items.map((m) => (
-        <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} onClick={() => navigate(`/movies/${m.streamId}`)} />
+        <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} watchedRef={{ kind: 'movie', id: m.streamId }} onClick={() => navigate(`/movies/${m.streamId}`)} />
       ))}
     </Row>
   )
@@ -44,7 +44,7 @@ function SeriesMatches({ titles, id }: { titles: string[]; id: number }) {
   return (
     <Row title="Parecidos com este">
       {items.map((s) => (
-        <PosterCard key={s.seriesId} title={s.name} image={s.cover} onClick={() => navigate(`/series/${s.seriesId}`)} />
+        <PosterCard key={s.seriesId} title={s.name} image={s.cover} watchedRef={{ kind: 'series', id: s.seriesId }} onClick={() => navigate(`/series/${s.seriesId}`)} />
       ))}
     </Row>
   )

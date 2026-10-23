@@ -22,6 +22,12 @@ export interface WatchProgress {
   seriesId?: number
 }
 
+export interface SeriesDone {
+  episodes: number
+  done: boolean
+  at: number
+}
+
 // Every record below is keyed by `${profileId}:${...}` — favorites, resume points and watched
 // history are "who's watching" data (like Netflix profiles), separate per profile even though every
 // profile shares the same Xtream login/subscription.
@@ -38,6 +44,9 @@ interface LibraryState {
   // point is removed (so it drops out of "continue watching"), but this flag
   // stays forever so episode lists can still show "already watched".
   watched: Record<string, true>
+  /** Series inteiras ja vistas, por `${perfil}:${seriesId}` (o `watched` acima so guarda o id do episodio, sem a serie).
+   * `episodes` e quantos havia quando terminou: se o provedor trouxer mais, a pagina mostra "Novos episódios". */
+  seriesDone: Record<string, SeriesDone>
   /** Canais ao vivo abertos por ultimo, por perfil, mais recente primeiro (a tela de canais abre nele). */
   recentLive: Record<string, number[]>
   addRecentLive: (profileId: string, streamId: number) => void
@@ -67,6 +76,7 @@ export const useLibraryStore = create<LibraryState>()(
       favorites: {},
       progress: {},
       watched: {},
+      seriesDone: {},
       recentLive: {},
       favoriteTeams: {},
       favoritesAt: {},
@@ -162,6 +172,21 @@ export function progressFor(progress: LibraryState['progress'], profileId: strin
     .filter(([key]) => key.startsWith(prefix))
     .map(([, value]) => value)
 }
+/** Recalcula se a serie foi toda vista (sem especiais da temporada 0) e grava so quando muda. Chamado pela pagina da
+ * serie e pelo player, que ja tem a lista de episodios: nao pede nada ao provedor. */
+export function updateSeriesDone(profileId: string, seriesId: number, seasons: { seasonNumber: number; episodes: { id: string }[] }[]): void {
+  const episodes = seasons.filter((s) => s.seasonNumber > 0).flatMap((s) => s.episodes)
+  if (!episodes.length) return
+  const { watched, seriesDone } = useLibraryStore.getState()
+  const key = `${profileId}:${seriesId}`
+  const prev = seriesDone[key]
+  const all = episodes.every((ep) => watched[`${profileId}:series-${ep.id}`])
+  let next: SeriesDone | null = null
+  if (all && (!prev?.done || prev.episodes !== episodes.length)) next = { episodes: episodes.length, done: true, at: Date.now() }
+  else if (!all && prev?.done) next = { ...prev, done: false, at: Date.now() }
+  if (next) useLibraryStore.setState((state) => ({ seriesDone: { ...state.seriesDone, [key]: next } }))
+}
+
 export function isWatchedFor(watched: LibraryState['watched'], profileId: string, key: string): boolean {
   return Boolean(watched[`${profileId}:${key}`])
 }

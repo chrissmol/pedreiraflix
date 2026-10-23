@@ -11,7 +11,7 @@ import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
-import { useLibraryStore } from '../store/library'
+import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
@@ -249,6 +249,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       // A serie continua em "Continuar assistindo" pelo proximo episodio (como o "Next Up" do Plex/Jellyfin),
       // sem apagar o progresso se ele ja foi comecado.
       const { nextEpisode, seriesDetails } = nextUp.current
+      if (seriesDetails) updateSeriesDone(profileId, seriesDetails.seriesId, seriesDetails.seasons)
       if (nextEpisode && seriesDetails && !useLibraryStore.getState().progress[`${profileId}:series-${nextEpisode.id}`]) {
         setProgress(profileId, {
           kind: 'series',
@@ -279,6 +280,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
 
   function handleEnded() {
     if (kind === 'series' && id) markWatched(profileId, `series-${id}`)
+    if (kind === 'series' && seriesDetails) updateSeriesDone(profileId, seriesDetails.seriesId, seriesDetails.seasons)
     if (nextEpisode) goToEpisode(nextEpisode)
   }
 

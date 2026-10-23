@@ -190,7 +190,7 @@ export default function HomePage() {
         {recentMovies.length > 0 && (
           <Row title="Adicionados recentemente">
             {recentMovies.map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} onClick={() => navigate(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} watchedRef={{ kind: 'movie', id: m.streamId }} onClick={() => navigate(`/movies/${m.streamId}`)} />
             ))}
           </Row>
         )}
@@ -203,6 +203,7 @@ export default function HomePage() {
                 title={r.name}
                 image={r.image}
                 imdb={{ title: r.name, kind: r.kind === 'movie' ? 'movie' : 'tv' }}
+                watchedRef={{ kind: r.kind === 'movie' ? 'movie' : 'series', id: r.id }}
                 onClick={() => navigate(r.kind === 'movie' ? `/movies/${r.id}` : `/series/${r.id}`)}
               />
             ))}
@@ -216,6 +217,7 @@ export default function HomePage() {
                 key={`${f.kind}-${f.id}`}
                 title={f.name}
                 image={f.image}
+                watchedRef={f.kind === 'live' ? undefined : { kind: f.kind, id: f.id }}
                 onClick={() =>
                   navigate(
                     f.kind === 'live'
