@@ -117,3 +117,19 @@ test('desmarcar visto em um aparelho vale nos outros, e marcar de novo depois vo
   assert.deepEqual(again.watched, ['movie-a'])
   assert.deepEqual(again.unwatched, {})
 })
+
+test('categorias: cada aparelho mexe numa, as duas mudancas ficam (nao vence o perfil inteiro)', () => {
+  // Aparelho daqui escondeu Noticias as 10; a nuvem tem a TV, que nao sabia disso, escondendo Esportes as 20.
+  const local = { ...empty, settings: { ...ana, hiddenCategories: ['live:1'], categoryOrder: ['movie:3', 'movie:2'], prefsAt: { 'hidden:live:1': 10, 'order:movie': 10 } }, settingsAt: 10 }
+  const remote = { ...empty, settings: { ...ana, hiddenCategories: ['live:2'], prefsAt: { 'hidden:live:2': 20 } }, settingsAt: 20 }
+  const { settings, settingsAt } = mergeProfile(local, remote)
+  assert.deepEqual(settings.hiddenCategories.sort(), ['live:1', 'live:2'])
+  assert.deepEqual(settings.categoryOrder, ['movie:3', 'movie:2'])
+  assert.equal(settingsAt, 20)
+})
+
+test('categorias: mostrar de novo depois vence o esconder antigo', () => {
+  const local = { ...empty, settings: { ...ana, prefsAt: { 'hidden:live:1': 30 } }, settingsAt: 30 }
+  const remote = { ...empty, settings: { ...ana, hiddenCategories: ['live:1'], prefsAt: { 'hidden:live:1': 10 } }, settingsAt: 10 }
+  assert.equal(mergeProfile(local, remote).settings.hiddenCategories, undefined)
+})

@@ -3,6 +3,8 @@ import { login, seedSession } from './helpers'
 
 // /api/sync de mentira, dividido entre os dois "aparelhos" (o Worker com D1 tem teste proprio em worker/sync.test.mjs).
 async function sharedSync(context: BrowserContext, store: Map<string, string>) {
+  // Busca mudancas dos outros aparelhos a cada 1 s em vez de 2 min.
+  await context.addInitScript(() => ((window as { __SYNC_POLL_MS__?: number }).__SYNC_POLL_MS__ = 1000))
   await context.route('**/api/sync', async (route) => {
     const key = (await route.request().headerValue('x-sync-key')) ?? ''
     if (route.request().method() === 'PUT') {
@@ -91,6 +93,37 @@ test('perfil criado e perfil marcado como infantil no computador chegam na TV', 
   await expect(tvPage.getByText('Filme Adulto')).toHaveCount(0)
   await tvPage.goto('/profiles')
   await expect(tvPage.getByText('Vovó')).toBeVisible()
+
+  await computador.close()
+  await tv.close()
+})
+
+test('categorias: dois aparelhos abertos, cada um esconde uma, as duas ficam e a TV ve sem recarregar', async ({ browser }) => {
+  const store = new Map<string, string>()
+  const computador = await browser.newContext()
+  const tv = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7633) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36',
+    viewport: { width: 960, height: 540 },
+  })
+  await sharedSync(computador, store)
+  await sharedSync(tv, store)
+  const pc = await computador.newPage()
+  await login(pc)
+  const tvPage = await tv.newPage()
+  await seedSession(tvPage)
+  await tvPage.goto('/categorias')
+  await expect(tvPage.getByRole('button', { name: 'Esconder Esportes' })).toBeVisible()
+
+  await pc.goto('/categorias')
+  await pc.getByRole('button', { name: 'Esconder Notícias' }).click()
+  // A TV continua na tela e recebe sozinha.
+  await expect(tvPage.getByRole('button', { name: 'Mostrar Notícias' })).toBeVisible()
+
+  await tvPage.getByRole('button', { name: 'Esconder Esportes' }).click()
+  await expect(pc.getByRole('button', { name: 'Mostrar Esportes' })).toBeVisible()
+  await pc.reload()
+  await expect(pc.getByRole('button', { name: 'Mostrar Notícias' })).toBeVisible()
+  await expect(pc.getByRole('button', { name: 'Mostrar Esportes' })).toBeVisible()
 
   await computador.close()
   await tv.close()
