@@ -373,6 +373,41 @@ async function sync(request, env) {
   return new Response(null, { status: 204 })
 }
 
+// Codigo do grupo: com o secret GROUP_CODE, o proxy (/api/xtream, /api/session e /api/stream sem sessao cifrada) so
+// atende quem ja digitou o codigo uma vez no aparelho. Sem o secret tudo segue aberto, como antes. O cookie guarda o
+// hash do codigo, nao o codigo; trocar o secret desloga todo mundo do grupo. /api/stream com `s` passa sem cookie
+// porque a sessao so sai do /api/session (que ja exige o codigo) e o Chromecast/AirPlay buscam o video sem cookie.
+const GRUPO_COOKIE = 'pf_grupo'
+async function grupoToken(code) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`pedreiraflix-grupo:${code.trim().toLowerCase()}`))
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+async function noGrupo(request, env) {
+  if (!env.GROUP_CODE) return true
+  const cookie = (request.headers.get('cookie') || '').split(/;\s*/).find((c) => c.startsWith(`${GRUPO_COOKIE}=`))
+  return cookie?.slice(GRUPO_COOKIE.length + 1) === (await grupoToken(env.GROUP_CODE))
+}
+const foraDoGrupo = () => new Response('codigo do grupo', { status: 401 })
+
+async function grupo(request, env) {
+  if (request.method === 'GET') {
+    return Response.json({ required: !!env.GROUP_CODE, ok: await noGrupo(request, env) }, { headers: { 'cache-control': 'no-store' } })
+  }
+  let codigo
+  try {
+    codigo = (await request.json())?.codigo
+  } catch {
+    return new Response('invalid json', { status: 400 })
+  }
+  if (!env.GROUP_CODE) return new Response(null, { status: 204 })
+  if (typeof codigo !== 'string' || (await grupoToken(codigo)) !== (await grupoToken(env.GROUP_CODE))) {
+    return new Response('codigo errado', { status: 403 })
+  }
+  // 400 dias e o maximo que o Chrome aceita; Path=/api porque so o proxy confere.
+  const cookie = `${GRUPO_COOKIE}=${await grupoToken(env.GROUP_CODE)}; Path=/api; Max-Age=34560000; HttpOnly; Secure; SameSite=Lax`
+  return new Response(null, { status: 204, headers: { 'set-cookie': cookie } })
+}
+
 async function logError(request) {
   let body
   try {
@@ -585,6 +620,13 @@ export default {
       if (isRateLimited(ip, 'sync', 30, 10_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await sync(request, env))
     }
+    if (url.pathname === '/api/grupo' && (request.method === 'GET' || request.method === 'POST')) {
+      // Apertado de proposito: e o unico lugar onde alguem poderia tentar adivinhar o codigo.
+      if (request.method === 'POST' && isRateLimited(ip, 'grupo', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await grupo(request, env))
+    }
+    const proxy = url.pathname === '/api/xtream' || url.pathname === '/api/session' || (url.pathname === '/api/stream' && !url.searchParams.get('s'))
+    if (proxy && !(await noGrupo(request, env))) return withSecurityHeaders(foraDoGrupo())
     if (url.pathname === '/api/xtream') {
       // Catalog/EPG/login calls: normal browsing is a handful of these at a time, not a sustained burst.
       if (isRateLimited(ip, 'xtream', 300, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))

@@ -61,6 +61,7 @@ Um único Worker (`worker/index.js`, configuração em `wrangler.jsonc`) serve o
 | `/api/sync` | favoritos, times e progresso iguais em todos os aparelhos da conta | D1 `SYNC` |
 | `/api/feedback` | mensagens da tela Suporte | KV `FEEDBACK` |
 | `/api/moltv/*` | times favoritos e jogos | Worker `mol-tv-api` (`MOLTV`) |
+| `/api/grupo` | código do grupo: sem ele o proxy recusa o aparelho | secret `GROUP_CODE` |
 | `/api/log-error` | erros do app que os usuários encontram | log do Worker |
 
 O KV e o D1 são criados pelo próprio `wrangler deploy` na primeira vez. Todos os secrets são opcionais: sem eles, o recurso correspondente some e o resto do app continua funcionando. Para criá-los:
@@ -69,6 +70,7 @@ O KV e o D1 são criados pelo próprio `wrangler deploy` na primeira vez. Todos 
 .\scripts\set-stream-key.ps1     # gera e grava STREAM_KEY
 .\scripts\set-tmdb-token.ps1     # confere e grava TMDB_TOKEN
 npx wrangler secret put OMDB_KEY
+npx wrangler secret put GROUP_CODE   # código que os amigos digitam uma vez; trocar desloga todo mundo
 ```
 
 Para rodar o Worker local, crie `.dev.vars` com os mesmos nomes e rode `npx wrangler dev`.
@@ -76,7 +78,7 @@ Para rodar o Worker local, crie `.dev.vars` com os mesmos nomes e rode `npx wran
 ## Segurança
 
 - Credenciais e dados dos perfis ficam no aparelho. A sincronização guarda só favoritos, times, progresso e vistos, sob uma chave que é o SHA-256 de servidor, usuário e senha. A senha nunca vai para o banco.
-- O proxy aceita qualquer host público e recusa redes privadas. Mesmo assim, qualquer pessoa que souber o endereço consegue usá-lo, então não o divulgue fora do grupo e não o publique em outro domínio sem autenticação.
+- O proxy aceita qualquer host público e recusa redes privadas. Com o secret `GROUP_CODE`, ele só atende aparelhos que já digitaram o código do grupo (cookie com o hash do código); sem o secret, qualquer pessoa que souber o endereço consegue usá-lo. Vídeo com sessão cifrada (`/api/stream?s=`) passa sem cookie, porque Chromecast e AirPlay não mandam cookie e a sessão só sai do `/api/session`, que já exige o código.
 - Plano grátis da Cloudflare: 100 mil requisições por dia (TV ao vivo gasta muitas). Servir vídeo por proxy pode ferir os termos da Cloudflare, então use por sua conta e risco.
 - Como avisar de uma falha: veja [SECURITY.md](SECURITY.md).
 
