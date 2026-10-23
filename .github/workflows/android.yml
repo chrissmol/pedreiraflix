@@ -1,0 +1,38 @@
+name: App Android
+
+# Monta o APK (Capacitor, android/) numa maquina do GitHub, para conferir que a parte nativa compila. Roda quando
+# ela muda ou na mao, em Actions > App Android > Run workflow. Sai sem assinatura (a chave fica so no Mac do Chris):
+# serve para testar, nao para atualizar o app instalado. O APK sai como artefato (PedreiraFlix-Android).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**', 'capacitor.config.ts', '.github/workflows/android.yml']
+  pull_request:
+    branches: [main]
+    paths: ['android/**', 'capacitor.config.ts', '.github/workflows/android.yml']
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PedreiraFlix-Android
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

@@ -13,6 +13,9 @@ export interface SyncedProfile {
   progress: Record<string, WatchProgress>
   removed: Record<string, number>
   watched: string[]
+  /** Quando cada visto foi marcado e quando foi desmarcado; ausentes na primeira versao do sync. */
+  watchedAt?: Record<string, number>
+  unwatched?: Record<string, number>
   /** Por seriesId; o mais novo (`at`) vence. */
   seriesDone?: Record<string, SeriesDone>
   recentLive?: number[]
@@ -36,6 +39,8 @@ export interface LibraryRecords {
   progress: Record<string, WatchProgress>
   progressRemoved: Record<string, number>
   watched: Record<string, true>
+  watchedAt: Record<string, number>
+  watchedRemoved: Record<string, number>
   seriesDone: Record<string, SeriesDone>
   recentLive: Record<string, number[]>
   recentLiveAt: Record<string, number>
@@ -88,7 +93,16 @@ export function mergeProfile(local: SyncedProfile, remote: SyncedProfile | undef
   for (const [key, entry] of [...Object.entries(remote.progress ?? {}), ...Object.entries(local.progress)]) {
     if (entry.updatedAt > (removed[key] ?? 0) && entry.updatedAt >= (progress[key]?.updatedAt ?? 0)) progress[key] = entry
   }
-  const watched = [...new Set([...(remote.watched ?? []), ...local.watched])]
+  const watchedAt: Record<string, number> = {}
+  for (const [key, at] of [...Object.entries(remote.watchedAt ?? {}), ...Object.entries(local.watchedAt ?? {})]) {
+    if (at > (watchedAt[key] ?? 0)) watchedAt[key] = at
+  }
+  const unwatched: Record<string, number> = {}
+  for (const [key, at] of [...Object.entries(remote.unwatched ?? {}), ...Object.entries(local.unwatched ?? {})]) {
+    if (now - at < TOMBSTONE_MS && at > (unwatched[key] ?? 0) && at >= (watchedAt[key] ?? 0)) unwatched[key] = at
+  }
+  // Visto sem data (antes disto) perde para qualquer desmarcacao; marcado de novo depois dela, volta.
+  const watched = [...new Set([...(remote.watched ?? []), ...local.watched])].filter((key) => !unwatched[key])
   const seriesDone: Record<string, SeriesDone> = {}
   for (const [key, entry] of [...Object.entries(remote.seriesDone ?? {}), ...Object.entries(local.seriesDone ?? {})]) {
     if (entry.at >= (seriesDone[key]?.at ?? 0)) seriesDone[key] = entry
@@ -101,6 +115,8 @@ export function mergeProfile(local: SyncedProfile, remote: SyncedProfile | undef
     progress,
     removed,
     watched,
+    watchedAt: Object.fromEntries(Object.entries(watchedAt).filter(([key]) => !unwatched[key])),
+    unwatched,
     seriesDone,
     recentLive: recentLive.slice(0, 20),
     recentLiveAt,
@@ -146,6 +162,8 @@ export function extractProfile(state: LibraryRecords, profileId: string, profile
     progress: scoped(state.progress, profileId),
     removed: scoped(state.progressRemoved, profileId),
     watched: Object.keys(scoped(state.watched, profileId)),
+    watchedAt: scoped(state.watchedAt, profileId),
+    unwatched: scoped(state.watchedRemoved, profileId),
     seriesDone: scoped(state.seriesDone, profileId),
     recentLive: state.recentLive[profileId] ?? [],
     recentLiveAt: state.recentLiveAt[profileId] ?? 0,
@@ -182,6 +200,8 @@ export function applyProfile(state: LibraryRecords, profileId: string, p: Synced
     progress: replace(state.progress, p.progress ?? {}),
     progressRemoved: replace(state.progressRemoved, p.removed ?? {}),
     watched: replace(state.watched, Object.fromEntries((p.watched ?? []).map((k) => [k, true as const]))),
+    watchedAt: replace(state.watchedAt, p.watchedAt ?? {}),
+    watchedRemoved: replace(state.watchedRemoved, p.unwatched ?? {}),
     seriesDone: replace(state.seriesDone, p.seriesDone ?? {}),
     recentLive: { ...state.recentLive, [profileId]: p.recentLive ?? [] },
     recentLiveAt: { ...state.recentLiveAt, [profileId]: p.recentLiveAt ?? 0 },

@@ -41,6 +41,8 @@ test('extrai e aplica so as chaves do perfil, sem mexer no outro', () => {
     progress: { 'p1:movie-a': prog('a', 1), 'p2:movie-z': prog('z', 1) },
     progressRemoved: {},
     watched: { 'p1:movie-x': true, 'p2:movie-y': true },
+    watchedAt: {},
+    watchedRemoved: {},
     seriesDone: { 'p1:50': { episodes: 6, done: true, at: 1 }, 'p2:51': { episodes: 3, done: true, at: 1 } },
     recentLive: {},
     recentLiveAt: {},
@@ -105,4 +107,13 @@ test('cada perfil daqui acha o seu na nuvem: chave guardada, depois nome, senao 
     remote,
   )
   assert.deepEqual(claims, { a: 'demo', b: 'k2', c: 'c', d: 'k9' })
+})
+
+test('desmarcar visto em um aparelho vale nos outros, e marcar de novo depois volta', () => {
+  const local = { ...empty, watched: ['movie-a', 'movie-b'] }
+  const remote = { ...empty, watched: [], unwatched: { 'movie-a': now - 100 } }
+  assert.deepEqual(mergeProfile(local, remote, now).watched, ['movie-b'])
+  const again = mergeProfile({ ...empty, watched: ['movie-a'], watchedAt: { 'movie-a': now - 10 } }, remote, now)
+  assert.deepEqual(again.watched, ['movie-a'])
+  assert.deepEqual(again.unwatched, {})
 })

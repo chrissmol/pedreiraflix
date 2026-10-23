@@ -5,7 +5,7 @@ import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import SeasonDownloadButton from '../components/SeasonDownloadButton'
 import SeriesZipButton from '../components/SeriesZipButton'
-import { Check, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
+import { Check, Eye, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
 import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
@@ -37,6 +37,7 @@ export default function SeriesDetailPage() {
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'series', Number(id)))
   const episodeProgress = useLibraryStore((s) => s.progress)
   const watched = useLibraryStore((s) => s.watched)
+  const setWatched = useLibraryStore((s) => s.setWatched)
   const seriesDone = useLibraryStore((s) => s.seriesDone[`${profileId}:${id}`])
 
   useEffect(() => {
@@ -112,6 +113,7 @@ export default function SeriesDetailPage() {
   const tvmazeImage = (ep: Episode) => proxyImage(tvmaze?.episodeImages[`${ep.season}x${ep.episodeNum}`])
   const cast = series.cast || tvmaze?.cast || null
   // Licenca CC BY-SA do TVmaze: credito so quando algo dele aparece na tela.
+  const seasonWatched = !!season?.episodes.length && season.episodes.every((ep) => watched[`${profileId}:series-${ep.id}`])
   const usesTvmaze = Boolean((!series.cast && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
 
   return (
@@ -203,6 +205,17 @@ export default function SeriesDetailPage() {
         <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
           <h2 className="font-display text-headline-md text-white">Episódios</h2>
           <span className="text-body-sm text-on-surface-muted">{season?.episodes.length ?? 0} nesta temporada</span>
+          {season && season.episodes.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setWatched(profileId, season.episodes.map((ep) => `series-${ep.id}`), !seasonWatched)}
+              aria-pressed={seasonWatched}
+              className={`btn-secondary ${seasonWatched ? 'text-done' : ''}`}
+            >
+              {seasonWatched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {seasonWatched ? 'Temporada vista' : 'Marcar temporada como vista'}
+            </button>
+          )}
           <div className="sm:ml-auto">
             <SeriesZipButton series={series} />
           </div>
@@ -309,6 +322,21 @@ export default function SeriesDetailPage() {
                         </span>
                       ) : null}
                     </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setWatched(profileId, [`series-${ep.id}`], !isWatched)
+                      }}
+                      aria-pressed={isWatched}
+                      aria-label={isWatched ? `Desmarcar episódio ${ep.episodeNum} como visto` : `Marcar episódio ${ep.episodeNum} como visto`}
+                      title={isWatched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-highest ${
+                        isWatched ? 'text-done' : 'text-on-surface-variant hover:text-white'
+                      }`}
+                    >
+                      {isWatched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                     <span onClick={(e) => e.stopPropagation()}>
                       <DownloadButton
                         kind="series"

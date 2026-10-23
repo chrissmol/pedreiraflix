@@ -5,6 +5,7 @@ import { castMedia, ensureCastSdk } from '../lib/cast'
 import { isTv } from '../lib/device'
 import { moveFocusTv } from '../lib/spatialNav'
 import { usePlayerPrefs } from '../store/playerPrefs'
+import { useActiveProfileId } from '../store/profiles'
 import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
 import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
 import { VideoPlayerHeader } from './VideoPlayerHeader'
@@ -54,12 +55,17 @@ interface VideoPlayerProps {
 interface AudioTrack {
   id: number
   name: string
+  lang?: string
 }
 
 interface SubtitleTrack {
   id: number
   name: string
+  lang?: string
 }
+
+/** Como o idioma preferido e guardado e comparado: o codigo da faixa ("por"), senao o nome ("Português"). */
+const trackKey = (t: { name: string; lang?: string }) => (t.lang || t.name).toLowerCase()
 
 // AudioTrackList so existe no Safari; o lib.dom do TypeScript nao a declara.
 interface NativeAudioTrackList extends EventTarget {
@@ -131,6 +137,9 @@ export default function VideoPlayer({
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([])
   const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState(-1)
   const [playbackRate, setPlaybackRate] = useState(1)
+  const profileId = useActiveProfileId()
+  const trackPref = usePlayerPrefs((s) => s.trackLang[profileId])
+  const setTrackLang = usePlayerPrefs((s) => s.setTrackLang)
   const [openMenu, setOpenMenu] = useState<'quality' | 'audio' | 'subtitles' | 'speed' | 'display' | null>(null)
   const [pipSupported, setPipSupported] = useState(false)
   const [isPip, setIsPip] = useState(false)
@@ -388,7 +397,7 @@ export default function VideoPlayer({
           hls.on(HlsCtor.Events.AUDIO_TRACKS_UPDATED, (_evt, data) => {
             if (cancelled) return
             setAudioTracks(
-              data.audioTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}` })),
+              data.audioTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}`, lang: t.lang })),
             )
             setCurrentAudioTrack(hls?.audioTrack ?? -1)
           })
@@ -398,7 +407,7 @@ export default function VideoPlayer({
           hls.on(HlsCtor.Events.SUBTITLE_TRACKS_UPDATED, (_evt, data) => {
             if (cancelled) return
             setSubtitleTracks(
-              data.subtitleTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}` })),
+              data.subtitleTracks.map((t, i) => ({ id: i, name: t.name || t.lang || `Faixa ${i + 1}`, lang: t.lang })),
             )
           })
 
@@ -488,12 +497,12 @@ export default function VideoPlayer({
     function syncAudio() {
       if (!audio) return
       const list = Array.from({ length: audio.length }, (_, i) => audio[i])
-      setAudioTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}` })))
+      setAudioTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}`, lang: t.language })))
       setCurrentAudioTrack(list.findIndex((t) => t.enabled))
     }
     function syncText() {
       const list = nativeSubtitleTracks(video)
-      setSubtitleTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}` })))
+      setSubtitleTracks(list.map((t, i) => ({ id: i, name: t.label || t.language || `Faixa ${i + 1}`, lang: t.language })))
       setCurrentSubtitleTrack(list.findIndex((t) => t.mode === 'showing'))
     }
     syncAudio()
@@ -537,7 +546,8 @@ export default function VideoPlayer({
   }, [])
 
   useSubtitleOffset(videoRef, subtitleOffset, currentSubtitleTrack)
-  useStereoDownmix(videoRef, isTv)
+  const voiceBoost = usePlayerPrefs((s) => s.voiceBoost)
+  useStereoDownmix(videoRef, isTv, voiceBoost)
 
   const [sleepMinutes, setSleepMinutes] = useSleepTimer(videoRef)
 
@@ -829,21 +839,49 @@ export default function VideoPlayer({
     setOpenMenu(null)
   }
 
+  // Lista de faixas nova (video novo): abre no idioma que o perfil escolheu por ultimo, se o video tiver.
+  useEffect(() => {
+    const want = trackPref?.audio
+    const idx = want ? audioTracks.findIndex((t) => trackKey(t) === want) : -1
+    if (idx >= 0 && idx !== currentAudioTrack) applyAudioTrack(idx)
+    // So quando a lista muda; a escolha manual ja grava a preferencia.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioTracks])
+  useEffect(() => {
+    const want = trackPref?.subtitle
+    if (want === undefined || subtitleTracks.length === 0) return
+    const idx = want === null ? -1 : subtitleTracks.findIndex((t) => trackKey(t) === want)
+    if ((idx >= 0 || want === null) && idx !== currentSubtitleTrack) applySubtitleTrack(idx)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtitleTracks])
+
   function selectAudioTrack(id: number) {
+    const track = audioTracks[id]
+    if (track) setTrackLang(profileId, { audio: trackKey(track) })
+    applyAudioTrack(id)
+    setOpenMenu(null)
+  }
+
+  function applyAudioTrack(id: number) {
     if (hlsRef.current) hlsRef.current.audioTrack = id
     const nativeAudio = (videoRef.current as { audioTracks?: NativeAudioTrackList } | null)?.audioTracks
     if (!hlsRef.current && isHls && nativeHls && nativeAudio) {
       for (let i = 0; i < nativeAudio.length; i++) nativeAudio[i].enabled = i === id
     }
     setCurrentAudioTrack(id)
-    setOpenMenu(null)
   }
 
   function selectSubtitleTrack(id: number) {
+    const track = subtitleTracks[id]
+    setTrackLang(profileId, { subtitle: track ? trackKey(track) : null })
+    applySubtitleTrack(id)
+    setOpenMenu(null)
+  }
+
+  function applySubtitleTrack(id: number) {
     if (hlsRef.current) hlsRef.current.subtitleTrack = id
     else if (isHls && nativeHls) nativeSubtitleTracks(videoRef.current).forEach((t, i) => (t.mode = i === id ? 'showing' : 'disabled'))
     setCurrentSubtitleTrack(id)
-    setOpenMenu(null)
   }
 
   function setSpeed(rate: number) {

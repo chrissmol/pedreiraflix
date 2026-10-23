@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
 import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
-import { Check, FileArrowDown, Play, Plus } from '../components/icons'
+import { Check, Eye, FileArrowDown, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
@@ -32,6 +32,7 @@ export default function MovieDetailPage() {
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'movie', Number(id)))
   const watched = useLibraryStore((s) => Boolean(s.watched[`${profileId}:movie-${id}`]))
+  const setWatched = useLibraryStore((s) => s.setWatched)
 
   useEffect(() => {
     if (!client || !id) return
@@ -121,6 +122,16 @@ export default function MovieDetailPage() {
             >
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               <span className="hidden sm:inline">{isFavorite ? 'Na lista' : 'Minha lista'}</span>
+            </button>
+            <button
+              onClick={() => setWatched(profileId, [`movie-${movie.streamId}`], !watched)}
+              aria-pressed={watched}
+              aria-label={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+              title={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+              className={`btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md ${watched ? 'text-done' : ''}`}
+            >
+              {watched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              <span className="hidden sm:inline">{watched ? 'Visto' : 'Marcar como visto'}</span>
             </button>
             <DownloadButton
               kind="movie"

@@ -222,3 +222,20 @@ test('os botoes de pular mostram o numero de segundos no icone', async ({ page }
   await expect(page.getByRole('button', { name: 'Voltar 10s' }).locator('text')).toHaveText('10')
   await expect(page.getByRole('button', { name: 'Avançar 10s' }).locator('text')).toHaveText('10')
 })
+
+test('o idioma de audio e a legenda escolhidos valem para o proximo video do perfil', async ({ page }) => {
+  await page.goto('/watch/movie/3?ext=m3u8&name=Multi')
+  await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
+  await page.getByRole('button', { name: 'Áudio' }).click()
+  await page.getByRole('button', { name: 'English' }).click()
+  await page.getByRole('button', { name: 'Legendas' }).click()
+  await page.getByRole('button', { name: 'Português', exact: true }).click()
+
+  await page.reload()
+  await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.readyState >= 1)
+  await expect.poll(() =>
+    page.locator('video').evaluate((v: HTMLVideoElement) => Array.from(v.textTracks).find((t) => t.mode === 'showing')?.kind),
+  ).toBe('subtitles')
+  await page.getByRole('button', { name: 'Áudio' }).click()
+  await expect(page.getByRole('button', { name: 'English' })).toHaveClass(/menu-option-active/)
+})

@@ -25,6 +25,13 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
+            <!-- Itens da fileira "Continuar assistindo" do Google TV abrem o video direto (ContinuarTvPlugin). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="pedreiraflix" android:host="abrir" />
+            </intent-filter>
+
         </activity>
 
         <provider
