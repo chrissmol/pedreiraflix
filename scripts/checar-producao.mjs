@@ -60,14 +60,23 @@ await checar('PWA: manifest, icones e service worker', async () => {
 
 await checar('proxy bloqueia endereco interno', async () => {
   const r = await get('/api/stream?url=' + encodeURIComponent('http://127.0.0.1/'))
-  exige(r.status === 403, `esperava 403, veio ${r.status}`)
+  // 401 = nem chegou no proxy: o codigo do grupo (GROUP_CODE) barrou antes, o que tambem protege.
+  exige(r.status === 403 || r.status === 401, `esperava 403 ou 401, veio ${r.status}`)
+  return r.status === 401 ? 'barrado pelo codigo do grupo' : undefined
 })
 
 await checar('secret STREAM_KEY configurado', async () => {
   // Credencial falsa: /api/session so cifra, nao chama o provedor. 204 = Worker sem chave.
   const body = JSON.stringify({ base: 'https://example.com', username: 'checar', password: 'checar' })
   const r = await get('/api/session', { method: 'POST', body, headers: { 'content-type': 'application/json' } })
+  // 401: o codigo do grupo barrou antes, entao nao da para conferir a chave daqui (sem segredo nenhum no script).
+  if (r.status === 401) return 'nao conferido: atras do codigo do grupo'
   exige(r.status === 200, r.status === 204 ? 'Worker sem STREAM_KEY (videos sem URL cifrada)' : `status ${r.status}`)
+})
+
+await checar('codigo do grupo ligado', async () => {
+  const s = await (await get('/api/grupo')).json()
+  exige(s.required, 'Worker sem GROUP_CODE: qualquer pessoa usa o proxy')
 })
 
 await checar('secret TMDB_TOKEN configurado', async () => {

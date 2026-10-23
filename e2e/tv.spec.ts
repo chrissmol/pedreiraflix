@@ -323,3 +323,20 @@ test('TV: se a mistura deixar o filme mudo, ela desliga neste aparelho e o playe
   await recarregou
   expect(await page.evaluate(() => localStorage.getItem('pf-sem-mistura'))).toBe('1')
 })
+
+test('TV: codigo do grupo com o OK e o teclado da TV', async ({ page }) => {
+  let liberado = false
+  await page.route('**/api/grupo', async (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: { required: true, ok: liberado } })
+    liberado = true
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/')
+  const campo = page.getByRole('textbox', { name: 'Código do grupo' })
+  await expect(campo).toBeFocused() // ja abre com o foco no campo
+  await page.keyboard.press('Enter') // OK libera o teclado da TV
+  await page.keyboard.type('pedreira')
+  // Como no login, o OK do teclado da TV envia (fora do Layout nao ha navegacao por setas do app).
+  await page.keyboard.press('Enter')
+  await expect(campo).toBeHidden()
+})
