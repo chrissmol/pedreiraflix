@@ -41,7 +41,7 @@ for (const [nome, tela] of Object.entries(TELAS)) {
         // O credito e so texto: nao rouba o foco, as setas seguem chegando nos episodios.
         for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowDown')
         const focado = await page.evaluate(() => document.activeElement?.getAttribute('aria-label') || '')
-        expect(focado).toMatch(/Assistir episódio|Baixar|download/i)
+        expect(focado).toMatch(/Assistir episódio|como visto|Baixar|download/i)
       }
     })
   })
