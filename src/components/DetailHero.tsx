@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { displayTitle } from '../lib/displayTitle'
+import { Check } from './icons'
 
 interface DetailHeroProps {
   title: string
@@ -14,11 +15,13 @@ interface DetailHeroProps {
   credits: { label: string; value: string | null }[]
   actions: ReactNode
   footnote?: ReactNode
+  /** Selo de status antes da nota: "Assistido"/"Concluída" com ✓, ou "Novos episódios" quando a serie cresceu. */
+  status?: { label: string; done: boolean } | null
 }
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, chips, genre, plot, credits, actions, footnote }: DetailHeroProps) {
+export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, chips, genre, plot, credits, actions, footnote, status }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
@@ -34,6 +37,16 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
       <div className="relative z-10 flex items-end gap-10 px-4 pb-10 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10 sm:pt-32">
         <div className="min-w-0 max-w-3xl flex-1">
           <div className="mb-4 flex flex-wrap items-center gap-2">
+            {status && (
+              <span
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-label-badge font-semibold ${
+                  status.done ? 'bg-black/70 text-done' : 'bg-white text-black'
+                }`}
+              >
+                {status.done && <Check className="h-3.5 w-3.5" />}
+                {status.label}
+              </span>
+            )}
             {imdbRating && (
               <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-white">
                 <span className="font-extrabold text-rating">IMDb</span> {imdbRating}

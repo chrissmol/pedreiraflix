@@ -31,6 +31,7 @@ export default function MovieDetailPage() {
   const isKids = Boolean(useActiveProfile()?.isKids)
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'movie', Number(id)))
+  const watched = useLibraryStore((s) => Boolean(s.watched[`${profileId}:movie-${id}`]))
 
   useEffect(() => {
     if (!client || !id) return
@@ -89,6 +90,7 @@ export default function MovieDetailPage() {
         poster={movie.streamIcon}
         imdbRating={tmdb?.imdbRating}
         chips={chips}
+        status={watched ? { label: 'Assistido', done: true } : null}
         genre={genre}
         plot={plot}
         credits={[

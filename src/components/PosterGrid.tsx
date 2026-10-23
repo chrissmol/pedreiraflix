@@ -56,6 +56,7 @@ export default function PosterGrid({ items, kind, loading }: PosterGridProps) {
               title={item.name}
               image={(item as Movie).streamIcon}
               imdb={{ title: item.name, year: movieYear(item as Movie), kind: 'movie' }}
+              watchedRef={{ kind: 'movie', id: (item as Movie).streamId }}
               onClick={() => navigate(`/movies/${(item as Movie).streamId}`)}
             />
           ) : (
@@ -65,6 +66,7 @@ export default function PosterGrid({ items, kind, loading }: PosterGridProps) {
               title={item.name}
               image={(item as SeriesItem).cover}
               imdb={{ title: item.name, year: (item as SeriesItem).releaseDate, kind: 'tv' }}
+              watchedRef={{ kind: 'series', id: (item as SeriesItem).seriesId }}
               onClick={() => navigate(`/series/${(item as SeriesItem).seriesId}`)}
             />
           ),

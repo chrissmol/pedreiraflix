@@ -199,7 +199,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.movies.slice(0, shown('movies')).map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} onClick={() => open(`/movies/${m.streamId}`)} />
+              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} watchedRef={{ kind: 'movie', id: m.streamId }} onClick={() => open(`/movies/${m.streamId}`)} />
             ))}
           </div>
           {results.movies.length > shown('movies') && (
@@ -218,7 +218,7 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {results.series.slice(0, shown('series')).map((s) => (
-              <PosterCard key={s.seriesId} title={s.name} image={s.cover} imdb={{ title: s.name, year: s.releaseDate, kind: 'tv' }} onClick={() => open(`/series/${s.seriesId}`)} />
+              <PosterCard key={s.seriesId} title={s.name} image={s.cover} imdb={{ title: s.name, year: s.releaseDate, kind: 'tv' }} watchedRef={{ kind: 'series', id: s.seriesId }} onClick={() => open(`/series/${s.seriesId}`)} />
             ))}
           </div>
           {results.series.length > shown('series') && (

@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useImdbRating, type ImdbQuery } from '../hooks/useImdbRating'
 import { isTv } from '../lib/device'
 import { displayTitle } from '../lib/displayTitle'
-import { Play } from './icons'
+import { useLibraryStore } from '../store/library'
+import { useActiveProfileId } from '../store/profiles'
+import { Check, Play } from './icons'
 
 interface PosterCardProps {
   title: string
@@ -18,9 +20,11 @@ interface PosterCardProps {
    * w-32/sm:w-40/md:w-44 used everywhere else is for a horizontal scroll row (Row.tsx), which has no
    * track to size against. */
   fill?: boolean
+  /** Filme visto ou serie concluida neste perfil ganha o ✓ no canto, como no Plex/Jellyfin, no verde do "Assistido" dos episodios. */
+  watchedRef?: { kind: 'movie' | 'series'; id: number }
 }
 
-export default function PosterCard({ title: rawTitle, image, onClick, imdb, subtitle, progressPct, fill }: PosterCardProps) {
+export default function PosterCard({ title: rawTitle, image, onClick, imdb, subtitle, progressPct, fill, watchedRef }: PosterCardProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido) em todo poster do app — mesma limpeza do destaque (#86).
   const title = displayTitle(rawTitle)
   const ref = useRef<HTMLButtonElement>(null)
@@ -33,6 +37,10 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
     return () => io.disconnect()
   }, [imdb, seen])
   const rating = useImdbRating(imdb, seen)
+  const profileId = useActiveProfileId()
+  const done = useLibraryStore((s) =>
+    !watchedRef ? false : watchedRef.kind === 'movie' ? Boolean(s.watched[`${profileId}:movie-${watchedRef.id}`]) : Boolean(s.seriesDone[`${profileId}:${watchedRef.id}`]?.done),
+  )
   return (
     <button
       ref={ref}
@@ -71,6 +79,17 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
       {rating && (
         <span title="Nota do IMDb" className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
           ★ {rating}
+        </span>
+      )}
+
+      {done && (
+        <span
+          role="img"
+          aria-label={watchedRef?.kind === 'series' ? 'Série concluída' : 'Assistido'}
+          title={watchedRef?.kind === 'series' ? 'Série concluída' : 'Assistido'}
+          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-done text-black shadow-[0_2px_8px_rgba(0,0,0,0.6)] ring-2 ring-black/40"
+        >
+          <Check className="h-3.5 w-3.5" />
         </span>
       )}
 

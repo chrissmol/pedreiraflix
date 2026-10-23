@@ -10,7 +10,7 @@ import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
-import { useLibraryStore } from '../store/library'
+import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
 import SimilarRow from '../components/SimilarRow'
@@ -37,6 +37,7 @@ export default function SeriesDetailPage() {
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'series', Number(id)))
   const episodeProgress = useLibraryStore((s) => s.progress)
   const watched = useLibraryStore((s) => s.watched)
+  const seriesDone = useLibraryStore((s) => s.seriesDone[`${profileId}:${id}`])
 
   useEffect(() => {
     if (!client || !id) return
@@ -74,6 +75,11 @@ export default function SeriesDetailPage() {
       cancelled = true
     }
   }, [series])
+
+  // A lista de episodios ja esta aqui: marca/desmarca a serie concluida sem pedir nada ao provedor.
+  useEffect(() => {
+    if (series) updateSeriesDone(profileId, series.seriesId, series.seasons)
+  }, [series, watched, profileId])
 
   if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
@@ -116,6 +122,13 @@ export default function SeriesDetailPage() {
         poster={series.cover}
         imdbRating={tmdb?.imdbRating ?? null}
         chips={chips}
+        status={
+          seriesDone?.done
+            ? { label: 'Concluída', done: true }
+            : seriesDone && allEpisodes.filter((ep) => ep.season > 0).length > seriesDone.episodes
+              ? { label: 'Novos episódios', done: false }
+              : null
+        }
         genre={series.genre}
         plot={series.plot}
         credits={[

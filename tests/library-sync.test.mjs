@@ -41,6 +41,7 @@ test('extrai e aplica so as chaves do perfil, sem mexer no outro', () => {
     progress: { 'p1:movie-a': prog('a', 1), 'p2:movie-z': prog('z', 1) },
     progressRemoved: {},
     watched: { 'p1:movie-x': true, 'p2:movie-y': true },
+    seriesDone: { 'p1:50': { episodes: 6, done: true, at: 1 }, 'p2:51': { episodes: 3, done: true, at: 1 } },
     recentLive: {},
     recentLiveAt: {},
     searches: {},
@@ -53,6 +54,17 @@ test('extrai e aplica so as chaves do perfil, sem mexer no outro', () => {
   assert.deepEqual(Object.keys(next.watched).sort(), ['p1:movie-w', 'p1:movie-x', 'p2:movie-y'])
   assert.deepEqual(Object.keys(next.progress), ['p2:movie-z'])
   assert.deepEqual(next.favorites.p2, [fav(9)])
+  assert.deepEqual(p1.seriesDone, { 50: { episodes: 6, done: true, at: 1 } })
+  assert.deepEqual(Object.keys(next.seriesDone).sort(), ['p1:50', 'p2:51'])
+})
+
+test('serie concluida: o registro mais novo vence, inclusive o "nao concluida" de temporada nova', () => {
+  const local = { ...empty, seriesDone: { 50: { episodes: 6, done: true, at: now - 100 }, 51: { episodes: 3, done: true, at: now - 100 } } }
+  const remote = { ...empty, seriesDone: { 50: { episodes: 6, done: false, at: now - 10 }, 52: { episodes: 2, done: true, at: now } } }
+  const { seriesDone } = mergeProfile(local, remote)
+  assert.equal(seriesDone[50].done, false)
+  assert.equal(seriesDone[51].done, true)
+  assert.equal(seriesDone[52].done, true)
 })
 
 const ana = { name: 'Ana', color: '#fff' }

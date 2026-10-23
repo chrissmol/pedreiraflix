@@ -1,4 +1,4 @@
-import type { FavoriteRef, FavoriteTeam, WatchProgress } from '../store/library'
+import type { FavoriteRef, FavoriteTeam, SeriesDone, WatchProgress } from '../store/library'
 import type { Profile } from '../store/profiles'
 
 /** O perfil em si: o que aparece em "Gerenciar perfis" e as categorias que ele escondeu ou reordenou. */
@@ -13,6 +13,8 @@ export interface SyncedProfile {
   progress: Record<string, WatchProgress>
   removed: Record<string, number>
   watched: string[]
+  /** Por seriesId; o mais novo (`at`) vence. */
+  seriesDone?: Record<string, SeriesDone>
   recentLive?: number[]
   recentLiveAt?: number
   searches?: string[]
@@ -34,6 +36,7 @@ export interface LibraryRecords {
   progress: Record<string, WatchProgress>
   progressRemoved: Record<string, number>
   watched: Record<string, true>
+  seriesDone: Record<string, SeriesDone>
   recentLive: Record<string, number[]>
   recentLiveAt: Record<string, number>
   searches: Record<string, string[]>
@@ -86,6 +89,10 @@ export function mergeProfile(local: SyncedProfile, remote: SyncedProfile | undef
     if (entry.updatedAt > (removed[key] ?? 0) && entry.updatedAt >= (progress[key]?.updatedAt ?? 0)) progress[key] = entry
   }
   const watched = [...new Set([...(remote.watched ?? []), ...local.watched])]
+  const seriesDone: Record<string, SeriesDone> = {}
+  for (const [key, entry] of [...Object.entries(remote.seriesDone ?? {}), ...Object.entries(local.seriesDone ?? {})]) {
+    if (entry.at >= (seriesDone[key]?.at ?? 0)) seriesDone[key] = entry
+  }
   return {
     favorites,
     favoritesAt,
@@ -94,6 +101,7 @@ export function mergeProfile(local: SyncedProfile, remote: SyncedProfile | undef
     progress,
     removed,
     watched,
+    seriesDone,
     recentLive: recentLive.slice(0, 20),
     recentLiveAt,
     searches: searches.slice(0, 8),
@@ -138,6 +146,7 @@ export function extractProfile(state: LibraryRecords, profileId: string, profile
     progress: scoped(state.progress, profileId),
     removed: scoped(state.progressRemoved, profileId),
     watched: Object.keys(scoped(state.watched, profileId)),
+    seriesDone: scoped(state.seriesDone, profileId),
     recentLive: state.recentLive[profileId] ?? [],
     recentLiveAt: state.recentLiveAt[profileId] ?? 0,
     searches: state.searches[profileId] ?? [],
@@ -173,6 +182,7 @@ export function applyProfile(state: LibraryRecords, profileId: string, p: Synced
     progress: replace(state.progress, p.progress ?? {}),
     progressRemoved: replace(state.progressRemoved, p.removed ?? {}),
     watched: replace(state.watched, Object.fromEntries((p.watched ?? []).map((k) => [k, true as const]))),
+    seriesDone: replace(state.seriesDone, p.seriesDone ?? {}),
     recentLive: { ...state.recentLive, [profileId]: p.recentLive ?? [] },
     recentLiveAt: { ...state.recentLiveAt, [profileId]: p.recentLiveAt ?? 0 },
     searches: { ...state.searches, [profileId]: p.searches ?? [] },

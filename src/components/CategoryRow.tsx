@@ -51,7 +51,8 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
             title={item.name}
             image={(item as Movie).streamIcon}
             imdb={{ title: item.name, year: movieYear(item as Movie), kind: 'movie' }}
-            onClick={() => navigate(`/movies/${(item as Movie).streamId}`)}
+            watchedRef={{ kind: 'movie', id: (item as Movie).streamId }}
+              onClick={() => navigate(`/movies/${(item as Movie).streamId}`)}
           />
         ) : (
           <PosterCard
@@ -59,7 +60,8 @@ function CategoryRow({ title, loading, items, kind, limit, categoryId }: Categor
             title={item.name}
             image={(item as SeriesItem).cover}
             imdb={{ title: item.name, year: (item as SeriesItem).releaseDate, kind: 'tv' }}
-            onClick={() => navigate(`/series/${(item as SeriesItem).seriesId}`)}
+            watchedRef={{ kind: 'series', id: (item as SeriesItem).seriesId }}
+              onClick={() => navigate(`/series/${(item as SeriesItem).seriesId}`)}
           />
         ),
       )}
