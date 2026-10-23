@@ -55,7 +55,7 @@ function visible(el: HTMLElement) {
   return cs.visibility !== 'hidden' && cs.display !== 'none' && !el.closest('[aria-hidden="true"], .sr-only')
 }
 
-export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
   const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(visible)
   const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
   if (!active || !all.includes(active)) {
@@ -77,7 +77,7 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right'): boolea
   const fromContent = !!active.closest('#main-content')
   const inMenu = !!active.closest('header')
   for (const el of all) {
-    if (el === active || el.contains(active) || active.contains(el)) continue
+    if (el === active || el === skip || el.contains(active) || active.contains(el)) continue
     if (el.closest('header') && (inMenu ? horizontal : fromContent && !horizontal)) continue
     const to = center(el)
     const main = (horizontal ? to.x - from.x : to.y - from.y) * sign

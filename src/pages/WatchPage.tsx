@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import EpisodesPanel from '../components/EpisodesPanel'
 import LiveChannelPanel from '../components/LiveChannelPanel'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
@@ -143,6 +144,17 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     [setParams],
   )
   const closeChannels = useCallback(() => navigate(-1), [navigate])
+  // Painel "Episodios": mesmo jeito da lista de canais (na URL, para o Voltar fechar o painel e nao o player).
+  const showEpisodes = params.get('episodios') === '1'
+  const openEpisodes = useCallback(
+    () =>
+      setParams((p) => {
+        const next = new URLSearchParams(p)
+        next.set('episodios', '1')
+        return next
+      }),
+    [setParams],
+  )
   const zapNext = useCallback(() => zap(1), [zap])
   const zapPrev = useCallback(() => zap(-1), [zap])
 
@@ -296,10 +308,14 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onEnded={handleEnded}
         next={nextEpisode ? { label: `${nextEpisode.title}`, onPlay: () => goToEpisode(nextEpisode) } : null}
         previous={previousEpisode ? { label: previousEpisode.title, onPlay: () => goToEpisode(previousEpisode) } : null}
+        onShowEpisodes={kind === 'series' && seriesDetails ? openEpisodes : undefined}
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
         onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
       />
+      {showEpisodes && kind === 'series' && seriesDetails && id && (
+        <EpisodesPanel series={seriesDetails} currentId={id} onClose={closeChannels} onPick={goToEpisode} />
+      )}
       {showChannels && kind === 'live' && liveChannels.length > 0 && (
         <LiveChannelPanel
           categories={liveCategories}

@@ -1,4 +1,4 @@
-import { Maximize, Minimize, Pause, Play, SkipNext, SkipPrevious, SkipSeconds, VolumeHigh, VolumeMute, Zap } from './icons'
+import { Episodes, Maximize, Minimize, Pause, Play, SkipNext, SkipPrevious, SkipSeconds, VolumeHigh, VolumeMute, Zap } from './icons'
 import { useState } from 'react'
 import { SKIP_SECONDS, formatTime } from './videoPlayerUtils'
 
@@ -22,6 +22,7 @@ interface VideoPlayerBottomControlsProps {
   onPlayPrevious: () => void
   hasNext: boolean
   onPlayNext: () => void
+  onShowEpisodes?: () => void
   fsSupported: boolean
   isFullscreen: boolean
   onToggleFullscreen: () => void
@@ -47,6 +48,7 @@ export function VideoPlayerBottomControls({
   onPlayPrevious,
   hasNext,
   onPlayNext,
+  onShowEpisodes,
   fsSupported,
   isFullscreen,
   onToggleFullscreen,
@@ -173,6 +175,11 @@ export function VideoPlayerBottomControls({
           {hasNext && !isLive && (
             <button onClick={onPlayNext} aria-label="Próximo episódio" title="Próximo episódio" className="player-btn bg-transparent">
               <SkipNext className="h-5 w-5" />
+            </button>
+          )}
+          {onShowEpisodes && !isLive && (
+            <button onClick={onShowEpisodes} aria-label="Episódios" title="Episódios" className="player-btn bg-transparent">
+              <Episodes className="h-5 w-5" />
             </button>
           )}
           {fsSupported && (

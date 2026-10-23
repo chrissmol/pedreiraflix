@@ -388,6 +388,15 @@ export function SkipPrevious({ className }: IconProps) {
   )
 }
 
+// Retangulo com duas barras em cima: o icone de "Episodios" do player da Netflix.
+export function Episodes({ className }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M7 4h10M5 7.5h14M4 11h16v9H4z" strokeLinejoin="round" />
+    </Stroke>
+  )
+}
+
 export function SkipNext({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
