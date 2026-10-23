@@ -63,7 +63,7 @@ export default function SupportPage() {
     <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Suporte</h1>
       <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">
-        Algo não funcionou ou tem uma ideia? Conte aqui o que aconteceu. O aparelho e a tela em que você estava vão juntos.
+        Algo não funcionou ou tem uma ideia? Conte aqui o que aconteceu. O nome do perfil, o usuário da conta, o aparelho e a tela em que você estava vão juntos, e a mensagem é apagada depois de 180 dias.
       </p>
       <form onSubmit={enviar} className="max-w-2xl space-y-4">
         <div role="group" aria-label="Tipo" className="flex flex-wrap gap-2">
@@ -106,6 +106,13 @@ export default function SupportPage() {
         <img src="/tmdb.svg" alt="TMDB" className="h-8 w-8 shrink-0" />
         <p>Sinopses, gêneros e imagens extras vêm do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p>
       </footer>
+      {/* Fora da TV: la a seta para baixo saia do campo de texto direto para este link, pulando o Enviar.
+          Na TV a pagina continua linkada na tela de login. */}
+      {!isTv && (
+        <a href="/sobre/privacidade.html" className="mt-4 inline-block text-body-sm text-on-surface-variant underline hover:text-white">
+          Privacidade e termos de uso
+        </a>
+      )}
     </div>
   )
 }

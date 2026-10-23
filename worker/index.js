@@ -335,7 +335,8 @@ async function feedback(request, env) {
   }
   console.log(JSON.stringify({ source: 'feedback', ...item }))
   if (!env.FEEDBACK) return new Response('feedback storage not configured', { status: 503 })
-  await env.FEEDBACK.put(`${ts}-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(item))
+  // 180 dias: e o prazo prometido em /sobre/privacidade.html; a conta do provedor vai junto e nao deve ficar para sempre.
+  await env.FEEDBACK.put(`${ts}-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(item), { expirationTtl: 180 * 86400 })
   return new Response(null, { status: 204 })
 }
 
