@@ -47,6 +47,12 @@ interface LibraryState {
   /** Series inteiras ja vistas, por `${perfil}:${seriesId}` (o `watched` acima so guarda o id do episodio, sem a serie).
    * `episodes` e quantos havia quando terminou: se o provedor trouxer mais, a pagina mostra "Novos episódios". */
   seriesDone: Record<string, SeriesDone>
+  /** Quando cada item foi marcado como visto e quando foi desmarcado (mesma chave do `watched`): no sync o mais novo
+   * vence, senao a uniao dos aparelhos traria de volta o que a pessoa desmarcou. */
+  watchedAt: Record<string, number>
+  watchedRemoved: Record<string, number>
+  /** Marcar/desmarcar a mao (filme, episodio, temporada). Marcar tambem tira do "continuar assistindo". */
+  setWatched: (profileId: string, keys: string[], on: boolean) => void
   /** Canais ao vivo abertos por ultimo, por perfil, mais recente primeiro (a tela de canais abre nele). */
   recentLive: Record<string, number[]>
   addRecentLive: (profileId: string, streamId: number) => void
@@ -77,6 +83,8 @@ export const useLibraryStore = create<LibraryState>()(
       progress: {},
       watched: {},
       seriesDone: {},
+      watchedAt: {},
+      watchedRemoved: {},
       recentLive: {},
       favoriteTeams: {},
       favoritesAt: {},
@@ -124,7 +132,35 @@ export const useLibraryStore = create<LibraryState>()(
           delete next[`${profileId}:${key}`]
           return { progress: next, progressRemoved: { ...state.progressRemoved, [`${profileId}:${key}`]: Date.now() } }
         }),
-      markWatched: (profileId, key) => set((state) => ({ watched: { ...state.watched, [`${profileId}:${key}`]: true } })),
+      markWatched: (profileId, key) =>
+        set((state) => ({
+          watched: { ...state.watched, [`${profileId}:${key}`]: true },
+          watchedAt: { ...state.watchedAt, [`${profileId}:${key}`]: Date.now() },
+        })),
+      setWatched: (profileId, keys, on) =>
+        set((state) => {
+          const now = Date.now()
+          const watched = { ...state.watched }
+          const watchedAt = { ...state.watchedAt }
+          const watchedRemoved = { ...state.watchedRemoved }
+          const progress = { ...state.progress }
+          const progressRemoved = { ...state.progressRemoved }
+          for (const key of keys.map((k) => `${profileId}:${k}`)) {
+            if (on) {
+              watched[key] = true
+              watchedAt[key] = now
+              if (progress[key]) {
+                delete progress[key]
+                progressRemoved[key] = now
+              }
+            } else {
+              delete watched[key]
+              delete watchedAt[key]
+              watchedRemoved[key] = now
+            }
+          }
+          return { watched, watchedAt, watchedRemoved, progress, progressRemoved }
+        }),
     }),
     {
       name: 'iptv-library',
