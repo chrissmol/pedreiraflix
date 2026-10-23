@@ -42,6 +42,8 @@ interface VideoPlayerProps {
   next?: NextEpisode | null
   /** Series only: botao "episodio anterior" (voltar para rever o que acabou de ver). */
   previous?: NextEpisode | null
+  /** Series only: abre o painel "Episodios" (lista da temporada) por cima do video. */
+  onShowEpisodes?: () => void
   /** Live only: zapping to the previous/next channel — arrow keys, on-screen buttons, and a vertical swipe on touch. */
   onChannelUp?: () => void
   onChannelDown?: () => void
@@ -86,6 +88,7 @@ export default function VideoPlayer({
   onEnded,
   next,
   previous,
+  onShowEpisodes,
   onChannelUp,
   onChannelDown,
   onShowChannels,
@@ -586,7 +589,9 @@ export default function VideoPlayer({
             const bar = containerRef.current?.querySelector<HTMLElement>('[aria-label="Progresso"]')
             if (active === bar && (dir === 'left' || dir === 'right')) skip(dir === 'left' ? -SKIP_SECONDS : SKIP_SECONDS)
             else if (bar && dir === 'up' && active !== bar && active.closest('[data-controls]') === bar.closest('[data-controls]')) bar.focus()
-            else moveFocusTv(dir)
+            // Para os lados na fileira de botoes, a barra fica de fora: o centro dela (meio da tela) ganhava dos botoes
+            // da direita (anterior/proximo/Episodios/tela cheia), que ficavam inalcancaveis no controle.
+            else moveFocusTv(dir, dir === 'left' || dir === 'right' ? bar : null)
           }
           wakeControls()
           return
@@ -997,6 +1002,7 @@ export default function VideoPlayer({
           onPlayPrevious={() => previous?.onPlay()}
           hasNext={Boolean(next)}
           onPlayNext={playNext}
+          onShowEpisodes={onShowEpisodes}
           fsSupported={fsSupported}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
