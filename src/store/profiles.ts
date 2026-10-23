@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAuthStore } from './auth'
 import { accountId } from './accounts'
+import { settingsAtoms } from '../lib/librarySync'
 
 export interface Profile {
   id: string
@@ -18,6 +19,8 @@ export interface Profile {
    * aparelho, e quando ele foi editado por ultimo aqui (sem data = nunca editado desde que o sync existe). */
   syncId?: string
   updatedAt?: number
+  /** Quando cada pedaco do perfil (cada categoria escondida, a ordem de cada tipo, nome...) mudou aqui; ver settingsAtoms. */
+  prefsAt?: Record<string, number>
 }
 
 interface AccountProfiles {
@@ -50,6 +53,18 @@ function newProfile(name: string, colorIndex: number): Profile {
   return { id: `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, name, color: COLORS[colorIndex % COLORS.length] }
 }
 
+/** Marca a hora em cada pedaco que mudou, para o sync juntar categoria por categoria (lib/librarySync.ts). */
+function stamped(before: Profile, after: Profile): Profile {
+  const now = Date.now()
+  const old = settingsAtoms(before)
+  const next = settingsAtoms(after)
+  const prefsAt = { ...before.prefsAt }
+  for (const atom of new Set([...Object.keys(old), ...Object.keys(next)])) {
+    if (JSON.stringify(old[atom]) !== JSON.stringify(next[atom])) prefsAt[atom] = now
+  }
+  return { ...after, prefsAt, updatedAt: now }
+}
+
 function updateProfile(
   state: ProfilesState,
   accId: string,
@@ -61,7 +76,7 @@ function updateProfile(
   return {
     byAccount: {
       ...state.byAccount,
-      [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? { ...p, ...patch, updatedAt: Date.now() } : p)) },
+      [accId]: { ...account, profiles: account.profiles.map((p) => (p.id === profileId ? stamped(p, { ...p, ...patch }) : p)) },
     },
   }
 }

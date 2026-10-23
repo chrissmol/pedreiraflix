@@ -16,6 +16,9 @@ async function syncKey(creds: ProviderCredentials): Promise<string | null> {
   return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+// So leitura no D1 (o PUT so sai quando algo mudou); o teste encurta para nao esperar minutos.
+const POLL_MS = (typeof window !== 'undefined' && (window as { __SYNC_POLL_MS__?: number }).__SYNC_POLL_MS__) || 2 * 60_000
+
 let applying = false
 let running: Promise<void> | null = null
 let again = false
@@ -127,10 +130,13 @@ export default function LibrarySync() {
       else if (timer) flush()
     }
     document.addEventListener('visibilitychange', onVisibility)
+    // A TV fica dias aberta sem nunca sair do app: sem isto ela so via a mudanca de outro aparelho ao mexer em algo.
+    const poll = setInterval(() => document.visibilityState === 'visible' && syncNow(), POLL_MS)
     syncNow()
     return () => {
       unsubscribe()
       unsubscribeProfiles()
+      clearInterval(poll)
       document.removeEventListener('visibilitychange', onVisibility)
       if (timer) flush()
     }

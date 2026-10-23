@@ -2,7 +2,7 @@ import type { FavoriteRef, FavoriteTeam, SeriesDone, WatchProgress } from '../st
 import type { Profile } from '../store/profiles'
 
 /** O perfil em si: o que aparece em "Gerenciar perfis" e as categorias que ele escondeu ou reordenou. */
-export type ProfileSettings = Pick<Profile, 'name' | 'color' | 'isKids' | 'pin' | 'hiddenCategories' | 'categoryOrder'>
+export type ProfileSettings = Pick<Profile, 'name' | 'color' | 'isKids' | 'pin' | 'hiddenCategories' | 'categoryOrder' | 'prefsAt'>
 
 /** O que vai para a nuvem de um perfil. Os campos opcionais nao existiam na primeira versao do sync. */
 export interface SyncedProfile {
@@ -63,17 +63,62 @@ function mergeList<T>(local: T[], localAt: number, remote: T[], remoteAt: number
 
 /** Mesma regra para o perfil. Sem data local junta pelo lado seguro: infantil se algum lado for, PIN de quem tiver,
  * categorias escondidas dos dois. */
-function mergeSettings(local: ProfileSettings, localAt: number, remote: ProfileSettings | undefined, remoteAt: number): [ProfileSettings, number] {
-  if (!remote || localAt) return localAt >= remoteAt || !remote ? [local, localAt] : [remote, remoteAt]
-  const hidden = [...new Set([...(remote.hiddenCategories ?? []), ...(local.hiddenCategories ?? [])])]
-  const merged: ProfileSettings = {
-    ...remote,
-    isKids: remote.isKids || local.isKids || undefined,
-    pin: remote.pin ?? local.pin,
-    hiddenCategories: hidden.length ? hidden : undefined,
-    categoryOrder: remote.categoryOrder?.length ? remote.categoryOrder : local.categoryOrder,
+/** O perfil em pedacos que mudam sozinhos: cada categoria escondida, a ordem de cada tipo, nome, cor, infantil e PIN.
+ * Assim dois aparelhos mexendo em categorias diferentes nao apagam a mudanca um do outro. */
+export function settingsAtoms(s: ProfileSettings): Record<string, unknown> {
+  const atoms: Record<string, unknown> = { name: s.name, color: s.color, isKids: Boolean(s.isKids), pin: s.pin ?? null }
+  for (const key of s.hiddenCategories ?? []) atoms[`hidden:${key}`] = true
+  for (const key of s.categoryOrder ?? []) {
+    const kind = key.split(':')[0]
+    atoms[`order:${kind}`] = [...((atoms[`order:${kind}`] as string[] | undefined) ?? []), key]
   }
-  return JSON.stringify(merged) === JSON.stringify(remote) ? [remote, remoteAt] : [merged, Date.now()]
+  return atoms
+}
+
+function fromAtoms(atoms: Record<string, unknown>, prefsAt: Record<string, number>): ProfileSettings {
+  const keys = Object.keys(atoms)
+  const hidden = keys.filter((k) => k.startsWith('hidden:') && atoms[k]).map((k) => k.slice('hidden:'.length))
+  const order = keys.filter((k) => k.startsWith('order:')).flatMap((k) => (atoms[k] as string[] | undefined) ?? [])
+  return {
+    name: atoms.name as string,
+    color: atoms.color as string,
+    isKids: atoms.isKids ? true : undefined,
+    pin: (atoms.pin as string | null) ?? undefined,
+    hiddenCategories: hidden.length ? hidden : undefined,
+    categoryOrder: order.length ? order : undefined,
+    prefsAt,
+  }
+}
+
+/** Mesma regra para o perfil, pedaco por pedaco. Sem data local (nunca editado desde o sync) junta pelo lado seguro:
+ * infantil se algum lado for, PIN de quem tiver, categorias escondidas dos dois. */
+function mergeSettings(local: ProfileSettings, localAt: number, remote: ProfileSettings | undefined, remoteAt: number): [ProfileSettings, number] {
+  if (!remote) return [local, localAt]
+  if (!localAt) {
+    const hidden = [...new Set([...(remote.hiddenCategories ?? []), ...(local.hiddenCategories ?? [])])]
+    const merged: ProfileSettings = {
+      ...remote,
+      isKids: remote.isKids || local.isKids || undefined,
+      pin: remote.pin ?? local.pin,
+      hiddenCategories: hidden.length ? hidden : undefined,
+      categoryOrder: remote.categoryOrder?.length ? remote.categoryOrder : local.categoryOrder,
+    }
+    return JSON.stringify(merged) === JSON.stringify(remote) ? [remote, remoteAt] : [merged, Date.now()]
+  }
+  // Data de cada pedaco: a gravada nele; quem ainda nao grava por pedaco (versao anterior) usa a do perfil inteiro.
+  const stamp = (s: ProfileSettings, at: number, atom: string) => (s.prefsAt ? (s.prefsAt[atom] ?? 0) : at)
+  const mine = settingsAtoms(local)
+  const theirs = settingsAtoms(remote)
+  const atoms: Record<string, unknown> = {}
+  const prefsAt: Record<string, number> = {}
+  for (const atom of new Set([...Object.keys(theirs), ...Object.keys(mine)])) {
+    const localStamp = stamp(local, localAt, atom)
+    const remoteStamp = stamp(remote, remoteAt, atom)
+    atoms[atom] = localStamp > remoteStamp ? mine[atom] : theirs[atom]
+    const at = Math.max(localStamp, remoteStamp)
+    if (at) prefsAt[atom] = at
+  }
+  return [fromAtoms(atoms, prefsAt), Math.max(localAt, remoteAt)]
 }
 
 const sameValue = <T,>(a: T, b: T) => a === b
@@ -177,6 +222,7 @@ export function extractProfile(state: LibraryRecords, profileId: string, profile
         pin: profile.pin,
         hiddenCategories: profile.hiddenCategories,
         categoryOrder: profile.categoryOrder,
+        prefsAt: profile.prefsAt,
       },
       settingsAt: profile.updatedAt ?? 0,
     }),
