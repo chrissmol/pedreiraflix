@@ -137,10 +137,10 @@ export function useMediaSession(o: MediaSessionOptions) {
 }
 
 // --- Audio 5.1 misturado em estereo ---
-// Suspeita (Chris, 22/10): filme 5.1 na TV sai sem a voz dos atores, porque a voz fica no canal central e a TV de
-// dois alto-falantes o descartaria. Passar o som pelo Web Audio forca a mistura: a saida tem 2 canais e a regra
-// "speakers" soma o central na esquerda e na direita. Por enquanto so o teste de som dos Ajustes usa; o player so
-// liga depois de confirmado numa TV real (e so na TV: no celular/PC o Web Audio quebraria AirPlay/Chromecast).
+// Filme 5.1 na TV saia sem a voz dos atores (Chris, 22/10; nao confirmado em TV real): a voz fica no canal central,
+// que a TV de dois alto-falantes descartaria. Passar o som pelo Web Audio forca a mistura: a saida tem 2 canais e a
+// regra "speakers" soma o central na esquerda e na direita. So na TV: no celular/PC o Web Audio quebraria
+// AirPlay/Chromecast. O teste de som dos Ajustes compara com e sem.
 let audioCtx: AudioContext | null = null
 const routed = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>()
 
@@ -163,4 +163,57 @@ export async function routeToStereo(el: HTMLMediaElement): Promise<boolean> {
   source.connect(audioCtx.destination)
   routed.set(el, source)
   return true
+}
+
+// Se o som sair mudo pela mistura (ex.: o aparelho manda o AC3 direto para a TV sem decodificar), desliga a mistura
+// neste aparelho e recarrega: o player volta ao som de antes e continua de onde parou.
+const SEM_MISTURA = 'pf-sem-mistura'
+const SILENCIO_MAX_S = 20 // 20 s de zero absoluto tocando nao acontece num filme com som
+
+export function useStereoDownmix(videoRef: RefObject<HTMLVideoElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const el = videoRef.current
+    let desligada = false
+    try {
+      desligada = localStorage.getItem(SEM_MISTURA) === '1'
+    } catch {
+      // sem localStorage: segue com a mistura
+    }
+    if (!enabled || desligada || !el) return
+    let silencio = 0
+    let vigia: ReturnType<typeof setInterval> | null = null
+    async function route() {
+      if (!el || !(await routeToStereo(el)) || vigia || silencio < 0) return
+      const source = routed.get(el)!
+      const analyser = source.context.createAnalyser()
+      source.connect(analyser)
+      const buf = new Float32Array(analyser.fftSize)
+      vigia = setInterval(() => {
+        if (el.paused || el.muted || el.volume === 0 || el.readyState < 3) return
+        // Chromium conta o audio decodificado: 0 e video sem faixa de audio, nao culpa da mistura.
+        if ((el as HTMLVideoElement & { webkitAudioDecodedByteCount?: number }).webkitAudioDecodedByteCount === 0) return
+        analyser.getFloatTimeDomainData(buf)
+        if (buf.some((v) => v !== 0)) {
+          silencio = -1 // tem som: para de vigiar
+          source.disconnect(analyser)
+          clearInterval(vigia!)
+        } else if (++silencio >= SILENCIO_MAX_S) {
+          clearInterval(vigia!)
+          try {
+            localStorage.setItem(SEM_MISTURA, '1')
+          } catch {
+            return // sem como lembrar, recarregar entraria em laco
+          }
+          location.reload()
+        }
+      }, 1000)
+    }
+    const onPlaying = () => void route()
+    el.addEventListener('playing', onPlaying)
+    return () => {
+      el.removeEventListener('playing', onPlaying)
+      if (vigia) clearInterval(vigia)
+      routed.get(el)?.disconnect() // o contexto e um so para o app inteiro: solta o video que saiu da tela
+    }
+  }, [videoRef, enabled])
 }

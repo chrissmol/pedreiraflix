@@ -286,3 +286,40 @@ test('TV: o teste de som dos Ajustes toca a voz do canal central com e sem a mis
   await page.getByRole('button', { name: 'AAC com mistura' }).click()
   await expect.poll(() => page.evaluate(() => (window as unknown as { __mixados: number }).__mixados)).toBe(1)
 })
+
+test('TV: o som do filme passa pelo Web Audio para o 5.1 sair em estereo (com a voz do canal central)', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __mixados: number }
+    w.__mixados = 0
+    const original = AudioContext.prototype.createMediaElementSource
+    AudioContext.prototype.createMediaElementSource = function (el) { w.__mixados++; return original.call(this, el) }
+  })
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/3/)
+  // O Chromium de teste pode nao decodificar o video: dispara o "playing" na mao.
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')?.currentSrc ?? '')).not.toBe('')
+  await page.evaluate(() => document.querySelector('video')!.dispatchEvent(new Event('playing')))
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __mixados: number }).__mixados)).toBe(1)
+})
+
+test('TV: se a mistura deixar o filme mudo, ela desliga neste aparelho e o player recarrega', async ({ page }) => {
+  await page.clock.install()
+  await page.addInitScript(() => {
+    // Mistura muda: o analisador so le zeros, e o video finge estar tocando com audio.
+    AnalyserNode.prototype.getFloatTimeDomainData = () => {}
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', { get: () => false })
+    Object.defineProperty(HTMLMediaElement.prototype, 'readyState', { get: () => 4 })
+    Object.defineProperty(HTMLMediaElement.prototype, 'webkitAudioDecodedByteCount', { get: () => 1000 })
+  })
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')?.currentSrc ?? '')).not.toBe('')
+  await page.evaluate(() => document.querySelector('video')!.dispatchEvent(new Event('playing')))
+  await page.clock.runFor(5000)
+  expect(await page.evaluate(() => localStorage.getItem('pf-sem-mistura'))).toBeNull()
+  const recarregou = page.waitForEvent('load')
+  await page.clock.runFor(20000)
+  await recarregou
+  expect(await page.evaluate(() => localStorage.getItem('pf-sem-mistura'))).toBe('1')
+})
