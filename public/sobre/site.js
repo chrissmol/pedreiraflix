@@ -20,12 +20,12 @@ for (const p of document.querySelectorAll('[data-dl-text]')) {
   if (url) p.textContent = url
 }
 
-// Entrada suave ao rolar; sem JS ou com "reduzir movimento" tudo já aparece.
+// Entrada suave ao rolar, para baixo e para cima; sem JS ou com "reduzir movimento" tudo já aparece.
 const itens = document.querySelectorAll('.reveal')
 if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   document.documentElement.classList.add('anim')
   const io = new IntersectionObserver((es) => {
-    for (const e of es) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
-  }, { threshold: 0.15 })
+    for (const e of es) e.target.classList.toggle('in', e.isIntersecting)
+  }, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' })
   itens.forEach((el, i) => { el.style.transitionDelay = `${(i % 3) * 80}ms`; io.observe(el) })
 }
