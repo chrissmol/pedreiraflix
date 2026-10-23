@@ -15,7 +15,8 @@ const post = (body, env, ip = '1.1.1.1') =>
 
 test('feedback vai para o KV com perfil, aparelho e pagina', async () => {
   const saved = new Map()
-  const env = { FEEDBACK: { put: async (k, v) => saved.set(k, v) } }
+  let opts
+  const env = { FEEDBACK: { put: async (k, v, o) => (saved.set(k, v), (opts = o)) } }
   const res = await post({ tipo: 'Problema', texto: ' canal travou ', perfil: 'Ana', aparelho: 'TV', pagina: '/live' }, env, '2.2.2.2')
   assert.equal(res.status, 204)
   const [item] = [...saved.values()].map((v) => JSON.parse(v))
@@ -23,6 +24,7 @@ test('feedback vai para o KV com perfil, aparelho e pagina', async () => {
   assert.equal(item.perfil, 'Ana')
   assert.equal(item.aparelho, 'TV')
   assert.equal(item.pagina, '/live')
+  assert.equal(opts.expirationTtl, 180 * 86400)
 })
 
 test('feedback sem texto e recusado', async () => {

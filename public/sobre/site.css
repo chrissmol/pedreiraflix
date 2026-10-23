@@ -1,4 +1,5 @@
-:root { --bg:#06070c; --card:#0f121b; --line:#1d2230; --text:#eef1f8; --mute:#98a1b5; --blue:#1b7bff; --blue2:#3a97ff }
+/* --blue era #1b7bff: com texto branco dava 3,9:1; #0761e0 (brand-600 do app) da 5,5:1, acima dos 4,5:1 do AA */
+:root { --bg:#06070c; --card:#0f121b; --line:#1d2230; --text:#eef1f8; --mute:#98a1b5; --blue:#0761e0; --blue2:#3a97ff }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;overflow-x:clip}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow-x:hidden}
@@ -43,6 +44,14 @@ h2{font-size:clamp(28px,3.6vw,42px);margin:0 0 14px;letter-spacing:-.02em}
 .plat{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:center}
 .plat ul{list-style:none;padding:0;margin:0;display:grid;gap:16px;color:var(--mute)}
 .plat li b{color:var(--text)}
+.footer a{text-decoration:underline}
+.footer a:hover{color:var(--text)}
+.doc{padding-top:120px;max-width:760px}
+.doc h1{font-size:clamp(30px,4vw,44px);margin:0 0 8px;letter-spacing:-.02em}
+.doc h2{font-size:22px;margin:36px 0 10px}
+.doc p,.doc li{color:var(--mute)}
+.doc b{color:var(--text)}
+.doc ul{padding-left:20px;display:grid;gap:8px}
 .footer{border-top:1px solid var(--line);padding:30px 24px;text-align:center;color:var(--mute);font-size:14px}
 .anim .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
 .anim .reveal.in{opacity:1;transform:none}

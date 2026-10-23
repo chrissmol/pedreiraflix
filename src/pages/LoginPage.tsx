@@ -457,8 +457,12 @@ export default function LoginPage() {
           <Shield className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
           <p className="text-body-sm text-on-surface-variant">
             <span className="block text-label-md text-white">O PedreiraFlix é só o player</span>
-            Não hospeda nenhum conteúdo: toca o que o seu provedor já entrega. Os dados de acesso só ficam salvos
-            neste aparelho.
+            Não hospeda, não fornece e não indica nenhum conteúdo: toca o que o seu provedor já entrega. Use só com um
+            serviço que você contratou e que tem direito àquele conteúdo. Os dados de acesso só ficam salvos neste
+            aparelho.{' '}
+            <a href="/sobre/privacidade.html" className="underline hover:text-white">
+              Privacidade e termos
+            </a>
           </p>
         </div>
       </div>
