@@ -579,6 +579,14 @@ export default function VideoPlayer({
       const video = videoRef.current
       if (!video) return
       const focused = document.activeElement
+      // Voltar do controle fecha o menu aberto (antes so a lista de canais e os Episodios fechavam).
+      const openPanel = containerRef.current?.querySelector('[data-controls] .menu-panel')
+      if ((e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') && openPanel) {
+        e.preventDefault()
+        ;(openPanel.previousElementSibling as HTMLElement | null)?.focus() // o foco volta para o botao do menu, nao some
+        setOpenMenu(null)
+        return
+      }
       // Na TV a barra de progresso tambem e um <input>, mas as setas nela sao do player (abaixo), nao do navegador.
       if ((focused instanceof HTMLInputElement && !(isTv && focused.type === 'range')) || focused instanceof HTMLTextAreaElement) {
         return

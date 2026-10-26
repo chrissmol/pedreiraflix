@@ -44,7 +44,7 @@ export function VideoPlayerSubtitleMenu({
         <Subtitles className="h-4 w-4" />
       </button>
       {open && (
-        <div className="menu-panel absolute right-0 mt-2 w-56">
+        <div className="menu-panel absolute right-0 mt-2 max-h-[70vh] overflow-y-auto w-56">
           <button
             onClick={() => onSelectTrack(-1)}
             className={`menu-option ${currentTrack === -1 ? 'menu-option-active' : ''}`}
