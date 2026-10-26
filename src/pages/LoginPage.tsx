@@ -460,7 +460,7 @@ export default function LoginPage() {
             Não hospeda, não fornece e não indica nenhum conteúdo: toca o que o seu provedor já entrega. Use só com um
             serviço que você contratou e que tem direito àquele conteúdo. Os dados de acesso só ficam salvos neste
             aparelho.{' '}
-            <a href="/sobre/privacidade.html" className="underline hover:text-white">
+            <a href="/sobre/privacidade.html" className="-my-2 inline-block py-2 underline hover:text-white">
               Privacidade e termos
             </a>
           </p>

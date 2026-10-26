@@ -100,7 +100,7 @@ export function VideoPlayerHeader({
   return (
     <div
       data-controls
-      className={`absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
+      className={`absolute inset-x-0 top-0 z-30 flex items-start gap-2 bg-gradient-to-b from-black/80 to-transparent pb-8 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] pt-[max(0.5rem,env(safe-area-inset-top))] transition-opacity duration-200 ${
         controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
