@@ -370,3 +370,57 @@ test('TV: menus do player cabem acima da barra de baixo, todos os botoes se alca
   await expect(page).toHaveURL(/\/watch\/movie\/1/)
   expect(await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('Ajustes de exibição')
 })
+
+test('TV: o Voltar do Android (historico) fecha o menu do player e so o proximo Voltar sai', async ({ page }) => {
+  await page.goto('/movies/3')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/3/)
+  await page.keyboard.press('Enter')
+  const idx = () => page.evaluate(() => history.state?.idx as number)
+  const antes = await idx()
+  await page.getByRole('button', { name: 'Ajustes de exibição' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.menu-panel')).toBeVisible()
+  await page.goBack() // o botao Voltar do Fire TV chama webView.goBack(): nao manda tecla para a pagina
+  await expect(page.locator('.menu-panel')).toHaveCount(0)
+  expect(await idx()).toBe(antes) // continua na mesma tela do player
+  await page.waitForTimeout(300)
+  // Escolher uma opcao fecha o menu e tira a marca do historico: o Voltar seguinte sai do player de uma vez.
+  await page.getByRole('button', { name: 'Ajustes de exibição' }).focus()
+  await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: /Preencher/ }).click()
+  await expect(page.locator('.menu-panel')).toHaveCount(0)
+  await page.waitForFunction(() => !history.state?.pfMenu) // o history.back() que tira a marca e assincrono
+  await page.goBack()
+  await expect.poll(idx).toBe(antes - 1)
+})
+
+for (const tecla of [{ key: 'Escape' }, { key: 'GoBack' }, { key: 'XF86Back', keyCode: 10009 }]) {
+  test(`TV: a tecla ${tecla.key} do controle fecha o menu do player e devolve o foco ao botao`, async ({ page }) => {
+    await page.goto('/watch/movie/1?ext=mp4&name=Filme')
+    await expect(page.getByRole('button', { name: 'Play/Pause' })).toBeAttached()
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: 'Ajustes de exibição' }).focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.menu-panel')).toBeVisible()
+    await page.evaluate((t) => window.dispatchEvent(new KeyboardEvent('keydown', { key: t.key, keyCode: t.keyCode, bubbles: true })), tecla)
+    await expect(page.locator('.menu-panel')).toHaveCount(0)
+    await expect(page).toHaveURL(/\/watch\/movie\/1/)
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('Ajustes de exibição')
+  })
+}
+
+test('TV: no ao vivo, de Tela cheia as setas sobem pela coluna dos botoes de canal e descem de volta', async ({ page }) => {
+  await page.goto('/watch/live/101?name=Canal')
+  const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
+  await expect(page.getByRole('button', { name: 'Lista de canais' })).toBeAttached()
+  await page.keyboard.press('Enter') // foca o Play/Pause
+  for (let i = 0; i < 6 && (await focado()) !== 'Tela cheia'; i++) await page.keyboard.press('ArrowRight')
+  expect(await focado()).toBe('Tela cheia')
+  for (const esperado of ['Canal anterior', 'Lista de canais', 'Próximo canal']) {
+    await page.keyboard.press('ArrowUp')
+    expect(await focado()).toBe(esperado)
+  }
+  await page.keyboard.press('Enter') // OK em "Próximo canal" zapeia
+  await expect(page).toHaveURL(/\/watch\/live\/(?!101)\d+/)
+})
