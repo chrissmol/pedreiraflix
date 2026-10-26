@@ -75,6 +75,7 @@ interface NativeAudioTrackList extends EventTarget {
 
 // Atraso (s) atras do ponto ao vivo a partir do qual o "Rápido" do HLS nativo pula de volta.
 const NATIVE_FAST_MAX_LAG = 6
+const NATIVE_STALL_MS = 15_000
 
 function nativeSubtitleTracks(video: HTMLVideoElement | null) {
   return Array.from(video?.textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions')
@@ -533,6 +534,37 @@ export default function VideoPlayer({
     video.addEventListener('timeupdate', chase)
     return () => video.removeEventListener('timeupdate', chase)
   }, [isLive, nativeHls, fastLive, src])
+
+  // Safari (HLS nativo) nao tem o retry do hls.js: se o provedor engasga, o video fica em "carregando" para sempre.
+  // Parado ha NATIVE_STALL_MS sem voltar a tocar, recarrega a fonte (ate 3x seguidas; tocar de novo zera a conta).
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isLive || !nativeHls) return
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let reloads = 0
+    function onStall() {
+      if (timer || reloads >= 3) return
+      timer = setTimeout(() => {
+        timer = null
+        reloads += 1
+        setRetryToken((t) => t + 1)
+      }, NATIVE_STALL_MS)
+    }
+    function onOk() {
+      if (timer) clearTimeout(timer)
+      timer = null
+      reloads = 0
+    }
+    video.addEventListener('waiting', onStall)
+    video.addEventListener('stalled', onStall)
+    video.addEventListener('playing', onOk)
+    return () => {
+      if (timer) clearTimeout(timer)
+      video.removeEventListener('waiting', onStall)
+      video.removeEventListener('stalled', onStall)
+      video.removeEventListener('playing', onOk)
+    }
+  }, [isLive, nativeHls, src])
 
   // --- Fullscreen tracking ---
   useEffect(() => {

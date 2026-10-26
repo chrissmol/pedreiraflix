@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { XtreamClient } from '../lib/xtream'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { clearAllCaches } from '../lib/cache'
 import { isTv } from '../lib/device'
 import { routeToStereo } from '../components/useVideoPlayerEffects'
+import { supportsNativeHls } from '../components/videoPlayerUtils'
 
 // Diagnostico de conexao (menu da conta): roda as mesmas chamadas que o app faz e mostra o que ESTE aparelho recebe,
 // linha por linha. Existe porque o app do Windows do Christian nao carregava canais nem baixava e nao havia como ver
@@ -207,6 +208,7 @@ export default function DiagnosticPage() {
         />
       )}
       <TesteDeSom />
+      <TesteAoVivo />
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
           <li key={l.nome} className="rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm">
@@ -251,6 +253,118 @@ function TesteDeSom() {
         <button onClick={() => tocar('ac3', true)} className="chip">AC3 com mistura</button>
       </div>
       {aviso && <p className="mt-2 text-body-sm text-live">{aviso}</p>}
+    </section>
+  )
+}
+
+const TESTE_VIVO_S = 40
+
+// Teste do ao vivo: toca um canal por 40 s (mudo, na tela) do mesmo jeito que o player (HLS nativo no Safari, hls.js nos
+// outros) e conta travadas, erros e o tempo dos pedidos ao provedor. Existe porque o ao vivo travava no iPhone (26/10)
+// e sem esses numeros so se chuta a causa.
+function TesteAoVivo() {
+  const client = useXtream()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [rodando, setRodando] = useState(false)
+  const [relatorio, setRelatorio] = useState('')
+
+  async function testar() {
+    const video = videoRef.current
+    if (!video || !(client instanceof XtreamClient)) {
+      setRelatorio('O teste vale para contas usuário/senha (Xtream).')
+      return
+    }
+    setRodando(true)
+    setRelatorio('Procurando um canal…')
+    let hls: { destroy: () => void } | null = null
+    try {
+      const cat = (await client.getLiveCategories())[0]
+      const canal = (await client.getLiveStreams(cat?.categoryId))[0]
+      if (!canal) throw new Error('nenhum canal encontrado')
+      const native = supportsNativeHls()
+      const src = client.streamUrl('live', canal.streamId, 'm3u8')
+      const t0 = performance.now()
+      const eventos: string[] = []
+      const log = (e: string) => eventos.push(`${((performance.now() - t0) / 1000).toFixed(1)}s ${e}`)
+      let primeiro: number | null = null
+      let esperas = 0
+      let esperaDesde: number | null = null
+      let esperaMs = 0
+      const noAr: number[] = []
+      const on = (nome: string, fn: () => void) => video.addEventListener(nome, fn)
+      on('playing', () => {
+        if (primeiro === null) primeiro = Math.round(performance.now() - t0)
+        if (esperaDesde !== null) esperaMs += performance.now() - esperaDesde
+        esperaDesde = null
+        log('playing')
+      })
+      on('waiting', () => {
+        esperas += 1
+        esperaDesde ??= performance.now()
+        log('waiting')
+      })
+      on('stalled', () => log('stalled'))
+      on('error', () => log(`error code ${video.error?.code} ${video.error?.message ?? ''}`))
+      video.muted = true
+      performance.clearResourceTimings()
+      if (native) {
+        video.src = src
+      } else {
+        const { default: Hls } = await import('hls.js')
+        const h = new Hls()
+        hls = h
+        h.on(Hls.Events.ERROR, (_e, d) => log(`hls ${d.details}${d.fatal ? ' FATAL' : ''}${d.response?.code ? ` HTTP ${d.response.code}` : ''}`))
+        h.loadSource(src)
+        h.attachMedia(video)
+      }
+      video.play().catch((e) => log(`play recusado: ${e instanceof Error ? e.name : e}`))
+      const t1 = performance.now()
+      let ult = 0
+      for (let i = 0; i < TESTE_VIVO_S; i++) {
+        await sleep(1000)
+        const b = video.buffered
+        noAr.push(b.length ? Math.max(0, b.end(b.length - 1) - video.currentTime) : 0)
+        ult = video.currentTime
+        setRelatorio(`Testando… ${i + 1}/${TESTE_VIVO_S} s`)
+      }
+      if (esperaDesde !== null) esperaMs += performance.now() - esperaDesde
+      const rec = performance.getEntriesByType('resource').filter((r) => r.name.includes('/api/stream')) as PerformanceResourceTiming[]
+      const lentos = rec.filter((r) => r.duration > 3000).length
+      const falhas = rec.filter((r) => r.responseStatus >= 400).length
+      const maior = Math.round(Math.max(0, ...rec.map((r) => r.duration)))
+      const media = noAr.reduce((a, b) => a + b, 0) / (noAr.length || 1)
+      setRelatorio(
+        [
+          `Canal ${canal.name} · ${native ? 'HLS nativo (Safari)' : 'hls.js'} · ${navigator.userAgent}`,
+          `Começou a tocar em: ${primeiro === null ? 'NÃO COMEÇOU' : `${primeiro} ms`}`,
+          `Tocou ${ult.toFixed(1)} s de ${Math.round((performance.now() - t1) / 1000)} s · travadas: ${esperas} · parado esperando: ${(esperaMs / 1000).toFixed(1)} s`,
+          `Vídeo guardado à frente: média ${media.toFixed(1)} s · mínimo ${Math.min(...noAr).toFixed(1)} s`,
+          `Pedidos ao servidor: ${rec.length} · com erro (4xx/5xx): ${falhas} · acima de 3 s: ${lentos} · o mais lento: ${maior} ms`,
+          `Eventos: ${eventos.slice(0, 40).join(' | ') || 'nenhum'}`,
+        ].join('\n'),
+      )
+    } catch (err) {
+      setRelatorio(`Falhou: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      hls?.destroy()
+      video.pause()
+      video.removeAttribute('src')
+      video.load()
+      setRodando(false)
+    }
+  }
+
+  return (
+    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
+      <h2 className="text-label-md text-white">Teste de canal ao vivo</h2>
+      <p className="mt-1 text-body-sm text-on-surface-variant">
+        Toca um canal por {TESTE_VIVO_S} segundos e conta travadas e erros. Rode no aparelho que está travando e mande a captura desta caixa.
+      </p>
+      <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-sm rounded-lg bg-black" />
+      <button onClick={testar} disabled={rodando} className="btn-primary mt-3">
+        {rodando ? 'Testando…' : 'Testar canal ao vivo'}
+      </button>
+      {relatorio && <pre className="mt-3 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>}
     </section>
   )
 }
