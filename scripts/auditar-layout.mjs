@@ -34,7 +34,7 @@ export function auditarLayout({ toque }) {
   for (const h of document.querySelectorAll('h1, h2')) {
     if (!cab || !visivel(h)) continue
     const r = h.getBoundingClientRect()
-    if (r.top < cab.bottom - 4 && r.bottom > cab.top && document.querySelector('#main-content')?.scrollTop === 0) out.push(`titulo "${nome(h)}" por baixo do cabecalho`)
+    if (r.top < cab.bottom - 4 && r.bottom > cab.top && r.left < cab.right && r.right > cab.left && document.querySelector('#main-content')?.scrollTop === 0) out.push(`titulo "${nome(h)}" por baixo do cabecalho`)
   }
   for (const el of document.querySelectorAll('h1, h2, h3, button, a, p, span')) {
     if (!visivel(el) || el.children.length) continue

@@ -66,10 +66,10 @@ const MENUS = [
   ['player-legendas', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Legendas']],
   ['player-exibicao', '/watch/movie/3?ext=m3u8&name=Multi%20%C3%81udio%20Teste', ['Ajustes de exibição']],
 ]
-// So existe no servidor de desenvolvimento: /api/tmdb e do Worker, e o WebSocket e a recarga do Vite. O 400 de
-// /api/xtream sem nada e a pagina Diagnostico testando o proxy de proposito. Os console.error genericos de 400/404
-// repetem uma resposta que o registro de HTTP ja mostra com o endereco.
-const RUIDO_DEV = [/\/api\/tmdb/, /WebSocket connection to 'ws:/, /\[vite\]/, /status of 40[04] \((Not Found|Bad Request)\)/, /HTTP 400: \S*\/api\/xtream$/]
+// So existe no servidor de desenvolvimento: /api/tmdb, grupo, sync, em-alta e sugestoes sao do Worker, e o WebSocket
+// e a recarga do Vite. O 400 de /api/xtream sem nada e a pagina Diagnostico testando o proxy de proposito.
+// Os console.error genericos de 400/404 repetem uma resposta que o registro de HTTP ja mostra com o endereco.
+const RUIDO_DEV = [/\/api\/(tmdb|grupo|sync|em-alta|sugestoes)\b/, /WebSocket connection to 'ws:/, /\[vite\]/, /status of 40[04] \((Not Found|Bad Request)\)/, /HTTP 400: \S*\/api\/xtream$/]
 
 const so = opcao('--aparelho')
 if (so && !APARELHOS[so]) {
@@ -144,7 +144,8 @@ try {
         await page.evaluate(() => new Promise((r) => { const q = indexedDB.deleteDatabase('pedreiraflix-cache'); q.onsuccess = q.onerror = q.onblocked = r }))
       }
       await page.goto(BASE + rota)
-      await page.locator('#main-content, video, form').first().waitFor({ timeout: 20_000 })
+      // A busca do topo e um form escondido no celular: sem o filtro, o first() pegava ela e nunca ficava visivel.
+      await page.locator('#main-content, video, form').filter({ visible: true }).first().waitFor({ timeout: 20_000 })
       await sleep(2500)
       // "Carregando" ainda na tela depois de 20s+ de espera e problema, nao paciencia.
       if (await page.getByText(/^Carregando/).first().isVisible().catch(() => false)) visual.push(`[${aparelho}/${nome}] ainda "Carregando..." depois da espera`)
