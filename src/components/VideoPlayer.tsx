@@ -76,6 +76,7 @@ interface NativeAudioTrackList extends EventTarget {
 // Atraso (s) atras do ponto ao vivo a partir do qual o "Rápido" do HLS nativo pula de volta.
 const NATIVE_FAST_MAX_LAG = 6
 const NATIVE_STALL_MS = 15_000
+const LIVE_AUTO_RETRY_MS = 20_000
 
 function nativeSubtitleTracks(video: HTMLVideoElement | null) {
   return Array.from(video?.textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions')
@@ -437,6 +438,8 @@ export default function VideoPlayer({
                   hls?.startLoad()
                 } else {
                   setError('Sinal instável: não foi possível reconectar ao stream.')
+                  // Ao vivo (TV, Windows, site): sem isto o canal ficava parado ate alguem apertar "Tentar novamente".
+                  if (isLive) setTimeout(() => !cancelled && setRetryToken((t) => t + 1), LIVE_AUTO_RETRY_MS)
                 }
                 break
               case HlsCtor.ErrorTypes.MEDIA_ERROR:
