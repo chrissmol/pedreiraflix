@@ -605,6 +605,28 @@ export default function VideoPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying])
 
+  // Menu aberto vira uma entrada do historico, como a lista de canais: o Voltar do Android/Fire TV (MainActivity chama
+  // webView.goBack(), sem tecla para o JS) fecha so o menu em vez de sair do player.
+  const menuMarker = useRef(false)
+  useEffect(() => {
+    if (openMenu && !menuMarker.current) {
+      history.pushState({ ...history.state, pfMenu: true }, '')
+      menuMarker.current = true
+    } else if (!openMenu && menuMarker.current) {
+      menuMarker.current = false
+      if (history.state?.pfMenu) history.back()
+    }
+  }, [openMenu])
+  useEffect(() => {
+    const onPop = () => {
+      if (!menuMarker.current) return
+      menuMarker.current = false
+      setOpenMenu(null)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
   // --- Keyboard shortcuts ---
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -613,7 +635,7 @@ export default function VideoPlayer({
       const focused = document.activeElement
       // Voltar do controle fecha o menu aberto (antes so a lista de canais e os Episodios fechavam).
       const openPanel = containerRef.current?.querySelector('[data-controls] .menu-panel')
-      if ((e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') && openPanel) {
+      if ((e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack' || e.key === 'XF86Back' || e.keyCode === 10009) && openPanel) {
         e.preventDefault()
         ;(openPanel.previousElementSibling as HTMLElement | null)?.focus() // o foco volta para o botao do menu, nao some
         setOpenMenu(null)
