@@ -340,3 +340,33 @@ test('TV: codigo do grupo com o OK e o teclado da TV', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(campo).toBeHidden()
 })
+
+test('TV: menus do player cabem acima da barra de baixo, todos os botoes se alcancam e Voltar fecha', async ({ page }) => {
+  await page.goto('/watch/movie/1?ext=mp4&name=Filme')
+  await expect(page.getByRole('button', { name: 'Play/Pause' })).toBeAttached()
+  await page.keyboard.press('Enter') // mostra os controles
+  await page.getByRole('button', { name: 'Ajustes de exibição' }).focus()
+  await page.keyboard.press('Enter')
+  const painel = page.locator('.menu-panel')
+  await expect(painel).toBeVisible()
+  // Desce pelo menu ate o ultimo "Desligar em": nenhum item focado pode ficar coberto pela barra de controles.
+  const coberto = () => page.evaluate(() => {
+    const a = document.activeElement as HTMLElement
+    const r = a.getBoundingClientRect()
+    const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+    return !!top && top !== a && !a.contains(top) && !top.contains(a)
+  })
+  const rotulo = () => page.evaluate(() => document.activeElement?.textContent?.trim() ?? '')
+  const vistos = new Set<string>()
+  for (let i = 0; i < 12 && !vistos.has('90min'); i++) {
+    await page.keyboard.press('ArrowDown')
+    vistos.add(await rotulo())
+    if ((await rotulo()).includes('min') || (await rotulo()) === 'Nunca') expect(await coberto(), await rotulo()).toBe(false)
+  }
+  expect(vistos.has('90min')).toBe(true)
+
+  await page.keyboard.press('Escape') // Voltar do controle
+  await expect(painel).toHaveCount(0)
+  await expect(page).toHaveURL(/\/watch\/movie\/1/)
+  expect(await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('Ajustes de exibição')
+})

@@ -20,7 +20,7 @@ export function VideoPlayerSpeedMenu({ open, playbackRate, onToggle, onSelect }:
         {playbackRate !== 1 && <span className="tabular-nums">{playbackRate}x</span>}
       </button>
       {open && (
-        <div className="menu-panel absolute right-0 mt-2 w-36">
+        <div className="menu-panel absolute right-0 mt-2 max-h-[70vh] overflow-y-auto w-36">
           {PLAYBACK_RATES.map((rate) => (
             <button
               key={rate}

@@ -44,7 +44,7 @@ export function VideoPlayerDisplayMenu({
         {sleepRemaining != null && <span className="tabular-nums">{sleepRemaining}min</span>}
       </button>
       {open && (
-        <div className="menu-panel absolute right-0 mt-2 w-72">
+        <div className="menu-panel absolute right-0 mt-2 max-h-[70vh] overflow-y-auto w-72">
           <p className="menu-label">Proporção</p>
           {FITS.map((option) => (
             <button
