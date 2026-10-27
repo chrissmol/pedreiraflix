@@ -1,4 +1,4 @@
-import Select from './Select'
+import { ChipGroup } from './FilterPanel'
 
 // Xtream ratings are a 0–10 scale (same one the home carousel's MIN_RATING/8.5 and the ★ badges on
 // posters already use) — these thresholds match that, not a 1–5 star count.
@@ -11,11 +11,11 @@ interface RatingFilterProps {
 
 export default function RatingFilter({ value, onChange }: RatingFilterProps) {
   return (
-    <Select
-      label="Nota mínima"
+    <ChipGroup
+      title="Nota mínima"
       value={String(value)}
       onChange={(v) => onChange(Number(v))}
-      options={[{ value: '0', label: 'Qualquer nota' }, ...THRESHOLDS.map((t) => ({ value: String(t), label: `★ ${t}+` }))]}
+      options={[{ value: '0', label: 'Qualquer' }, ...THRESHOLDS.map((t) => ({ value: String(t), label: `★ ${t}+` }))]}
     />
   )
 }

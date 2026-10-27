@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
-import FilterBar from '../components/FilterBar'
+import FilterPanel, { ChipGroup, FilterSection } from '../components/FilterPanel'
 import PosterGrid from '../components/PosterGrid'
 import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
@@ -15,6 +15,7 @@ import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
+const SORT_LABELS: Record<SortKey, string> = { default: 'Padrão', name: 'Nome (A-Z)', recent: 'Recentes', rating: 'Melhor avaliados' }
 
 function sortMovies(items: Movie[], sort: SortKey): Movie[] {
   if (sort === 'default') return items // same reference — see CategoryRow.tsx for why that matters
@@ -79,40 +80,49 @@ export default function MoviesPage() {
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Filmes</h1>
-        <FilterBar
-          active={[sort !== 'default', minRating > 0, activeYear != null, activeCategory != null].filter(Boolean).length}
+        <FilterPanel
+          active={[
+            sort !== 'default' && { key: 'sort', label: SORT_LABELS[sort], clear: () => setSort('default') },
+            minRating > 0 && { key: 'rating', label: `★ ${minRating}+`, clear: () => setMinRating(0) },
+            activeYear != null && { key: 'year', label: String(activeYear), clear: () => setActiveYear(null) },
+            activeCategory != null && {
+              key: 'category',
+              label: cleanCategoryName(groups.find((g) => g.category.categoryId === activeCategory)?.category.categoryName ?? ''),
+              clear: () => setActiveCategory(null),
+            },
+          ].filter((f) => f !== false)}
         >
-        <Select
-          label="Ordenar"
-          value={sort}
-          onChange={(v) => setSort(v as SortKey)}
-          options={[
-            { value: 'default', label: 'Ordem padrão' },
-            { value: 'name', label: 'Nome (A-Z)' },
-            { value: 'recent', label: 'Adicionados recentemente' },
-            { value: 'rating', label: 'Melhor avaliados' },
-          ]}
-        />
-        <RatingFilter value={minRating} onChange={setMinRating} />
-        {allYears.length > 0 && (
-          <Select
-            label="Ano"
-            value={activeYear != null ? String(activeYear) : ''}
-            onChange={(v) => setActiveYear(v ? Number(v) : null)}
-            options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+          <ChipGroup
+            title="Ordenar"
+            value={sort}
+            onChange={setSort}
+            options={(Object.keys(SORT_LABELS) as SortKey[]).map((k) => ({ value: k, label: SORT_LABELS[k] }))}
           />
-        )}
-        <Select
-          label="Categoria"
-          className="ml-auto max-w-56"
-          value={activeCategory ?? ''}
-          onChange={(v) => setActiveCategory(v || null)}
-          options={[
-            { value: '', label: 'Todas as categorias' },
-            ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
-          ]}
-        />
-        </FilterBar>
+          <RatingFilter value={minRating} onChange={setMinRating} />
+          {allYears.length > 0 && (
+            <FilterSection title="Ano">
+              <Select
+                inline
+                label="Ano"
+                value={activeYear != null ? String(activeYear) : ''}
+                onChange={(v) => setActiveYear(v ? Number(v) : null)}
+                options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+              />
+            </FilterSection>
+          )}
+          <FilterSection title="Categoria">
+            <Select
+              inline
+              label="Categoria"
+              value={activeCategory ?? ''}
+              onChange={(v) => setActiveCategory(v || null)}
+              options={[
+                { value: '', label: 'Todas as categorias' },
+                ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
+              ]}
+            />
+          </FilterSection>
+        </FilterPanel>
       </div>
 
       <ContinueWatchingRow kind="movie" />
