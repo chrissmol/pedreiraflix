@@ -41,10 +41,10 @@ test('seguir um time mostra os proximos jogos com o canal', async ({ page }) => 
 
   const card = page.getByRole('region', { name: 'Flamengo' })
   await expect(card.getByText('Flamengo × Vasco')).toBeVisible()
-  await expect(card.getByRole('link', { name: 'Premiere, provável: procurar o canal' })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Premiere, provável: abrir o canal ao vivo' })).toBeVisible()
   await expect(card.getByText('Canal a confirmar')).toBeVisible()
   // Com canal confirmado, os provaveis somem daquele jogo
-  await expect(card.getByRole('link', { name: 'Globo: procurar o canal' })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Globo, confirmado: abrir o canal ao vivo' })).toBeVisible()
   await expect(card.getByText('SporTV')).toHaveCount(0)
 
   // Fica salvo no perfil: recarregar mantem o time
@@ -54,8 +54,8 @@ test('seguir um time mostra os proximos jogos com o canal', async ({ page }) => 
   await expect(page.getByRole('region', { name: 'Flamengo' })).toHaveCount(0)
 })
 
-// O proximo jogo fica em destaque com "Ao vivo" ou "Hoje" e quanto falta; o canal leva para a busca com o nome dele.
-test('proximo jogo em destaque e canal abre a busca', async ({ page }) => {
+// O canal do jogo leva ao canal ao vivo do provedor: um achado abre direto, varios viram opcoes, nenhum avisa.
+test('tocar no canal do jogo abre o canal ao vivo do provedor, mostra opcoes ou avisa que nao tem', async ({ page }) => {
   const h = (n: number) => new Date(Date.now() + n * 3600_000).toISOString()
   await page.route('**/api/moltv/v1/search?*', (route) => route.fulfill({ json: { results: [{ type: 'team', slug: 'flamengo', name: 'Flamengo' }] } }))
   await page.route('**/api/moltv/v1/teams/flamengo/next', (route) =>
@@ -64,7 +64,11 @@ test('proximo jogo em destaque e canal abre a busca', async ({ page }) => {
         matches: [
           {
             match: { id: 'fd:1', home: 'Flamengo', away: 'Vasco', kickoff: h(-0.5), competition: 'Brasileirão', status: 'scheduled' },
-            broadcasts: [{ channel: 'Globo', slug: 'globo', confidence: 'confirmada' }],
+            broadcasts: [
+              { channel: 'Esporte Total', slug: 'a', confidence: 'confirmada' },
+              { channel: 'Canal', slug: 'b', confidence: 'confirmada' },
+              { channel: 'Disney+', slug: 'c', confidence: 'confirmada' },
+            ],
           },
         ],
       },
@@ -76,6 +80,16 @@ test('proximo jogo em destaque e canal abre a busca', async ({ page }) => {
   await page.getByRole('button', { name: 'Flamengo', exact: true }).click()
   const card = page.getByRole('region', { name: 'Flamengo' })
   await expect(card.getByText('Ao vivo')).toBeVisible()
-  await card.getByRole('link', { name: 'Globo: procurar o canal' }).click()
-  await expect(page).toHaveURL(/\/search\?q=Globo$/)
+
+  await card.getByRole('button', { name: /^Disney\+/ }).click()
+  await expect(card.getByText('Seu provedor não tem o canal Disney+.')).toBeVisible()
+
+  await card.getByRole('button', { name: /^Canal,/ }).click()
+  await expect(card.getByText(/Seu provedor tem \d+ canais com esse nome/)).toBeVisible()
+  await card.getByRole('button', { name: 'Canal Clima' }).click()
+  await expect(page).toHaveURL(/\/watch\/live\/103/)
+  await page.goBack()
+
+  await card.getByRole('button', { name: /^Esporte Total/ }).click()
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
 })
