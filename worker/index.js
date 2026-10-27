@@ -6,6 +6,7 @@
 // always target the single host the user typed at login, so this is no less safe for those; images
 // just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
+import { junto } from './junto.js'
 import { molTv } from './moltv.js'
 import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
@@ -657,6 +658,8 @@ async function aiSuggest(request, url, env, ctx) {
   return res
 }
 
+export { SalaJunto } from './junto.js'
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
@@ -713,6 +716,12 @@ export default {
       // Cada pergunta nova gasta a cota diaria de IA de todo mundo: bem mais apertado que o TMDB.
       if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await aiSuggest(request, url, env, ctx))
+    }
+    if (url.pathname.startsWith('/api/junto/')) {
+      if (isRateLimited(ip, 'junto', 20, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      // Sem withSecurityHeaders: a resposta 101 do WebSocket nao pode ser recriada (o Response perderia o socket).
+      const res = await junto(request, url, env)
+      return res.status === 101 ? res : withSecurityHeaders(res)
     }
     if (url.pathname.startsWith('/api/moltv/')) {
       if (isRateLimited(ip, 'moltv', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))

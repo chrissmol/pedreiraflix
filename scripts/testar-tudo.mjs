@@ -23,9 +23,9 @@ const PILARES = {
   telas: 'Celular, iPhone, TV e acessibilidade',
 }
 const SPECS = {
-  player: ['smoke', 'player', 'voz-tv', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'live-travado-safari', 'live-queda-sinal', 'libera-conexao'],
-  'ao-vivo': ['live-epg', 'live-404', 'canal-bloqueado', 'canais-grupos', 'canais-grupos.mobile', 'epg', 'epg-manual', 'xmltv', 'xmltv-real', 'relogio', 'zap.mobile'],
-  catalogo: ['busca-grande', 'busca-pessoa', 'titulos-duplicados', 'concluido', 'visto-e-em-alta', 'continuar-tv', 'search-suggestions', 'serie-detalhe', 'titulos', 'titulo-removido', 'tmdb', 'hero', 'grade-progressiva', 'scroll-restore', 'cache', 'prioridade', 'perf', 'erro-tentar'],
+  player: ['smoke', 'player', 'voz-tv', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'live-travado-safari', 'live-queda-sinal', 'libera-conexao', 'assistir-junto'],
+  'ao-vivo': ['live-epg', 'live-404', 'canal-bloqueado', 'canais-grupos', 'canais-grupos.mobile', 'epg', 'epg-manual', 'xmltv', 'xmltv-real', 'relogio', 'zap.mobile', 'ao-vivo-agora', 'numero-canal'],
+  catalogo: ['busca-grande', 'busca-pessoa', 'titulos-duplicados', 'concluido', 'visto-e-em-alta', 'continuar-tv', 'search-suggestions', 'serie-detalhe', 'titulos', 'titulo-removido', 'tmdb', 'hero', 'grade-progressiva', 'scroll-restore', 'cache', 'prioridade', 'perf', 'erro-tentar', 'saga', 'novos-episodios', 'busca-voz', 'retrospectiva'],
   conta: ['auth', 'autologout', 'app-pin', 'account-label-profile-name', 'profiles', 'parental', 'credenciais', 'm3u-login', 'conexoes', 'limite-telas', 'trocar-conta', 'trocar-conta.mobile', 'provedores-fora-do-padrao'],
   downloads: ['downloads', 'downloads-erros', 'downloads-partes', 'baixar-temporada', 'fila-para-no-403', 'serie-zip', 'sem-internet'],
   pwa: ['pwa.pwa', 'pwa-css', 'entrar-offline.pwa', 'instalar-app', 'update-prompt', 'fonte-propria'],
