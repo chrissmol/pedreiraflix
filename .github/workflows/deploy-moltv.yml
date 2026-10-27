@@ -1,0 +1,32 @@
+name: Deploy API Mol TV
+
+# Publica o Worker mol-tv-api (repo privado chrissmol/mol-tv) com o CLOUDFLARE_API_TOKEN deste repo, sem ninguem rodar
+# o wrangler na mao. O checkout do outro repo usa MOLTV_READ_TOKEN (o GITHUB_TOKEN so enxerga este repo).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch ou commit do mol-tv
+        default: main
+  push:
+    branches: [claude/deploy-moltv]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: chrissmol/mol-tv
+          ref: ${{ inputs.ref || 'claude/nba-futebol-mundial' }}
+          token: ${{ secrets.MOLTV_READ_TOKEN || github.token }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run apps/api
+      - run: npx wrangler deploy
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
