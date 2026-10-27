@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import ErrorCard from '../components/ErrorCard'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLiveCatalog } from '../hooks/useCatalog'
+import { displayTitle } from '../lib/displayTitle'
+import { searchCatalog } from '../lib/search'
+import type { LiveChannel } from '../types'
 import { Check, Plus, Trophy, Tv, X } from '../components/icons'
 import { useMinuteClock } from '../lib/minuteClock'
 import { matchWhen } from '../lib/matchTime'
@@ -95,34 +99,90 @@ function shownBroadcasts(all: Broadcast[]) {
   return confirmed.length ? confirmed : all
 }
 
-/** Each channel opens the search with its name: the IPTV list may carry it as "Globo SP HD" or several variants. */
+/** Tocar no canal procura o nome dele nos canais ao vivo do provedor: um achado abre direto, vários viram opções
+ * e nenhum avisa. Só monta ao tocar, porque carregar a lista de canais é o custo da Live.
+ * shortcut: casa pelo nome do canal ("Globo" acha "Globo SP HD"); não distingue praça nem qualidade. */
+function ChannelPicker({ channel, onClose }: { channel: string; onClose: () => void }) {
+  const navigate = useNavigate()
+  const live = useLiveCatalog()
+  const hits = useMemo(
+    () => searchCatalog(live.groups, channel).filter((h) => h.rank <= 3).slice(0, 8).map((h) => h.item),
+    [live.groups, channel],
+  )
+  const open = (c: LiveChannel) => navigate(`/watch/live/${c.streamId}?name=${encodeURIComponent(c.name)}`)
+  const waiting = live.loading || live.groups.some((g) => g.loading)
+  // Um único canal parecido: vai direto, sem pedir outro toque.
+  useEffect(() => {
+    if (!waiting && hits.length === 1) navigate(`/watch/live/${hits[0].streamId}?name=${encodeURIComponent(hits[0].name)}`)
+  }, [waiting, hits, navigate])
+
+  return (
+    <div role="status" className="mt-2 w-full rounded-xl border border-outline-soft bg-surface-high p-3 text-body-sm">
+      {waiting && hits.length === 0 ? (
+        <p className="text-on-surface-variant">Procurando {channel} nos seus canais…</p>
+      ) : hits.length === 0 ? (
+        <>
+          <p className="text-white">Seu provedor não tem o canal {channel}.</p>
+          <p className="mb-2 text-on-surface-variant">Pode ser que ele passe como outro nome. Veja pela busca.</p>
+          <Link to={`/search?${new URLSearchParams({ q: channel })}`} className="brand-focus mr-2 rounded-full bg-brand-500/15 px-3 py-1 text-label-md text-brand-300">
+            Buscar {channel}
+          </Link>
+        </>
+      ) : (
+        <>
+          <p className="mb-2 text-on-surface-variant">Seu provedor tem {hits.length} canais com esse nome. Escolha um:</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {hits.map((c) => (
+              <li key={c.streamId}>
+                <button onClick={() => open(c)} className="brand-focus inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-md text-white hover:bg-surface-low pointer-coarse:min-h-9">
+                  <Tv className="h-3.5 w-3.5" />
+                  {displayTitle(c.name)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <button onClick={onClose} className="brand-focus mt-2 rounded-full px-3 py-1 text-label-md text-on-surface-variant hover:text-white">
+        Fechar
+      </button>
+    </div>
+  )
+}
+
+/** "Confirmado" só quando a API garante (curadoria); o resto é palpite por regra e diz "provável". */
 function Channels({ broadcasts }: { broadcasts: Broadcast[] }) {
   const shown = shownBroadcasts(broadcasts)
+  const [picked, setPicked] = useState<string | null>(null)
   return (
-    <ul aria-label="Onde passa" className="flex flex-wrap gap-1.5">
-      {shown.length === 0 ? (
-        <li className="rounded-full border border-dashed border-outline-soft px-3 py-1 text-label-md text-on-surface-variant">Canal a confirmar</li>
-      ) : (
-        shown.map((b) => {
-          const sure = b.confidence === 'confirmada'
-          return (
-            <li key={b.slug}>
-              <Link
-                to={`/search?${new URLSearchParams({ q: b.channel })}`}
-                aria-label={`${b.channel}${sure ? '' : ', provável'}: procurar o canal`}
-                className={`brand-focus inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label-md transition-colors pointer-coarse:min-h-9 ${
-                  sure ? 'bg-brand-500/15 text-brand-300 hover:bg-brand-500/25' : 'border border-outline-soft text-white hover:bg-surface-high'
-                }`}
-              >
-                <Tv className="h-3.5 w-3.5" />
-                {b.channel}
-                {!sure && <span className="text-on-surface-variant">· provável</span>}
-              </Link>
-            </li>
-          )
-        })
-      )}
-    </ul>
+    <div>
+      <ul aria-label="Onde passa" className="flex flex-wrap gap-1.5">
+        {shown.length === 0 ? (
+          <li className="rounded-full border border-dashed border-outline-soft px-3 py-1 text-label-md text-on-surface-variant">Canal a confirmar</li>
+        ) : (
+          shown.map((b) => {
+            const sure = b.confidence === 'confirmada'
+            return (
+              <li key={b.slug}>
+                <button
+                  onClick={() => setPicked(picked === b.channel ? null : b.channel)}
+                  aria-expanded={picked === b.channel}
+                  aria-label={`${b.channel}, ${sure ? 'confirmado' : 'provável'}: abrir o canal ao vivo`}
+                  className={`brand-focus inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label-md transition-colors pointer-coarse:min-h-9 ${
+                    sure ? 'bg-brand-500/15 text-brand-300 hover:bg-brand-500/25' : 'border border-outline-soft text-white hover:bg-surface-high'
+                  }`}
+                >
+                  {sure ? <Check className="h-3.5 w-3.5" /> : <Tv className="h-3.5 w-3.5" />}
+                  {b.channel}
+                  <span className={sure ? '' : 'text-on-surface-variant'}>· {sure ? 'confirmado' : 'provável'}</span>
+                </button>
+              </li>
+            )
+          })
+        )}
+      </ul>
+      {picked && <ChannelPicker channel={picked} onClose={() => setPicked(null)} />}
+    </div>
   )
 }
 

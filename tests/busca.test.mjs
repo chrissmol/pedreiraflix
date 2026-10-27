@@ -22,3 +22,12 @@ test('aceita um erro de digitacao quando nada bate exato', () => {
   assert.equal(nomes('homen aranha').length, 3)
   assert.deepEqual(nomes('xyzw'), [])
 })
+
+test('filmes e series: um resultado por obra (dublado e legendado com o mesmo nome limpo)', () => {
+  const grupos = [
+    { category: { categoryName: 'Drama' }, items: [{ streamId: 1, name: 'Forrest Gump (1994)' }] },
+    { category: { categoryName: 'Legendados' }, items: [{ streamId: 2, name: 'Forrest Gump [L] (1994)' }] },
+  ]
+  assert.deepEqual(searchCatalog(grupos, 'forrest', true).map((h) => h.item.streamId), [1])
+  assert.equal(searchCatalog(grupos, 'forrest').length, 2)
+})

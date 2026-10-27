@@ -37,21 +37,22 @@ function AppPinSettings() {
               setPinInput('')
             }
           }}
-          className="mt-3 flex gap-2"
+          className="mt-3 flex flex-col gap-2"
         >
           <input
             inputMode="numeric"
             placeholder="0000"
+            aria-label="PIN de 4 dígitos"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus h-10 w-20 rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
+            className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
           />
           <button
             type="submit"
             disabled={pinInput.length !== 4}
-            className="btn-primary h-10 px-4 text-body-sm sm:px-4"
+            className="btn-primary h-10 w-full px-4 text-body-sm sm:px-4"
           >
-            Definir
+            Definir PIN
           </button>
         </form>
       )}
@@ -65,60 +66,72 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="w-full rounded-2xl border border-outline-soft bg-surface-lowest p-3 text-left text-body-sm">
-      <label className="mb-3 flex cursor-pointer items-center justify-between gap-2">
+    // Sem moldura propria: o cartao do perfil ja e a moldura, e no celular (w-40) uma segunda apertava tudo.
+    <div className="flex w-full flex-col gap-3 text-left text-body-sm">
+      <label className="flex cursor-pointer items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-label-md text-white">
-          <Shield className="h-3.5 w-3.5" /> Perfil infantil
+          <Shield className="h-3.5 w-3.5 shrink-0" /> Perfil infantil
         </span>
-        <input
-          type="checkbox"
-          checked={Boolean(profile.isKids)}
-          onChange={(e) => setKids(accId, profile.id, e.target.checked)}
-          className="h-4 w-4 accent-brand-500"
-        />
+        <span className="relative inline-flex shrink-0">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={Boolean(profile.isKids)}
+            onChange={(e) => setKids(accId, profile.id, e.target.checked)}
+            // OK do controle remoto manda Enter, que um checkbox nativo ignora (so liga com espaco).
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                setKids(accId, profile.id, !profile.isKids)
+              }
+            }}
+            className="brand-focus peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-surface-highest transition-colors checked:bg-brand-fill"
+          />
+          <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </span>
       </label>
-      <p className="mb-3 text-body-sm text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+      <p className="text-body-sm text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
 
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-label-md text-white">
-          {profile.pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-          {profile.pin ? 'PIN ativo' : 'Sem PIN'}
-        </span>
-        {profile.pin && (
-          <button onClick={() => setPin(accId, profile.id, null)} className="rounded-full px-2 py-1 text-live hover:bg-live/10">
-            Remover
-          </button>
+      <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
+        <div className="flex min-h-8 items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-label-md text-white">
+            {profile.pin ? <Lock className="h-3.5 w-3.5 shrink-0" /> : <Unlock className="h-3.5 w-3.5 shrink-0" />}
+            {profile.pin ? 'PIN ativo' : 'Sem PIN'}
+          </span>
+          {profile.pin && (
+            <button onClick={() => setPin(accId, profile.id, null)} className="rounded-full px-2 py-1 text-live hover:bg-live/10">
+              Remover
+            </button>
+          )}
+        </div>
+        {!profile.pin && (
+          // Empilhado: lado a lado nao cabia no cartao estreito e o botao vazava pela borda.
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (pinInput.length === 4) {
+                setPin(accId, profile.id, pinInput)
+                setPinInput('')
+              }
+            }}
+            className="flex flex-col gap-2"
+          >
+            <input
+              inputMode="numeric"
+              placeholder="0000"
+              aria-label="PIN de 4 dígitos"
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
+            />
+            <button type="submit" disabled={pinInput.length !== 4} className="btn-primary h-10 w-full px-4 text-body-sm sm:px-4">
+              Definir PIN
+            </button>
+          </form>
         )}
       </div>
-      {!profile.pin && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (pinInput.length === 4) {
-              setPin(accId, profile.id, pinInput)
-              setPinInput('')
-            }
-          }}
-          className="mt-3 flex gap-2"
-        >
-          <input
-            inputMode="numeric"
-            placeholder="0000"
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus h-10 w-20 rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
-          />
-          <button
-            type="submit"
-            disabled={pinInput.length !== 4}
-            className="btn-primary h-10 px-4 text-body-sm sm:px-4"
-          >
-            Definir
-          </button>
-        </form>
-      )}
 
-      <button onClick={onClose} className="mt-3 w-full rounded-full py-2 text-center text-label-md text-on-surface-variant hover:bg-surface-high hover:text-white">
+      <button onClick={onClose} className="btn-secondary h-10 w-full text-body-sm">
         Fechar
       </button>
     </div>
