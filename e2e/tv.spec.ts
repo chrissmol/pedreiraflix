@@ -424,3 +424,17 @@ test('TV: no ao vivo, de Tela cheia as setas sobem pela coluna dos botoes de can
   await page.keyboard.press('Enter') // OK em "Próximo canal" zapeia
   await expect(page).toHaveURL(/\/watch\/live\/(?!101)\d+/)
 })
+
+test('TV: ajustes do perfil so com setas e OK (interruptor infantil e PIN)', async ({ page }) => {
+  await page.goto('/profiles')
+  const card = page.getByTestId(/^profile-card-/).first()
+  await card.getByRole('button', { name: 'Ajustes' }).focus()
+  await page.keyboard.press('Enter')
+  const sw = card.getByRole('switch', { name: 'Perfil infantil' })
+  await sw.focus()
+  await page.keyboard.press('Enter') // OK do controle; checkbox nativo so liga com espaco
+  await expect(sw).toBeChecked()
+  await page.keyboard.press('ArrowDown')
+  await expect(card.getByPlaceholder('0000')).toBeFocused()
+  await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/tv.png` : undefined })
+})
