@@ -44,7 +44,8 @@ const SECURITY_HEADERS = {
   ].join('; '),
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'strict-origin-when-cross-origin',
-  'permissions-policy': 'geolocation=(), microphone=(), camera=(), usb=(), payment=()',
+  // microphone=(self): busca por voz (src/lib/voz.ts) no Chrome e no Safari; nada de fora pode pedir o microfone.
+  'permissions-policy': 'geolocation=(), microphone=(self), camera=(), usb=(), payment=()',
   // No X-Frame-Options: frame-ancestors above already covers it and is the modern replacement.
 }
 

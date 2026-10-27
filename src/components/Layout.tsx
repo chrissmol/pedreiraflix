@@ -67,8 +67,11 @@ export default function Layout() {
         const dirs: Record<string, 'up' | 'down' | 'left' | 'right'> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
         const dir = dirs[e.key]
         if (!dir) return
-        // Digitando num campo (busca, suporte), esquerda/direita movem o cursor do texto.
-        const typing = (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) && (dir === 'left' || dir === 'right')
+        // Digitando num campo (busca, suporte), esquerda/direita movem o cursor do texto. Campo ainda travado (so passou
+        // por ele, sem OK) deixa a seta ir para o lado: e assim que se chega no X e no microfone da busca.
+        const field = document.activeElement
+        const typing =
+          (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) && !('tvLock' in field.dataset) && (dir === 'left' || dir === 'right')
         if (!typing && moveFocusTv(dir)) e.preventDefault()
         return
       }

@@ -11,6 +11,7 @@ import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 import { isTv } from '../lib/device'
+import VoiceSearchButton from './VoiceSearchButton'
 import { loadRecentSearches, saveRecentSearch } from '../store/library'
 import { installApp, useInstallPrompt } from '../lib/installPrompt'
 
@@ -228,21 +229,24 @@ export default function TopNav() {
             onFocus={openSuggestions}
             placeholder="Buscar…"
             aria-label="Buscar"
-            className="brand-focus h-10 w-44 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-8 text-body-md text-white transition-[width,border-color] duration-300 placeholder:text-on-surface-muted focus:w-64 focus:border-brand-500/60"
+            className="brand-focus h-10 w-44 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-16 text-body-md text-white transition-[width,border-color] duration-300 placeholder:text-on-surface-muted focus:w-64 focus:border-brand-500/60"
           />
-          {query && (
-            <button
-              type="button"
-              aria-label="Limpar busca"
-              onClick={() => {
-                setQuery('')
-                searchInputRef.current?.focus()
-              }}
-              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+            {query && (
+              <button
+                type="button"
+                aria-label="Limpar busca"
+                onClick={() => {
+                  setQuery('')
+                  searchInputRef.current?.focus()
+                }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <VoiceSearchButton className="h-6 w-6 [&>svg]:h-4 [&>svg]:w-4" onResult={searchFor} />
+          </div>
         </div>
         {suggestionsOpen && (
           <SearchSuggestions
