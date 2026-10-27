@@ -43,6 +43,12 @@ export default function Layout() {
   const dismissWarning = useAuthStore((s) => s.dismissWarning)
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
+  // Troca de pagina com um fade curto. Animacao pelo JS no proprio <main>: um involucro com `key` remontaria a pagina
+  // e quebraria quem usa h-full. O CSS de "reduzir movimento" nao alcanca a Web Animations API, dai o matchMedia.
+  useEffect(() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    mainRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' })
+  }, [pathname])
 
   // The router keeps the old scroll offset, so a new page would open halfway down. `body` itself never
   // scrolls (see index.css) — `<main>` below is the actual scrollable element now, so that's what gets

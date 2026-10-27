@@ -38,7 +38,7 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
         aria-modal="true"
         aria-label={`PIN do perfil ${profile.name}`}
         onClick={(e) => e.stopPropagation()}
-        className="card-panel w-full max-w-xs p-6 text-center sm:p-8"
+        className="card-panel anim-pop w-full max-w-xs p-6 text-center sm:p-8"
       >
         <span
           className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-headline-md text-white"

@@ -8,6 +8,7 @@ import SeriesZipButton from '../components/SeriesZipButton'
 import { Check, Eye, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
 import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
+import { episodeName, episodeTitle } from '../lib/displayTitle'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
@@ -96,7 +97,7 @@ export default function SeriesDetailPage() {
 
   const playUrl = (ep: Episode) =>
     `/watch/series/${ep.id}?ext=${ep.containerExtension}&name=${encodeURIComponent(
-      `${series.name} - ${ep.title}`,
+      episodeName(series.name, ep.title),
     )}&image=${encodeURIComponent(series.cover || '')}&seriesId=${series.seriesId}`
 
   // "Continuar T2:E4": o episodio desta serie com progresso mais recente; sem nenhum, o primeiro.
@@ -260,7 +261,7 @@ export default function SeriesDetailPage() {
                 <button
                   type="button"
                   data-spatial
-                  aria-label={`Assistir episódio ${ep.episodeNum}: ${ep.title}`}
+                  aria-label={`Assistir episódio ${ep.episodeNum}: ${episodeTitle(series.name, ep.title)}`}
                   className="absolute inset-0 rounded-2xl"
                 />
                 <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-surface-high sm:w-44">
@@ -307,7 +308,7 @@ export default function SeriesDetailPage() {
                 <div className="relative flex min-w-0 flex-1 flex-col">
                   <p className="flex min-w-0 items-baseline gap-1.5 text-label-md text-white">
                     <span className="shrink-0 text-on-surface-muted">Ep. {ep.episodeNum} •</span>
-                    <span className={`truncate ${isCurrent ? 'text-brand-300' : ''}`}>{ep.title}</span>
+                    <span className={`truncate ${isCurrent ? 'text-brand-300' : ''}`}>{episodeTitle(series.name, ep.title)}</span>
                   </p>
                   {ep.plot && <p className="mt-1 line-clamp-2 text-body-sm text-on-surface-variant">{ep.plot}</p>}
                   <div className="mt-auto flex items-center gap-1 pt-2">
@@ -342,7 +343,7 @@ export default function SeriesDetailPage() {
                         kind="series"
                         id={ep.id}
                         ext={ep.containerExtension}
-                        name={`${series.name} - ${ep.title}`}
+                        name={episodeName(series.name, ep.title)}
                         image={series.cover}
                         seriesId={series.seriesId}
                         compact
@@ -350,7 +351,7 @@ export default function SeriesDetailPage() {
                     </span>
                     {client && (
                       <a
-                        href={client.downloadUrl('series', ep.id, ep.containerExtension, `${series.name} - ${ep.title}`)}
+                        href={client.downloadUrl('series', ep.id, ep.containerExtension, episodeName(series.name, ep.title))}
                         download
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-highest hover:text-white"

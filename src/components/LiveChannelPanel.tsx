@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from './icons'
+import { cleanCategoryName } from '../lib/channelGroups'
 import { displayTitle } from '../lib/displayTitle'
 import type { Category, LiveChannel } from '../types'
 
@@ -63,7 +64,7 @@ export default function LiveChannelPanel({ categories, channels, currentId, onPi
           <button onClick={() => setIndex((i) => (i - 1 + withChannels.length) % withChannels.length)} aria-label="Categoria anterior" className="player-btn h-11 w-11 shrink-0" tabIndex={-1}>
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <p className="min-w-0 flex-1 truncate text-center text-body-md font-semibold text-white">{category?.categoryName ?? 'Canais'}</p>
+          <p className="min-w-0 flex-1 truncate text-center text-body-md font-semibold text-white">{category ? cleanCategoryName(category.categoryName) : 'Canais'}</p>
           <button onClick={() => setIndex((i) => (i + 1) % withChannels.length)} aria-label="Próxima categoria" className="player-btn h-11 w-11 shrink-0" tabIndex={-1}>
             <ChevronRight className="h-5 w-5" />
           </button>

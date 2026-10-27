@@ -37,6 +37,8 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
     return () => io.disconnect()
   }, [imdb, seen])
   const rating = useImdbRating(imdb, seen)
+  const [broken, setBroken] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const profileId = useActiveProfileId()
   const done = useLibraryStore((s) =>
     !watchedRef ? false : watchedRef.kind === 'movie' ? Boolean(s.watched[`${profileId}:movie-${watchedRef.id}`]) : Boolean(s.seriesDone[`${profileId}:${watchedRef.id}`]?.done),
@@ -53,17 +55,19 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
         fill ? 'w-full [content-visibility:auto]' : isTv ? 'w-28 shrink-0' : 'w-32 shrink-0 sm:w-40 md:w-44'
       }`}
     >
-      {image ? (
+      {image && !broken ? (
         <img
           src={image}
           alt={title}
           loading="lazy"
-          className="h-full w-full object-cover brightness-[0.92] transition-[filter,transform] duration-300 group-hover:scale-105 group-hover:brightness-100"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-          }}
+          onLoad={() => setLoaded(true)}
+          // Sem capa (ou capa quebrada): fica o fundo colorido abaixo, com o titulo uma vez so, no rodape.
+          onError={() => setBroken(true)}
+          className={`h-full w-full object-cover brightness-[0.92] transition-[filter,transform,opacity] duration-300 group-hover:scale-105 group-hover:brightness-100 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
-      ) : null}
+      ) : (
+        <div aria-hidden="true" className="absolute inset-0" style={{ background: placeholderBackground(title) }} />
+      )}
 
       {/* O titulo fica SEMPRE visivel, como o brand book mostra: so o botao de play e revelado no hover.
           Esconder informacao atras de hover ja foi corrigido tres vezes neste projeto. */}
@@ -93,12 +97,6 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
         </span>
       )}
 
-      {!image && (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-surface-high to-surface-container p-2 text-center text-label-badge text-on-surface-variant">
-          {title}
-        </div>
-      )}
-
       {progressPct != null && progressPct > 0 && (
         <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
           <div
@@ -109,4 +107,11 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
       )}
     </button>
   )
+}
+
+/** Fundo da capa que falta: uma cor por titulo (sempre a mesma), para a grade nao virar uma parede cinza. */
+function placeholderBackground(title: string): string {
+  let h = 0
+  for (const c of title) h = (h * 31 + c.charCodeAt(0)) % 360
+  return `linear-gradient(160deg, hsl(${h} 45% 30%), hsl(${h} 40% 12%))`
 }

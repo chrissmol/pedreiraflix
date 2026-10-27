@@ -35,7 +35,7 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
       <div className="absolute inset-0 bg-gradient-to-r from-surface/95 via-surface/60 to-transparent" />
 
       <div className="relative z-10 flex items-end gap-10 px-4 pb-10 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10 sm:pt-32">
-        <div className="min-w-0 max-w-3xl flex-1">
+        <div className="min-w-0 max-w-5xl flex-1">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             {status && (
               <span

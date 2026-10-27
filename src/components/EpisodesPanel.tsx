@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from './icons'
 import { formatRuntime } from './videoPlayerUtils'
+import { episodeTitle } from '../lib/displayTitle'
 import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 import { proxyImage } from '../lib/xtream'
 import { useLibraryStore } from '../store/library'
@@ -126,7 +127,7 @@ export default function EpisodesPanel({ series, currentId, onPick, onClose }: Ep
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className={`flex min-w-0 items-baseline gap-1.5 text-label-md ${isCurrent ? 'text-brand-300' : 'text-white'}`}>
                       <span className="shrink-0 text-on-surface-muted">{ep.episodeNum}.</span>
-                      <span className="truncate">{ep.title}</span>
+                      <span className="truncate">{episodeTitle(series.name, ep.title)}</span>
                     </span>
                     {formatRuntime(ep.duration) && <span className="text-label-badge text-on-surface-muted">{formatRuntime(ep.duration)}</span>}
                     {ep.plot && <span className="mt-0.5 line-clamp-2 text-body-sm text-on-surface-variant">{ep.plot}</span>}

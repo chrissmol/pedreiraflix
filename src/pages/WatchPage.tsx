@@ -6,6 +6,7 @@ import LiveChannelPanel from '../components/LiveChannelPanel'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
+import { displayTitle, episodeName, episodeTitle } from '../lib/displayTitle'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
@@ -227,7 +228,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     if (!seriesDetails) return
     navigate(
       `/watch/series/${ep.id}?ext=${ep.containerExtension}&name=${encodeURIComponent(
-        `${seriesDetails.name} - ${ep.title}`,
+        episodeName(seriesDetails.name, ep.title),
       )}&image=${encodeURIComponent(seriesDetails.cover || '')}&seriesId=${seriesDetails.seriesId}`,
       { replace: true },
     )
@@ -254,7 +255,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         setProgress(profileId, {
           kind: 'series',
           id: nextEpisode.id,
-          name: `${seriesDetails.name} - ${nextEpisode.title}`,
+          name: episodeName(seriesDetails.name, nextEpisode.title),
           image: seriesDetails.cover || null,
           ext: nextEpisode.containerExtension,
           positionSeconds: 0,
@@ -290,7 +291,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const subtitle = isCatchup
     ? `Catch-up · ${catchupStart ? new Date(catchupStart * 1000).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}`
     : kind === 'live' && current
-      ? `AGORA ${formatEpgTime(current.start)}-${formatEpgTime(current.end)} ${current.title}${nextProgram ? ` · A seguir: ${nextProgram.title}` : ''}`
+      ? `AGORA ${formatEpgTime(current.start)}-${formatEpgTime(current.end)} ${displayTitle(current.title)}${nextProgram ? ` · A seguir: ${displayTitle(nextProgram.title)}` : ''}`
       : isLikelyUnsupportedContainer
         ? `Formato .${ext} pode não ser suportado pelo navegador (comum em .mkv/.avi).`
         : undefined
@@ -308,7 +309,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         startAt={kind !== 'live' ? existingProgress?.positionSeconds ?? 0 : 0}
         onProgress={handleProgress}
         onEnded={handleEnded}
-        next={nextEpisode ? { label: `${nextEpisode.title}`, onPlay: () => goToEpisode(nextEpisode) } : null}
+        next={nextEpisode ? { label: episodeTitle(seriesDetails?.name ?? '', nextEpisode.title), onPlay: () => goToEpisode(nextEpisode) } : null}
         previous={previousEpisode ? { label: previousEpisode.title, onPlay: () => goToEpisode(previousEpisode) } : null}
         onShowEpisodes={kind === 'series' && seriesDetails ? openEpisodes : undefined}
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
