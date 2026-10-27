@@ -19,6 +19,19 @@ const BLOCK = 60
 
 type Section = 'movies' | 'series' | 'live'
 
+// "Escolher pelo humor": frases fixas para a busca por IA. Sendo sempre as mesmas, a resposta fica no cache da
+// Cloudflare e serve a todos, quase sem gastar a cota. Na TV poupa digitar com o controle.
+const MOODS = [
+  { label: 'Pra rir', q: 'comédias leves para dar risada' },
+  { label: 'Pra chorar', q: 'dramas emocionantes para chorar' },
+  { label: 'Suspense', q: 'suspenses tensos de prender' },
+  { label: 'Terror', q: 'filmes de terror assustadores' },
+  { label: 'Ação', q: 'filmes de ação cheios de adrenalina' },
+  { label: 'Romance', q: 'romances bonitos para ver a dois' },
+  { label: 'Família', q: 'filmes para assistir em família com crianças' },
+  { label: 'Baseado em fatos', q: 'filmes baseados em histórias reais' },
+]
+
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
   const query = (params.get('q') || '').trim()
@@ -183,11 +196,25 @@ export default function SearchPage() {
           </div>
         </section>
       )}
-      {query.length === 0 && recent.length === 0 && <p className="text-on-surface-variant">Digite o nome de um filme, série ou canal.</p>}
+      {query.length === 0 && recent.length === 0 && <p className="mb-8 text-on-surface-variant">Digite o nome de um filme, série ou canal.</p>}
+      {query.length === 0 && (
+        <section className="mb-8">
+          <h2 className="font-display mb-3 text-headline-sm text-white">Escolher pelo humor</h2>
+          <div className="flex flex-wrap gap-2">
+            {MOODS.map((m) => (
+              <button key={m.label} type="button" onClick={() => commit(m.q)} className="btn-secondary">
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       {query.length === 1 && <p className="text-on-surface-variant">Digite pelo menos 2 letras.</p>}
 
       {query.length >= 2 && loading && <PageLoading label="Carregando catálogo" className="py-8" />}
-      {query.length >= 2 && !loading && total === 0 && picks.length === 0 && personPicks.length === 0 && <p className="text-on-surface-variant">Nada encontrado para "{query}". Confira se o nome está certo.</p>}
+      {/* A IA leva alguns segundos: sem isto, a busca por frase dizia "Nada encontrado" antes da resposta chegar. */}
+      {askAi && ai.q !== query && !loading && total === 0 && <PageLoading label="Procurando sugestões" className="py-8" />}
+      {query.length >= 2 && !loading && total === 0 && picks.length === 0 && personPicks.length === 0 && !(askAi && ai.q !== query) && <p className="text-on-surface-variant">Nada encontrado para "{query}". Confira se o nome está certo.</p>}
 
       {personPicks.length > 0 && person.data && (
         <section className="mb-8">

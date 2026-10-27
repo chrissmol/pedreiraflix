@@ -7,7 +7,7 @@ import { Check, Eye, FileArrowDown, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
 import { isCategoryBlocked } from '../lib/parentalControl'
-import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
+import { blockedForKids, getAiSynopsis, getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 import { formatRuntime } from '../components/videoPlayerUtils'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
@@ -70,8 +70,22 @@ export default function MovieDetailPage() {
     }
   }, [movie])
 
+  // Sem sinopse do provedor nem do TMDB em portugues: a IA traduz a do TMDB em ingles.
+  const [aiPlot, setAiPlot] = useState<{ id: number; text: string | null } | null>(null)
+  const needsAiPlot = Boolean(movie && tmdb && !movie.plot && !tmdb.overview)
+  useEffect(() => {
+    if (!movie || !needsAiPlot) return
+    let cancelled = false
+    getAiSynopsis(movie.name, movie.releaseDate, 'movie').then((text) => !cancelled && setAiPlot({ id: movie.streamId, text }))
+    return () => {
+      cancelled = true
+    }
+  }, [movie, needsAiPlot])
+
   if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
+  // shortcut: a idade so e conferida aqui no detalhe (as listas nao perguntam ao TMDB titulo por titulo).
+  if (isKids && blockedForKids(tmdb?.certification)) return <BlockedByProfile certification={tmdb?.certification} />
   if (error) return <ErrorCard message={error} onRetry={() => setAttempt((n) => n + 1)} className="mt-32" />
   if (!movie) return <ErrorCard message="Filme não encontrado." className="mt-32" />
 
@@ -79,7 +93,8 @@ export default function MovieDetailPage() {
   // The provider's own data wins; TMDB only fills what it left empty.
   const year = movie.releaseDate?.slice(0, 4) || tmdb?.year
   const genre = movie.genre || tmdb?.genres.join(', ')
-  const plot = movie.plot || tmdb?.overview
+  const aiText = aiPlot?.id === movie.streamId ? aiPlot.text : null
+  const plot = movie.plot || tmdb?.overview || aiText
   // Xtream hands duration over as a raw clock string ("01:32:00"), which reads like a timestamp rather
   // than a length — every streaming service shows "1h 32min" here instead.
   const chips = [year, formatRuntime(movie.duration)].filter(Boolean) as string[]
@@ -91,6 +106,9 @@ export default function MovieDetailPage() {
         backdrop={backdrop}
         poster={movie.streamIcon}
         imdbRating={tmdb?.imdbRating}
+        logo={tmdb?.logo}
+        certification={tmdb?.certification}
+        plotNote={plot && plot === aiText ? 'Sinopse traduzida por IA' : null}
         chips={chips}
         status={watched ? { label: 'Assistido', done: true } : null}
         genre={genre}

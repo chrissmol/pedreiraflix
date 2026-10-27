@@ -4,7 +4,8 @@ import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import { displayTitle } from '../lib/displayTitle'
 import { isTv } from '../lib/device'
-import { useImdbRating } from '../hooks/useImdbRating'
+import { useTmdbInfo } from '../hooks/useImdbRating'
+import { proxyImage } from '../lib/xtream'
 
 export interface FeaturedCandidate {
   key: string
@@ -68,7 +69,11 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
   const index = timeSlot % Math.max(1, playable.length)
   const current = playable[index]
   // O destaque escolhe pela nota do provedor, mas mostra so a do IMDb.
-  const imdbRating = useImdbRating(current && { title: current.title, kind: current.kind === 'movie' ? 'movie' : 'tv' })
+  const tmdb = useTmdbInfo(current && { title: current.title, kind: current.kind === 'movie' ? 'movie' : 'tv' })
+  const imdbRating = tmdb?.imdbRating ?? null
+  // Logo do titulo no lugar do nome escrito, como nos streamings; se a imagem falhar, volta o nome.
+  const [logoFailed, setLogoFailed] = useState<string | null>(null)
+  const logo = tmdb?.logo && tmdb.logo !== logoFailed ? tmdb.logo : null
   const profileId = useActiveProfileId()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => (current ? s.isFavorite(profileId, current.kind, current.id) : false))
@@ -120,9 +125,21 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
         {/* No maximo 2 linhas e sem os enfeites do provedor: um titulo longo subia ate o cabecalho e ficava por
             cima do logo (painel de 654px, 08/10). */}
-        <h1 className="font-display line-clamp-2 max-w-xl text-balance text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
-          {displayTitle(current.title)}
-        </h1>
+        {logo ? (
+          <h1>
+            <img
+              key={logo}
+              src={proxyImage(logo) ?? undefined}
+              alt={displayTitle(current.title)}
+              onError={() => setLogoFailed(logo)}
+              className="max-h-20 max-w-[70%] object-contain object-left drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:max-h-32 sm:max-w-md"
+            />
+          </h1>
+        ) : (
+          <h1 className="font-display line-clamp-2 max-w-xl text-balance text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
+            {displayTitle(current.title)}
+          </h1>
+        )}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">
           {imdbRating && <span title="Nota do IMDb" className="font-semibold text-rating">★ {imdbRating}</span>}
           {[current.kind === 'movie' ? 'Filme' : 'Série', ...current.meta].map((m) => (
