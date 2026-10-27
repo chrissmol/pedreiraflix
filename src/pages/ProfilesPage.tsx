@@ -37,21 +37,22 @@ function AppPinSettings() {
               setPinInput('')
             }
           }}
-          className="mt-3 flex gap-2"
+          className="mt-3 flex flex-col gap-2"
         >
           <input
             inputMode="numeric"
             placeholder="0000"
+            aria-label="PIN de 4 dígitos"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            className="brand-focus h-10 w-20 rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
+            className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
           />
           <button
             type="submit"
             disabled={pinInput.length !== 4}
-            className="btn-primary h-10 px-4 text-body-sm sm:px-4"
+            className="btn-primary h-10 w-full px-4 text-body-sm sm:px-4"
           >
-            Definir
+            Definir PIN
           </button>
         </form>
       )}
