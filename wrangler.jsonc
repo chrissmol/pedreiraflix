@@ -12,6 +12,9 @@
   "d1_databases": [{ "binding": "SYNC", "database_name": "pedreiraflix-sync" }],
   // Busca por frase e "parecidos" (/api/sugestoes). Plano gratis: 10 mil neurons/dia; passou disso, o app usa so a busca normal.
   "ai": { "binding": "AI" },
+  // "Assistir junto" (/api/junto/<codigo>, worker/junto.js): uma sala por codigo. SQLite e o que o plano gratis aceita.
+  "durable_objects": { "bindings": [{ "name": "JUNTO", "class_name": "SalaJunto" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SalaJunto"] }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

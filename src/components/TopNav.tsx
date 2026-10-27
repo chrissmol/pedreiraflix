@@ -6,11 +6,12 @@ import { connectionStatus, refreshSession, subscriptionStatus } from '../lib/ses
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Info, ListIcon, Plus, RefreshCw, Search, Settings, User, X } from './icons'
+import { Download, Info, ListIcon, Plus, RefreshCw, Search, Settings, Trophy, Tv, User, X } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 import { isTv } from '../lib/device'
+import VoiceSearchButton from './VoiceSearchButton'
 import { loadRecentSearches, saveRecentSearch } from '../store/library'
 import { installApp, useInstallPrompt } from '../lib/installPrompt'
 
@@ -228,21 +229,24 @@ export default function TopNav() {
             onFocus={openSuggestions}
             placeholder="Buscar…"
             aria-label="Buscar"
-            className="brand-focus h-10 w-44 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-8 text-body-md text-white transition-[width,border-color] duration-300 placeholder:text-on-surface-muted focus:w-64 focus:border-brand-500/60"
+            className="brand-focus h-10 w-44 appearance-none rounded-full border border-outline-soft bg-surface-container pl-8 pr-16 text-body-md text-white transition-[width,border-color] duration-300 placeholder:text-on-surface-muted focus:w-64 focus:border-brand-500/60"
           />
-          {query && (
-            <button
-              type="button"
-              aria-label="Limpar busca"
-              onClick={() => {
-                setQuery('')
-                searchInputRef.current?.focus()
-              }}
-              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+            {query && (
+              <button
+                type="button"
+                aria-label="Limpar busca"
+                onClick={() => {
+                  setQuery('')
+                  searchInputRef.current?.focus()
+                }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <VoiceSearchButton className="h-6 w-6 [&>svg]:h-4 [&>svg]:w-4" onResult={searchFor} />
+          </div>
         </div>
         {suggestionsOpen && (
           <SearchSuggestions
@@ -291,7 +295,8 @@ export default function TopNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu da conta"
-            className={isTv ? 'menu-panel absolute bottom-full left-0 mb-2 w-64' : 'menu-panel absolute right-0 mt-2 w-64'}
+            // Com mais itens o menu passa da altura da TV (540) e de celular pequeno: rola por dentro em vez de sair da tela.
+            className={`overflow-y-auto overscroll-contain ${isTv ? 'menu-panel absolute bottom-full left-0 mb-2 max-h-[calc(100dvh-5rem)] w-64' : 'menu-panel absolute right-0 mt-2 max-h-[calc(100dvh-5rem)] w-64'}`}
           >
             <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
@@ -364,6 +369,24 @@ export default function TopNav() {
               className="menu-option"
             >
               <ListIcon className="h-4 w-4 text-on-surface-variant" /> Organizar categorias
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/retrospectiva')
+              }}
+              className="menu-option"
+            >
+              <Trophy className="h-4 w-4 text-on-surface-variant" /> Sua retrospectiva
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/junto')
+              }}
+              className="menu-option"
+            >
+              <Tv className="h-4 w-4 text-on-surface-variant" /> Assistir junto
             </button>
             {!isTv && (
               <button

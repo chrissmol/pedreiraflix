@@ -14,6 +14,7 @@ public class MainActivity extends BridgeActivity {
         // Plugin proprio do app (download em segundo plano); precisa ser registrado antes do super.onCreate.
         registerPlugin(BaixadorPlugin.class);
         registerPlugin(ContinuarTvPlugin.class);
+        registerPlugin(VozPlugin.class);
         super.onCreate(savedInstanceState);
         // Aberto por um item da fileira "Continuar assistindo" da TV: o site ainda nao carregou, entao guarda o
         // caminho e o site pede ao plugin quando abrir (src/lib/continuarTv.ts).

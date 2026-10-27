@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
+import LiveNowRow from '../components/LiveNowRow'
+import NewEpisodesRow from '../components/NewEpisodesRow'
 import HeroCarousel, { type FeaturedCandidate } from '../components/HeroCarousel'
 import { Shuffle } from '../components/icons'
 import PosterCard from '../components/PosterCard'
@@ -189,6 +191,8 @@ export default function HomePage() {
 
       <div className="relative z-10 pt-8 sm:pt-10">
         <ContinueWatchingRow />
+        <NewEpisodesRow />
+        <LiveNowRow />
 
         {recentMovies.length > 0 && (
           <Row title="Adicionados recentemente">

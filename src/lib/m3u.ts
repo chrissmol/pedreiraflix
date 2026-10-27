@@ -31,6 +31,8 @@ export interface M3uEntry {
   seriesName?: string
   /** `tvg-id`: the key that matches this channel to an XMLTV `<programme channel="...">`. */
   tvgId?: string
+  /** `tvg-chno`: o numero do canal, quando a lista traz. */
+  chno?: number
 }
 
 const EPISODE_RE = /s(\d{1,2})\s?e(\d{1,3})/i
@@ -106,6 +108,7 @@ export function parseM3u(text: string): M3uEntry[] {
       episode,
       seriesName,
       tvgId: attr(line, 'tvg-id') || undefined,
+      chno: Number(attr(line, 'tvg-chno')) || undefined,
     })
   }
 
@@ -173,6 +176,7 @@ export class M3uClient implements ProviderClient {
         epgChannelId: e.tvgId ?? null,
         hasArchive: false,
         archiveDurationHours: 0,
+        num: e.chno,
       }))
   }
 

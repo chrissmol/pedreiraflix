@@ -48,6 +48,12 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 11+: sem isto o app nao enxerga o reconhecedor de voz do aparelho (busca por voz, VozPlugin). -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
     <!-- O mesmo APK serve celular e TV: a TV nao tem tela de toque e o celular nao tem "leanback". -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />

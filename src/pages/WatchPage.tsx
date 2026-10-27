@@ -14,8 +14,11 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
+import { useWatchTime } from '../store/watchStats'
 import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
+import ChannelNumberOverlay from '../components/ChannelNumberOverlay'
+import { useChannelNumber } from '../hooks/useChannelNumber'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
 function flattenEpisodes(details: SeriesDetails): Episode[] {
@@ -157,6 +160,12 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     [setParams],
   )
   const zapNext = useCallback(() => zap(1), [zap])
+  // Digitar o numero do canal no controle/teclado troca de canal, como na TV a cabo.
+  const channelNumber = useChannelNumber(
+    liveChannels,
+    (ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true }),
+    kind === 'live' && !isCatchup,
+  )
   const zapPrev = useCallback(() => zap(-1), [zap])
 
   // Series: fetch the whole series once so we know which episode follows this one.
@@ -173,6 +182,20 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       cancelled = true
     }
   }, [client, kind, seriesId])
+
+  // Retrospectiva: tempo tocando por titulo (serie soma todos os episodios).
+  useWatchTime(
+    profileId,
+    !id || isCatchup
+      ? null
+      : kind === 'series'
+        ? seriesId
+          ? { kind: 'series', id: seriesId, name: seriesDetails?.name ?? name, image: seriesDetails?.cover || image }
+          : null
+        : kind === 'movie' || kind === 'live'
+          ? { kind, id: Number(id), name, image }
+          : null,
+  )
 
   // Direct link/bookmark/deep link guard — the catalog lists themselves already hide adult categories
   // for a kids profile, but someone could still land here straight from a URL that bypasses them.
@@ -316,6 +339,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
         onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
       />
+      <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
       {showEpisodes && kind === 'series' && seriesDetails && id && (
         <EpisodesPanel series={seriesDetails} currentId={id} onClose={closeChannels} onPick={goToEpisode} />
       )}

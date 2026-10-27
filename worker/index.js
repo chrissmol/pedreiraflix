@@ -6,6 +6,7 @@
 // always target the single host the user typed at login, so this is no less safe for those; images
 // just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
+import { junto } from './junto.js'
 import { molTv } from './moltv.js'
 import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
@@ -44,7 +45,8 @@ const SECURITY_HEADERS = {
   ].join('; '),
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'strict-origin-when-cross-origin',
-  'permissions-policy': 'geolocation=(), microphone=(), camera=(), usb=(), payment=()',
+  // microphone=(self): busca por voz (src/lib/voz.ts) no Chrome e no Safari; nada de fora pode pedir o microfone.
+  'permissions-policy': 'geolocation=(), microphone=(self), camera=(), usb=(), payment=()',
   // No X-Frame-Options: frame-ancestors above already covers it and is the modern replacement.
 }
 
@@ -554,6 +556,32 @@ async function trending(url, env) {
   return Response.json({ titles }, { headers: { 'cache-control': 'public, max-age=21600' } })
 }
 
+// "Da mesma saga": a colecao do TMDB a que o filme pertence (Velozes e Furiosos, Harry Potter...), na ordem de
+// lancamento. So nomes e anos: o app mostra os que existem no catalogo. Sem token, sem colecao ou erro: 204.
+async function saga(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  const title = (url.searchParams.get('title') || '').trim().slice(0, 200)
+  const year = url.searchParams.get('year') || ''
+  if (!title) return none('no-title')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+  const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
+  const hit = search.ok ? (await search.json()).results?.[0] : null
+  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status}`)
+  const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
+  const collection = details.ok ? (await details.json()).belongs_to_collection : null
+  if (!collection?.id) return none(details.ok ? 'sem-saga' : `details-${details.status}`)
+  const res = await get(`/collection/${collection.id}`, { language: 'pt-BR' })
+  if (!res.ok) return none(`collection-${res.status}`)
+  const parts = ((await res.json()).parts || [])
+    .filter((p) => p.release_date)
+    .sort((a, b) => a.release_date.localeCompare(b.release_date))
+    .map((p) => ({ title: p.title || '', original: p.original_title || '', year: p.release_date.slice(0, 4) }))
+  if (parts.length < 2) return none('saga-curta')
+  return Response.json({ name: collection.name, parts }, { headers: { 'cache-control': 'public, max-age=86400' } })
+}
+
 // Busca por ator ou diretor: o TMDB acha a pessoa e devolve os filmes/series dela; o app mostra os que existem no
 // catalogo. So vale pessoa cujo nome tem todas as palavras digitadas ("matrix" nao vira um ator chamado Matrix X).
 // Sem token, sem pessoa ou erro: 204 e a busca fica so pelo titulo.
@@ -641,6 +669,8 @@ async function aiSuggest(request, url, env, ctx) {
   if (cache) ctx?.waitUntil?.(cache.put(cacheKey, res.clone()))
   return res
 }
+
+export { SalaJunto } from './junto.js'
 
 // Sinopse traduzida pela IA quando nem o provedor nem o TMDB tem uma em portugues (~20 neurons). So a pagina de
 // detalhe pede, e a traducao fica 30 dias no KV. Sem token, sem IA, sem texto em ingles ou erro: 204.
@@ -787,6 +817,10 @@ export default {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await person(url, env))
     }
+    if (url.pathname === '/api/saga') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await saga(url, env))
+    }
     if (url.pathname === '/api/em-alta') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await trending(url, env))
@@ -803,6 +837,12 @@ export default {
       // Cada pergunta nova gasta a cota diaria de IA de todo mundo: bem mais apertado que o TMDB.
       if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await aiSuggest(request, url, env, ctx))
+    }
+    if (url.pathname.startsWith('/api/junto/')) {
+      if (isRateLimited(ip, 'junto', 20, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      // Sem withSecurityHeaders: a resposta 101 do WebSocket nao pode ser recriada (o Response perderia o socket).
+      const res = await junto(request, url, env)
+      return res.status === 101 ? res : withSecurityHeaders(res)
     }
     if (url.pathname.startsWith('/api/moltv/')) {
       if (isRateLimited(ip, 'moltv', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))

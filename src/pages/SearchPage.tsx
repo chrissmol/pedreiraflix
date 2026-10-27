@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
 import { Clock, Search, X } from '../components/icons'
+import VoiceSearchButton from '../components/VoiceSearchButton'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
 import { useDebounced } from '../hooks/useDebounced'
 import { isTv } from '../lib/device'
@@ -152,22 +153,32 @@ export default function SearchPage() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Filmes, séries e canais"
           aria-label="Buscar no catálogo"
-          className="brand-focus h-12 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-12 pr-12 text-body-lg text-white placeholder:text-on-surface-muted focus:border-brand-500/60"
+          className="brand-focus h-12 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-12 pr-24 text-body-lg text-white placeholder:text-on-surface-muted focus:border-brand-500/60"
         />
-        {text && (
-          <button
-            type="button"
-            aria-label="Limpar busca"
-            onClick={() => {
-              setText('')
-              commit('')
-              inputRef.current?.focus()
+        <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {text && (
+            <button
+              type="button"
+              aria-label="Limpar busca"
+              onClick={() => {
+                setText('')
+                commit('')
+                inputRef.current?.focus()
+              }}
+              className="brand-focus flex h-9 w-9 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+          <VoiceSearchButton
+            className="h-9 w-9"
+            onResult={(spoken) => {
+              setText(spoken)
+              commit(spoken)
+              saveRecentSearch(profileId, spoken)
             }}
-            className="brand-focus absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-on-surface-muted hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
+          />
+        </div>
       </form>
 
       {query.length >= 2 && <h1 className="font-display text-headline-md text-white sm:text-headline-lg mb-8">Resultados para "{query}"</h1>}
