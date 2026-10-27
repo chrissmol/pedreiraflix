@@ -504,22 +504,34 @@ async function tmdb(url, env) {
   const cacheKey = `tmdb:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
   const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
-  if (saved) return answer(saved)
+  // Guardado antes do logo e da classificacao: refaz so o TMDB e reaproveita a nota (o OMDb so da 1.000/dia).
+  if (saved && 'logo' in saved) return answer(saved)
   const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
   const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
   const hit = search.ok ? (await search.json()).results?.[0] : null
-  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status} ${shape}`)
-  const details = await get(tv ? `/tv/${hit.id}` : `/movie/${hit.id}`, { language: 'pt-BR', ...(tv ? { append_to_response: 'external_ids' } : {}) })
-  if (!details.ok) return none(`details-${details.status}`)
+  if (!hit) return saved ? answer(saved) : none(search.ok ? 'no-match' : `search-${search.status} ${shape}`)
+  // Logo do titulo e classificacao indicativa vem no mesmo pedido (append_to_response), sem consulta a mais.
+  const details = await get(tv ? `/tv/${hit.id}` : `/movie/${hit.id}`, {
+    language: 'pt-BR',
+    append_to_response: tv ? 'external_ids,images,content_ratings' : 'images,release_dates',
+    include_image_language: 'pt,en,null',
+  })
+  if (!details.ok) return saved ? answer(saved) : none(`details-${details.status}`)
   const d = await details.json()
   const firstDate = tv ? d.first_air_date : d.release_date
-  const imdb = await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
+  const imdb = saved ? saved.imdbRating : await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
+  const logos = d.images?.logos || []
+  const logo = ['pt', 'en', null].map((lang) => logos.find((l) => l.iso_639_1 === lang)).find(Boolean)?.file_path
+  const br = (tv ? d.content_ratings?.results : d.release_dates?.results)?.find((r) => r.iso_3166_1 === 'BR')
+  const certification = tv ? br?.rating : br?.release_dates?.map((r) => r.certification).find(Boolean)
   const body = {
     genres: (d.genres || []).map((g) => g.name),
     year: firstDate ? firstDate.slice(0, 4) : null,
     rating: d.vote_average || null,
     overview: d.overview || null,
     imdbRating: imdb ?? null,
+    logo: logo ? `https://image.tmdb.org/t/p/w500${logo}` : null,
+    certification: /^(L|10|12|14|16|18)$/.test(certification || '') ? certification : null,
     ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
   }
   // shortcut: a nota fica 30 dias sem atualizar; encurte o prazo se alguem reclamar de nota velha.
@@ -660,6 +672,107 @@ async function aiSuggest(request, url, env, ctx) {
 
 export { SalaJunto } from './junto.js'
 
+// Sinopse traduzida pela IA quando nem o provedor nem o TMDB tem uma em portugues (~20 neurons). So a pagina de
+// detalhe pede, e a traducao fica 30 dias no KV. Sem token, sem IA, sem texto em ingles ou erro: 204.
+async function synopsis(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-ia': why } })
+  const title = (url.searchParams.get('title') || '').trim().slice(0, 200)
+  const year = url.searchParams.get('year') || ''
+  const tv = url.searchParams.get('kind') === 'tv'
+  if (!title) return none('vazio')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  if (!env.AI) return none('sem-ai')
+  const cacheKey = `sinopse:v1:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
+  const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
+  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  if (saved) return answer(saved)
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+  const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
+  const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
+  const hit = search.ok ? (await search.json()).results?.[0] : null
+  if (!hit) return none('no-match')
+  const en = await get(tv ? `/tv/${hit.id}` : `/movie/${hit.id}`, { language: 'en-US' })
+  const text = en.ok ? (await en.json()).overview : ''
+  if (!text) return none('sem-texto')
+  const overview = await translate(text, env)
+  if (!overview) return none('erro-ai')
+  const body = { overview }
+  await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  return answer(body)
+}
+
+async function translate(text, env) {
+  try {
+    const out = await env.AI.run(AI_MODEL, {
+      messages: [
+        { role: 'system', content: 'Traduza o texto para português do Brasil. Responda só com a tradução, sem comentários.' },
+        { role: 'user', content: text.slice(0, 1500) },
+      ],
+      max_tokens: 500,
+    })
+    const t = (typeof out?.response === 'string' ? out.response : out?.choices?.[0]?.message?.content || '').trim()
+    return t || null
+  } catch {
+    return null
+  }
+}
+
+// "Resumo ate aqui": a IA resume as sinopses do TMDB dos episodios ANTES do que a pessoa vai ver (sem spoiler do
+// resto). So os ultimos 30, para caber no plano gratis (~80 neurons por resumo); fica 30 dias no KV. Sem token, sem
+// IA, sem serie ou erro: 204 e o botao some.
+async function recap(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-ia': why } })
+  const title = (url.searchParams.get('title') || '').trim().slice(0, 200)
+  const year = url.searchParams.get('year') || ''
+  const season = Number(url.searchParams.get('season'))
+  const episode = Number(url.searchParams.get('episode'))
+  if (!title || !(season >= 1) || !(episode >= 1)) return none('vazio')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  if (!env.AI) return none('sem-ai')
+  const cacheKey = `resumo:v1:${title.toLowerCase()}:${year}:${season}x${episode}`
+  const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
+  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  if (saved) return answer(saved)
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+  const search = await get('/search/tv', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { first_air_date_year: year } : {}) })
+  const hit = search.ok ? (await search.json()).results?.[0] : null
+  if (!hit) return none('no-match')
+  // Em ingles porque o TMDB quase nunca tem a sinopse de episodio em portugues; o resumo sai em portugues.
+  const before = []
+  for (let s = season; s >= 1 && before.length < 30 && season - s < 4; s--) {
+    const res = await get(`/tv/${hit.id}/season/${s}`, { language: 'en-US' })
+    if (!res.ok) continue
+    const eps = ((await res.json()).episodes || []).filter((e) => e.overview && (s < season || e.episode_number < episode))
+    before.unshift(...eps.map((e) => `T${s}E${e.episode_number}: ${e.overview.slice(0, 400)}`))
+  }
+  const lines = before.slice(-30)
+  if (lines.length === 0) return none('sem-sinopses')
+  let text = ''
+  try {
+    const out = await env.AI.run(AI_MODEL, {
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Você escreve o "anteriormente" de uma série em português do Brasil. Use SÓ as sinopses recebidas, sem inventar ' +
+            'nada e sem falar do que vem depois. Até 6 frases curtas, em texto corrido, sem títulos nem listas.',
+        },
+        { role: 'user', content: `Série: ${title}\n\n${lines.join('\n')}` },
+      ],
+      max_tokens: 400,
+    })
+    text = (typeof out?.response === 'string' ? out.response : out?.choices?.[0]?.message?.content || '').trim()
+  } catch {
+    return none('erro-ai')
+  }
+  if (!text) return none('vazio-ai')
+  const body = { summary: text.slice(0, 1500) }
+  await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  return answer(body)
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
@@ -711,6 +824,14 @@ export default {
     if (url.pathname === '/api/em-alta') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await trending(url, env))
+    }
+    if (url.pathname === '/api/sinopse') {
+      if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await synopsis(url, env))
+    }
+    if (url.pathname === '/api/resumo') {
+      if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      return withSecurityHeaders(await recap(url, env))
     }
     if (url.pathname === '/api/sugestoes') {
       // Cada pergunta nova gasta a cota diaria de IA de todo mundo: bem mais apertado que o TMDB.

@@ -128,3 +128,34 @@ test('429 do provedor: /api/xtream repassa o Retry-After', async () => {
   assert.equal(res.status, 429)
   assert.equal(res.headers.get('retry-after'), '7')
 })
+
+test('logo (portugues antes do ingles) e classificacao indicativa do Brasil vem no mesmo pedido', async () => {
+  const calls = []
+  globalThis.fetch = async (url) => {
+    url = String(url)
+    calls.push(url)
+    if (url.includes('/search/movie')) return Response.json({ results: [{ id: 1 }] })
+    if (url.includes('/movie/1'))
+      return Response.json({
+        overview: 'x',
+        images: { logos: [{ iso_639_1: 'en', file_path: '/en.png' }, { iso_639_1: 'pt', file_path: '/pt.png' }] },
+        release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ certification: 'R' }] }, { iso_3166_1: 'BR', release_dates: [{ certification: '' }, { certification: '14' }] }] },
+      })
+    throw new Error(`fetch inesperado: ${url}`)
+  }
+  const body = await (await ask({ TMDB_TOKEN: 'a.b.c' })).json()
+  assert.equal(body.logo, 'https://image.tmdb.org/t/p/w500/pt.png')
+  assert.equal(body.certification, '14')
+  assert.ok(calls.some((u) => u.includes('append_to_response=images%2Crelease_dates')))
+})
+
+test('nota guardada sem logo (versao antiga): refaz o TMDB e reaproveita a nota sem chamar o OMDb', async () => {
+  const NOTAS = memoryKv()
+  NOTAS.data.set('tmdb:movie:interestelar:2014', JSON.stringify({ genres: [], imdbRating: '8.7' }))
+  const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
+  const body = await (await ask({ ...ENV, NOTAS })).json()
+  assert.equal(body.imdbRating, '8.7')
+  assert.equal(body.logo, null)
+  assert.ok(calls.some((u) => u.includes('/movie/157336')))
+  assert.ok('logo' in JSON.parse(NOTAS.data.get('tmdb:movie:interestelar:2014')))
+})
