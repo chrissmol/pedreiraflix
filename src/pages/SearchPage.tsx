@@ -82,8 +82,8 @@ export default function SearchPage() {
     if (query.length < 2) return { movies: [], series: [], live: [] }
     const items = <T,>(hits: { item: T }[]) => hits.map((h) => h.item)
     return {
-      movies: items(searchCatalog(movies.groups, query)),
-      series: items(searchCatalog(series.groups, query)),
+      movies: items(searchCatalog(movies.groups, query, true)),
+      series: items(searchCatalog(series.groups, query, true)),
       live: items(searchCatalog(live.groups, query)),
     }
   }, [query, movies.groups, series.groups, live.groups])

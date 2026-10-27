@@ -25,7 +25,7 @@ export function searchKey(value: string): string {
 
 // O catalogo tem dezenas de milhares de nomes; normalizar todos a cada letra travava a TV.
 const keyCache = new WeakMap<object, string>()
-function itemKey(item: { name: string }): string {
+export function itemKey(item: { name: string }): string {
   let key = keyCache.get(item)
   if (key === undefined) {
     key = searchKey(displayTitle(item.name))
@@ -71,13 +71,15 @@ export interface SearchHit<T> {
 export function searchCatalog<T extends { name: string; streamId?: number; seriesId?: number }>(
   groups: { category: { categoryName: string }; items: T[] }[],
   rawQuery: string,
+  /** Filmes e series: um resultado por obra (o provedor cadastra dublado e legendado com o mesmo nome limpo). */
+  byWork = false,
 ): SearchHit<T>[] {
   const query = searchKey(rawQuery)
   if (!query) return []
   const words = query.split(' ')
   const best = new Map<unknown, SearchHit<T>>()
   const keep = (item: T, r: number) => {
-    const id = item.streamId ?? item.seriesId ?? item.name
+    const id = byWork ? itemKey(item) : (item.streamId ?? item.seriesId ?? item.name)
     const prev = best.get(id)
     if (!prev || r < prev.rank) best.set(id, { item, rank: r })
   }

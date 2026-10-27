@@ -15,6 +15,7 @@ import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
 import SimilarRow from '../components/SimilarRow'
+import { SeriesVersions } from '../components/VersionPicker'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
@@ -217,7 +218,9 @@ export default function SeriesDetailPage() {
           </>
         }
         footnote={
-          recapOpen && (
+          <>
+            <SeriesVersions id={series.seriesId} />
+            {recapOpen && (
             <div role="status" className="mt-6 max-w-2xl rounded-2xl border border-outline-soft bg-surface-container/90 p-4">
               <p className="mb-2 text-label-md font-semibold text-white">Antes de {recapEp && tag(recapEp)}</p>
               {recapOpen.loading ? (
@@ -231,7 +234,8 @@ export default function SeriesDetailPage() {
                 <p className="text-body-md text-on-surface-variant">Não deu para fazer o resumo desta série agora.</p>
               )}
             </div>
-          )
+            )}
+          </>
         }
       />
 

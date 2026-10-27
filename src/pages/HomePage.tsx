@@ -1,5 +1,6 @@
 import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
+import { firstPerWork } from '../lib/versions'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
@@ -94,10 +95,10 @@ export default function HomePage() {
   // Only movies carry `added` in the basic catalog listing (get_vod_streams) — series' equivalent field
   // isn't returned by this provider's get_series call, so this row is movies-only rather than mixed.
   const recentMovies = useMemo(() => {
-    return flattenGroups(movies.groups)
+    const recent = flattenGroups(movies.groups)
       .filter((m) => m.added && Number(m.added) > 0)
       .sort((a, b) => Number(b.added) - Number(a.added))
-      .slice(0, 25)
+    return firstPerWork(recent).slice(0, 25)
   }, [movies.groups])
 
   // "Recomendado pra você": genre isn't available in the basic catalog listing for movies (only via a
@@ -151,7 +152,7 @@ export default function HomePage() {
         .filter((s) => likedCategoryIds.has(s.categoryId) && !excludeSeriesIds.has(s.seriesId))
         .map((s) => ({ kind: 'series' as const, id: s.seriesId, name: s.name, image: s.cover, rating: Number(s.rating) || 0 })),
     ]
-    return candidates.sort((a, b) => b.rating - a.rating).slice(0, 25)
+    return firstPerWork(candidates.sort((a, b) => b.rating - a.rating)).slice(0, 25)
   }, [movies.groups, series.groups, favorites, progressItems])
 
   // "Surpreenda-me": picks a uniformly random title from everything loaded so far, favoring nothing —

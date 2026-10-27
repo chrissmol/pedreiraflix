@@ -223,7 +223,7 @@ test('TV: "Ver tudo" de uma fileira em Filmes e Series abre a categoria inteira 
   }
 })
 
-test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre a busca dele', async ({ page }) => {
+test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre o canal ao vivo', async ({ page }) => {
   await page.route('**/api/moltv/v1/search?*', (route) => route.fulfill({ json: { results: [{ type: 'team', slug: 'flamengo', name: 'Flamengo' }] } }))
   await page.route('**/api/moltv/v1/teams/flamengo/next', (route) =>
     route.fulfill({
@@ -231,7 +231,7 @@ test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre a
         matches: [
           {
             match: { id: 'fd:1', home: 'Flamengo', away: 'Vasco', kickoff: '2030-10-26T23:00:00Z', competition: 'Brasileirão', status: 'scheduled' },
-            broadcasts: [{ channel: 'Premiere', slug: 'premiere', confidence: 'confirmada' }],
+            broadcasts: [{ channel: 'Esporte Total', slug: 'premiere', confidence: 'confirmada' }],
           },
         ],
       },
@@ -242,13 +242,13 @@ test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre a
   await page.keyboard.press('Enter') // na TV o OK abre o teclado do campo
   await page.keyboard.type('flam')
   await page.getByRole('button', { name: 'Flamengo', exact: true }).click()
-  await expect(page.getByRole('link', { name: 'Premiere: procurar o canal' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Esporte Total, confirmado/ })).toBeVisible()
 
   const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') || '')
-  for (let i = 0; i < 8 && !/^Premiere/.test(await focado()); i++) await page.keyboard.press('ArrowDown')
-  expect(await focado()).toMatch(/^Premiere/)
+  for (let i = 0; i < 8 && !/^Esporte Total/.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+  expect(await focado()).toMatch(/^Esporte Total/)
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/search\?q=Premiere$/)
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
 })
 
 test('TV: Organizar categorias funciona so com setas e OK e cabe na tela', async ({ page }) => {
@@ -428,4 +428,18 @@ test('TV: no ao vivo, de Tela cheia as setas sobem pela coluna dos botoes de can
   }
   await page.keyboard.press('Enter') // OK em "Próximo canal" zapeia
   await expect(page).toHaveURL(/\/watch\/live\/(?!101)\d+/)
+})
+
+test('TV: ajustes do perfil so com setas e OK (interruptor infantil e PIN)', async ({ page }) => {
+  await page.goto('/profiles')
+  const card = page.getByTestId(/^profile-card-/).first()
+  await card.getByRole('button', { name: 'Ajustes' }).focus()
+  await page.keyboard.press('Enter')
+  const sw = card.getByRole('switch', { name: 'Perfil infantil' })
+  await sw.focus()
+  await page.keyboard.press('Enter') // OK do controle; checkbox nativo so liga com espaco
+  await expect(sw).toBeChecked()
+  await page.keyboard.press('ArrowDown')
+  await expect(card.getByPlaceholder('0000')).toBeFocused()
+  await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/tv.png` : undefined })
 })
