@@ -41,6 +41,7 @@ export function newCode(): string {
 export const normalizeCode = (raw: string) => raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
 
 let socket: WebSocket | null = null
+let queued: JuntoState | null = null
 let retry: ReturnType<typeof setTimeout> | undefined
 let attempts = 0
 
@@ -51,6 +52,9 @@ function connect(code: string) {
   ws.onopen = () => {
     attempts = 0
     useJunto.setState({ connected: true })
+    // O que a pessoa fez enquanto reconectava (recarregou o player e deu play logo) nao se perde.
+    if (queued) ws.send(JSON.stringify({ t: 'estado', ...queued }))
+    queued = null
   }
   ws.onmessage = (e) => {
     let msg: { t?: string; n?: number } & Partial<RemoteState>
@@ -93,12 +97,14 @@ export function leaveRoom() {
   }
   const ws = socket
   socket = null
+  queued = null
   ws?.close()
   useJunto.setState({ code: null, connected: false, people: 0, remote: null })
 }
 
 export function sendState(state: JuntoState) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ t: 'estado', ...state }))
+  else queued = state
 }
 
 /** Volta para a sala depois de recarregar a pagina. */
