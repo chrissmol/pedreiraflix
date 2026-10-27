@@ -1,0 +1,44 @@
+name: Codigo do grupo
+
+# Cria (ou troca) o secret GROUP_CODE do Worker sem ninguem precisar rodar o wrangler na mao. So roda quando alguem
+# dispara. O repo e publico, entao o codigo nunca aparece no log: sai cifrado com a chave publica abaixo, e so quem tem
+# a chave privada (a sessao do Claude que disparou) le e passa o codigo para o Chris. Trocar o codigo desloga todo mundo.
+on:
+  workflow_dispatch:
+
+jobs:
+  criar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Gerar, gravar no Worker e mostrar cifrado
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CHAVE_PUBLICA: |
+            -----BEGIN PUBLIC KEY-----
+            MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAu6mF1PqljZcqhUFM0ICd
+            khmrWWfS+3sGRq7tfqqr3QqQE+hHpFwWjLEfqStC0Ry9asPNQDexDcD6tKGimZTD
+            dOKImKVHfTpnoCNRDXqo6OBT8zwrhlC+wMovyKYta4kv2e0dbd1+cWrOLhM7kIzQ
+            w+a7/Ck+sV2Rhk3j2VXXXK6XHWSkd67NOXbRvjxEjmWG1oLc7z1/CIO7Jv9/Bw2p
+            uJFY8JDfxtCfcj7SUkaf19Nv/HBUZ5wd27QF58iRtinAcH/t4ryAr2Fsqy6iKeW3
+            CIwCVxjAr8AYP6edQd72YovJ1QcIpIx8HKsXxadvWUvwuSY6eXUnRim+w3gEUmbq
+            yVn8KN7nCnLJaarzaKcYrQ5MYuPvHQZQgFtEbrxXd5frtXT1cFvDJS1ih3wPcZ8H
+            nNkcdGI0EMFCLZgrcoynHqP83MkpPDbHraR4JfYaQjJMpRbHpH5K9sc/fzko/1C4
+            8iL8TN98QqPAF2z/Y3mCiiE7DOXc5wPiQuKkxbla/FvnAgMBAAE=
+            -----END PUBLIC KEY-----
+        run: |
+          # 8 letras/numeros sem os que confundem (0/o, 1/l/i): facil de digitar com o controle da TV.
+          codigo=$(node -e "const a='abcdefghjkmnpqrstuvwxyz23456789';console.log(Array.from(crypto.getRandomValues(new Uint8Array(8)),(b)=>a[b%a.length]).join(''))")
+          printf '%s' "$codigo" | npx wrangler secret put GROUP_CODE
+          printf '%s' "$CHAVE_PUBLICA" > chave.pub
+          echo "Codigo cifrado:"
+          printf '%s' "$codigo" | openssl pkeyutl -encrypt -pubin -inkey chave.pub -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 | base64 -w0
+          echo

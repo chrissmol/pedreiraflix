@@ -71,6 +71,7 @@ O KV e o D1 são criados pelo próprio `wrangler deploy` na primeira vez. Todos 
 .\scripts\set-tmdb-token.ps1     # confere e grava TMDB_TOKEN
 npx wrangler secret put OMDB_KEY
 npx wrangler secret put GROUP_CODE   # código que os amigos digitam uma vez; trocar desloga todo mundo
+# ou: Actions > "Codigo do grupo" > Run workflow (gera um código e grava; sai cifrado no log, o repo é público)
 ```
 
 Para rodar o Worker local, crie `.dev.vars` com os mesmos nomes e rode `npx wrangler dev`.
