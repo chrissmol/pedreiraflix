@@ -26,6 +26,7 @@ const SearchPage = lazy(() => import("./pages/SearchPage"));
 const SeriesDetailPage = lazy(() => import("./pages/SeriesDetailPage"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
+const RetrospectivePage = lazy(() => import("./pages/RetrospectivePage"));
 const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const WatchPage = lazy(() => import("./pages/WatchPage"));
 
@@ -84,6 +85,7 @@ export default function App() {
               <Route path="/downloads" element={<DownloadsPage />} />
               <Route path="/diagnostico" element={<DiagnosticPage />} />
               <Route path="/suporte" element={<SupportPage />} />
+              <Route path="/retrospectiva" element={<RetrospectivePage />} />
               <Route path="/categorias" element={<CategoriesPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

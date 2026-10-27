@@ -14,6 +14,7 @@ import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
+import { useWatchTime } from '../store/watchStats'
 import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
 import ChannelNumberOverlay from '../components/ChannelNumberOverlay'
@@ -181,6 +182,20 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       cancelled = true
     }
   }, [client, kind, seriesId])
+
+  // Retrospectiva: tempo tocando por titulo (serie soma todos os episodios).
+  useWatchTime(
+    profileId,
+    !id || isCatchup
+      ? null
+      : kind === 'series'
+        ? seriesId
+          ? { kind: 'series', id: seriesId, name: seriesDetails?.name ?? name, image: seriesDetails?.cover || image }
+          : null
+        : kind === 'movie' || kind === 'live'
+          ? { kind, id: Number(id), name, image }
+          : null,
+  )
 
   // Direct link/bookmark/deep link guard — the catalog lists themselves already hide adult categories
   // for a kids profile, but someone could still land here straight from a URL that bypasses them.
