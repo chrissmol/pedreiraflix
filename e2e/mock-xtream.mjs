@@ -250,7 +250,8 @@ function checkCreds(req, res) {
 // Live: a sliding 5-segment window that loops the 10 fixture segments forever.
 // Discontinuity counted from server start: hls.js walks an array up to that number on every playlist reload, and
 // counting from 1970 (~88 million) froze the page with two players at once (mosaico).
-const LIVE_SEQ0 = Math.floor(Date.now() / 2000)
+// Multiplo do tamanho do loop: a DISCONTINUITY-SEQUENCE so bate com as tags (n % tamanho) assim; sem isto o hls.js dava levelParsingError FATAL.
+const LIVE_SEQ0 = Math.floor(Date.now() / 2000 / liveSegments.length) * liveSegments.length
 app.get('/live/:u/:p/:file', (req, res) => {
   if (!checkCreds(req, res)) return
   const seq = Math.floor(Date.now() / 2000)
