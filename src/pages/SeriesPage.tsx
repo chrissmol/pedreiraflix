@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CatalogProgress from '../components/CatalogProgress'
-import FilterBar from '../components/FilterBar'
+import FilterPanel, { ChipGroup, FilterSection } from '../components/FilterPanel'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import PosterGrid from '../components/PosterGrid'
@@ -10,10 +10,12 @@ import Row from '../components/Row'
 import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import { cleanCategoryName } from '../lib/channelGroups'
+import { genresOf } from '../lib/genres'
 import type { SeriesItem } from '../types'
 import ErrorCard from '../components/ErrorCard'
 
 type SortKey = 'default' | 'name' | 'rating'
+const SORT_LABELS: Record<SortKey, string> = { default: 'Padrão', name: 'Nome (A-Z)', rating: 'Melhor avaliados' }
 
 function sortSeries(items: SeriesItem[], sort: SortKey): SeriesItem[] {
   if (sort === 'default') return items // same reference — see CategoryRow.tsx for why that matters
@@ -29,13 +31,7 @@ function sortSeries(items: SeriesItem[], sort: SortKey): SeriesItem[] {
 // "Ação / Drama") since it's a free-text field, not a fixed enum.
 function extractGenres(items: SeriesItem[]): string[] {
   const set = new Set<string>()
-  for (const item of items) {
-    if (!item.genre) continue
-    for (const g of item.genre.split(/[,/]/)) {
-      const trimmed = g.trim()
-      if (trimmed) set.add(trimmed)
-    }
-  }
+  for (const item of items) for (const g of genresOf(item.genre)) set.add(g)
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
@@ -83,7 +79,7 @@ export default function SeriesPage() {
         items: sortSeries(
           g.items.filter(
             (it) =>
-              (!activeGenre || it.genre?.split(/[,/]/).some((g2) => g2.trim() === activeGenre)) &&
+              (!activeGenre || genresOf(it.genre).includes(activeGenre)) &&
               (!activeYear || yearOf(it) === activeYear) &&
               (minRating === 0 || Number(it.rating) >= minRating),
           ),
@@ -97,68 +93,59 @@ export default function SeriesPage() {
     <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Séries</h1>
-        <FilterBar
-          active={[sort !== 'default', minRating > 0, activeYear != null, activeCategory != null].filter(Boolean).length}
+        <FilterPanel
+          active={[
+            sort !== 'default' && { key: 'sort', label: SORT_LABELS[sort], clear: () => setSort('default') },
+            minRating > 0 && { key: 'rating', label: `★ ${minRating}+`, clear: () => setMinRating(0) },
+            activeYear != null && { key: 'year', label: String(activeYear), clear: () => setActiveYear(null) },
+            activeCategory != null && {
+              key: 'category',
+              label: cleanCategoryName(groups.find((g) => g.category.categoryId === activeCategory)?.category.categoryName ?? ''),
+              clear: () => setActiveCategory(null),
+            },
+            activeGenre != null && { key: 'genre', label: activeGenre, clear: () => setActiveGenre(null) },
+          ].filter((f) => f !== false)}
         >
-        <Select
-          label="Ordenar"
-          value={sort}
-          onChange={(v) => setSort(v as SortKey)}
-          options={[
-            { value: 'default', label: 'Ordem padrão' },
-            { value: 'name', label: 'Nome (A-Z)' },
-            { value: 'rating', label: 'Melhor avaliados' },
-          ]}
-        />
-        <RatingFilter value={minRating} onChange={setMinRating} />
-        {allYears.length > 0 && (
-          <Select
-            label="Ano"
-            value={activeYear != null ? String(activeYear) : ''}
-            onChange={(v) => setActiveYear(v ? Number(v) : null)}
-            options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+          <ChipGroup
+            title="Ordenar"
+            value={sort}
+            onChange={setSort}
+            options={(Object.keys(SORT_LABELS) as SortKey[]).map((k) => ({ value: k, label: SORT_LABELS[k] }))}
           />
-        )}
-        <Select
-          label="Categoria"
-          className="ml-auto max-w-56"
-          value={activeCategory ?? ''}
-          onChange={(v) => setActiveCategory(v || null)}
-          options={[
-            { value: '', label: 'Todas as categorias' },
-            ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
-          ]}
-        />
-        </FilterBar>
+          <RatingFilter value={minRating} onChange={setMinRating} />
+          {allYears.length > 0 && (
+            <FilterSection title="Ano">
+              <Select
+                inline
+                label="Ano"
+                value={activeYear != null ? String(activeYear) : ''}
+                onChange={(v) => setActiveYear(v ? Number(v) : null)}
+                options={[{ value: '', label: 'Qualquer ano' }, ...allYears.map((y) => ({ value: String(y), label: String(y) }))]}
+              />
+            </FilterSection>
+          )}
+          <FilterSection title="Categoria">
+            <Select
+              inline
+              label="Categoria"
+              value={activeCategory ?? ''}
+              onChange={(v) => setActiveCategory(v || null)}
+              options={[
+                { value: '', label: 'Todas as categorias' },
+                ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
+              ]}
+            />
+          </FilterSection>
+          {allGenres.length > 0 && (
+            <ChipGroup
+              title="Gênero"
+              value={activeGenre ?? ''}
+              onChange={(v) => setActiveGenre(v || null)}
+              options={[{ value: '', label: 'Todos' }, ...allGenres.map((g) => ({ value: g, label: g }))]}
+            />
+          )}
+        </FilterPanel>
       </div>
-
-      {allGenres.length > 0 && (
-        <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto px-4 sm:flex-wrap sm:px-10">
-          <button
-            onClick={() => setActiveGenre(null)}
-            className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
-              activeGenre === null
-                ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
-            }`}
-          >
-            Todos os gêneros
-          </button>
-          {allGenres.map((g) => (
-            <button
-              key={g}
-              onClick={() => setActiveGenre(g === activeGenre ? null : g)}
-              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-label-md transition-colors ${
-              activeGenre === g
-                ? 'bg-brand-fill text-white shadow-[0_0_20px_-4px_rgba(15,123,255,0.6)]'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-high hover:text-white'
-            }`}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
-      )}
 
       <ContinueWatchingRow kind="series" />
 

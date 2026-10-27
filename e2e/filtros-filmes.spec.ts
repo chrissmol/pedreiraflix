@@ -5,6 +5,7 @@ import { login } from './helpers'
 test('filmes: categoria e ano juntos', async ({ page }) => {
   await login(page)
   await page.goto('/movies')
+  await page.getByRole('button', { name: 'Filtros' }).click()
   await page.getByRole('button', { name: 'Ano' }).click()
   await page.getByRole('option', { name: '2019' }).click()
   await page.getByRole('button', { name: 'Categoria' }).click()

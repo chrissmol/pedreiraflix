@@ -3,14 +3,14 @@ import { login } from './helpers'
 
 const PHONE = { width: 390, height: 844 }
 
-test('on a phone the catalog filters start collapsed behind "Filtrar"', async ({ page }) => {
+test('on a phone the catalog filters live in a sheet behind "Filtros"', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await login(page)
   await page.goto('/movies')
 
-  const sort = page.getByRole('button', { name: /Ordenar/ })
+  const sort = page.getByRole('button', { name: 'Nome (A-Z)' })
   await expect(sort).toBeHidden()
-  await page.getByRole('button', { name: 'Filtrar' }).click()
+  await page.getByRole('button', { name: 'Filtros' }).click()
   await expect(sort).toBeVisible()
 })
 
