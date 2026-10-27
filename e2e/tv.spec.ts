@@ -163,7 +163,7 @@ test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page 
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
   const escolher = async (filtro: string, opcao: string) => {
     const botao = page.getByRole('button', { name: filtro, exact: true })
-    for (let i = 0; i < 8 && !(await botao.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowRight')
+    for (let i = 0; i < 8 && !(await botao.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
     await expect(botao).toBeFocused()
     await page.keyboard.press('Enter')
     const item = page.getByRole('option', { name: opcao, exact: true })
@@ -172,9 +172,14 @@ test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page 
     await page.keyboard.press('Enter')
     await expect(botao).toBeFocused()
   }
-  await page.keyboard.press('ArrowDown') // o foco entra no conteudo, nos filtros
+  const filtros = page.getByRole('button', { name: 'Filtros' })
+  for (let i = 0; i < 8 && !(await filtros.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowRight')
+  await expect(filtros).toBeFocused()
+  await page.keyboard.press('Enter') // abre o painel; as setas ficam presas dentro dele
   await escolher('Ano', '2019')
   await escolher('Categoria', 'Ação')
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Filtros' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
 })

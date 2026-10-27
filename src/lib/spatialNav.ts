@@ -56,7 +56,9 @@ function visible(el: HTMLElement) {
 }
 
 export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
-  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(visible)
+  // Painel aberto (Filtros): as setas andam so dentro dele, nao pelo catalogo escondido atras.
+  const modal = document.querySelector('[aria-modal="true"]')
+  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => visible(el) && (!modal || modal.contains(el)))
   const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
   if (!active || !all.includes(active)) {
     // Primeira seta: o primeiro item do conteudo (nao o logo do cabecalho).
