@@ -15,6 +15,7 @@ import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Episode, SeriesDetails } from '../types'
 import SimilarRow from '../components/SimilarRow'
+import { SeriesVersions } from '../components/VersionPicker'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
@@ -177,6 +178,7 @@ export default function SeriesDetailPage() {
             </button>
           </>
         }
+        footnote={<SeriesVersions id={series.seriesId} />}
       />
 
       <div className="px-4 sm:px-10">

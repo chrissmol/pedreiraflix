@@ -42,10 +42,10 @@ export default function SearchSuggestions({ query: liveQuery, recent, onNavigate
 
   const results = useMemo<Suggestion[]>(() => {
     if (query.length < 2) return []
-    const movieHits = searchCatalog(movies.groups, query)
+    const movieHits = searchCatalog(movies.groups, query, true)
       .slice(0, 4)
       .map(({ item: m, rank }): Suggestion => ({ key: `movie-${m.streamId}`, name: m.name, image: m.streamIcon, kind: 'movie', path: `/movies/${m.streamId}`, rank }))
-    const seriesHits = searchCatalog(series.groups, query)
+    const seriesHits = searchCatalog(series.groups, query, true)
       .slice(0, 4)
       .map(({ item: s, rank }): Suggestion => ({ key: `series-${s.seriesId}`, name: s.name, image: s.cover, kind: 'series', path: `/series/${s.seriesId}`, rank }))
     const liveHits = searchCatalog(live.groups, query)

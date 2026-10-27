@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { cached } from '../lib/cache'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isAdultCategoryName } from '../lib/parentalControl'
+import { mergeVersions } from '../lib/versions'
 import type { ProviderClient } from '../lib/provider'
 import { NOT_AVAILABLE, XtreamApiError } from '../lib/xtream'
 import { useActiveProfile } from '../store/profiles'
@@ -124,9 +125,11 @@ function useCategorizedCatalog<T>(
 
         const tasks = categories.map((category) => async () => {
           try {
-            const items = await cached(`${kind}:items:${category.categoryId}`, () =>
+            const raw = await cached(`${kind}:items:${category.categoryId}`, () =>
               withRetry(() => loadItemsForCategory(client, category.categoryId)),
             )
+            // Canal com o mesmo nome pode ser um reserva: so filmes e series juntam versoes.
+            const items = kind === 'live' ? raw : (mergeVersions(raw as Movie[]) as T[])
             if (cancelled || myRequest !== requestId.current) return
             setState((s) => ({
               ...s,
@@ -204,12 +207,13 @@ export function useSeriesCatalog() {
   return useCategorizedCatalog<SeriesItem>('series', client, loadCategories, loadItems, hideAdult, profile?.hiddenCategories, profile?.categoryOrder)
 }
 
-/** Flattens every loaded item across all category groups, deduped by id. Useful for search/home rails. */
-export function flattenGroups<T extends { streamId?: number; seriesId?: number }>(groups: CategoryGroup<T>[]): T[] {
+/** Flattens every loaded item across all category groups, deduped by id. Useful for search/home rails. Inclui as
+ * versoes juntadas (mergeVersions): quem procura por id (favoritos, progresso) acha qualquer uma delas. */
+export function flattenGroups<T extends { streamId?: number; seriesId?: number; versions?: T[] }>(groups: CategoryGroup<T>[]): T[] {
   const seen = new Set<number>()
   const out: T[] = []
   for (const group of groups) {
-    for (const item of group.items) {
+    for (const item of group.items.flatMap((i) => i.versions ?? [i])) {
       const id = item.streamId ?? item.seriesId ?? -1
       if (seen.has(id)) continue
       seen.add(id)
