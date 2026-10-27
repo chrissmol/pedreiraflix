@@ -16,7 +16,9 @@ test('Trocar conta: vai para a outra conta sem sair e volta sem baixar o catalog
   })
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page).toHaveURL(/\/movies$/)
+  // .first(): o filme pode aparecer em mais de uma fileira por um instante; o teste so quer saber que o catalogo voltou.
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
   await expect(page.getByText('Carregando filmes:')).toHaveCount(0)
   const primeiraCarga = vodCalls.length
   expect(primeiraCarga).toBeGreaterThan(0)
@@ -42,7 +44,9 @@ test('Trocar conta: vai para a outra conta sem sair e volta sem baixar o catalog
   await page.getByTestId('saved-accounts').getByRole('button', { name: new RegExp(MOCK.username) }).first().click()
   await expect(page).toHaveURL(/\/$/)
   await page.getByRole('link', { name: 'Filmes' }).click()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page).toHaveURL(/\/movies$/)
+  // .first(): o filme pode aparecer em mais de uma fileira por um instante; o teste so quer saber que o catalogo voltou.
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
   await expect(page.getByText('Filme M3U Teste')).toHaveCount(0)
   expect(vodCalls.length).toBe(primeiraCarga)
 })
