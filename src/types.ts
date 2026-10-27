@@ -56,6 +56,8 @@ export interface Movie {
   containerExtension: string
   /** Só alguns painéis mandam o ano na lista; os outros põem no nome ("Duna (2024)"), ver movieYear. */
   year?: string | null
+  /** A mesma obra cadastrada mais de uma vez pelo provedor (dublado, legendado, 4K), ver lib/versions. */
+  versions?: Movie[]
 }
 
 export interface MovieDetails extends Movie {
@@ -81,6 +83,8 @@ export interface SeriesItem {
   backdropPath: string[]
   cast: string | null
   director: string | null
+  /** A mesma serie cadastrada mais de uma vez pelo provedor (dublada, legendada), ver lib/versions. */
+  versions?: SeriesItem[]
 }
 
 export interface Episode {

@@ -13,6 +13,7 @@ import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
 import SimilarRow from '../components/SimilarRow'
+import { MovieVersions } from '../components/VersionPicker'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
@@ -176,12 +177,15 @@ export default function MovieDetailPage() {
           </>
         }
         footnote={
-          tmdb && (
-            <p className="mt-6 flex items-center gap-2 text-body-sm text-on-surface-muted">
-              <img src="/tmdb.svg" alt="TMDB" className="h-6 w-6 shrink-0" />
-              Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.
-            </p>
-          )
+          <>
+            <MovieVersions id={movie.streamId} />
+            {tmdb && (
+              <p className="mt-6 flex items-center gap-2 text-body-sm text-on-surface-muted">
+                <img src="/tmdb.svg" alt="TMDB" className="h-6 w-6 shrink-0" />
+                Dados complementares do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado por ele.
+              </p>
+            )}
+          </>
         }
       />
       <SimilarRow kind="movie" name={movie.name} id={movie.streamId} />
