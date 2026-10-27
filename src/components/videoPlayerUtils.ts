@@ -96,6 +96,12 @@ export function supportsNativeHls() {
   // HLS nativo nenhum. O desempate e por recurso, nao por string nem por user agent — as APIs de
   // midia prefixadas do WebKit (`webkitShowPlaybackTargetPicker`, usada pelo proprio botao de
   // AirPlay) existem no Safari e em nenhum outro lugar.
+  // Chave de teste/saida: com pf-hlsjs=1 o Safari passa a usar o hls.js (buffer e retry ajustaveis, sem video no AirPlay).
+  try {
+    if (localStorage.getItem('pf-hlsjs') === '1') return false
+  } catch {
+    // sem localStorage: segue o padrao
+  }
   const video = document.createElement('video')
   const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl')
   const isWebKitMedia =

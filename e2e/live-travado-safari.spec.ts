@@ -43,3 +43,19 @@ test('Safari (HLS nativo): canal ao vivo travado e recarregado, no maximo 3 veze
   await travar()
   expect(await loads()).toBe(depoisDe3) // 4a travada seguida: desiste, nao fica recarregando para sempre
 })
+
+// Chave pf-hlsjs=1: o Safari troca o HLS nativo pelo hls.js (blob do MediaSource); sem ela fica no nativo (URL direta).
+for (const [flag, esperado] of [['1', 'blob:'], [null, '/api/stream']] as const) {
+  test(`Safari: pf-hlsjs=${flag} usa ${esperado === 'blob:' ? 'hls.js' : 'HLS nativo'}`, async ({ page }) => {
+    await page.addInitScript((f) => {
+      const canPlay = HTMLMediaElement.prototype.canPlayType
+      HTMLMediaElement.prototype.canPlayType = function (t: string) {
+        return /mpegurl/i.test(t) ? 'probably' : canPlay.call(this, t)
+      }
+      if (f) localStorage.setItem('pf-hlsjs', f)
+    }, flag)
+    await seedSession(page)
+    await page.goto('/watch/live/101?name=Teste')
+    await expect.poll(() => page.locator('video').evaluate((v: HTMLVideoElement) => v.currentSrc || v.src)).toContain(esperado)
+  })
+}
