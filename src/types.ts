@@ -43,6 +43,8 @@ export interface LiveChannel {
   /** Whether this channel's provider keeps a rewind/catch-up buffer at all, and for how long. */
   hasArchive: boolean
   archiveDurationHours: number
+  /** Numero do canal no provedor (`num` no Xtream, `tvg-chno` na M3U), para digitar no controle. */
+  num?: number
 }
 
 export interface Movie {

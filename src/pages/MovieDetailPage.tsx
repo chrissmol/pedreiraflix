@@ -13,6 +13,7 @@ import { useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { MovieDetails } from '../types'
 import SimilarRow from '../components/SimilarRow'
+import SagaRow from '../components/SagaRow'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
@@ -166,6 +167,7 @@ export default function MovieDetailPage() {
           )
         }
       />
+      <SagaRow name={movie.name} year={movie.releaseDate?.slice(0, 4) || null} id={movie.streamId} />
       <SimilarRow kind="movie" name={movie.name} id={movie.streamId} />
     </div>
   )

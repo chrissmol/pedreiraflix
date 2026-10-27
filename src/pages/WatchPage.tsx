@@ -16,6 +16,8 @@ import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
 import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
+import ChannelNumberOverlay from '../components/ChannelNumberOverlay'
+import { useChannelNumber } from '../hooks/useChannelNumber'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
 function flattenEpisodes(details: SeriesDetails): Episode[] {
@@ -157,6 +159,12 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     [setParams],
   )
   const zapNext = useCallback(() => zap(1), [zap])
+  // Digitar o numero do canal no controle/teclado troca de canal, como na TV a cabo.
+  const channelNumber = useChannelNumber(
+    liveChannels,
+    (ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true }),
+    kind === 'live' && !isCatchup,
+  )
   const zapPrev = useCallback(() => zap(-1), [zap])
 
   // Series: fetch the whole series once so we know which episode follows this one.
@@ -316,6 +324,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
         onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
       />
+      <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
       {showEpisodes && kind === 'series' && seriesDetails && id && (
         <EpisodesPanel series={seriesDetails} currentId={id} onClose={closeChannels} onPick={goToEpisode} />
       )}

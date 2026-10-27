@@ -43,3 +43,13 @@ export function personTitles(q: string): Promise<{ name: string; directing: bool
     return (await res.json()) as { name: string; directing: boolean; titles: string[] }
   }).catch(() => null)
 }
+
+/** Os filmes da mesma colecao do TMDB (/api/saga), em ordem de lancamento. Sem colecao, sem token ou erro: null. */
+export function sagaTitles(title: string, year: string | null): Promise<{ name: string; parts: { title: string; original: string; year: string }[] } | null> {
+  const qs = new URLSearchParams({ title, ...(year && /^\d{4}$/.test(year) ? { year } : {}) })
+  return cached(`saga:${qs}`, async () => {
+    const res = await fetch(`/api/saga?${qs}`)
+    if (res.status !== 200) throw new Error('sem saga')
+    return (await res.json()) as { name: string; parts: { title: string; original: string; year: string }[] }
+  }).catch(() => null)
+}

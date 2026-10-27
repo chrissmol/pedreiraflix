@@ -108,6 +108,7 @@ export default function LiveChannelCard({ channel, onOpen, onRemove }: LiveChann
 
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
+            {channel.num != null && <span className="shrink-0 text-label-badge tabular-nums text-on-surface-muted">{channel.num}</span>}
             <span className="truncate text-label-md text-white">{nome}</span>
             {channel.hasArchive && (
               <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-0.5 text-label-badge font-bold text-brand-300">REVER</span>

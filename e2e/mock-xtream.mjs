@@ -73,7 +73,7 @@ const liveStreams = [
   { stream_id: 201, name: 'Esporte Total', category_id: '2', tv_archive: 1, tv_archive_duration: 7 },
   { stream_id: 202, name: 'Futebol HD', category_id: '2', tv_archive: 0, tv_archive_duration: 0 },
   { stream_id: 901, name: 'Canal Adulto', category_id: '9', tv_archive: 0, tv_archive_duration: 0 },
-].map((s, i) => ({ ...s, stream_icon: img(s.name.split(' ')[1] || 'TV', i * 50), epg_channel_id: `ch${s.stream_id}` }))
+].map((s, i) => ({ ...s, num: i + 1, stream_icon: img(s.name.split(' ')[1] || 'TV', i * 50), epg_channel_id: `ch${s.stream_id}` }))
 
 const vodCategories = [
   { category_id: '10', category_name: 'Ação' },

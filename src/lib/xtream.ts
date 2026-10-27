@@ -257,6 +257,7 @@ export class XtreamClient implements ProviderClient {
         epg_channel_id: string | null
         tv_archive?: number | string
         tv_archive_duration?: number | string
+        num?: number | string
       }[]
     >('get_live_streams', categoryId ? { category_id: categoryId } : {})
     return asList<typeof raw[number]>(raw).map((s) => ({
@@ -268,6 +269,7 @@ export class XtreamClient implements ProviderClient {
       epgChannelId: s.epg_channel_id,
       hasArchive: Number(s.tv_archive) === 1,
       archiveDurationHours: Number(s.tv_archive_duration) || 0,
+      num: Number(s.num) || undefined,
     }))
   }
 

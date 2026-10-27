@@ -10,6 +10,8 @@ import { matchesQuery } from '../lib/search'
 import { favoritesFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import ErrorCard from '../components/ErrorCard'
+import ChannelNumberOverlay from '../components/ChannelNumberOverlay'
+import { useChannelNumber } from '../hooks/useChannelNumber'
 
 const PAGE_SIZE = 60
 
@@ -117,6 +119,10 @@ export default function LivePage() {
   }, [visibleCategories, activeCategory, activeChampionship, channelsByChampionship, selection, showingRecent, recentChannels, filter, onlyArchive])
 
   const channels = allChannels.slice(0, visibleCount)
+
+  // Digitar o numero do canal (controle da TV ou teclado) abre o canal direto, de qualquer categoria.
+  const lineup = useMemo(() => visibleCategories.flatMap((g) => g.items), [visibleCategories])
+  const channelNumber = useChannelNumber(lineup, (ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`))
 
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- filter/category changes must restart infinite scroll.
@@ -333,6 +339,7 @@ export default function LivePage() {
           </button>
         )}
       </div>
+      <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
       {confirmClearRecent && (
         <ConfirmDialog
           message="Limpar todos os canais recentes?"

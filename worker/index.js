@@ -542,6 +542,32 @@ async function trending(url, env) {
   return Response.json({ titles }, { headers: { 'cache-control': 'public, max-age=21600' } })
 }
 
+// "Da mesma saga": a colecao do TMDB a que o filme pertence (Velozes e Furiosos, Harry Potter...), na ordem de
+// lancamento. So nomes e anos: o app mostra os que existem no catalogo. Sem token, sem colecao ou erro: 204.
+async function saga(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  const title = (url.searchParams.get('title') || '').trim().slice(0, 200)
+  const year = url.searchParams.get('year') || ''
+  if (!title) return none('no-title')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+  const search = await get('/search/movie', { query: title, language: 'pt-BR', ...(/^\d{4}$/.test(year) ? { year } : {}) })
+  const hit = search.ok ? (await search.json()).results?.[0] : null
+  if (!hit) return none(search.ok ? 'no-match' : `search-${search.status}`)
+  const details = await get(`/movie/${hit.id}`, { language: 'pt-BR' })
+  const collection = details.ok ? (await details.json()).belongs_to_collection : null
+  if (!collection?.id) return none(details.ok ? 'sem-saga' : `details-${details.status}`)
+  const res = await get(`/collection/${collection.id}`, { language: 'pt-BR' })
+  if (!res.ok) return none(`collection-${res.status}`)
+  const parts = ((await res.json()).parts || [])
+    .filter((p) => p.release_date)
+    .sort((a, b) => a.release_date.localeCompare(b.release_date))
+    .map((p) => ({ title: p.title || '', original: p.original_title || '', year: p.release_date.slice(0, 4) }))
+  if (parts.length < 2) return none('saga-curta')
+  return Response.json({ name: collection.name, parts }, { headers: { 'cache-control': 'public, max-age=86400' } })
+}
+
 // Busca por ator ou diretor: o TMDB acha a pessoa e devolve os filmes/series dela; o app mostra os que existem no
 // catalogo. So vale pessoa cujo nome tem todas as palavras digitadas ("matrix" nao vira um ator chamado Matrix X).
 // Sem token, sem pessoa ou erro: 204 e a busca fica so pelo titulo.
@@ -673,6 +699,10 @@ export default {
     if (url.pathname === '/api/pessoa') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await person(url, env))
+    }
+    if (url.pathname === '/api/saga') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await saga(url, env))
     }
     if (url.pathname === '/api/em-alta') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
