@@ -17,7 +17,8 @@ function formatWatchTime(seconds: number): string {
 
 const monthLabel = (key: string) => {
   const [y, m] = key.split('-').map(Number)
-  return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const label = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 /** Retrospectiva do perfil: quanto assistiu no mes, do que mais gostou e a serie mais maratonada. So o que foi visto
@@ -58,7 +59,7 @@ export default function RetrospectivePage() {
             key={m}
             onClick={() => setChosen(m)}
             aria-pressed={m === chosen}
-            className={`brand-focus shrink-0 rounded-full px-4 py-2 text-label-md capitalize transition-colors ${m === chosen ? 'bg-white text-black' : 'bg-surface-container text-on-surface-variant hover:text-white'}`}
+            className={`brand-focus shrink-0 rounded-full px-4 py-2 text-label-md transition-colors ${m === chosen ? 'bg-white text-black' : 'bg-surface-container text-on-surface-variant hover:text-white'}`}
           >
             {monthLabel(m)}
           </button>
@@ -67,12 +68,12 @@ export default function RetrospectivePage() {
 
       {total === 0 ? (
         <p className="mt-12 rounded-2xl border border-outline-soft bg-surface-low p-6 text-center text-body-md text-on-surface-variant">
-          Nada assistido em {monthLabel(chosen)} ainda. Dê o play em algo e volte aqui.
+          Nada assistido em {monthLabel(chosen).toLowerCase()} ainda. Dê o play em algo e volte aqui.
         </p>
       ) : (
         <>
           <section className="mt-8 rounded-3xl bg-gradient-to-br from-brand-600 to-brand-900 p-6 sm:p-8">
-            <p className="text-label-md uppercase tracking-wider text-white/75">Tempo assistido em {monthLabel(chosen)}</p>
+            <p className="text-label-md uppercase tracking-wider text-white/75">Tempo assistido em {monthLabel(chosen).toLowerCase()}</p>
             <p data-testid="retro-total" className="font-display mt-2 text-headline-lg text-white sm:text-display-hero">
               {formatWatchTime(total)}
             </p>
