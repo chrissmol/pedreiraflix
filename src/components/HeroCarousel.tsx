@@ -3,6 +3,7 @@ import { Check, Info, Play, Plus } from './icons'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import { displayTitle } from '../lib/displayTitle'
+import { isTv } from '../lib/device'
 import { useImdbRating } from '../hooks/useImdbRating'
 
 export interface FeaturedCandidate {
@@ -39,6 +40,9 @@ function resolveSlotMs(fallback: number): number {
   const override = (typeof window !== 'undefined' && (window as { __HERO_SLOT_MS_OVERRIDE__?: number }).__HERO_SLOT_MS_OVERRIDE__) || 0
   return override || fallback
 }
+
+// Na TV (960x540) o destaque ocupava a tela toda e escondia a primeira fileira: fica menor para ela aparecer embaixo.
+const HERO_H = isTv ? 'h-[72vh]' : 'h-[60vw] max-h-[560px] min-h-[420px]'
 
 /** Rotating hero, restricted to the household's "only the very best" bar (≥8.5 — filtered by the caller)
  * and alternating movie/series: which title is "now" is computed straight from the wall clock (a stable
@@ -81,7 +85,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
   if (!current) {
     if (!loading) return <div className="h-[calc(5rem+env(safe-area-inset-top))]" />
     return (
-      <div data-testid="hero-carregando" className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
+      <div data-testid="hero-carregando" className={`relative w-full overflow-hidden ${HERO_H}`}>
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
           <div className="skeleton h-10 w-3/4 max-w-md rounded-lg sm:h-14" />
           <div className="skeleton h-4 w-1/2 max-w-sm rounded" />
@@ -98,7 +102,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
   // screen — the cue every streaming home page uses to say "there's more below", which a hero that
   // exactly filled the viewport was swallowing.
   return (
-    <div className="relative h-[60vw] max-h-[560px] min-h-[420px] w-full overflow-hidden">
+    <div className={`relative w-full overflow-hidden ${HERO_H}`}>
       {current.image && (
         <img
           key={current.key}

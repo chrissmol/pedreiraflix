@@ -204,9 +204,16 @@ export function teamsFor(favoriteTeams: LibraryState['favoriteTeams'], profileId
 }
 export function progressFor(progress: LibraryState['progress'], profileId: string): WatchProgress[] {
   const prefix = `${profileId}:`
-  return Object.entries(progress)
-    .filter(([key]) => key.startsWith(prefix))
-    .map(([, value]) => value)
+  // O progresso e guardado por episodio: parar no E1 e abrir o E3 deixava a serie duas vezes em "Continuar assistindo".
+  // Fica so o episodio mexido por ultimo de cada serie.
+  const latest = new Map<string, WatchProgress>()
+  for (const [key, p] of Object.entries(progress)) {
+    if (!key.startsWith(prefix)) continue
+    const k = p.kind === 'series' && p.seriesId != null ? `s${p.seriesId}` : key
+    const prev = latest.get(k)
+    if (!prev || p.updatedAt > prev.updatedAt) latest.set(k, p)
+  }
+  return [...latest.values()]
 }
 /** Recalcula se a serie foi toda vista (sem especiais da temporada 0) e grava so quando muda. Chamado pela pagina da
  * serie e pelo player, que ja tem a lista de episodios: nao pede nada ao provedor. */

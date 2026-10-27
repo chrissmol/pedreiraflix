@@ -9,6 +9,7 @@ import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
 import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
+import { cleanCategoryName } from '../lib/channelGroups'
 import type { SeriesItem } from '../types'
 import ErrorCard from '../components/ErrorCard'
 
@@ -125,7 +126,7 @@ export default function SeriesPage() {
           onChange={(v) => setActiveCategory(v || null)}
           options={[
             { value: '', label: 'Todas as categorias' },
-            ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
+            ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
           ]}
         />
         </FilterBar>
@@ -172,7 +173,7 @@ export default function SeriesPage() {
           <CategoryRow
             key={category.categoryId}
             kind="series"
-            title={category.categoryName}
+            title={cleanCategoryName(category.categoryName)}
             loading={groupLoading && items.length === 0}
             items={items}
             limit={ROW_LIMIT}

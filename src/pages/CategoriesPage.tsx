@@ -3,6 +3,7 @@ import ErrorCard from '../components/ErrorCard'
 import { ChevronDown, ChevronUp, Eye, EyeOff } from '../components/icons'
 import { friendlyCatalogError } from '../hooks/useCatalog'
 import { useXtream } from '../hooks/useXtream'
+import { cleanCategoryName } from '../lib/channelGroups'
 import { cached } from '../lib/cache'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isAdultCategoryName } from '../lib/parentalControl'
@@ -132,7 +133,7 @@ export default function CategoriesPage() {
           return (
             <li key={c.categoryId} className="flex items-center gap-2 py-2">
               <span className={`min-w-0 flex-1 truncate text-body-md ${isHidden ? 'text-on-surface-variant line-through' : 'text-white'}`}>
-                {c.categoryName}
+                {cleanCategoryName(c.categoryName)}
               </span>
               <button
                 onClick={() => toggle(c)}

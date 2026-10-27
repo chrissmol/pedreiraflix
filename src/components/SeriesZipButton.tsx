@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { isTv } from '../lib/device'
+import { episodeName } from '../lib/displayTitle'
 import { nativeDownloads } from '../lib/nativeDownloads'
 import { getDownload, getDownloadBlob } from '../lib/offlineStore'
 import { buildZip, safeName, type ZipEntry } from '../lib/zip'
@@ -40,7 +41,7 @@ export default function SeriesZipButton({ series }: { series: SeriesDetails }) {
         profileId,
         queueKey,
         series.seriesId,
-        missing.map((ep) => ({ id: ep.id, ext: ep.containerExtension, name: `${series.name} - ${ep.title}` })),
+        missing.map((ep) => ({ id: ep.id, ext: ep.containerExtension, name: episodeName(series.name, ep.title) })),
         series.cover,
       )
     }

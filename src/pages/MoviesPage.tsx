@@ -11,6 +11,7 @@ import Select from '../components/Select'
 import { useMovieCatalog } from '../hooks/useCatalog'
 import type { Movie } from '../types'
 import ErrorCard from '../components/ErrorCard'
+import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
@@ -108,7 +109,7 @@ export default function MoviesPage() {
           onChange={(v) => setActiveCategory(v || null)}
           options={[
             { value: '', label: 'Todas as categorias' },
-            ...groups.map((g) => ({ value: g.category.categoryId, label: g.category.categoryName })),
+            ...groups.map((g) => ({ value: g.category.categoryId, label: cleanCategoryName(g.category.categoryName) })),
           ]}
         />
         </FilterBar>
@@ -130,7 +131,7 @@ export default function MoviesPage() {
           <CategoryRow
             key={category.categoryId}
             kind="movie"
-            title={category.categoryName}
+            title={cleanCategoryName(category.categoryName)}
             loading={groupLoading && items.length === 0}
             items={items}
             limit={ROW_LIMIT}

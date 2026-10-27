@@ -15,7 +15,7 @@ function AppPinSettings() {
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="mb-8 max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-body-sm">
+    <div className="mt-12 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-label-md text-white">
           {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
@@ -169,20 +169,19 @@ export default function ProfilesPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
-      <h1 className="font-display mb-1 text-headline-md text-white sm:text-headline-lg">Perfis</h1>
-      <p className="mb-8 max-w-lg text-body-md text-on-surface-variant">
+    // "Quem esta assistindo?" no meio da tela, como Netflix/Max: os perfis sao o assunto, o PIN do app vai para baixo.
+    <div className="flex min-h-screen flex-col items-center px-4 pb-10 pt-[calc(6rem+env(safe-area-inset-top))] text-center sm:px-10">
+      <h1 className="font-display mb-2 text-headline-md text-white sm:text-headline-lg">Quem está assistindo?</h1>
+      <p className="mb-10 max-w-lg text-body-md text-on-surface-variant">
         Cada perfil tem sua própria lista, continuar assistindo e histórico — todos usam a mesma assinatura.
       </p>
 
-      <AppPinSettings />
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <div className="flex flex-wrap justify-center gap-4">
         {profiles.map((p) => (
           <div
             key={p.id}
             data-testid={`profile-card-${p.id}`}
-            className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-5 transition-colors ${
+            className={`group relative flex w-40 flex-col items-center gap-3 rounded-2xl border p-5 transition-colors sm:w-52 ${
               p.id === activeProfile?.id
                 ? 'border-brand-500/50 bg-surface-container shadow-[0_0_30px_-12px_rgba(15,123,255,0.5)]'
                 : 'border-outline-soft bg-surface-low hover:border-outline-strong hover:bg-surface-container'
@@ -195,7 +194,7 @@ export default function ProfilesPage() {
                 <button onClick={() => enterProfile(p)} className="flex flex-col items-center gap-2" aria-label={`Entrar como ${p.name}`}>
                   <span className="relative">
                     <span
-                      className="flex h-20 w-20 items-center justify-center rounded-full text-headline-lg text-white shadow-[0_12px_28px_-10px_rgba(0,0,0,0.8)]"
+                      className="flex h-20 w-20 items-center justify-center rounded-full text-headline-lg text-white shadow-[0_12px_28px_-10px_rgba(0,0,0,0.8)] transition-transform duration-200 group-hover:scale-105 sm:h-28 sm:w-28"
                       style={{ background: p.color }}
                     >
                       {p.id === activeProfile?.id ? <Check className="h-7 w-7" /> : p.name[0]?.toUpperCase()}
@@ -232,7 +231,7 @@ export default function ProfilesPage() {
                   </form>
                 ) : (
                   // Always visible on touch (no hover to reveal them there); fades in on mouse hover otherwise.
-                  <div className="flex gap-1 text-body-sm text-on-surface-variant">
+                  <div className="flex flex-wrap justify-center gap-1 text-body-sm text-on-surface-variant">
                     <button
                       onClick={() => {
                         setRenamingId(p.id)
@@ -261,7 +260,7 @@ export default function ProfilesPage() {
           (adding ? (
             <form
               onSubmit={handleAdd}
-              className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-strong bg-surface-low p-5"
+              className="flex w-40 flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-strong bg-surface-low p-5 sm:w-52"
             >
               <div className="flex flex-wrap justify-center gap-1.5">
                 {COLORS.map((c) => (
@@ -305,9 +304,9 @@ export default function ProfilesPage() {
                 setColor(COLORS[profiles.length % COLORS.length])
                 setAdding(true)
               }}
-              className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-outline-strong p-5 text-label-md text-on-surface-variant transition-colors hover:border-brand-500/50 hover:bg-surface-low hover:text-white"
+              className="flex w-40 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-outline-strong p-5 text-label-md sm:w-52 text-on-surface-variant transition-colors hover:border-brand-500/50 hover:bg-surface-low hover:text-white"
             >
-              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-outline-strong">
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-outline-strong sm:h-28 sm:w-28">
                 <Plus className="h-7 w-7" />
               </span>
               Adicionar perfil
@@ -315,9 +314,11 @@ export default function ProfilesPage() {
           ))}
       </div>
 
+      <AppPinSettings />
+
       <button
         onClick={() => navigate('/')}
-        className="btn-secondary mt-10"
+        className="btn-secondary mt-8"
       >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </button>

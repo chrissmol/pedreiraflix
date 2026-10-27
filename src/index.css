@@ -326,6 +326,18 @@ img {
   animation: ring-in 300ms ease-out 400ms forwards;
 }
 
+/* Menus e janelas surgem subindo um pouco. So opacidade e transform (baratos ate no Fire TV) e sem fill-mode: um
+   transform que ficasse depois do fim prenderia os `fixed` de dentro na caixa. A troca de pagina fica no Layout.tsx. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+.anim-pop {
+  animation: pop-in 160ms ease-out;
+}
+
 /* O iPhone desenha campos de busca com estilo proprio (largura minima, arredondamento, lupa e "x" nativos)
  * por cima do nosso: o botao de busca saia oval e com a lupa torta. `appearance-none` no input + isto. */
 input[type='search']::-webkit-search-decoration,
@@ -395,6 +407,7 @@ html.tv .brand-focus:focus-visible {
   @apply bg-brand-500/25 text-brand-300 hover:bg-brand-500/35;
 }
 @utility menu-panel {
+  animation: pop-in 160ms ease-out;
   @apply overflow-hidden rounded-2xl border border-outline-soft bg-surface-lowest/95 p-1.5 text-body-md shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl;
 }
 @utility menu-option {

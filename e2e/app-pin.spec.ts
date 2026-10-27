@@ -21,7 +21,7 @@ test('app-wide PIN locks the whole app after reload and unlocks with the right c
 
   await page.getByLabel('PIN do app').fill('1234')
   await expect(page.getByLabel('PIN do app')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: 'Perfis' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Quem está assistindo?' })).toBeVisible()
 
   // Removing the PIN stops asking for it.
   await page.getByRole('button', { name: 'Remover' }).click()

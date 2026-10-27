@@ -24,7 +24,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Excluir', onCon
         aria-modal="true"
         aria-label="Confirmar"
         onClick={(e) => e.stopPropagation()}
-        className="card-panel w-full max-w-sm p-6 text-center sm:p-8"
+        className="card-panel anim-pop w-full max-w-sm p-6 text-center sm:p-8"
       >
         <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-live/15 text-live">
           <AlertTriangle className="h-6 w-6" />

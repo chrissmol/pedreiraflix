@@ -4,6 +4,7 @@ import { useActiveProfileId } from '../store/profiles'
 import type { Episode } from '../types'
 import { Check, Download, X } from './icons'
 import { isTv } from '../lib/device'
+import { episodeName } from '../lib/displayTitle'
 
 interface SeasonDownloadButtonProps {
   seriesId: number
@@ -64,7 +65,7 @@ export default function SeasonDownloadButton({ seriesId, seriesName, season, epi
           profileId,
           seasonKey,
           seriesId,
-          missing.map((ep) => ({ id: ep.id, ext: ep.containerExtension, name: `${seriesName} - ${ep.title}` })),
+          missing.map((ep) => ({ id: ep.id, ext: ep.containerExtension, name: episodeName(seriesName, ep.title) })),
           image,
         )
       }

@@ -33,3 +33,13 @@ export function trendingTitles(kind: 'movie' | 'tv'): Promise<string[]> {
     return ((await res.json()) as { titles: string[] }).titles
   }).catch(() => [])
 }
+
+/** Ator ou diretor com esse nome e os titulos dele pelo TMDB (/api/pessoa). Nao e pessoa, sem token ou erro: null. */
+export function personTitles(q: string): Promise<{ name: string; directing: boolean; titles: string[] } | null> {
+  return cached(`pessoa:${q.toLowerCase()}`, async () => {
+    const res = await fetch(`/api/pessoa?q=${encodeURIComponent(q)}`)
+    // Sem resposta nao vai para o cache: erro passageiro (cota, rede) nao pode esconder a pessoa depois.
+    if (res.status !== 200) throw new Error('sem pessoa')
+    return (await res.json()) as { name: string; directing: boolean; titles: string[] }
+  }).catch(() => null)
+}

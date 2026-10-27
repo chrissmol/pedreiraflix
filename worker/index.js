@@ -542,6 +542,36 @@ async function trending(url, env) {
   return Response.json({ titles }, { headers: { 'cache-control': 'public, max-age=21600' } })
 }
 
+// Busca por ator ou diretor: o TMDB acha a pessoa e devolve os filmes/series dela; o app mostra os que existem no
+// catalogo. So vale pessoa cujo nome tem todas as palavras digitadas ("matrix" nao vira um ator chamado Matrix X).
+// Sem token, sem pessoa ou erro: 204 e a busca fica so pelo titulo.
+async function person(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  const q = (url.searchParams.get('q') || '').trim().slice(0, 80)
+  if (q.length < 3) return none('curto')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
+  const plain = (v) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const words = plain(q).split(/\s+/)
+  const search = await get('/search/person', { query: q, language: 'pt-BR' })
+  if (!search.ok) return none(`search-${search.status}`)
+  const hit = ((await search.json()).results || []).find((p) => {
+    const name = plain(p.name || '').split(/\s+/)
+    return words.every((w) => name.some((n) => n.startsWith(w)))
+  })
+  if (!hit) return none('no-match')
+  const credits = await get(`/person/${hit.id}/combined_credits`, { language: 'pt-BR' })
+  if (!credits.ok) return none(`credits-${credits.status}`)
+  const c = await credits.json()
+  const directing = hit.known_for_department === 'Directing'
+  const works = directing ? (c.crew || []).filter((w) => w.job === 'Director') : c.cast || []
+  works.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+  // Nome em portugues e o original: o provedor usa um ou outro.
+  const titles = [...new Set(works.flatMap((w) => [w.title || w.name, w.original_title || w.original_name]).filter(Boolean))]
+  return Response.json({ name: hit.name, directing, titles }, { headers: { 'cache-control': 'public, max-age=86400' } })
+}
+
 // Busca por frase ("comedia anos 90") e "parecidos com este" via Workers AI: o modelo so devolve nomes de titulos,
 // e o app procura esses nomes no proprio catalogo (cada amigo tem o seu). Plano gratis = 10 mil neurons/dia; cada
 // pergunta gasta ~25, e a resposta fica uma semana no cache da Cloudflare (a mesma frase nao gasta de novo). Passou
@@ -639,6 +669,10 @@ export default {
     if (url.pathname === '/api/tmdb') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await tmdb(url, env))
+    }
+    if (url.pathname === '/api/pessoa') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await person(url, env))
     }
     if (url.pathname === '/api/em-alta') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))

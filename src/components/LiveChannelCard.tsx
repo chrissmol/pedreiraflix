@@ -116,7 +116,7 @@ export default function LiveChannelCard({ channel, onOpen, onRemove }: LiveChann
           {program ? (
             <>
               <span className="mt-0.5 flex items-baseline gap-1.5">
-                <span className="truncate text-body-sm text-white/85">{program.title}</span>
+                <span className="truncate text-body-sm text-white/85">{displayTitle(program.title)}</span>
                 {endsAt && <span className="shrink-0 text-label-badge text-on-surface-muted">até {endsAt}</span>}
               </span>
               {progress != null && (

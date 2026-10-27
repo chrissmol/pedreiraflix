@@ -203,7 +203,7 @@ export default function EpgGuidePage() {
                               style={{ left: left + 2, width: width - 4 }}
                             >
                               <span className="flex items-center gap-2">
-                                <span className="line-clamp-1 text-label-md">{p.title}</span>
+                                <span className="line-clamp-1 text-label-md">{displayTitle(p.title)}</span>
                                 {isNow && width > 160 && (
                                   <span className="ml-auto shrink-0 rounded bg-live px-1.5 py-0.5 text-label-badge font-bold text-white">NO AR</span>
                                 )}

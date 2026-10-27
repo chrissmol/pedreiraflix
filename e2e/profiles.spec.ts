@@ -66,7 +66,7 @@ test('cannot delete the last remaining profile', async ({ page }) => {
   await login(page)
   await page.getByRole('button', { name: 'Conta', exact: true }).click()
   await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
-  await expect(page.locator('.grid > div').filter({ hasText: /./ })).toHaveCount(1)
+  await expect(page.locator('[data-testid^="profile-card-"]')).toHaveCount(1)
   // No delete option should render for the only profile (hover reveal is gated behind profiles.length > 1).
   await expect(page.getByRole('button', { name: 'Excluir' })).toHaveCount(0)
 })

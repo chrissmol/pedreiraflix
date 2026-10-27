@@ -1,3 +1,4 @@
+import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -239,7 +240,7 @@ export default function HomePage() {
           <CategoryRow
             key={category.categoryId}
             kind="movie"
-            title={category.categoryName}
+            title={cleanCategoryName(category.categoryName)}
             loading={loading && items.length === 0}
             items={items}
             limit={25}
@@ -252,7 +253,7 @@ export default function HomePage() {
           <CategoryRow
             key={category.categoryId}
             kind="series"
-            title={category.categoryName}
+            title={cleanCategoryName(category.categoryName)}
             loading={loading && items.length === 0}
             items={items}
             limit={25}
