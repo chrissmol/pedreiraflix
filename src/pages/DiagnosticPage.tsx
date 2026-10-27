@@ -339,7 +339,7 @@ function TesteAoVivo() {
           `Começou a tocar em: ${primeiro === null ? 'NÃO COMEÇOU' : `${primeiro} ms`}`,
           `Tocou ${ult.toFixed(1)} s de ${Math.round((performance.now() - t1) / 1000)} s · travadas: ${esperas} · parado esperando: ${(esperaMs / 1000).toFixed(1)} s`,
           `Vídeo guardado à frente: média ${media.toFixed(1)} s · mínimo ${Math.min(...noAr).toFixed(1)} s`,
-          `Pedidos ao servidor: ${rec.length} · com erro (4xx/5xx): ${falhas} · acima de 3 s: ${lentos} · o mais lento: ${maior} ms`,
+          `Pedidos ao servidor: ${rec.length} · com erro (4xx/5xx): ${falhas}${native ? ' (no Safari a página não vê pedido que falha: use as travadas acima)' : ''} · acima de 3 s: ${lentos} · o mais lento: ${maior} ms`,
           `Eventos: ${eventos.slice(0, 40).join(' | ') || 'nenhum'}`,
         ].join('\n'),
       )
