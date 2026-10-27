@@ -5,7 +5,7 @@ import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import SeasonDownloadButton from '../components/SeasonDownloadButton'
 import SeriesZipButton from '../components/SeriesZipButton'
-import { Check, Eye, FileArrowDown, Play, Plus, RefreshCw } from '../components/icons'
+import { Check, Eye, FileArrowDown, ListIcon, Play, Plus, RefreshCw } from '../components/icons'
 import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { episodeName, episodeTitle } from '../lib/displayTitle'
@@ -18,7 +18,7 @@ import SimilarRow from '../components/SimilarRow'
 import PageLoading from '../components/PageLoading'
 import ErrorCard from '../components/ErrorCard'
 import { friendlyCatalogError } from '../hooks/useCatalog'
-import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
+import { blockedForKids, getAiSynopsis, getRecap, getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 import { proxyImage } from '../lib/xtream'
 
 export default function SeriesDetailPage() {
@@ -66,8 +66,8 @@ export default function SeriesDetailPage() {
     }
   }, [client, id, isKids, attempt])
 
-  // Nota do IMDb e, do TVmaze, elenco/miniaturas que faltarem (via /api/tmdb, kind=tv); genero/sinopse da
-  // serie continuam vindo so do provedor.
+  // Nota do IMDb, logo, classificacao, sinopse que faltar e, do TVmaze, elenco/miniaturas que faltarem (via
+  // /api/tmdb, kind=tv); genero continua vindo so do provedor.
   const [tmdb, setTmdb] = useState<TmdbInfo | null>(null)
   useEffect(() => {
     if (!series) return
@@ -78,6 +78,30 @@ export default function SeriesDetailPage() {
     }
   }, [series])
 
+  // Sem sinopse do provedor nem do TMDB em portugues: a IA traduz a do TMDB em ingles.
+  const [aiPlot, setAiPlot] = useState<{ id: number; text: string | null } | null>(null)
+  const needsAiPlot = Boolean(series && tmdb && !series.plot && !tmdb.overview)
+  useEffect(() => {
+    if (!series || !needsAiPlot) return
+    let cancelled = false
+    getAiSynopsis(series.name, series.releaseDate, 'tv').then((text) => !cancelled && setAiPlot({ id: series.seriesId, text }))
+    return () => {
+      cancelled = true
+    }
+  }, [series, needsAiPlot])
+
+  // "Resumo ate aqui": so quando a pessoa pede (cada resumo novo gasta a cota de IA do dia).
+  const [recap, setRecap] = useState<{ key: string; text: string | null; loading: boolean } | null>(null)
+  function askRecap(ep: Episode) {
+    if (!series) return
+    const key = `${series.seriesId}:${ep.season}x${ep.episodeNum}`
+    if (recap?.key === key) return setRecap(null) // segundo toque fecha
+    setRecap({ key, text: null, loading: true })
+    getRecap(series.name, series.releaseDate, ep.season, ep.episodeNum).then((text) =>
+      setRecap((r) => (r?.key === key ? { key, text, loading: false } : r)),
+    )
+  }
+
   // A lista de episodios ja esta aqui: marca/desmarca a serie concluida sem pedir nada ao provedor.
   useEffect(() => {
     if (series) updateSeriesDone(profileId, series.seriesId, series.seasons)
@@ -85,6 +109,8 @@ export default function SeriesDetailPage() {
 
   if (loading) return <PageLoading />
   if (blocked) return <BlockedByProfile />
+  // shortcut: a idade so e conferida aqui no detalhe (as listas nao perguntam ao TMDB titulo por titulo).
+  if (isKids && blockedForKids(tmdb?.certification)) return <BlockedByProfile certification={tmdb?.certification} />
   if (error) return <ErrorCard message={error} onRetry={() => setAttempt((n) => n + 1)} className="mt-32" />
   if (!series) return <ErrorCard message="Série não encontrada." className="mt-32" />
 
@@ -115,6 +141,11 @@ export default function SeriesDetailPage() {
   const cast = series.cast || tvmaze?.cast || null
   // Licenca CC BY-SA do TVmaze: credito so quando algo dele aparece na tela.
   const seasonWatched = !!season?.episodes.length && season.episodes.every((ep) => watched[`${profileId}:series-${ep.id}`])
+  const aiText = aiPlot?.id === series.seriesId ? aiPlot.text : null
+  const plot = series.plot || tmdb?.overview || aiText
+  // Resumo dos episodios antes do que vai continuar; no primeiro episodio nao ha o que resumir.
+  const recapEp = resume && (resume.ep.season > 1 || resume.ep.episodeNum > 1) ? resume.ep : null
+  const recapOpen = recapEp && recap?.key === `${series.seriesId}:${recapEp.season}x${recapEp.episodeNum}` ? recap : null
   const usesTvmaze = Boolean((!series.cast && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
 
   return (
@@ -124,6 +155,9 @@ export default function SeriesDetailPage() {
         backdrop={backdrop}
         poster={series.cover}
         imdbRating={tmdb?.imdbRating ?? null}
+        logo={tmdb?.logo}
+        certification={tmdb?.certification}
+        plotNote={plot && plot === aiText ? 'Sinopse traduzida por IA' : null}
         chips={chips}
         status={
           seriesDone?.done
@@ -133,7 +167,7 @@ export default function SeriesDetailPage() {
               : null
         }
         genre={series.genre}
-        plot={series.plot}
+        plot={plot}
         credits={[
           { label: 'Elenco', value: cast },
           { label: 'Direção', value: series.director },
@@ -175,7 +209,29 @@ export default function SeriesDetailPage() {
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               <span className="hidden sm:inline">{isFavorite ? 'Na lista' : 'Minha lista'}</span>
             </button>
+            {recapEp && (
+              <button onClick={() => askRecap(recapEp)} aria-expanded={Boolean(recapOpen)} className="btn-secondary">
+                <ListIcon className="h-5 w-5" /> Resumo até aqui
+              </button>
+            )}
           </>
+        }
+        footnote={
+          recapOpen && (
+            <div role="status" className="mt-6 max-w-2xl rounded-2xl border border-outline-soft bg-surface-container/90 p-4">
+              <p className="mb-2 text-label-md font-semibold text-white">Antes de {recapEp && tag(recapEp)}</p>
+              {recapOpen.loading ? (
+                <p className="text-body-md text-on-surface-variant">Preparando o resumo…</p>
+              ) : recapOpen.text ? (
+                <>
+                  <p className="text-body-md text-on-surface-variant">{recapOpen.text}</p>
+                  <p className="mt-2 text-body-sm text-on-surface-muted">Resumo feito por IA a partir das sinopses do TMDB.</p>
+                </>
+              ) : (
+                <p className="text-body-md text-on-surface-variant">Não deu para fazer o resumo desta série agora.</p>
+              )}
+            </div>
+          )
         }
       />
 
