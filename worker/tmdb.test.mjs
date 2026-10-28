@@ -159,3 +159,20 @@ test('nota guardada sem logo (versao antiga): refaz o TMDB e reaproveita a nota 
   assert.ok(calls.some((u) => u.includes('/movie/157336')))
   assert.ok('logo' in JSON.parse(NOTAS.data.get('tmdb:movie:interestelar:2014')))
 })
+
+// Limite de 1.000 gravacoes/dia do KV: em producao as respostas vao para a Cache API e o KV NOTAS nunca recebe put.
+test('com Cache API: guarda nela, nao faz put no KV e a segunda pergunta nao chama TMDB', async () => {
+  const store = new Map()
+  globalThis.caches = { default: { match: async (r) => store.get(r.url)?.clone(), put: async (r, res) => void store.set(r.url, res) } }
+  try {
+    const NOTAS = { ...memoryKv(), put: async () => assert.fail('nao devia gravar no KV') }
+    stubFetch(() => Response.json({ imdbRating: '8.7' }))
+    await ask({ ...ENV, NOTAS })
+    const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
+    const body = await (await ask({ ...ENV, NOTAS })).json()
+    assert.equal(body.imdbRating, '8.7')
+    assert.equal(calls.length, 0)
+  } finally {
+    delete globalThis.caches
+  }
+})

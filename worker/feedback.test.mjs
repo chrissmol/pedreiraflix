@@ -33,3 +33,9 @@ test('feedback sem texto e recusado', async () => {
   assert.equal(res.status, 400)
   assert.equal(saved.size, 0)
 })
+
+test('KV no limite diario (put falha): responde 503 em vez de estourar', async () => {
+  const FEEDBACK = { put: async () => { throw new Error('KV put() limit exceeded for the day.') } }
+  const res = await worker.fetch(new Request('http://app/api/feedback', { method: 'POST', body: JSON.stringify({ texto: 'oi' }), headers: { 'cf-connecting-ip': String(Math.random()) } }), { FEEDBACK })
+  assert.equal(res.status, 503)
+})
