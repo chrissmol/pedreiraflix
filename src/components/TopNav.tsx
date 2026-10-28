@@ -12,7 +12,7 @@ import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
 import { isTv } from '../lib/device'
 import VoiceSearchButton from './VoiceSearchButton'
-import { loadRecentSearches, saveRecentSearch } from '../store/library'
+import { clearRecentSearches, loadRecentSearches, saveRecentSearch } from '../store/library'
 import { installApp, useInstallPrompt } from '../lib/installPrompt'
 
 const links = [
@@ -257,6 +257,10 @@ export default function TopNav() {
               setSuggestionsOpen(false)
             }}
             onSearch={searchFor}
+            onClearRecent={() => {
+              clearRecentSearches(profileId)
+              setRecent([])
+            }}
           />
         )}
       </form>

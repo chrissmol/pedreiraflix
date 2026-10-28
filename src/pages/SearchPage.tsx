@@ -185,25 +185,24 @@ export default function SearchPage() {
 
       {query.length === 0 && recent.length > 0 && (
         <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-display text-headline-sm text-white">Buscas recentes</h2>
-            <button
-              type="button"
-              onClick={() => {
-                clearRecentSearches(profileId)
-                setRecentCleared((n) => n + 1)
-              }}
-              className="text-label-md text-on-surface-variant hover:text-white"
-            >
-              Limpar
-            </button>
-          </div>
+          <h2 className="font-display mb-3 text-headline-sm text-white">Buscas recentes</h2>
           <div className="flex flex-wrap gap-2">
             {recent.map((q) => (
               <button key={q} type="button" onClick={() => commit(q)} className="btn-secondary flex items-center gap-2">
                 <Clock className="h-4 w-4" /> {q}
               </button>
             ))}
+            {/* Junto das buscas (nao no canto do titulo): na TV a seta para a direita chega nele a partir da ultima busca. */}
+            <button
+              type="button"
+              onClick={() => {
+                clearRecentSearches(profileId)
+                setRecentCleared((n) => n + 1)
+              }}
+              className="btn-secondary text-on-surface-variant"
+            >
+              Limpar
+            </button>
           </div>
         </section>
       )}

@@ -22,6 +22,8 @@ interface SearchSuggestionsProps {
   onNavigate: () => void
   /** Vai para a pagina com todos os resultados de `q` (tambem usado pelas buscas recentes). */
   onSearch: (q: string) => void
+  /** Apaga o historico de buscas do perfil. */
+  onClearRecent: () => void
 }
 
 const KIND_ICON = { movie: Film, series: Layers, live: Tv } as const
@@ -33,7 +35,7 @@ const KIND_LABEL = { movie: 'Filme', series: 'Série', live: 'Canal' } as const
 //
 // Todos os botoes daqui sao type="button": esta lista fica dentro do <form> da busca, e um <button> sem tipo e de
 // envio — o Enter no campo "clicava" a primeira sugestao e abria o primeiro filme em vez de mostrar os resultados.
-export default function SearchSuggestions({ query: liveQuery, recent, onNavigate, onSearch }: SearchSuggestionsProps) {
+export default function SearchSuggestions({ query: liveQuery, recent, onNavigate, onSearch, onClearRecent }: SearchSuggestionsProps) {
   const navigate = useNavigate()
   const movies = useMovieCatalog()
   const series = useSeriesCatalog()
@@ -74,7 +76,12 @@ export default function SearchSuggestions({ query: liveQuery, recent, onNavigate
     <div className="menu-panel absolute right-0 top-full mt-2 max-h-96 w-80 max-w-[calc(100vw-2rem)] overflow-y-auto">
       {!typed && (
         <>
-          <p className="px-3 pb-1 pt-2 text-label-badge font-semibold uppercase tracking-wide text-on-surface-muted">Buscas recentes</p>
+          <div className="flex items-center justify-between px-3 pb-1 pt-2">
+            <p className="text-label-badge font-semibold uppercase tracking-wide text-on-surface-muted">Buscas recentes</p>
+            <button type="button" data-suggestion onClick={onClearRecent} className="text-label-badge font-semibold uppercase tracking-wide text-on-surface-variant hover:text-white">
+              Limpar
+            </button>
+          </div>
           {recent.map((q) => (
             <button key={q} type="button" data-suggestion onClick={() => onSearch(q)} className="menu-option py-2">
               <Clock className="h-4 w-4 shrink-0 text-on-surface-muted" />
