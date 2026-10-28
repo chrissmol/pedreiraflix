@@ -4,9 +4,11 @@ import { molTv, molTvTarget } from './moltv.js'
 
 const target = (path) => molTvTarget(new URL(`https://x${path}`))
 
-test('so libera busca e proximos jogos do time', () => {
+test('so libera busca e proximos jogos do time e do campeonato', () => {
   assert.equal(target('/api/moltv/v1/search?q=flamengo'), '/v1/search?q=flamengo')
   assert.equal(target('/api/moltv/v1/teams/sao-paulo/next'), '/v1/teams/sao-paulo/next')
+  assert.equal(target('/api/moltv/v1/competitions/premier-league/next'), '/v1/competitions/premier-league/next')
+  assert.equal(target('/api/moltv/v1/competitions/../x/next'), null)
   assert.equal(target('/api/moltv/v1/search?q='), null)
   assert.equal(target('/api/moltv/v1/teams/../admin/next'), null)
   assert.equal(target('/api/moltv/admin/ingest'), null)

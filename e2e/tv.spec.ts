@@ -251,6 +251,39 @@ test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre o
   await expect(page).toHaveURL(/\/watch\/live\/201/)
 })
 
+test('TV: so com setas e OK segue um campeonato e chega no canal do jogo', async ({ page }) => {
+  await page.route('**/api/moltv/v1/teams/*/next', (route) => route.fulfill({ json: { matches: [] } }))
+  await page.route('**/api/moltv/v1/search?*', (route) => route.fulfill({ json: { results: [{ type: 'team', slug: 'flamengo', name: 'Flamengo' }] } }))
+  await page.route('**/api/moltv/v1/competitions/*/next', (route) =>
+    route.fulfill({
+      json: {
+        teams: [],
+        matches: [
+          {
+            match: { id: 'fd:1', home: 'Flamengo', away: 'Vasco', kickoff: new Date(Date.now() + 3 * 3600_000).toISOString(), competition: 'Brasileirão', status: 'scheduled' },
+            broadcasts: [{ channel: 'Esporte Total', slug: 'premiere', confidence: 'confirmada' }],
+          },
+        ],
+      },
+    }),
+  )
+  await page.goto('/times')
+  const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent || '')
+  const ate = async (re: RegExp) => {
+    for (let i = 0; i < 12 && !re.test(await focado()); i++) await page.keyboard.press('ArrowDown')
+    expect(await focado()).toMatch(re)
+  }
+  await page.getByLabel('Seguir um time').focus()
+  await ate(/Seguir um campeonato/)
+  await page.keyboard.press('Enter')
+  await ate(/^Brasileirão Série A$/)
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: /^Esporte Total, confirmado/ })).toBeVisible()
+  await ate(/^Esporte Total/)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
+})
+
 test('TV: Organizar categorias funciona so com setas e OK e cabe na tela', async ({ page }) => {
   await page.goto('/categorias')
   await expect(page.getByRole('button', { name: 'Esconder Notícias' })).toBeVisible()
