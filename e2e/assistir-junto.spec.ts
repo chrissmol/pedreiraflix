@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page, type WebSocketRoute } from '@playwright/test'
+import { SalaJunto } from '../worker/junto.js'
 import { seedSession } from './helpers'
 
 // O video do mock nao toca no Chromium da nuvem: o elemento de video vira um falso que obedece play/pause/pulo e
@@ -11,7 +12,16 @@ const fakeMedia = () => {
   }
   const proto = HTMLMediaElement.prototype
   Object.defineProperty(proto, 'paused', { get() { return s(this).paused }, configurable: true })
-  Object.defineProperty(proto, 'readyState', { get: () => 4, configurable: true })
+  // Aparelho com rede lenta: o video so fica pronto quando o teste chama __carregar().
+  // O arquivo do mock nao abre no Chromium da nuvem e o <video> solta "error": aqui ele nao conta como carregado.
+  let ready = !(window as any).__lento
+  for (const ev of ['error', 'canplay', 'loadedmetadata', 'loadeddata', 'canplaythrough'])
+    addEventListener(ev, (e) => e.target instanceof HTMLMediaElement && e.isTrusted && !ready && e.stopImmediatePropagation(), true)
+  Object.defineProperty(proto, 'readyState', { get: () => (ready ? 4 : 0), configurable: true })
+  ;(window as any).__carregar = () => {
+    ready = true
+    for (const v of document.querySelectorAll('video')) for (const ev of ['loadedmetadata', 'canplay']) v.dispatchEvent(new Event(ev))
+  }
   Object.defineProperty(proto, 'duration', { get: () => 600, configurable: true })
   Object.defineProperty(proto, 'currentTime', {
     get() { return s(this).t },
@@ -32,37 +42,63 @@ const fakeMedia = () => {
   }
 }
 
-/** A sala do Worker (worker/junto.js) feita aqui: repassa o estado aos outros, guarda o ultimo e conta as pessoas. */
-function fakeRoom() {
-  const sockets = new Set<WebSocketRoute>()
-  let last: { state: Record<string, unknown>; at: number } | null = null
-  const sent: { from: string; msg: Record<string, unknown> }[] = []
-  const people = () => sockets.forEach((ws) => ws.send(JSON.stringify({ t: 'pessoas', n: sockets.size })))
-  const attach = async (ctx: BrowserContext, name: string) => {
-    await ctx.routeWebSocket(/\/api\/junto\//, (ws) => {
-      sockets.add(ws)
-      if (last) ws.send(JSON.stringify({ t: 'estado', ...last.state, age: Date.now() - last.at }))
-      people()
+/** A sala do Worker (worker/junto.js) de verdade, so que com sockets e disco falsos: o que se testa e o codigo que vai para producao. */
+function fakeRoom(esperaMs?: number) {
+  const sockets: ServerSocket[] = []
+  const store = new Map<string, unknown>()
+  let alarm: ReturnType<typeof setTimeout> | undefined
+  const ctx = {
+    acceptWebSocket: (ws: ServerSocket) => sockets.push(ws),
+    getWebSockets: () => sockets,
+    storage: {
+      get: async (k: string) => store.get(k),
+      put: async (k: string, v: unknown) => void store.set(k, v),
+      delete: async (k: string) => void store.delete(k),
+      setAlarm: async (at: number) => {
+        clearTimeout(alarm)
+        alarm = setTimeout(() => void sala.alarm(), Math.max(0, at - Date.now()))
+      },
+      deleteAlarm: async () => clearTimeout(alarm),
+    },
+  }
+  const sala = new SalaJunto(ctx)
+  if (esperaMs) sala.esperaMs = esperaMs
+  const sent: { from: string; msg: Record<string, any> }[] = []
+  let queue: Promise<unknown> = Promise.resolve()
+  const attach = async (browserCtx: BrowserContext, name: string) => {
+    await browserCtx.routeWebSocket(/\/api\/junto\//, (ws) => {
+      const server = new ServerSocket(ws)
+      ;(globalThis as any).WebSocketPair = class { 0 = {}; 1 = server }
+      queue = queue.then(() => sala.fetch(new Request('http://app/api/junto/ABC123', { headers: { upgrade: 'websocket' } })).catch(() => {}))
       ws.onMessage((m) => {
-        const msg = JSON.parse(String(m))
-        sent.push({ from: name, msg })
-        last = { state: { path: msg.path, playing: msg.playing, pos: msg.pos, ref: msg.ref }, at: Date.now() }
-        for (const other of sockets) if (other !== ws) other.send(JSON.stringify({ ...last.state, t: 'estado', age: 0 }))
+        sent.push({ from: name, msg: JSON.parse(String(m)) })
+        queue = queue.then(() => sala.webSocketMessage(server, String(m)))
       })
       ws.onClose(() => {
-        sockets.delete(ws)
-        people()
+        queue = queue.then(async () => {
+          sockets.splice(sockets.indexOf(server), 1)
+          await sala.webSocketClose(server)
+        })
       })
     })
   }
-  return { attach, sent }
+  return { attach, sent, sala, estados: (from: string) => sent.filter((s) => s.from === from && s.msg.t === 'estado') }
+}
+class ServerSocket {
+  att: unknown = null
+  constructor(private ws: WebSocketRoute) {}
+  send(m: string) { this.ws.send(m) }
+  close() {}
+  serializeAttachment(a: unknown) { this.att = a }
+  deserializeAttachment() { return this.att }
 }
 
-async function person(browser: import('@playwright/test').Browser, room: ReturnType<typeof fakeRoom>, name: string, options = {}) {
+async function person(browser: import('@playwright/test').Browser, room: ReturnType<typeof fakeRoom>, name: string, options = {}, slow = false) {
   const ctx = await browser.newContext(options)
   await room.attach(ctx, name)
   const page = await ctx.newPage()
   await seedSession(page)
+  if (slow) await page.addInitScript(() => ((window as any).__lento = true))
   await page.addInitScript(fakeMedia)
   return page
 }
@@ -89,6 +125,7 @@ test('dois aparelhos: quem entra segue o titulo, o pulo, a pausa e o play de que
   await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
   await video(a).evaluate((v: HTMLVideoElement) => v.play())
   await expect(b).toHaveURL(/\/watch\/movie\/1\?ext=mp4&name=Filme/)
+  await expect.poll(() => video(b).evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
 
   // A pula para 1:40 e pausa: B fica no mesmo ponto, pausado.
   await video(a).evaluate((v: HTMLVideoElement) => {
@@ -103,7 +140,7 @@ test('dois aparelhos: quem entra segue o titulo, o pulo, a pausa e o play de que
 
   // O que B fez por causa da sala nao volta para ela.
   await b.waitForTimeout(2000)
-  expect(room.sent.filter((s) => s.from === 'b')).toEqual([])
+  expect(room.estados('b')).toEqual([])
 
   // B pausa no proprio controle: A pausa junto.
   await video(b).evaluate((v: HTMLVideoElement) => v.pause())
@@ -125,7 +162,9 @@ test('sair do player nao pausa a sala; sair da sala some o aviso', async ({ brow
   await a.getByRole('button', { name: 'Voltar', exact: true }).click()
   await expect(a).toHaveURL(/\/junto$/)
   await a.waitForTimeout(1000)
-  expect(room.sent.at(-1)!.msg).toMatchObject({ playing: true })
+  // Sair do player e so "sair": nao e uma pausa.
+  expect(room.estados('a').at(-1)!.msg).toMatchObject({ playing: true })
+  expect(room.sent.at(-1)!.msg).toEqual({ t: 'sair' })
   await a.getByRole('button', { name: 'Sair da sala' }).click()
   await expect(a.getByRole('button', { name: 'Criar uma sala' })).toBeVisible()
   await expect(a.getByRole('status').filter({ hasText: 'Assistindo junto' })).toHaveCount(0)
@@ -326,4 +365,124 @@ test('outro provedor: acha o filme mesmo com ano, tag e prefixo no nome', async 
     await a.context().close()
     await b.context().close()
   }
+})
+
+const carregar = (p: Page) => p.evaluate(() => (window as any).__carregar())
+const aviso = (p: Page, t: string) => p.getByRole('status').filter({ hasText: t })
+
+// Pedido do Chris: o anfitriao ja comecava a ver enquanto o do amigo ainda carregava. Agora a sala espera todo mundo.
+test('inicio sincronizado: ninguem toca ate o convidado (rede lenta, outro provedor) carregar', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b', {}, true)
+  await catalogoLento(b, 0, (n) => (n === 'Filme Explosivo' ? 'BR - Filme Explosivo [4K]' : n))
+  await join(a, b)
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(b).toHaveURL(/\/watch\/movie\/1\?/)
+  await expect(aviso(a, 'Esperando outra pessoa carregar…')).toBeVisible()
+  await expect(aviso(b, 'Carregando para começar juntos…')).toBeVisible()
+  // Enquanto o do amigo carrega, o de quem abriu fica parado (antes: tocava sozinho).
+  await a.waitForTimeout(2500)
+  expect(await paused(a)).toBe(true)
+  expect(await paused(b)).toBe(true)
+
+  await carregar(b)
+  await expect.poll(() => paused(a)).toBe(false)
+  await expect.poll(() => paused(b)).toBe(false)
+  await expect(aviso(a, 'Assistindo junto')).toBeVisible()
+  const [ta, tb] = await Promise.all([a, b].map((p) => video(p).evaluate((v: HTMLVideoElement) => v.currentTime)))
+  expect(Math.abs(ta - tb)).toBeLessThan(2)
+})
+
+test('inicio sincronizado: limite de espera, se o amigo travar a sala comeca sozinha', async ({ browser }) => {
+  const room = fakeRoom(2500)
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b', {}, true)
+  await join(a, b)
+  const t0 = Date.now()
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(aviso(a, 'Esperando outra pessoa carregar…')).toBeVisible()
+  expect(await paused(a)).toBe(true)
+  await expect.poll(() => paused(a), { timeout: 8000 }).toBe(false)
+  expect(Date.now() - t0).toBeGreaterThan(2000)
+})
+
+test('inicio sincronizado: convidado sem o titulo nao segura a sala', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b', {}, true)
+  await join(a, b)
+  await a.goto('/watch/movie/888888?ext=mp4&name=Titulo%20Que%20Nao%20Existe')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(aviso(b, 'Sua conta não tem «Titulo Que Nao Existe»')).toBeVisible()
+  await expect.poll(() => paused(a), { timeout: 5000 }).toBe(false)
+})
+
+test('inicio sincronizado: 3 pessoas esperam a mais lenta; quem entra depois segue sem parar os outros', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b')
+  const c = await person(browser, room, 'c', {}, true)
+  await join(a, b)
+  await c.goto('/junto')
+  const code = (await a.getByTestId('junto-codigo').textContent())!.trim()
+  await c.getByLabel('Entrar com um código').fill(code)
+  await c.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(c.getByText('3 pessoas na sala.')).toBeVisible()
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(c).toHaveURL(/\/watch\/movie\/1\?/)
+  await expect(b).toHaveURL(/\/watch\/movie\/1\?/)
+  await a.waitForTimeout(1800)
+  expect([await paused(a), await paused(b), await paused(c)]).toEqual([true, true, true])
+  await carregar(c)
+  for (const p of [a, b, c]) await expect.poll(() => paused(p)).toBe(false)
+
+  // Alguem que entra no meio: segue o titulo e ninguem pausa.
+  const d = await person(browser, room, 'd')
+  await d.goto('/junto')
+  await d.getByLabel('Entrar com um código').fill(code)
+  await d.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(d).toHaveURL(/\/watch\/movie\/1\?/)
+  await expect.poll(() => paused(d)).toBe(false)
+  await a.waitForTimeout(800)
+  expect(await paused(a)).toBe(false)
+})
+
+const abrirNoApp = (p: Page, url: string) =>
+  p.evaluate((u) => {
+    history.pushState({}, '', u)
+    dispatchEvent(new PopStateEvent('popstate'))
+  }, url)
+
+test('saida sincronizada: quem sai do filme (ou troca por outro) tira os amigos; quem entra depois nao e puxado', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b')
+  await join(a, b)
+  await abrirNoApp(a, '/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(b).toHaveURL(/\/watch\/movie\/1\?/)
+  await expect.poll(() => paused(b)).toBe(false)
+  await b.waitForTimeout(1800)
+
+  // A volta ao catalogo: B tambem sai do player.
+  await a.getByRole('button', { name: 'Voltar', exact: true }).click()
+  await expect(a).not.toHaveURL(/\/watch\//)
+  await expect(b).not.toHaveURL(/\/watch\//)
+  await a.waitForTimeout(1000)
+  await expect(a).not.toHaveURL(/\/watch\//) // B saindo por causa da sala nao puxa A de volta
+  expect(room.sent.filter((s) => s.from === 'b' && s.msg.t === 'sair')).toEqual([])
+
+  // A escolhe outro filme: B vai junto (sem passar pelo catalogo), esperando carregar.
+  await abrirNoApp(a, '/watch/movie/2?ext=mp4&name=Corrida%20Final')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(b).toHaveURL(/\/watch\/movie\/2\?/)
+
+  // B (convidado) tambem pode sair: A sai junto.
+  await b.waitForTimeout(1800)
+  await b.getByRole('button', { name: 'Voltar', exact: true }).click()
+  await expect(a).not.toHaveURL(/\/watch\//)
 })
