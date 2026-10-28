@@ -9,24 +9,8 @@ import { Check, Plus, Trophy, Tv, X } from '../components/icons'
 import { useMinuteClock } from '../lib/minuteClock'
 import { matchWhen } from '../lib/matchTime'
 import { type FavoriteTeam, teamsFor, useLibraryStore } from '../store/library'
+import { COMPETITIONS, COMPETITION_PREFIX, type Broadcast, type Competition, type CompetitionData, type NextMatchData, competitionBySlug, getJson, loadCompetition } from '../lib/competitions'
 import { useActiveProfileId } from '../store/profiles'
-
-// Shapes of the Mol TV API (proxied by our Worker at /api/moltv): which channel airs each team's next matches.
-interface Broadcast {
-  channel: string
-  slug: string
-  confidence: 'confirmada' | 'provavel' | string
-}
-interface NextMatchData {
-  match: { id: string; home: string; away: string; kickoff: string; competition: string; status: string }
-  broadcasts: Broadcast[]
-}
-
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`/api/moltv${path}`)
-  if (!res.ok) throw new Error(String(res.status))
-  return (await res.json()) as T
-}
 
 function TeamMatches({ team, onRemove }: { team: FavoriteTeam; onRemove: () => void }) {
   const [matches, setMatches] = useState<NextMatchData[] | null>(null)
@@ -249,11 +233,164 @@ function teamColor(slug: string) {
   return `hsl(${Math.abs(hash) % 360} 55% 36%)`
 }
 
+const PAGE_SIZE = 5
+const MAX_SHOWN = 10
+
+/** Campeonato seguido: os times dele (tocar segue o time) e os próximos jogos com o canal. 5 jogos, "Ver mais" até 10. */
+function CompetitionCard({ comp, followedTeams, onToggleTeam, onRemove }: {
+  comp: Competition
+  followedTeams: FavoriteTeam[]
+  onToggleTeam: (t: FavoriteTeam) => void
+  onRemove: () => void
+}) {
+  const [data, setData] = useState<CompetitionData | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const [limit, setLimit] = useState(PAGE_SIZE)
+  // Só os times seguidos ao abrir entram na busca: seguir um time daqui não recarrega o card (o jogo dele já está na lista).
+  const [seedTeams] = useState(followedTeams)
+
+  useEffect(() => {
+    let alive = true
+    loadCompetition(comp, seedTeams, attempt)
+      .then((d) => alive && setData(d))
+      .catch(() => alive && setFailed(true))
+    return () => {
+      alive = false
+    }
+  }, [comp, seedTeams, attempt])
+
+  const now = useMinuteClock(Boolean(data?.matches.length))
+  const upcoming = (data?.matches ?? []).filter((m) => matchWhen(m.match.kickoff, m.match.status, now).live || new Date(m.match.kickoff).getTime() > now - 135 * 60_000)
+  const shown = upcoming.slice(0, limit)
+  const [next, ...later] = shown
+
+  return (
+    <section aria-labelledby={`comp-${comp.slug}`} className="rounded-2xl border border-outline-soft bg-surface-low p-4 sm:p-5">
+      <div className="mb-3 flex items-center gap-3">
+        <Trophy aria-hidden className="h-6 w-6 shrink-0 text-brand-400" />
+        <h2 id={`comp-${comp.slug}`} className="min-w-0 flex-1 truncate font-display text-headline-sm text-white">
+          {comp.name}
+        </h2>
+        <button
+          onClick={onRemove}
+          aria-label={`Deixar de seguir ${comp.name}`}
+          className="brand-focus rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-high hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      {data && data.teams.length > 0 && (
+        <ul aria-label="Times do campeonato" className="mb-4 flex flex-wrap gap-1.5">
+          {data.teams.map((t) => {
+            const on = followedTeams.some((f) => f.slug === t.slug)
+            return (
+              <li key={t.slug}>
+                <button
+                  onClick={() => onToggleTeam(t)}
+                  aria-pressed={on}
+                  aria-label={`${on ? 'Deixar de seguir' : 'Seguir'} ${t.name}`}
+                  className={`brand-focus inline-flex items-center gap-1 rounded-full px-3 py-1 text-label-md transition-colors pointer-coarse:min-h-9 ${
+                    on ? 'bg-brand-500/15 text-brand-300' : 'bg-surface-high text-white hover:bg-surface-container'
+                  }`}
+                >
+                  {on ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                  {t.name}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {failed ? (
+        <ErrorCard className="!mx-0" message="Não deu para buscar os jogos agora." onRetry={() => {
+            setFailed(false)
+            setAttempt((n) => n + 1)
+          }} />
+      ) : data === null ? (
+        <p className="text-body-sm text-on-surface-variant">Buscando jogos…</p>
+      ) : !next ? (
+        <p className="text-body-sm text-on-surface-variant">Nenhum jogo marcado por enquanto.</p>
+      ) : (
+        <>
+          <NextMatch item={next} now={now} />
+          {later.length > 0 && (
+            <ul aria-label="Depois" className="mt-2 divide-y divide-outline-soft">
+              {later.map((item) => (
+                <LaterMatch key={item.match.id} item={item} now={now} />
+              ))}
+            </ul>
+          )}
+          {limit < MAX_SHOWN && upcoming.length > limit && (
+            <button onClick={() => setLimit(MAX_SHOWN)} className="brand-focus mt-2 rounded-full px-3 py-1.5 text-label-md text-brand-300 hover:bg-surface-high">
+              Ver mais jogos
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+/** Escolher campeonatos, por grupo. Recolhido: são 17 botões, que atrapalhariam quem navega só com setas. */
+function CompetitionPicker({ followed, onToggle }: { followed: string[]; onToggle: (c: Competition) => void }) {
+  const [open, setOpen] = useState(false)
+  const groups = [...new Set(COMPETITIONS.map((c) => c.group))]
+  return (
+    <div className="mb-8">
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className="brand-focus mb-2 inline-flex items-center gap-1.5 rounded-full bg-surface-high px-4 py-2 text-label-md text-white hover:bg-surface-container"
+      >
+        <Trophy className="h-4 w-4 text-brand-400" />
+        {open ? 'Esconder campeonatos' : 'Seguir um campeonato'}
+      </button>
+      {open && (
+        <div className="space-y-3">
+          {groups.map((g) => (
+            <div key={g}>
+              <p className="mb-1.5 text-label-md text-on-surface-variant">{g}</p>
+              <ul aria-label={g} className="flex flex-wrap gap-2">
+                {COMPETITIONS.filter((c) => c.group === g).map((c) => {
+                  const on = followed.includes(c.slug)
+                  return (
+                    <li key={c.slug}>
+                      <button
+                        onClick={() => onToggle(c)}
+                        aria-pressed={on}
+                        className={`brand-focus flex items-center gap-1.5 rounded-full px-4 py-2 text-label-md transition-colors ${
+                          on ? 'bg-brand-500/15 text-brand-300' : 'bg-surface-high text-white hover:bg-surface-container'
+                        }`}
+                      >
+                        {on ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        {c.name}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TeamsPage() {
   const profileId = useActiveProfileId()
   const favoriteTeams = useLibraryStore((s) => s.favoriteTeams)
   const toggleTeam = useLibraryStore((s) => s.toggleTeam)
-  const teams = useMemo(() => teamsFor(favoriteTeams, profileId), [favoriteTeams, profileId])
+  // shortcut: campeonatos seguidos ficam na mesma lista dos times, com slug "comp:<slug>", para sincronizarem entre
+  // aparelhos sem mudar o formato do sync. Separar numa lista propria se algum dia isso atrapalhar.
+  const all = useMemo(() => teamsFor(favoriteTeams, profileId), [favoriteTeams, profileId])
+  const teams = useMemo(() => all.filter((t) => !t.slug.startsWith(COMPETITION_PREFIX)), [all])
+  const comps = useMemo(
+    () => all.flatMap((t) => (t.slug.startsWith(COMPETITION_PREFIX) ? [competitionBySlug(t.slug.slice(COMPETITION_PREFIX.length))] : [])).filter((c): c is Competition => !!c),
+    [all],
+  )
+  const toggleComp = (c: Competition) => toggleTeam(profileId, { slug: COMPETITION_PREFIX + c.slug, name: c.name })
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<FavoriteTeam[] | null>(null)
   const [searchFailed, setSearchFailed] = useState(false)
@@ -285,7 +422,7 @@ export default function TeamsPage() {
         <Trophy className="h-7 w-7 text-brand-400" />
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Times favoritos</h1>
       </div>
-      <p className="mb-6 text-body-md text-on-surface-variant">Os próximos jogos dos times que você segue e em qual canal passam.</p>
+      <p className="mb-6 text-body-md text-on-surface-variant">Os próximos jogos dos times e campeonatos que você segue e em qual canal passam.</p>
 
       <label htmlFor="team-search" className="mb-2 block text-label-md text-on-surface-variant">
         Seguir um time
@@ -330,8 +467,17 @@ export default function TeamsPage() {
         )}
       </div>
 
+      <CompetitionPicker followed={comps.map((c) => c.slug)} onToggle={toggleComp} />
+
+      {comps.length > 0 && (
+        <div className="mb-4 grid gap-4 lg:grid-cols-2">
+          {comps.map((c) => (
+            <CompetitionCard key={c.slug} comp={c} followedTeams={teams} onToggleTeam={(t) => toggleTeam(profileId, t)} onRemove={() => toggleComp(c)} />
+          ))}
+        </div>
+      )}
       {teams.length === 0 ? (
-        <p className="text-body-md text-on-surface-variant">Busque um time acima para ver aqui onde passam os próximos jogos dele.</p>
+        comps.length === 0 && <p className="text-body-md text-on-surface-variant">Busque um time acima ou siga um campeonato para ver aqui onde passam os próximos jogos.</p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {teams.map((t) => (

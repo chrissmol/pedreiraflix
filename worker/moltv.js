@@ -1,5 +1,5 @@
-// "Times favoritos": proxies the two read endpoints of the Mol TV API (where each match airs in Brazil).
-// Only these two paths pass, so this is not an open proxy to the rest of that API.
+// "Times favoritos": proxies the read endpoints of the Mol TV API (where each match airs in Brazil): team search,
+// a team's next matches and a competition's next matches. Only these paths pass, so this is not an open proxy.
 export const MOLTV_ORIGIN = 'https://mol-tv-api.chrisouzamol.workers.dev'
 
 export function molTvTarget(url) {
@@ -8,7 +8,7 @@ export function molTvTarget(url) {
     const q = (url.searchParams.get('q') || '').trim().slice(0, 40)
     return q ? `/v1/search?${new URLSearchParams({ q })}` : null
   }
-  return /^\/v1\/teams\/[a-z0-9-]{1,80}\/next$/.test(path) ? path : null
+  return /^\/v1\/(teams|competitions)\/[a-z0-9-]{1,80}\/next$/.test(path) ? path : null
 }
 
 export async function molTv(url, env) {
