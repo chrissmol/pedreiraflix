@@ -19,6 +19,7 @@ import type { Category, Episode, LiveChannel, SeriesDetails } from '../types'
 import PageLoading from '../components/PageLoading'
 import ChannelNumberOverlay from '../components/ChannelNumberOverlay'
 import { useChannelNumber } from '../hooks/useChannelNumber'
+import { type JuntoRef, setMyRef } from '../lib/junto'
 
 /** Flattens every season into one ordered episode list, so "next episode" can just look at the following index. */
 function flattenEpisodes(details: SeriesDetails): Episode[] {
@@ -182,6 +183,18 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
       cancelled = true
     }
   }, [client, kind, seriesId])
+
+  // "Assistir junto": o titulo sem ids, para o aparelho de outra conta achar o mesmo no catalogo dele.
+  useEffect(() => {
+    if (!id || (kind !== 'movie' && kind !== 'live' && kind !== 'series')) return
+    let ref: JuntoRef | null = null
+    if (kind === 'series') {
+      const ep = seriesDetails && flattenEpisodes(seriesDetails).find((e) => e.id === id)
+      if (seriesDetails && ep) ref = { k: 'series', t: displayTitle(seriesDetails.name), s: ep.season, e: ep.episodeNum }
+    } else ref = { k: kind, t: displayTitle(name) }
+    setMyRef(kind, id, ref)
+    return () => setMyRef(kind, id, null)
+  }, [kind, id, name, seriesDetails])
 
   // Retrospectiva: tempo tocando por titulo (serie soma todos os episodios).
   useWatchTime(

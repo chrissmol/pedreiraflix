@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { expectedPosition, type RemoteState, resumeRoom, sendState, useJunto } from '../lib/junto'
+import { useXtream } from '../hooks/useXtream'
+import { expectedPosition, refFor, type RemoteState, resumeRoom, sendState, useJunto } from '../lib/junto'
+import { resolveRef } from '../lib/juntoResolve'
 
 // Paineis abertos por cima do player (lista de canais, episodios) nao mudam o que se assiste.
 const UI_PARAMS = ['canais', 'episodios']
@@ -23,7 +25,13 @@ export default function JuntoSync() {
   const people = useJunto((s) => s.people)
   const connected = useJunto((s) => s.connected)
   const remote = useJunto((s) => s.remote)
+  const client = useXtream()
   const path = watchPath(location.pathname, location.search)
+  // O estado da sala ja no caminho desta conta (ids de filme/serie/canal mudam de provedor para provedor).
+  const [target, setTarget] = useState<RemoteState | null>(null)
+  // Titulo que a sala assiste e esta conta nao tem: nao segue a sala nem manda nada para ela.
+  const [missing, setMissing] = useState<string | null>(null)
+  const missingRef = useRef<string | null>(null)
   // Logo depois de abrir o titulo da sala, o player toca sozinho e pula para o ponto salvo: nada disso vai para a sala.
   const suppressUntil = useRef(0)
   // O ultimo estado da sala que este aparelho conhece (recebido ou enviado por ele).
@@ -34,16 +42,39 @@ export default function JuntoSync() {
   // Sala -> tela: outro titulo abre aqui; o mesmo titulo so acerta play/pausa/posicao.
   useEffect(() => {
     if (!remote) return
-    room.current = remote
-    if (watchPath(location.pathname, location.search) !== remote.path) {
-      suppressUntil.current = Date.now() + 4000
-      navigate(remote.path)
+    let cancelled = false
+    ;(async () => {
+      let next = remote
+      if (remote.ref && client) {
+        try {
+          const mine = await resolveRef(client, remote.ref, remote.path)
+          if (cancelled) return
+          if (!mine) {
+            missingRef.current = remote.ref.t
+            setMissing(remote.ref.t)
+            return
+          }
+          next = { ...remote, path: mine }
+        } catch {
+          // sem conseguir olhar o catalogo: tenta o caminho da sala como veio
+        }
+      }
+      missingRef.current = null
+      setMissing(null)
+      room.current = next
+      setTarget(next)
+      if (watchPath(location.pathname, location.search) !== next.path) {
+        suppressUntil.current = Date.now() + 4000
+        navigate(next.path)
+      }
+    })()
+    return () => {
+      cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- so quando chega estado novo, nao a cada troca de tela
   }, [remote])
 
   useEffect(() => {
-    const target = room.current
     if (!code || !target || path !== target.path) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -79,7 +110,7 @@ export default function JuntoSync() {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [code, path, remote])
+  }, [code, path, target])
 
   // Tela -> sala: play, pausa e pulo feitos aqui.
   useEffect(() => {
@@ -88,8 +119,8 @@ export default function JuntoSync() {
     let timer: ReturnType<typeof setTimeout> | undefined
     const send = () => {
       // Sair do player tira o video da pagina e o navegador solta um "pause": isso nao pausa a sala.
-      if (!video || !video.isConnected || Date.now() < suppressUntil.current) return
-      const state = { path, playing: !video.paused, pos: video.currentTime }
+      if (!video || !video.isConnected || missingRef.current || Date.now() < suppressUntil.current) return
+      const state = { path, playing: !video.paused, pos: video.currentTime, ref: refFor(path) }
       // Igual ao que a sala ja tem e eco do que veio dela (ou nao mudou nada): nao volta.
       const known = room.current
       const live = path.startsWith('/watch/live/')
@@ -119,7 +150,7 @@ export default function JuntoSync() {
       className="pointer-events-none fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-label-md text-white shadow-lg backdrop-blur sm:bottom-6"
     >
       <span className={`mr-2 inline-block h-2 w-2 rounded-full ${connected ? 'bg-done' : 'bg-live'}`} />
-      Assistindo junto · {code} · {people === 1 ? 'só você' : `${people} pessoas`}
+      {missing ? `Sua conta não tem «${missing}»` : `Assistindo junto · ${code} · ${people === 1 ? 'só você' : `${people} pessoas`}`}
     </div>
   )
 }
