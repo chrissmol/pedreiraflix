@@ -192,3 +192,47 @@ test('convidado: mudo imposto pelo autoplay nao fica salvo e um toque devolve o 
   await expect(page.getByRole('button', { name: 'Ativar som' })).toHaveCount(0)
   expect(await page.evaluate(() => document.querySelector('video')!.paused)).toBe(false)
 })
+
+// Quem abriu a sala com a versao antiga ficou com "mudo" salvo no aparelho: o player nao pode restaurar isso.
+test('convidado com mudo salvo por versao antiga abre com som', async ({ browser }) => {
+  const ctx = await browser.newContext()
+  await ctx.routeWebSocket(/\/api\/junto\//, (ws) => {
+    ws.send(JSON.stringify({ t: 'pessoas', n: 2 }))
+    setTimeout(() => ws.send(JSON.stringify({ t: 'estado', path: '/watch/movie/1?ext=mp4&name=Filme', playing: true, pos: 3, age: 0 })), 2500)
+  })
+  const page = await ctx.newPage()
+  await seedSession(page)
+  await page.addInitScript(() => localStorage.setItem('iptv-player-prefs', JSON.stringify({ state: { volume: 1, muted: true }, version: 0 })))
+  await page.goto('/junto')
+  await page.getByLabel('Entrar com um código').fill('abcdef')
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/1/)
+  await expect.poll(() => page.evaluate(() => { const v = document.querySelector('video')!; return [v.muted, v.volume] })).toEqual([false, 1])
+})
+
+// Ids de filme sao do provedor de cada conta: o anfitriao de outra conta manda um id que aqui nao existe (ou e de outro
+// filme). O convidado tem que achar o mesmo titulo pelo nome, e avisar quando a conta dele nao tem.
+test('outra conta: acha o filme pelo titulo; sem o titulo, avisa e nao abre nada', async ({ browser }) => {
+  const ctx = await browser.newContext()
+  const send: { fn?: (m: object) => void } = {}
+  await ctx.routeWebSocket(/\/api\/junto\//, (ws) => {
+    ws.send(JSON.stringify({ t: 'pessoas', n: 2 }))
+    send.fn = (m) => ws.send(JSON.stringify({ t: 'estado', playing: true, pos: 3, age: 0, ...m }))
+  })
+  const page = await ctx.newPage()
+  await seedSession(page)
+  await page.addInitScript(fakeMedia)
+  await page.goto('/junto')
+  await page.getByLabel('Entrar com um código').fill('abcdef')
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect.poll(() => !!send.fn).toBe(true)
+
+  send.fn!({ path: '/watch/movie/999999?ext=mp4&name=Filme%20Explosivo', ref: { k: 'movie', t: 'Filme Explosivo' } })
+  await expect(page).toHaveURL(/\/watch\/movie\/1\?/)
+  await expect(video(page)).toHaveCount(1)
+  await expect.poll(() => video(page).evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
+
+  send.fn!({ path: '/watch/movie/888888?ext=mp4&name=Titulo%20Que%20Nao%20Existe', ref: { k: 'movie', t: 'Titulo Que Nao Existe' } })
+  await expect(page.getByRole('status').filter({ hasText: 'Sua conta não tem «Titulo Que Nao Existe»' })).toBeVisible()
+  await expect(page).toHaveURL(/\/watch\/movie\/1\?/)
+})

@@ -4,10 +4,18 @@ import { create } from 'zustand'
 // tocando ou pausado, posicao) e aplicado pelo useJuntoSync no player. O codigo fica no sessionStorage: recarregar a
 // pagina volta para a mesma sala, fechar o app sai dela.
 
+/** O titulo sem ids do provedor: cada aparelho acha o mesmo filme/serie/canal no catalogo da propria conta. */
+export interface JuntoRef {
+  k: 'movie' | 'series' | 'live'
+  t: string
+  s?: number
+  e?: number
+}
 export interface JuntoState {
   path: string
   playing: boolean
   pos: number
+  ref?: JuntoRef
 }
 /** Estado vindo da sala, com quando chegou (para somar o tempo que passou ate ser aplicado). */
 export interface RemoteState extends JuntoState {
@@ -26,6 +34,21 @@ interface JuntoStore {
 export function expectedPosition(remote: RemoteState, now = Date.now()): number {
   return remote.pos + (remote.playing ? (remote.age + now - remote.receivedAt) / 1000 : 0)
 }
+
+export function validRef(r: unknown): JuntoRef | undefined {
+  const o = r as Partial<JuntoRef> | null
+  if (!o || !['movie', 'series', 'live'].includes(o.k as string) || typeof o.t !== 'string' || !o.t || o.t.length > 200) return undefined
+  const num = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? n : undefined)
+  return { k: o.k as JuntoRef['k'], t: o.t, s: num(o.s), e: num(o.e) }
+}
+
+/** O que a tela aberta diz sobre o titulo (a WatchPage registra); so vale para o filme/episodio/canal em que foi registrado. */
+let myRef: { at: string; ref: JuntoRef } | null = null
+const where = (path: string) => path.match(/^\/watch\/(\w+)\/([^/?]+)/)?.slice(1, 3).join('/')
+export const setMyRef = (kind: string, id: string, ref: JuntoRef | null) => {
+  myRef = ref ? { at: `${kind}/${id}`, ref } : null
+}
+export const refFor = (path: string) => (myRef && myRef.at === where(path) ? myRef.ref : undefined)
 
 export const useJunto = create<JuntoStore>(() => ({ code: null, connected: false, people: 0, remote: null }))
 
@@ -65,7 +88,7 @@ function connect(code: string) {
     }
     if (msg.t === 'pessoas' && typeof msg.n === 'number') useJunto.setState({ people: msg.n })
     if (msg.t === 'estado' && typeof msg.path === 'string' && typeof msg.pos === 'number' && typeof msg.playing === 'boolean') {
-      useJunto.setState({ remote: { path: msg.path, playing: msg.playing, pos: msg.pos, age: Number(msg.age) || 0, receivedAt: Date.now() } })
+      useJunto.setState({ remote: { path: msg.path, playing: msg.playing, pos: msg.pos, ref: validRef(msg.ref), age: Number(msg.age) || 0, receivedAt: Date.now() } })
     }
   }
   ws.onclose = () => {

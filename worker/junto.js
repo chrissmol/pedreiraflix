@@ -10,10 +10,15 @@ const MAX_MSG = 2048
 /** So o que a sala precisa, com tipos conferidos: o resto do que o aparelho mandar e descartado. */
 export function cleanState(raw) {
   if (!raw || typeof raw !== 'object') return null
-  const { path, playing, pos } = raw
+  const { path, playing, pos, ref } = raw
   if (typeof path !== 'string' || !path.startsWith('/watch/') || path.length > 600) return null
   if (typeof playing !== 'boolean' || typeof pos !== 'number' || !Number.isFinite(pos) || pos < 0) return null
-  return { path, playing, pos }
+  const out = { path, playing, pos }
+  if (ref && typeof ref === 'object' && ['movie', 'series', 'live'].includes(ref.k) && typeof ref.t === 'string' && ref.t && ref.t.length <= 200) {
+    out.ref = { k: ref.k, t: ref.t }
+    for (const n of ['s', 'e']) if (Number.isFinite(ref[n])) out.ref[n] = ref[n]
+  }
+  return out
 }
 
 export class SalaJunto {

@@ -169,7 +169,6 @@ export default function VideoPlayer({
   const subtitleOffset = usePlayerPrefs((s) => s.subtitleOffset)
   const setSubtitleOffset = usePlayerPrefs((s) => s.setSubtitleOffset)
   const savedVolume = usePlayerPrefs((s) => s.volume)
-  const savedMuted = usePlayerPrefs((s) => s.muted)
   const setVolumePrefs = usePlayerPrefs((s) => s.setVolumePrefs)
   const subtitleSize = usePlayerPrefs((s) => s.subtitleSize)
   const subtitleBackground = usePlayerPrefs((s) => s.subtitleBackground)
@@ -177,7 +176,7 @@ export default function VideoPlayer({
   const setSubtitleBackground = usePlayerPrefs((s) => s.setSubtitleBackground)
   const playerId = useId().replace(/:/g, '')
   const [volume, setVolume] = useState(savedVolume)
-  const [isMuted, setIsMuted] = useState(savedMuted)
+  const [isMuted, setIsMuted] = useState(false)
   const [needsUnmutePrompt, setNeedsUnmutePrompt] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(true)
@@ -219,7 +218,9 @@ export default function VideoPlayer({
     setNextUpDismissed(false)
     // Restore the volume level from last time instead of always starting at 100%.
     video.volume = savedVolume
-    video.muted = savedMuted
+    // Sempre abre com som: um mudo salvo (inclusive o que versoes antigas gravaram sozinhas pelo autoplay) deixava o
+    // convidado da sala sem som e sem o botao "Ativar som". O volume continua o da ultima vez.
+    video.muted = false
     // Playback rate is a per-title choice (e.g. lectures vs. movies), not a saved preference, so each new title starts at 1x.
     video.playbackRate = 1
     setPlaybackRate(1)
