@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useXtream } from '../hooks/useXtream'
-import { expectedPosition, refFor, type RemoteState, resumeRoom, sendState, useJunto } from '../lib/junto'
-import { resolveRef } from '../lib/juntoResolve'
+import { expectedPosition, type JuntoRef, refFor, type RemoteState, resumeRoom, sendState, useJunto } from '../lib/junto'
+import { resolveRef, warmCatalog } from '../lib/juntoResolve'
 
 // Paineis abertos por cima do player (lista de canais, episodios) nao mudam o que se assiste.
 const UI_PARAMS = ['canais', 'episodios']
@@ -12,6 +12,14 @@ function watchPath(pathname: string, search: string): string | null {
   for (const p of UI_PARAMS) params.delete(p)
   const qs = params.toString()
   return qs ? `${pathname}?${qs}` : pathname
+}
+
+const sameRef = (a?: JuntoRef, b?: JuntoRef) => !!a && !!b && a.k === b.k && a.t === b.t && a.s === b.s && a.e === b.e
+/** O caminho no formato que a tela usa (URLSearchParams grafa espaco como "+", encodeURIComponent como "%20"): sem isso
+ * o caminho achado no catalogo nunca era igual ao da tela e play/pausa/pulo da sala nao eram aplicados. */
+const canon = (p: string) => {
+  const i = p.indexOf('?')
+  return (i < 0 ? watchPath(p, '') : watchPath(p.slice(0, i), p.slice(i))) ?? p
 }
 
 const SUPPRESS_MS = 1500
@@ -38,6 +46,9 @@ export default function JuntoSync() {
   const room = useRef<RemoteState | null>(null)
 
   useEffect(() => resumeRoom(), [])
+  useEffect(() => {
+    if (code && client) warmCatalog(client)
+  }, [code, client])
 
   // Sala -> tela: outro titulo abre aqui; o mesmo titulo so acerta play/pausa/posicao.
   useEffect(() => {
@@ -45,7 +56,10 @@ export default function JuntoSync() {
     let cancelled = false
     ;(async () => {
       let next = remote
-      if (remote.ref && client) {
+      const here = watchPath(location.pathname, location.search)
+      // Ja assistindo esse titulo: so play/pausa/pulo, sem olhar o catalogo (que pode ser enorme e lento).
+      if (remote.ref && here && sameRef(refFor(here), remote.ref)) next = { ...remote, path: here }
+      else if (remote.ref && client) {
         try {
           const mine = await resolveRef(client, remote.ref, remote.path)
           if (cancelled) return
@@ -54,7 +68,7 @@ export default function JuntoSync() {
             setMissing(remote.ref.t)
             return
           }
-          next = { ...remote, path: mine }
+          next = { ...remote, path: canon(mine) }
         } catch {
           // sem conseguir olhar o catalogo: tenta o caminho da sala como veio
         }
