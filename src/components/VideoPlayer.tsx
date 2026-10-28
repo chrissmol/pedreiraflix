@@ -228,6 +228,9 @@ export default function VideoPlayer({
     let cancelled = false
     let networkRetries = 0
     const MAX_NETWORK_RETRIES = 4
+    // Mudo imposto pela regra de autoplay (nao escolha da pessoa): nao vai para as preferencias, senao o proximo titulo
+    // (ex.: o da sala do "Assistir junto") ja comecaria mudo, sem o botao "Ativar som".
+    let forcedMute = false
 
     function onWaiting() {
       setBuffering(true)
@@ -269,6 +272,7 @@ export default function VideoPlayer({
         // actually starts, and surface a one-tap "unmute" prompt instead of
         // leaving a black screen with no visible next step.
         if (!video || !video.paused) return
+        forcedMute = true
         video.muted = true
         try {
           await video.play()
@@ -313,7 +317,11 @@ export default function VideoPlayer({
       if (!video) return
       setVolume(video.volume)
       setIsMuted(video.muted)
-      if (!video.muted) setNeedsUnmutePrompt(false)
+      if (!video.muted) {
+        setNeedsUnmutePrompt(false)
+        forcedMute = false
+      }
+      if (forcedMute) return
       // Debounced so dragging the slider doesn't write to localStorage on every tick.
       if (volumeSaveTimeout.current) clearTimeout(volumeSaveTimeout.current)
       volumeSaveTimeout.current = setTimeout(() => {
@@ -866,6 +874,8 @@ export default function VideoPlayer({
 
   function onContainerClick(e: React.MouseEvent<HTMLDivElement>) {
     if ((e.target as HTMLElement).closest('[data-controls]')) return
+    // Som preso pelo autoplay: o primeiro toque na tela so devolve o som, nao pausa quem esta assistindo junto.
+    if (needsUnmutePrompt) return unmute()
     if (lastPointerType.current !== 'touch') {
       togglePlay()
       return
