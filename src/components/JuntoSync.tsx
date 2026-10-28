@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useXtream } from '../hooks/useXtream'
-import { expectedPosition, type JuntoRef, refFor, type RemoteState, resumeRoom, sendState, useJunto } from '../lib/junto'
+import { expectedPosition, type JuntoRef, refFor, type RemoteState, resumeRoom, sendLeave, sendReady, sendState, useJunto } from '../lib/junto'
 import { resolveRef, warmCatalog } from '../lib/juntoResolve'
 
 // Paineis abertos por cima do player (lista de canais, episodios) nao mudam o que se assiste.
@@ -33,6 +33,10 @@ export default function JuntoSync() {
   const people = useJunto((s) => s.people)
   const connected = useJunto((s) => s.connected)
   const remote = useJunto((s) => s.remote)
+  const waiting = useJunto((s) => s.waiting)
+  const ready = useJunto((s) => s.ready)
+  const go = useJunto((s) => s.go)
+  const left = useJunto((s) => s.left)
   const client = useXtream()
   const path = watchPath(location.pathname, location.search)
   // O estado da sala ja no caminho desta conta (ids de filme/serie/canal mudam de provedor para provedor).
@@ -44,6 +48,10 @@ export default function JuntoSync() {
   const suppressUntil = useRef(0)
   // O ultimo estado da sala que este aparelho conhece (recebido ou enviado por ele).
   const room = useRef<RemoteState | null>(null)
+
+  // Foi a sala que tirou esta tela do player (nao conta como "sair" para os outros).
+  const leaving = useRef(false)
+  const prevPath = useRef<string | null>(null)
 
   useEffect(() => resumeRoom(), [])
   useEffect(() => {
@@ -126,6 +134,78 @@ export default function JuntoSync() {
     }
   }, [code, path, target])
 
+  // Espera de titulo novo: segura o video pausado, avisa "pronto" quando ele pode tocar e, no fim, o aparelho que abriu da o play.
+  useEffect(() => {
+    if (!code || !waiting) return
+    // Titulo que esta conta nao tem: nao ha o que carregar, nao segura os outros.
+    if (missing) {
+      sendReady(waiting.id)
+      return
+    }
+    if (!path || room.current?.path !== path) return
+    // O aparelho que abriu ja tinha mandado "tocando": a sala agora diz pausado.
+    room.current = { ...room.current, playing: false }
+    let video: HTMLVideoElement | null = null
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const hold = () => video?.pause()
+    const ok = () => sendReady(waiting.id)
+    const attach = () => {
+      video = document.querySelector('video')
+      if (!video) {
+        timer = setTimeout(attach, 200)
+        return
+      }
+      video.pause()
+      video.addEventListener('play', hold)
+      if (video.readyState >= 3) ok()
+      else {
+        video.addEventListener('canplay', ok, { once: true })
+        video.addEventListener('error', ok, { once: true })
+      }
+    }
+    attach()
+    // Se o aviso do fim da espera nunca chegar, ninguem fica preso na tela.
+    const giveUp = setTimeout(() => useJunto.setState({ waiting: null, ready: false }), 25_000)
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(giveUp)
+      video?.removeEventListener('play', hold)
+      video?.removeEventListener('canplay', ok)
+      video?.removeEventListener('error', ok)
+    }
+  }, [code, waiting, path, target, missing])
+
+  useEffect(() => {
+    if (!go?.toca || !path || room.current?.path !== path) return
+    document.querySelector('video')?.play().catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- so quando a sala manda tocar
+  }, [go])
+
+  // Sair do player (para o catalogo ou outro lugar que nao e player) tira os outros do titulo; e o inverso, se a sala mandou sair.
+  useEffect(() => {
+    if (!code) return
+    const before = prevPath.current
+    prevPath.current = path
+    if (!before || path) return
+    if (leaving.current) leaving.current = false
+    else if (room.current?.path === before && !missingRef.current) sendLeave()
+    room.current = null
+  }, [code, path])
+
+  useEffect(() => {
+    if (!left) return
+    room.current = null
+    missingRef.current = null
+    setMissing(null)
+    setTarget(null)
+    if (path) {
+      leaving.current = true
+      if (window.history.state?.idx > 0) navigate(-1)
+      else navigate('/', { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- so quando a sala manda sair
+  }, [left])
+
   // Tela -> sala: play, pausa e pulo feitos aqui.
   useEffect(() => {
     if (!code || !path) return
@@ -133,7 +213,7 @@ export default function JuntoSync() {
     let timer: ReturnType<typeof setTimeout> | undefined
     const send = () => {
       // Sair do player tira o video da pagina e o navegador solta um "pause": isso nao pausa a sala.
-      if (!video || !video.isConnected || missingRef.current || Date.now() < suppressUntil.current) return
+      if (!video || !video.isConnected || missingRef.current || useJunto.getState().waiting || Date.now() < suppressUntil.current) return
       const state = { path, playing: !video.paused, pos: video.currentTime, ref: refFor(path) }
       // Igual ao que a sala ja tem e eco do que veio dela (ou nao mudou nada): nao volta.
       const known = room.current
@@ -164,7 +244,13 @@ export default function JuntoSync() {
       className="pointer-events-none fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-label-md text-white shadow-lg backdrop-blur sm:bottom-6"
     >
       <span className={`mr-2 inline-block h-2 w-2 rounded-full ${connected ? 'bg-done' : 'bg-live'}`} />
-      {missing ? `Sua conta não tem «${missing}»` : `Assistindo junto · ${code} · ${people === 1 ? 'só você' : `${people} pessoas`}`}
+      {missing
+        ? `Sua conta não tem «${missing}»`
+        : waiting
+          ? ready
+            ? 'Esperando outra pessoa carregar…'
+            : 'Carregando para começar juntos…'
+          : `Assistindo junto · ${code} · ${people === 1 ? 'só você' : `${people} pessoas`}`}
     </div>
   )
 }

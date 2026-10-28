@@ -28,6 +28,13 @@ interface JuntoStore {
   connected: boolean
   people: number
   remote: RemoteState | null
+  /** Titulo novo aberto: a sala espera todo mundo carregar antes de tocar (id da espera); `ready` = este aparelho ja avisou. */
+  waiting: { id: number } | null
+  ready: boolean
+  /** A espera acabou: `toca` so para quem abriu o titulo. Objeto novo a cada vez, para o efeito disparar. */
+  go: { toca: boolean } | null
+  /** Alguem saiu do player: quem esta nele sai tambem. Objeto novo a cada vez. */
+  left: object | null
 }
 
 /** Onde o video da sala deveria estar agora: a posicao enviada mais o tempo que passou, se estava tocando. */
@@ -50,7 +57,7 @@ export const setMyRef = (kind: string, id: string, ref: JuntoRef | null) => {
 }
 export const refFor = (path: string) => (myRef && myRef.at === where(path) ? myRef.ref : undefined)
 
-export const useJunto = create<JuntoStore>(() => ({ code: null, connected: false, people: 0, remote: null }))
+export const useJunto = create<JuntoStore>(() => ({ code: null, connected: false, people: 0, remote: null, waiting: null, ready: false, go: null, left: null }))
 
 const KEY = 'pf-junto'
 // Sem 0/O e 1/I: o codigo e lido em voz alta ou digitado no controle da TV.
@@ -80,13 +87,16 @@ function connect(code: string) {
     queued = null
   }
   ws.onmessage = (e) => {
-    let msg: { t?: string; n?: number } & Partial<RemoteState>
+    let msg: { t?: string; n?: number; id?: number; toca?: boolean } & Partial<RemoteState>
     try {
       msg = JSON.parse(String(e.data))
     } catch {
       return
     }
     if (msg.t === 'pessoas' && typeof msg.n === 'number') useJunto.setState({ people: msg.n })
+    if (msg.t === 'espera' && typeof msg.id === 'number') useJunto.setState({ waiting: { id: msg.id }, ready: false, go: null })
+    if (msg.t === 'comecar') useJunto.setState({ waiting: null, ready: false, go: { toca: msg.toca === true } })
+    if (msg.t === 'sair') useJunto.setState({ remote: null, waiting: null, left: {} })
     if (msg.t === 'estado' && typeof msg.path === 'string' && typeof msg.pos === 'number' && typeof msg.playing === 'boolean') {
       useJunto.setState({ remote: { path: msg.path, playing: msg.playing, pos: msg.pos, ref: validRef(msg.ref), age: Number(msg.age) || 0, receivedAt: Date.now() } })
     }
@@ -94,7 +104,8 @@ function connect(code: string) {
   ws.onclose = () => {
     if (socket !== ws) return
     socket = null
-    useJunto.setState({ connected: false })
+    // Sem socket nao chega o "comecar": a espera recomeca na volta (a sala repete o aviso a quem reconecta).
+    useJunto.setState({ connected: false, waiting: null, ready: false })
     // Caiu (rede, celular dormiu): volta sozinho enquanto a pessoa nao saiu da sala.
     if (useJunto.getState().code === code) retry = setTimeout(() => connect(code), Math.min(30_000, 1000 * 2 ** attempts++))
   }
@@ -107,7 +118,7 @@ export function joinRoom(code: string) {
   } catch {
     // sem sessionStorage: so nao volta sozinho ao recarregar
   }
-  useJunto.setState({ code, people: 0, remote: null })
+  useJunto.setState({ code, people: 0, remote: null, waiting: null, ready: false, go: null, left: null })
   connect(code)
 }
 
@@ -122,12 +133,24 @@ export function leaveRoom() {
   socket = null
   queued = null
   ws?.close()
-  useJunto.setState({ code: null, connected: false, people: 0, remote: null })
+  useJunto.setState({ code: null, connected: false, people: 0, remote: null, waiting: null, ready: false, go: null, left: null })
 }
 
 export function sendState(state: JuntoState) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ t: 'estado', ...state }))
   else queued = state
+}
+
+/** Este aparelho carregou o titulo da espera `id` e pode tocar. */
+export function sendReady(id: number) {
+  if (socket?.readyState !== WebSocket.OPEN) return
+  socket.send(JSON.stringify({ t: 'pronto', id }))
+  useJunto.setState({ ready: true })
+}
+
+/** Saiu do player: a sala fecha o titulo para todos. */
+export function sendLeave() {
+  if (socket?.readyState === WebSocket.OPEN) socket.send('{"t":"sair"}')
 }
 
 /** Volta para a sala depois de recarregar a pagina. */

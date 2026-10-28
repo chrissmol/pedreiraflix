@@ -10,6 +10,7 @@ import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
 import { VideoPlayerCenterOverlays } from './VideoPlayerCenterOverlays'
 import { VideoPlayerHeader } from './VideoPlayerHeader'
 import type { QualityLevel } from './VideoPlayerQualityMenu'
+import { useJunto } from '../lib/junto'
 import { VideoPlayerZappingControls } from './VideoPlayerZappingControls'
 import { useMediaSession, useSleepTimer, useStereoDownmix, useSubtitleOffset, useWakeLock } from './useVideoPlayerEffects'
 import {
@@ -264,7 +265,8 @@ export default function VideoPlayer({
         .catch(() => !cancelled && setError(fallback))
     }
     async function attemptAutoplay() {
-      if (!autoPlay || !video || !video.paused) return
+      // "Assistir junto" espera todo mundo carregar: quem abriu o titulo so toca quando a sala mandar.
+      if (!autoPlay || !video || !video.paused || useJunto.getState().waiting) return
       try {
         await video.play()
       } catch {
