@@ -46,7 +46,7 @@ function fakeRoom() {
       ws.onMessage((m) => {
         const msg = JSON.parse(String(m))
         sent.push({ from: name, msg })
-        last = { state: { path: msg.path, playing: msg.playing, pos: msg.pos }, at: Date.now() }
+        last = { state: { path: msg.path, playing: msg.playing, pos: msg.pos, ref: msg.ref }, at: Date.now() }
         for (const other of sockets) if (other !== ws) other.send(JSON.stringify({ ...last.state, t: 'estado', age: 0 }))
       })
       ws.onClose(() => {
@@ -235,4 +235,95 @@ test('outra conta: acha o filme pelo titulo; sem o titulo, avisa e nao abre nada
   send.fn!({ path: '/watch/movie/888888?ext=mp4&name=Titulo%20Que%20Nao%20Existe', ref: { k: 'movie', t: 'Titulo Que Nao Existe' } })
   await expect(page.getByRole('status').filter({ hasText: 'Sua conta não tem «Titulo Que Nao Existe»' })).toBeVisible()
   await expect(page).toHaveURL(/\/watch\/movie\/1\?/)
+})
+
+async function join(a: Page, b: Page) {
+  await a.goto('/junto')
+  await a.getByRole('button', { name: 'Criar uma sala' }).click()
+  const code = (await a.getByTestId('junto-codigo').textContent())!.trim()
+  await b.goto('/junto')
+  await b.getByLabel('Entrar com um código').fill(code.toLowerCase())
+  await b.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(b.getByText('2 pessoas na sala.')).toBeVisible()
+}
+
+// Num painel real o catalogo inteiro (sem categoria) tem dezenas de milhares de titulos e demora segundos.
+async function catalogoLento(p: Page, ms: number, rename?: (n: string) => string) {
+  await p.route(/\/api\/xtream\?.*action=get_(vod_streams|series|live_streams)/, async (route) => {
+    if (!/category_id/.test(route.request().url())) await new Promise((r) => setTimeout(r, ms))
+    const res = await route.fetch()
+    if (!rename) return route.fulfill({ response: res })
+    const j = (await res.json()) as { name: string }[]
+    await route.fulfill({ response: res, json: j.map((x) => ({ ...x, name: rename(x.name) })) })
+  })
+}
+const paused = (p: Page) => video(p).evaluate((v: HTMLVideoElement) => v.paused)
+
+// Regressao do #194: o caminho achado no catalogo era grafado com %20 e o da tela com +, nunca eram iguais e o convidado
+// parava de aplicar play, pausa e pulo; e cada mensagem baixava o catalogo inteiro de novo.
+test('mesmo provedor, catalogo lento: pausa, play e pulo chegam na hora e a tela de quem criou nao muda', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b')
+  await catalogoLento(b, 2500)
+  await join(a, b)
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo&image=http%3A%2F%2Fx%2Fp.jpg')
+  const urlA = a.url()
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(b).toHaveURL(/\/watch\/movie\/1\?/, { timeout: 15_000 })
+  await expect.poll(() => paused(b), { timeout: 15_000 }).toBe(false)
+  await b.waitForTimeout(1600) // passa a janela em que o proprio player ainda pula para o ponto salvo
+
+  for (const [acao, esperado] of [['pause', true], ['play', false]] as const) {
+    const t0 = Date.now()
+    await video(a).evaluate((v: HTMLVideoElement, f) => (f === 'pause' ? v.pause() : v.play()), acao)
+    await expect.poll(() => paused(b), { timeout: 1500 }).toBe(esperado)
+    expect(Date.now() - t0).toBeLessThan(1500)
+  }
+  await video(a).evaluate((v: HTMLVideoElement) => (v.currentTime = 200))
+  await expect.poll(() => video(b).evaluate((v: HTMLVideoElement) => Math.round(v.currentTime)), { timeout: 1500 }).toBe(200)
+
+  // B pausa e da play no proprio controle: A acompanha sem trocar de tela.
+  await video(b).evaluate((v: HTMLVideoElement) => v.pause())
+  await expect.poll(() => paused(a), { timeout: 1500 }).toBe(true)
+  await video(b).evaluate((v: HTMLVideoElement) => v.play())
+  await expect.poll(() => paused(a), { timeout: 1500 }).toBe(false)
+  await a.waitForTimeout(500)
+  expect(a.url()).toBe(urlA)
+})
+
+test('troca de filme chega no outro aparelho e depois pausa e play seguem valendo', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b')
+  await join(a, b)
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await video(a).evaluate((v: HTMLVideoElement) => v.play())
+  await expect(b).toHaveURL(/\/watch\/movie\/1\?/)
+  await a.evaluate(() => {
+    history.pushState({}, '', '/watch/movie/2?ext=mp4&name=Corrida%20Final')
+    dispatchEvent(new PopStateEvent('popstate'))
+  })
+  await expect(b).toHaveURL(/\/watch\/movie\/2\?/)
+  await expect.poll(() => paused(b)).toBe(false)
+  await b.waitForTimeout(1800)
+  await video(a).evaluate((v: HTMLVideoElement) => v.pause())
+  await expect.poll(() => paused(b), { timeout: 1500 }).toBe(true)
+})
+
+// Provedores diferentes enfeitam o nome de outro jeito: ano, tag de qualidade, prefixo de idioma, pontuacao.
+test('outro provedor: acha o filme mesmo com ano, tag e prefixo no nome', async ({ browser }) => {
+  for (const nome of ['Filme Explosivo (2023)', 'BR - Filme Explosivo [4K]', 'FILME EXPLOSIVO DUBLADO', 'Filme: Explosivo']) {
+    const room = fakeRoom()
+    const a = await person(browser, room, 'a')
+    const b = await person(browser, room, 'b')
+    await catalogoLento(b, 0, (n) => (n === 'Filme Explosivo' ? nome : n))
+    await join(a, b)
+    await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+    await video(a).evaluate((v: HTMLVideoElement) => v.play())
+    await expect(b, nome).toHaveURL(/\/watch\/movie\/1\?/)
+    await expect(b.getByRole('status')).not.toContainText('não tem')
+    await a.context().close()
+    await b.context().close()
+  }
 })

@@ -48,9 +48,10 @@ export class SalaJunto {
     if (msg?.t !== 'estado') return
     const state = cleanState(msg)
     if (!state) return
-    await this.ctx.storage.put('estado', { state, at: Date.now() })
+    // Repassa primeiro: guardar em disco nao pode atrasar a pausa de ninguem.
     const out = JSON.stringify({ t: 'estado', ...state, age: 0 })
     for (const other of this.ctx.getWebSockets()) if (other !== ws) other.send(out)
+    await this.ctx.storage.put('estado', { state, at: Date.now() })
   }
 
   async webSocketClose(ws) {
