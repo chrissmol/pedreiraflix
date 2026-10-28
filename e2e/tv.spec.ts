@@ -455,3 +455,18 @@ test('TV: PIN do app so com setas e OK (campo, Definir PIN)', async ({ page }) =
   await page.keyboard.press('Enter')
   await expect(page.getByText('PIN do app ativo')).toBeVisible()
 })
+
+test('TV: so com as setas e OK da para limpar o historico de busca', async ({ page }) => {
+  await page.goto('/search?q=Explosivo')
+  await page.getByRole('button', { name: /Filme Explosivo/ }).first().click()
+  await expect(page).toHaveURL(/\/movies\/1$/)
+  await page.goto('/search')
+  const limpar = page.getByRole('button', { name: 'Limpar', exact: true })
+  await expect(limpar).toBeVisible()
+  // O foco comeca no campo; descer cai nos humores, subir pela esquerda volta as buscas e a direita chega no Limpar.
+  for (const tecla of ['ArrowDown', 'ArrowLeft', 'ArrowLeft', 'ArrowLeft', 'ArrowUp', 'ArrowRight']) await page.keyboard.press(tecla)
+  await expect(limpar).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(limpar).toHaveCount(0)
+  await expect(page.getByText('Digite o nome de um filme, série ou canal.')).toBeVisible()
+})

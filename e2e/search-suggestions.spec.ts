@@ -69,3 +69,25 @@ test('mais relevante primeiro, erro de digitacao e buscas recentes', async ({ pa
   await page.getByRole('button', { name: 'Limpar busca' }).click()
   await expect(page.locator('form').getByRole('button', { name: 'explosvo' })).toBeVisible()
 })
+
+test('Limpar apaga o historico de buscas, no menu do campo e na pagina de busca', async ({ page }) => {
+  await login(page)
+  const busca = page.getByRole('searchbox', { name: 'Buscar' })
+  await busca.fill('explosivo')
+  await busca.press('Enter')
+  await expect(page).toHaveURL(/\/search\?q=explosivo/)
+  await page.goto('/')
+  await busca.focus()
+  await expect(page.locator('form').getByRole('button', { name: 'explosivo' })).toBeVisible()
+  await page.locator('form').getByRole('button', { name: 'Limpar', exact: true }).click()
+  await expect(page.locator('form').getByRole('button', { name: 'explosivo' })).toHaveCount(0)
+
+  // Pagina de busca (celular/TV): o mesmo historico some e a mensagem vazia volta.
+  await busca.fill('explosivo')
+  await busca.press('Enter')
+  await page.goto('/search')
+  await expect(page.getByRole('button', { name: 'explosivo' })).toBeVisible()
+  await page.getByRole('button', { name: 'Limpar', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'explosivo' })).toHaveCount(0)
+  await expect(page.getByText('Digite o nome de um filme, série ou canal.')).toBeVisible()
+})
