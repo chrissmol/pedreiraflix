@@ -155,3 +155,40 @@ test('TV: entra na sala so com setas e OK e segue o filme', async ({ browser }) 
   await video(a).evaluate((v: HTMLVideoElement) => v.play())
   await expect(tv).toHaveURL(/\/watch\/series\/5011/)
 })
+
+// Regra de autoplay do WebKit/iOS: play() com som so passa logo depois de um toque de verdade. Quem entra na sala nao
+// toca em nada quando o titulo abre, entao o player cai no mudo; isso nao pode virar a preferencia de volume.
+test('convidado: mudo imposto pelo autoplay nao fica salvo e um toque devolve o som', async ({ browser }) => {
+  const ctx = await browser.newContext()
+  await ctx.routeWebSocket(/\/api\/junto\//, (ws) => {
+    ws.send(JSON.stringify({ t: 'pessoas', n: 2 }))
+    setTimeout(() => ws.send(JSON.stringify({ t: 'estado', path: '/watch/movie/1?ext=mp4&name=Filme', playing: true, pos: 3, age: 0 })), 2500)
+  })
+  const page = await ctx.newPage()
+  await seedSession(page)
+  await page.addInitScript(() => {
+    let last = -1e9
+    addEventListener('click', (e) => { if (e.isTrusted) last = performance.now() }, true)
+    const orig = HTMLMediaElement.prototype.play
+    HTMLMediaElement.prototype.play = function () {
+      if (!this.muted && performance.now() - last > 1000) return Promise.reject(new DOMException('blocked', 'NotAllowedError'))
+      return orig.call(this)
+    }
+  })
+  await page.goto('/junto')
+  await page.getByLabel('Entrar com um código').fill('abcdef')
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/1/)
+  await expect(page.getByRole('button', { name: 'Ativar som' })).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('iptv-player-prefs'))).toBeNull()
+  // Proximo titulo da sala: continua pedindo o som em vez de abrir mudo sem aviso.
+  await page.evaluate(() => {
+    history.pushState({}, '', '/watch/movie/2?ext=mp4&name=Outro')
+    dispatchEvent(new PopStateEvent('popstate'))
+  })
+  await expect(page.getByRole('button', { name: 'Ativar som' })).toBeVisible()
+  await page.locator('video').click({ position: { x: 20, y: 20 } })
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')!.muted)).toBe(false)
+  await expect(page.getByRole('button', { name: 'Ativar som' })).toHaveCount(0)
+  expect(await page.evaluate(() => document.querySelector('video')!.paused)).toBe(false)
+})
