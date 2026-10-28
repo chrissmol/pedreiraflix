@@ -338,7 +338,12 @@ async function feedback(request, env) {
   console.log(JSON.stringify({ source: 'feedback', ...item }))
   if (!env.FEEDBACK) return new Response('feedback storage not configured', { status: 503 })
   // 180 dias: e o prazo prometido em /sobre/privacidade.html; a conta do provedor vai junto e nao deve ficar para sempre.
-  await env.FEEDBACK.put(`${ts}-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(item), { expirationTtl: 180 * 86400 })
+  // Limite diario de gravacoes do KV (429): o texto ja foi para o log acima; avisa que nao guardou em vez de estourar 500.
+  try {
+    await env.FEEDBACK.put(`${ts}-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(item), { expirationTtl: 180 * 86400 })
+  } catch {
+    return new Response('feedback storage unavailable', { status: 503 })
+  }
   return new Response(null, { status: 204 })
 }
 
@@ -479,6 +484,26 @@ async function tvmaze(imdbId) {
   }
 }
 
+// Cache das respostas de TMDB/OMDb/IA (tmdb, sinopse, resumo). Cada poster na tela e um titulo novo, entao gravar no
+// KV estourava as 1.000 gravacoes/dia do plano gratis (put = 429 ate 00:00 UTC). A Cache API do edge nao tem limite de
+// gravacao: e ela que recebe os puts. O KV NOTAS so e lido (entradas antigas, 100 mil leituras/dia) e copiado para
+// a Cache API. shortcut: a Cache API e por data center e pode ser despejada; quem perder so refaz a consulta, e o
+// OMDb limita 1.000/dia. Sem `caches` (testes em Node) cai no KV.
+const notasUrl = (key) => new Request(`https://notas.pedreiraflix.invalid/${encodeURIComponent(key)}`)
+async function notasGet(env, key) {
+  const cache = globalThis.caches?.default
+  const hit = await cache?.match(notasUrl(key)).catch(() => null)
+  if (hit) return hit.json()
+  const saved = await env.NOTAS?.get(key, 'json').catch(() => null)
+  if (saved && cache) await notasPut(env, key, saved)
+  return saved
+}
+async function notasPut(env, key, body) {
+  const cache = globalThis.caches?.default
+  if (!cache) return env.NOTAS?.put(key, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  await cache.put(notasUrl(key), Response.json(body, { headers: { 'cache-control': 'public, max-age=2592000' } })).catch(() => {})
+}
+
 // Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
 // Needs the TMDB_TOKEN secret (v4 "API Read Access Token"); without it, or with no match, answers 204 and
 // the app just shows what the provider sent. The token stays server-side — never reaches the browser.
@@ -503,7 +528,7 @@ async function tmdb(url, env) {
   const tv = url.searchParams.get('kind') === 'tv'
   const cacheKey = `tmdb:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
-  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  const saved = await notasGet(env, cacheKey)
   // Guardado antes do logo e da classificacao: refaz so o TMDB e reaproveita a nota (o OMDb so da 1.000/dia).
   if (saved && 'logo' in saved) return answer(saved)
   const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
@@ -535,7 +560,7 @@ async function tmdb(url, env) {
     ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
   }
   // shortcut: a nota fica 30 dias sem atualizar; encurte o prazo se alguem reclamar de nota velha.
-  if (imdb !== undefined) await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  if (imdb !== undefined) await notasPut(env, cacheKey, body)
   return answer(body)
 }
 
@@ -684,7 +709,7 @@ async function synopsis(url, env) {
   if (!env.AI) return none('sem-ai')
   const cacheKey = `sinopse:v1:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
-  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  const saved = await notasGet(env, cacheKey)
   if (saved) return answer(saved)
   const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
   const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
@@ -698,7 +723,7 @@ async function synopsis(url, env) {
   const overview = await translate(text, env)
   if (!overview) return none('erro-ai')
   const body = { overview }
-  await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  await notasPut(env, cacheKey, body)
   return answer(body)
 }
 
@@ -732,7 +757,7 @@ async function recap(url, env) {
   if (!env.AI) return none('sem-ai')
   const cacheKey = `resumo:v1:${title.toLowerCase()}:${year}:${season}x${episode}`
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
-  const saved = await env.NOTAS?.get(cacheKey, 'json').catch(() => null)
+  const saved = await notasGet(env, cacheKey)
   if (saved) return answer(saved)
   const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
   const get = (path, params) => fetch(`https://api.themoviedb.org/3${path}?${new URLSearchParams(params)}`, { headers })
@@ -769,7 +794,7 @@ async function recap(url, env) {
   }
   if (!text) return none('vazio-ai')
   const body = { summary: text.slice(0, 1500) }
-  await env.NOTAS?.put(cacheKey, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
+  await notasPut(env, cacheKey, body)
   return answer(body)
 }
 
