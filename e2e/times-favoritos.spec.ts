@@ -32,7 +32,7 @@ test('seguir um time mostra os proximos jogos com o canal', async ({ page }) => 
   )
   await seedSession(page)
   await page.goto('/times')
-  await expect(page.getByRole('heading', { name: 'Times favoritos' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Esportes' })).toBeVisible()
 
   await page.getByLabel('Seguir um time').fill('flam')
   await page.getByRole('button', { name: 'Flamengo', exact: true }).click()

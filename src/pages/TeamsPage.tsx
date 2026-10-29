@@ -524,7 +524,7 @@ export default function TeamsPage() {
     <div className="min-h-screen px-4 pb-32 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <div className="mb-1 flex items-center gap-2">
         <Trophy className="h-7 w-7 text-brand-400" />
-        <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Times favoritos</h1>
+        <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Esportes</h1>
       </div>
       <p className="mb-6 text-body-md text-on-surface-variant">Os próximos jogos dos times e campeonatos que você segue e em qual canal passam.</p>
 
