@@ -127,18 +127,56 @@ export function clearCache() {
   withStore('readwrite', (s) => s.clear()).catch(() => {})
 }
 
-/** The "limpar cache" button's actual job: this catalog cache plus the service worker's own app-shell
- * cache (sw.js's `pedreiraflix-v*` CacheStorage entries) — the same two places an iPhone's Ajustes >
- * Safari > Limpar Histórico e Dados would touch for this app, done from inside it instead. Doesn't touch
- * login/profiles/favorites/downloads (those are real user data, not cache) — a fresh reload right after
- * is what actually makes the cleared state visible, since the page currently in memory still holds the
- * old catalog until then. */
-export async function clearAllCaches(): Promise<void> {
+/** The "limpar cache" button's actual job: everything this app stores that can be fetched again — the
+ * catalog (IndexedDB + memory), the service worker's app-shell CacheStorage, and the service worker
+ * registration itself (main.tsx re-registers it on the next load, which re-runs the precache, so offline
+ * mode comes back instead of being left without an app shell). Never touches login/profiles/favorites/
+ * downloads/settings (localStorage + offlineStore.ts) — those are user data, not cache. Returns how many
+ * bytes were freed; the caller reloads afterwards, since the page in memory still holds the old catalog. */
+export async function clearAllCaches(): Promise<number> {
+  let bytes = 0
   store.clear()
   inFlight.clear()
+  try {
+    const entries = await withStore<PersistedEntry<unknown>[]>('readonly', (s) => s.getAll())
+    bytes += entries.reduce((n, e) => n + JSON.stringify(e.value ?? '').length, 0)
+  } catch {
+    // sem IndexedDB: nada guardado para contar
+  }
   await withStore('readwrite', (s) => s.clear()).catch(() => {})
   if ('caches' in window) {
-    const keys = await caches.keys()
-    await Promise.all(keys.map((k) => caches.delete(k)))
+    for (const key of await caches.keys()) {
+      const cache = await caches.open(key)
+      for (const req of await cache.keys()) {
+        const res = await cache.match(req, { ignoreVary: true })
+        bytes += (await res?.clone().blob().catch(() => null))?.size ?? 0
+      }
+      await caches.delete(key)
+    }
   }
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations().catch(() => [])
+    await Promise.all(regs.map((r) => r.unregister()))
+  }
+  return bytes
+}
+
+export function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
+  return `${(n / 1024 / 1024).toFixed(1).replace('.', ',')} MB`
+}
+
+/** Runs the cleanup, shows what was freed for a moment, then reloads. `say` receives the dialog message. */
+export async function limparEAtualizar(say: (msg: string) => void): Promise<void> {
+  say('Limpando…')
+  let msg = 'Cache limpo. Recarregando…'
+  try {
+    msg = `Cache limpo: ${formatBytes(await clearAllCaches())} liberados. Recarregando…`
+  } catch {
+    // limpeza parcial: recarregar mesmo assim
+  }
+  say(msg)
+  await new Promise((r) => setTimeout(r, 1200))
+  window.location.reload()
 }
