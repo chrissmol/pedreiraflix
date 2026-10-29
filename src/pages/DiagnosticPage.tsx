@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { XtreamClient } from '../lib/xtream'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { clearAllCaches } from '../lib/cache'
+import { limparEAtualizar } from '../lib/cache'
 import { isTv } from '../lib/device'
 import { routeToStereo } from '../components/useVideoPlayerEffects'
 import { supportsNativeHls } from '../components/videoPlayerUtils'
@@ -34,6 +34,7 @@ export default function DiagnosticPage() {
   const [linhas, setLinhas] = useState<Linha[]>([])
   const [rodando, setRodando] = useState(false)
   const [limpar, setLimpar] = useState(false)
+  const [limpando, setLimpando] = useState<string | null>(null)
 
   async function rodar() {
     if (!(client instanceof XtreamClient)) {
@@ -198,12 +199,11 @@ export default function DiagnosticPage() {
       </div>
       {limpar && (
         <ConfirmDialog
-          message="Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads. O app recarrega em seguida."
+          message={limpando ?? 'Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads. O app recarrega em seguida.'}
           confirmLabel="Limpar"
           onCancel={() => setLimpar(false)}
           onConfirm={async () => {
-            await clearAllCaches()
-            window.location.reload()
+            await limparEAtualizar(setLimpando)
           }}
         />
       )}

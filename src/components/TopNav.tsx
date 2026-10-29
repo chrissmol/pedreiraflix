@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useDialogA11y } from '../hooks/useDialogA11y'
-import { clearAllCaches } from '../lib/cache'
+import { limparEAtualizar } from '../lib/cache'
 import { connectionStatus, refreshSession, subscriptionStatus } from '../lib/session'
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
@@ -44,6 +44,7 @@ export default function TopNav() {
   const setActiveProfile = useProfilesStore((s) => s.setActiveProfile)
   const [pinTarget, setPinTarget] = useState<Profile | null>(null)
   const [confirmClearCache, setConfirmClearCache] = useState(false)
+  const [clearMsg, setClearMsg] = useState('Limpando…')
   const [clearingCache, setClearingCache] = useState(false)
   const canInstall = useInstallPrompt((s) => s.event !== null)
   const profileId = useActiveProfileId()
@@ -478,15 +479,14 @@ export default function TopNav() {
         <ConfirmDialog
           message={
             clearingCache
-              ? 'Limpando…'
+              ? clearMsg
               : 'Limpar o catálogo salvo e o cache do app? Não apaga login, perfis, favoritos nem downloads — só o que pode ser rebaixado de novo do provedor. O app recarrega em seguida.'
           }
           confirmLabel="Limpar"
           onCancel={() => setConfirmClearCache(false)}
           onConfirm={async () => {
             setClearingCache(true)
-            await clearAllCaches()
-            window.location.reload()
+            await limparEAtualizar(setClearMsg)
           }}
         />
       )}
