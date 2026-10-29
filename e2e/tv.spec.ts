@@ -273,8 +273,11 @@ test('TV: so com setas e OK segue um campeonato e chega no canal do jogo', async
     for (let i = 0; i < 12 && !re.test(await focado()); i++) await page.keyboard.press('ArrowDown')
     expect(await focado()).toMatch(re)
   }
-  await page.getByLabel('Seguir um time').focus()
+  await page.getByRole('tab', { name: 'Campeonatos' }).focus()
+  await page.keyboard.press('Enter')
   await ate(/Seguir um campeonato/)
+  await page.keyboard.press('Enter')
+  await ate(/^Brasil\d*$/)
   await page.keyboard.press('Enter')
   await ate(/^Brasileirão Série A$/)
   await page.keyboard.press('Enter')

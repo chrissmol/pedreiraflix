@@ -7,7 +7,7 @@ const links: { to: string; label: string; Icon: ComponentType<{ className?: stri
   { to: '/live', label: 'Canais', Icon: Tv },
   { to: '/movies', label: 'Filmes', Icon: Film },
   { to: '/series', label: 'Séries', Icon: Layers },
-  { to: '/times', label: 'Times', Icon: Trophy },
+  { to: '/times', label: 'Esportes', Icon: Trophy },
 ]
 
 // Floating pill (Netflix-style) instead of an edge-to-edge bar pinned with `bottom-0`. Christian hit the
