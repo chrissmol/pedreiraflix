@@ -38,7 +38,9 @@ test('seguir um campeonato mostra os times, 5 jogos (ver mais ate 10) e so os de
   await mockApi(page)
   await seedSession(page)
   await page.goto('/times')
+  await page.getByRole('tab', { name: 'Campeonatos' }).click()
   await page.getByRole('button', { name: 'Seguir um campeonato' }).click()
+  await page.getByRole('button', { name: /^Brasil( \d+)?$/ }).click()
   await page.getByRole('button', { name: 'Brasileirão Série A' }).click()
 
   const card = page.getByRole('region', { name: 'Brasileirão Série A' })
@@ -60,11 +62,13 @@ test('seguir um campeonato mostra os times, 5 jogos (ver mais ate 10) e so os de
   await expect(page).toHaveURL(/\/watch\/live\/201/)
   await page.goBack()
 
-  // Seguir um time daqui vai para os times favoritos.
+  // Seguir um time daqui vai para a aba Times.
   await page.getByRole('region', { name: 'Brasileirão Série A' }).getByRole('button', { name: 'Seguir Palmeiras' }).click()
+  await page.getByRole('tab', { name: /^Times/ }).click()
   await expect(page.getByRole('region', { name: 'Palmeiras' })).toBeVisible()
 
-  // Fica salvo no perfil.
+  // Fica salvo no perfil, junto com a aba aberta.
+  await page.getByRole('tab', { name: /^Campeonatos/ }).click()
   await page.reload()
   await expect(page.getByRole('region', { name: 'Brasileirão Série A' })).toBeVisible()
   await page.getByRole('button', { name: 'Deixar de seguir Brasileirão Série A' }).click()
@@ -77,9 +81,28 @@ test('usa a rota por campeonato da API quando ela existe', async ({ page }) => {
   )
   await seedSession(page)
   await page.goto('/times')
+  await page.getByRole('tab', { name: 'Campeonatos' }).click()
   await page.getByRole('button', { name: 'Seguir um campeonato' }).click()
+  await page.getByRole('button', { name: /^Europa( \d+)?$/ }).click()
   await page.getByRole('button', { name: 'Premier League' }).click()
   const card = page.getByRole('region', { name: 'Premier League' })
   await expect(card.getByText('Arsenal × Chelsea')).toBeVisible()
   await expect(card.getByRole('button', { name: 'Seguir Arsenal' })).toBeVisible()
+})
+
+test('cards de time e campeonato recolhem, mostram so o proximo jogo e lembram o estado', async ({ page }) => {
+  await mockApi(page)
+  await seedSession(page)
+  await page.goto('/times')
+  await page.getByLabel('Seguir um time').fill('Flamengo')
+  await page.getByRole('button', { name: 'Flamengo', exact: true }).click()
+  const card = page.getByRole('region', { name: 'Flamengo' })
+  await expect(card.getByText('Flamengo × Vasco').first()).toBeVisible()
+  await card.getByRole('button', { name: 'Recolher Flamengo' }).click()
+  await expect(card.getByRole('button', { name: /^Esporte Total/ }).first()).toBeHidden()
+  await expect(card.getByText(/· Flamengo × Vasco/)).toBeVisible() // resumo do proximo jogo
+  await page.reload()
+  await expect(page.getByRole('region', { name: 'Flamengo' }).getByText(/· Flamengo × Vasco/)).toBeVisible()
+  await page.getByRole('region', { name: 'Flamengo' }).getByRole('button', { name: 'Expandir Flamengo' }).click()
+  await expect(page.getByRole('region', { name: 'Flamengo' }).getByRole('button', { name: /^Esporte Total/ }).first()).toBeVisible()
 })
