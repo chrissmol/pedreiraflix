@@ -66,7 +66,9 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
           className={`h-full w-full object-cover brightness-[0.92] transition-[filter,transform,opacity] duration-300 group-hover:scale-105 group-hover:brightness-100 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
       ) : (
-        <div aria-hidden="true" className="absolute inset-0" style={{ background: placeholderBackground(title) }} />
+        <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center pb-10 text-6xl font-bold text-white/15" style={{ background: placeholderBackground(title) }}>
+          {title.trim().charAt(0).toUpperCase()}
+        </div>
       )}
 
       {/* O titulo fica SEMPRE visivel, como o brand book mostra: so o botao de play e revelado no hover.

@@ -338,6 +338,43 @@ img {
   animation: pop-in 160ms ease-out;
 }
 
+/* Entrada leve: ao carregar, os filhos diretos sobem e aparecem em escada (so os 8 primeiros, 45ms de intervalo).
+   So opacity e transform; `backwards` segura o estado inicial durante o atraso e solta no fim, sem prender
+   `fixed` de dentro. Desligado na TV (CPU fraca, e la o foco e que guia o olho). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.stagger > * {
+  animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.stagger > :nth-child(2) { animation-delay: 45ms; }
+.stagger > :nth-child(3) { animation-delay: 90ms; }
+.stagger > :nth-child(4) { animation-delay: 135ms; }
+.stagger > :nth-child(5) { animation-delay: 180ms; }
+.stagger > :nth-child(6) { animation-delay: 225ms; }
+.stagger > :nth-child(7) { animation-delay: 270ms; }
+.stagger > :nth-child(n + 8) { animation-delay: 315ms; }
+html.tv .stagger > * {
+  animation: none;
+}
+
+/* Capa do destaque: aparece com fade e assenta de um zoom bem leve (um so transform, uma vez). */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+.hero-img {
+  animation: hero-in 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.tv .hero-img {
+  animation: none;
+}
+
 /* O iPhone desenha campos de busca com estilo proprio (largura minima, arredondamento, lupa e "x" nativos)
  * por cima do nosso: o botao de busca saia oval e com a lupa torta. `appearance-none` no input + isto. */
 input[type='search']::-webkit-search-decoration,
@@ -389,7 +426,7 @@ html.tv .brand-focus:focus-visible {
 /* Botoes do Stitch, iguais em todas as telas: pilula azul para a acao principal, pilula translucida
    para as demais. `btn-icon` e a versao quadrada (so icone) da secundaria. */
 @utility btn-primary {
-  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-fill px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 hover:bg-brand-400 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-fill sm:px-8;
+  @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand-fill px-6 text-body-md font-semibold text-white shadow-[0_12px_28px_-6px_rgba(15,123,255,0.4)] transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:bg-brand-400 active:translate-y-0 active:scale-95 disabled:opacity-50 disabled:hover:bg-brand-fill disabled:hover:translate-y-0 sm:px-8;
 }
 @utility btn-secondary {
   @apply inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-surface-high/70 px-5 text-label-md text-white backdrop-blur-xl transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 hover:bg-surface-highest active:scale-95 disabled:opacity-50 sm:px-6;
