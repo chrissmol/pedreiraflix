@@ -91,6 +91,16 @@ test('TV: menu na lateral; da seta para a esquerda no conteudo cai na secao aber
   await expect(page.locator('header a[aria-current="page"]')).toBeFocused()
 })
 
+test('TV: clique do cursor (Samsung/Tizen, sem Enter) libera o campo travado para o teclado', async ({ page }) => {
+  await page.goto('/search')
+  const campo = page.getByRole('searchbox', { name: 'Buscar no catálogo' })
+  await expect(campo).toBeFocused()
+  expect(await campo.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true)
+  await campo.click()
+  expect(await campo.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(false)
+  await expect(campo).toBeFocused()
+})
+
 test('TV: Buscar no menu abre a pagina de busca; passar pelo campo nao abre o teclado, o OK abre e da para digitar', async ({ page }) => {
   await page.goto('/movies')
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()

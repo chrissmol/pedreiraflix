@@ -123,21 +123,30 @@ export function installTvGuards() {
     el.readOnly = false
     delete el.dataset.tvLock
   })
+  // OK (Enter) ou clique do ponteiro da TV: libera o campo e refaz o foco para o teclado subir. O navegador da Samsung
+  // (Tizen) usa um cursor na tela, que clica sem mandar Enter: so com o keydown o campo ficava travado e sem teclado.
+  function unlock(el: HTMLInputElement | HTMLTextAreaElement) {
+    el.readOnly = false
+    delete el.dataset.tvLock
+    reopening = true // sai e volta o foco para o teclado abrir agora que o campo e editavel
+    el.blur()
+    el.focus()
+    reopening = false
+  }
   document.addEventListener(
     'keydown',
     (e) => {
       const el = e.target
       if (e.key !== 'Enter' || !editable(el) || !('tvLock' in el.dataset)) return
       e.preventDefault() // este OK so libera o campo; nao envia o formulario
-      el.readOnly = false
-      delete el.dataset.tvLock
-      reopening = true // sai e volta o foco para o Android abrir o teclado agora que o campo e editavel
-      el.blur()
-      el.focus()
-      reopening = false
+      unlock(el)
     },
     true,
   )
+  document.addEventListener('click', (e) => {
+    const el = e.target
+    if (editable(el) && 'tvLock' in el.dataset) unlock(el)
+  })
 
   // A casca do app e o documento nunca rolam (so o <main> rola na vertical), mas o scrollIntoView das fileiras e o
   // teclado da TV conseguem rolar ate o que tem overflow hidden — e a tela inteira ficava deslocada, cortando o menu.
