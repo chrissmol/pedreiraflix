@@ -357,7 +357,25 @@ img {
 .stagger > :nth-child(6) { animation-delay: 225ms; }
 .stagger > :nth-child(7) { animation-delay: 270ms; }
 .stagger > :nth-child(n + 8) { animation-delay: 315ms; }
-html.tv .stagger > * {
+/* Fileiras: so opacidade. Com transform, o teste de voltar-e-restaurar-rolagem falhou 3 de 8 vezes (restaurava 149 em vez
+   de 400); sem ele, 10 de 10. Nao confirmei o mecanismo, so o efeito. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.stagger-fade > * {
+  animation: fade-in 420ms ease-out backwards;
+}
+.stagger-fade > :nth-child(2) { animation-delay: 45ms; }
+.stagger-fade > :nth-child(3) { animation-delay: 90ms; }
+.stagger-fade > :nth-child(4) { animation-delay: 135ms; }
+.stagger-fade > :nth-child(5) { animation-delay: 180ms; }
+.stagger-fade > :nth-child(6) { animation-delay: 225ms; }
+.stagger-fade > :nth-child(7) { animation-delay: 270ms; }
+.stagger-fade > :nth-child(n + 8) { animation-delay: 315ms; }
+html.tv .stagger > *,
+html.tv .stagger-fade > * {
   animation: none;
 }
 
