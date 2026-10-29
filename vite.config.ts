@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import cascadeLayers from '@csstools/postcss-cascade-layers'
 import { defineConfig, type Plugin } from 'vite'
 
 const apiProxy = { '/api': 'http://localhost:8787' }
@@ -20,6 +21,11 @@ const precacheList = (): Plugin => ({
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), precacheList()],
+  // Navegador da TV Samsung (Tizen, Chromium ~76) nao conhece @layer (Chrome 99+) e descartava todos os utilitarios do
+  // Tailwind 4: a tela vinha sem estilo (icone gigante, campo minusculo). O plugin desembrulha as camadas; e es2019
+  // tira ?. e ?? do JS, que esse Chromium tambem nao le (29/10).
+  css: { postcss: { plugins: [cascadeLayers()] } },
+  build: { target: 'es2019' },
   server: { proxy: apiProxy },
   // `vite preview` (serving the real production build, used by the PWA/service-worker e2e test) has its
   // own proxy option, separate from `server.proxy` — without this, /api requests 404 under `preview`.

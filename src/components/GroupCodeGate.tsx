@@ -38,7 +38,7 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface p-4">
       <form onSubmit={enviar} className="card-panel w-full max-w-sm p-6 text-center sm:p-8">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/15 text-brand-400"><Lock className="h-7 w-7" /></span>
+        <span style={{ width: 56, height: 56, overflow: 'hidden' }} className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/15 text-brand-400"><Lock className="h-7 w-7" /></span>
         <h1 className="font-display text-headline-sm text-white">Código do grupo</h1>
         <p className="mb-5 mt-2 text-body-sm text-on-surface-variant">O PedreiraFlix é só para o grupo. Digite o código que o Christian passou; é só uma vez neste aparelho.</p>
         <input
