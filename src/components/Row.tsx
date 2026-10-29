@@ -64,7 +64,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         <div
           ref={scrollerRef}
           onKeyDown={onKeyDown}
-          className="no-scrollbar flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-4 pt-6 sm:px-10"
+          className="no-scrollbar stagger flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-4 pt-6 sm:px-10"
         >
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
