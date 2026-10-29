@@ -1,5 +1,7 @@
 const store = new Map<string, unknown>()
 const inFlight = new Map<string, Promise<unknown>>()
+// Quando cada entrada da memoria foi buscada: sem isto ela valia ate fechar o app (TV ligada o dia todo).
+const stamps = new Map<string, number>()
 
 // Persisted to IndexedDB — not localStorage, which was the previous choice here but is documented
 // elsewhere in this codebase (offlineStore.ts) as one of the storage kinds iOS evicts under pressure for
@@ -59,7 +61,7 @@ async function withStore<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore
   })
 }
 
-async function readPersisted<T>(key: string): Promise<{ value: T; isStale: boolean } | undefined> {
+async function readPersisted<T>(key: string): Promise<{ value: T; isStale: boolean; ts: number } | undefined> {
   try {
     const entry = await withStore<PersistedEntry<T> | undefined>('readonly', (s) => s.get(key))
     if (!entry) return undefined
@@ -68,7 +70,7 @@ async function readPersisted<T>(key: string): Promise<{ value: T; isStale: boole
       withStore('readwrite', (s) => s.delete(key)).catch(() => {})
       return undefined
     }
-    return { value: entry.value, isStale: age > TTL_MS }
+    return { value: entry.value, isStale: age > TTL_MS, ts: entry.ts }
   } catch {
     // IndexedDB unavailable (private browsing on some browsers, disabled, etc.) — the in-memory cache
     // alone still works for the rest of this page's lifetime, it just won't survive a reload.
@@ -88,6 +90,7 @@ function refresh<T>(key: string, loader: () => Promise<T>): Promise<T> {
   const promise = loader()
     .then((result) => {
       store.set(key, result)
+      stamps.set(key, Date.now())
       writePersisted(key, result)
       inFlight.delete(key)
       return result
@@ -108,12 +111,16 @@ function refresh<T>(key: string, loader: () => Promise<T>): Promise<T> {
  * of repeating the wait. */
 export async function cached<T>(rawKey: string, loader: () => Promise<T>): Promise<T> {
   const key = `${scope}|${rawKey}`
-  if (store.has(key)) return store.get(key) as T
+  if (store.has(key)) {
+    if (!inFlight.has(key) && Date.now() - (stamps.get(key) ?? 0) > TTL_MS) refresh(key, loader).catch(() => {})
+    return store.get(key) as T
+  }
   if (inFlight.has(key)) return inFlight.get(key) as Promise<T>
 
   const persisted = await readPersisted<T>(key)
   if (persisted !== undefined) {
     store.set(key, persisted.value)
+    stamps.set(key, persisted.ts)
     if (persisted.isStale) refresh(key, loader).catch(() => {})
     return persisted.value
   }
@@ -123,6 +130,7 @@ export async function cached<T>(rawKey: string, loader: () => Promise<T>): Promi
 
 export function clearCache() {
   store.clear()
+  stamps.clear()
   inFlight.clear()
   withStore('readwrite', (s) => s.clear()).catch(() => {})
 }
@@ -136,6 +144,7 @@ export function clearCache() {
 export async function clearAllCaches(): Promise<number> {
   let bytes = 0
   store.clear()
+  stamps.clear()
   inFlight.clear()
   try {
     const entries = await withStore<PersistedEntry<unknown>[]>('readonly', (s) => s.getAll())
