@@ -20,6 +20,7 @@ interface Linha {
   nome: string
   ok: boolean
   detalhe: string
+  origem: 'Player' | 'Provedor'
 }
 
 const resumo = (r: { status: number; type: string; ms: number; bytes: number; retryAfter?: string | null }) =>
@@ -38,7 +39,7 @@ export default function DiagnosticPage() {
 
   async function rodar() {
     if (!(client instanceof XtreamClient)) {
-      setLinhas([{ nome: 'Conta', ok: false, detalhe: 'O diagnóstico vale para contas usuário/senha (Xtream).' }])
+      setLinhas([{ nome: 'Conta', ok: false, detalhe: 'O diagnóstico vale para contas usuário/senha (Xtream).', origem: 'Player' }])
       return
     }
     setRodando(true)
@@ -49,15 +50,21 @@ export default function DiagnosticPage() {
     }
     // Espaca os pedidos ao provedor (1,3 s): este teste nao pode provocar o limite que esta tentando medir.
     let primeiro = true
-    const passo = async (nome: string, fn: () => Promise<{ ok: boolean; detalhe: string }>, aoProvedor = true) => {
+    // origem = de quem e o problema se a linha falhar: 'Player' (nosso app/Worker) ou 'Provedor' (video, conta, telas).
+    // Se o servidor do app nao responde, nada depois dele prova algo sobre o provedor: falha vira 'Player'.
+    let appCaido = false
+    const passo = async (nome: string, fn: () => Promise<{ ok: boolean; detalhe: string }>, aoProvedor = true, origem: Linha['origem'] = 'Provedor') => {
       if (aoProvedor) {
         if (!primeiro) await sleep(window.__DIAG_GAP_MS__ ?? 1300)
         primeiro = false
       }
       try {
-        add({ nome, ...(await fn()) })
+        const r = await fn()
+        if (origem === 'Player' && !r.ok) appCaido = true
+        add({ nome, ...r, origem: appCaido ? 'Player' : origem })
       } catch (err) {
-        add({ nome, ok: false, detalhe: `Sem resposta: ${err instanceof Error ? err.message : String(err)}` })
+        // Pedido que nem chegou ao app (rede/Worker): nao e o provedor.
+        add({ nome, ok: false, detalhe: `Sem resposta: ${err instanceof Error ? err.message : String(err)}`, origem: 'Player' })
       }
     }
     const json = (text: string) => {
@@ -76,6 +83,7 @@ export default function DiagnosticPage() {
         return { ok: res.status === 400, detalhe: `HTTP ${res.status} · ${text.slice(0, 80)}` }
       },
       false,
+      'Player',
     )
     let loginText = ''
     await passo('Login no provedor', async () => {
@@ -212,9 +220,17 @@ export default function DiagnosticPage() {
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
           <li key={l.nome} className="rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm">
-            <p className={`text-label-md ${l.ok ? 'text-done' : 'text-live'}`}>
-              {l.ok ? '✓' : '✗'} {l.nome}
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className={`text-label-md ${l.ok ? 'text-done' : 'text-live'}`}>
+                {l.ok ? '✓' : '✗'} {l.nome}
+              </p>
+              <span
+                data-testid="origem"
+                className={l.ok ? 'text-label-badge text-on-surface-variant opacity-60' : 'rounded-full border border-live px-2 py-0.5 text-label-badge text-live'}
+              >
+                {l.ok ? l.origem : `Problema do ${l.origem === 'Player' ? 'player' : 'provedor'}`}
+              </span>
+            </div>
             <p className="mt-0.5 break-words text-on-surface-variant">{l.detalhe}</p>
           </li>
         ))}
