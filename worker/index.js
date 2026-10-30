@@ -392,7 +392,9 @@ async function grupoToken(code) {
 async function noGrupo(request, env) {
   if (!env.GROUP_CODE) return true
   const cookie = (request.headers.get('cookie') || '').split(/;\s*/).find((c) => c.startsWith(`${GRUPO_COOKIE}=`))
-  return cookie?.slice(GRUPO_COOKIE.length + 1) === (await grupoToken(env.GROUP_CODE))
+  const esperado = await grupoToken(env.GROUP_CODE)
+  // x-grupo: o mesmo hash guardado pelo app, para o navegador da TV Samsung que nao guarda o cookie (loop do codigo, 30/10).
+  return cookie?.slice(GRUPO_COOKIE.length + 1) === esperado || request.headers.get('x-grupo') === esperado
 }
 const foraDoGrupo = () => new Response('codigo do grupo', { status: 401 })
 
@@ -412,7 +414,7 @@ async function grupo(request, env) {
   }
   // 400 dias e o maximo que o Chrome aceita; Path=/api porque so o proxy confere.
   const cookie = `${GRUPO_COOKIE}=${await grupoToken(env.GROUP_CODE)}; Path=/api; Max-Age=34560000; HttpOnly; Secure; SameSite=Lax`
-  return new Response(null, { status: 204, headers: { 'set-cookie': cookie } })
+  return Response.json({ token: await grupoToken(env.GROUP_CODE) }, { headers: { 'set-cookie': cookie, 'cache-control': 'no-store' } })
 }
 
 async function logError(request) {

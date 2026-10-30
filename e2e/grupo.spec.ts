@@ -3,11 +3,10 @@ import { expect, test } from '@playwright/test'
 // Codigo do grupo: com GROUP_CODE no Worker o app pede o codigo uma vez antes de tudo e recarrega quando acerta.
 // O painel falso dos testes nao tem o secret, entao o /api/grupo e simulado aqui.
 test('pede o codigo do grupo, recusa o errado e libera o certo', async ({ page }) => {
-  let liberado = false
+  // Simula o navegador que nao guarda o cookie (TV Samsung): so vale o hash que o app manda em x-grupo.
   await page.route('**/api/grupo', async (route) => {
-    if (route.request().method() === 'GET') return route.fulfill({ json: { required: true, ok: liberado } })
-    liberado = route.request().postDataJSON().codigo === 'pedreira'
-    return route.fulfill({ status: liberado ? 204 : 403 })
+    if (route.request().method() === 'GET') return route.fulfill({ json: { required: true, ok: route.request().headers()['x-grupo'] === 'hash-do-grupo' } })
+    return route.request().postDataJSON().codigo === 'pedreira' ? route.fulfill({ json: { token: 'hash-do-grupo' } }) : route.fulfill({ status: 403 })
   })
   await page.goto('/')
   const campo = page.getByRole('textbox', { name: 'Código do grupo' })
