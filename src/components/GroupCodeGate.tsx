@@ -1,6 +1,26 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Lock } from './icons'
 
+// Alguns navegadores (TV Samsung/Tizen) nao guardam o cookie do codigo e o app voltava a pedir sem fim: o hash que o
+// Worker devolve fica tambem no localStorage e vai em x-grupo nas chamadas a /api (o Worker aceita cookie ou header).
+const CHAVE = 'pf_grupo'
+function lerToken() {
+  try {
+    return localStorage.getItem(CHAVE)
+  } catch {
+    return null
+  }
+}
+const fetchOriginal = window.fetch.bind(window)
+window.fetch = (input, init) => {
+  const token = lerToken()
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+  if (!token || !url.startsWith('/api/')) return fetchOriginal(input, init)
+  const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined))
+  headers.set('x-grupo', token)
+  return fetchOriginal(input, { ...init, headers })
+}
+
 /** Codigo do grupo (secret GROUP_CODE no Worker): sem ele o proxy recusa o aparelho. Pergunta uma vez; o Worker grava
  * um cookie e o app recarrega para refazer as chamadas que ja tinham sido recusadas. Sem internet, ou num Worker sem
  * o secret, nao aparece. Enquanto pede, o app fica fora da tela: so com o overlay, Tab e as setas da TV chegavam ao login
@@ -28,7 +48,14 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ codigo: value }),
       })
-      if (res.ok) location.reload()
+      if (res.ok) {
+        try {
+          localStorage.setItem(CHAVE, (await res.json()).token)
+        } catch {
+          // sem localStorage fica so o cookie
+        }
+        location.reload()
+      }
       else setEstado(res.status === 403 ? 'errado' : 'erro')
     } catch {
       setEstado('erro')
