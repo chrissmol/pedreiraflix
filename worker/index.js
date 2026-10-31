@@ -394,7 +394,8 @@ async function noGrupo(request, env) {
   const cookie = (request.headers.get('cookie') || '').split(/;\s*/).find((c) => c.startsWith(`${GRUPO_COOKIE}=`))
   const esperado = await grupoToken(env.GROUP_CODE)
   // x-grupo: o mesmo hash guardado pelo app, para o navegador da TV Samsung que nao guarda o cookie (loop do codigo, 30/10).
-  return cookie?.slice(GRUPO_COOKIE.length + 1) === esperado || request.headers.get('x-grupo') === esperado
+  // g na URL: <img> nao manda header, e sem cookie (TV) as capas e logos do proxy davam 401 e viravam so a inicial (31/10).
+  return cookie?.slice(GRUPO_COOKIE.length + 1) === esperado || request.headers.get('x-grupo') === esperado || new URL(request.url).searchParams.get('g') === esperado
 }
 const foraDoGrupo = () => new Response('codigo do grupo', { status: 401 })
 

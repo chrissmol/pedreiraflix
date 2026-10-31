@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { XtreamClient } from '../lib/xtream'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -216,6 +216,7 @@ export default function DiagnosticPage() {
         />
       )}
       <TesteDeSom />
+      <TesteDeSetas />
       <TesteAoVivo />
       <ul className="max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
@@ -269,6 +270,24 @@ function TesteDeSom() {
         <button onClick={() => tocar('ac3', true)} className="chip">AC3 com mistura</button>
       </div>
       {aviso && <p className="mt-2 text-body-sm text-live">{aviso}</p>}
+    </section>
+  )
+}
+
+// Teste das setas: mostra a ultima tecla que chegou na pagina. Na TV Samsung o navegador tem um cursor na tela e as setas
+// podem mexer so nele (a pagina nao recebe nada); aqui se ve se a seta chega e com que codigo.
+function TesteDeSetas() {
+  const [teclas, setTeclas] = useState<string[]>([])
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => setTeclas((t) => [`${e.key || '(vazio)'} · keyCode ${e.keyCode}`, ...t].slice(0, 4))
+    window.addEventListener('keydown', on, true)
+    return () => window.removeEventListener('keydown', on, true)
+  }, [])
+  return (
+    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
+      <h2 className="text-label-md text-white">Teste das setas</h2>
+      <p className="mt-1 text-body-sm text-on-surface-variant">Aperte as setas e o OK do controle. Aparece aqui o que a página recebeu; vazio quer dizer que o navegador não entregou a tecla.</p>
+      <p className="mt-2 min-h-[4.5rem] text-body-sm text-white">{teclas.length ? teclas.map((t, i) => <span key={i} className="block">{t}</span>) : 'Nenhuma tecla recebida ainda.'}</p>
     </section>
   )
 }

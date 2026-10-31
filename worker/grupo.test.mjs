@@ -40,6 +40,9 @@ test('com GROUP_CODE o proxy pede o codigo e o cookie libera', async () => {
   assert.deepEqual(await (await call('/api/grupo', env, { token })).json(), { required: true, ok: true })
   assert.deepEqual(await (await call('/api/grupo', env, { token: 'errado' })).json(), { required: true, ok: false })
   assert.equal((await call(interno, env, { cookie })).status, 403)
+  // <img> sem cookie nem header (TV): o hash na URL (g) libera so as capas.
+  assert.equal((await call(`${interno}&g=${token}`, env)).status, 403)
+  assert.equal((await call(`${interno}&g=errado`, env)).status, 401)
   assert.equal((await call('/api/session', env, { method: 'POST', body: {}, cookie })).status, 400)
 })
 

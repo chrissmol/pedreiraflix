@@ -21,6 +21,22 @@ window.fetch = (input, init) => {
   return fetchOriginal(input, { ...init, headers })
 }
 
+// <img> nao manda header: sem cookie (TV) a capa do proxy volta 401. Refaz a imagem uma vez com o hash na URL (g) e
+// engole o erro da primeira tentativa, senao o cartao ja trocava a capa pela inicial.
+document.addEventListener(
+  'error',
+  (e) => {
+    const img = e.target
+    const token = lerToken()
+    if (!token || !(img instanceof HTMLImageElement)) return
+    const src = img.getAttribute('src') || ''
+    if (!src.startsWith('/api/stream?') || /[?&]g=/.test(src)) return
+    e.stopPropagation()
+    img.setAttribute('src', `${src}&g=${token}`)
+  },
+  true,
+)
+
 /** Codigo do grupo (secret GROUP_CODE no Worker): sem ele o proxy recusa o aparelho. Pergunta uma vez; o Worker grava
  * um cookie e o app recarrega para refazer as chamadas que ja tinham sido recusadas. Sem internet, ou num Worker sem
  * o secret, nao aparece. Enquanto pede, o app fica fora da tela: so com o overlay, Tab e as setas da TV chegavam ao login
