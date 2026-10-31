@@ -83,39 +83,48 @@ interface MediaSessionOptions {
 }
 
 // --- Media Session: lock-screen / notification-shade transport controls and metadata, e a posicao do scrubber. ---
+// Acao que o navegador nao conhece (seekto no Chromium < 78, o da TV Samsung) lanca erro e derrubava o player inteiro.
+function setAction(action: string, handler: MediaSessionActionHandler | null) {
+  try {
+    navigator.mediaSession.setActionHandler(action as MediaSessionAction, handler)
+  } catch {
+    /* sem essa acao neste navegador */
+  }
+}
+
 export function useMediaSession(o: MediaSessionOptions) {
   const { videoRef, title, subtitle, poster, isPlaying, isLive, next, previous, skip, currentTime, duration, playbackRate } = o
 
   useEffect(() => {
-    if (!('mediaSession' in navigator)) return
+    if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return
     navigator.mediaSession.metadata = new MediaMetadata({
       title: title || 'PedreiraFlix',
       artist: subtitle || 'PedreiraFlix',
       artwork: poster ? [{ src: poster, sizes: '512x512', type: 'image/png' }] : [],
     })
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
-    navigator.mediaSession.setActionHandler('play', () => videoRef.current?.play().catch(() => {}))
-    navigator.mediaSession.setActionHandler('pause', () => videoRef.current?.pause())
+    setAction('play', () => videoRef.current?.play().catch(() => {}))
+    setAction('pause', () => videoRef.current?.pause())
     if (isLive) {
-      navigator.mediaSession.setActionHandler('seekbackward', null)
-      navigator.mediaSession.setActionHandler('seekforward', null)
-      navigator.mediaSession.setActionHandler('seekto', null)
+      setAction('seekbackward', null)
+      setAction('seekforward', null)
+      setAction('seekto', null)
     } else {
-      navigator.mediaSession.setActionHandler('seekbackward', () => skip(-SKIP_SECONDS))
-      navigator.mediaSession.setActionHandler('seekforward', () => skip(SKIP_SECONDS))
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
+      setAction('seekbackward', () => skip(-SKIP_SECONDS))
+      setAction('seekforward', () => skip(SKIP_SECONDS))
+      setAction('seekto', (details) => {
         if (videoRef.current && details.seekTime != null) videoRef.current.currentTime = details.seekTime
       })
     }
-    navigator.mediaSession.setActionHandler('nexttrack', next ? next.onPlay : null)
-    navigator.mediaSession.setActionHandler('previoustrack', previous ? previous.onPlay : null)
+    setAction('nexttrack', next ? next.onPlay : null)
+    setAction('previoustrack', previous ? previous.onPlay : null)
     return () => {
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
-      navigator.mediaSession.setActionHandler('seekbackward', null)
-      navigator.mediaSession.setActionHandler('seekforward', null)
-      navigator.mediaSession.setActionHandler('seekto', null)
-      navigator.mediaSession.setActionHandler('nexttrack', null)
+      setAction('play', null)
+      setAction('pause', null)
+      setAction('seekbackward', null)
+      setAction('seekforward', null)
+      setAction('seekto', null)
+      setAction('nexttrack', null)
     }
     // `skip` e recriada a cada render; o que muda de verdade esta na lista (igual ao codigo de antes).
     // eslint-disable-next-line react-hooks/exhaustive-deps

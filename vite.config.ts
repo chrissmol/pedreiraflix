@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import cascadeLayers from '@csstools/postcss-cascade-layers'
+import logical from 'postcss-logical'
 import { defineConfig, type Plugin } from 'vite'
 
 const apiProxy = { '/api': 'http://localhost:8787' }
@@ -23,8 +24,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), precacheList()],
   // Navegador da TV Samsung (Tizen, Chromium ~76) nao conhece @layer (Chrome 99+) e descartava todos os utilitarios do
   // Tailwind 4: a tela vinha sem estilo (icone gigante, campo minusculo). O plugin desembrulha as camadas; e es2019
-  // tira ?. e ?? do JS, que esse Chromium tambem nao le (29/10).
-  css: { postcss: { plugins: [cascadeLayers()] } },
+  // tira ?. e ?? do JS, que esse Chromium tambem nao le (29/10). O Tailwind 4 usa padding-inline, margin-inline e inset,
+  // que so existem no Chrome 87+: no Chromium 76 os botoes ficavam sem margem interna; postcss-logical vira left/right.
+  css: { postcss: { plugins: [cascadeLayers(), logical()] } },
   build: { target: 'es2019' },
   server: { proxy: apiProxy },
   // `vite preview` (serving the real production build, used by the PWA/service-worker e2e test) has its
