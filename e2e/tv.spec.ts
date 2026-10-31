@@ -516,3 +516,10 @@ test('TV: so com as setas e OK da para limpar o historico de busca', async ({ pa
   await expect(limpar).toHaveCount(0)
   await expect(page.getByText('Digite o nome de um filme, série ou canal.')).toBeVisible()
 })
+
+test('TV: controle que manda so o keyCode (key vazio, como algumas Samsung) tambem anda pelas setas', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Unidentified', keyCode: 40, bubbles: true } as KeyboardEventInit)))
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
+})

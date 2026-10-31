@@ -107,7 +107,72 @@ function editable(el: unknown): el is HTMLInputElement | HTMLTextAreaElement {
   return (el instanceof HTMLInputElement && TEXT_INPUT.test(el.type)) || el instanceof HTMLTextAreaElement
 }
 
+// Controles de TV (Tizen, webOS) as vezes mandam so o keyCode, com `key` vazio ou "Unidentified". Todo o app le `e.key`:
+// no capture da janela, completa o `key` antes de qualquer outro tratador ver o evento.
+const KEY_BY_CODE: Record<number, string> = { 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter', 10009: 'GoBack', 461: 'GoBack' }
+
+// Navegador sem `gap` em flex (Chromium < 84, TVs Samsung antigas): botoes e textos ficavam colados. Copia o gap
+// calculado para margens dos filhos. shortcut: so olha containers com classe gap-* e nao reage a mudar de classe depois.
+function flexGapWorks() {
+  const box = document.createElement('div')
+  box.style.cssText = 'display:flex;gap:1px;position:absolute;visibility:hidden'
+  box.innerHTML = '<i></i><i></i>'
+  ;(box.firstChild as HTMLElement).style.width = (box.lastChild as HTMLElement).style.width = '1px'
+  document.body.appendChild(box)
+  const ok = box.scrollWidth === 3
+  box.remove()
+  return ok
+}
+
+function applyFlexGap(el: HTMLElement) {
+  const cs = getComputedStyle(el)
+  if (!cs.display.includes('flex')) return
+  const gx = parseFloat(cs.columnGap) || 0
+  const gy = parseFloat(cs.rowGap) || 0
+  if (!gx && !gy) return
+  const column = cs.flexDirection.startsWith('column')
+  const wrap = cs.flexWrap !== 'nowrap'
+  const kids = Array.from(el.children) as HTMLElement[]
+  kids.forEach((k, i) => {
+    if (wrap) {
+      k.style.marginRight = `${gx}px`
+      k.style.marginBottom = `${gy}px`
+    } else if (i > 0) {
+      if (column) k.style.marginTop = `${gy}px`
+      else k.style.marginLeft = `${gx}px`
+    }
+  })
+  if (wrap) {
+    el.style.marginRight = `-${gx}px`
+    el.style.marginBottom = `-${gy}px`
+  }
+}
+
+function installFlexGap() {
+  if (flexGapWorks()) return
+  const run = (root: ParentNode) => {
+    if (root instanceof HTMLElement && root.matches('[class*="gap-"]')) applyFlexGap(root)
+    root.querySelectorAll<HTMLElement>('[class*="gap-"]').forEach(applyFlexGap)
+  }
+  new MutationObserver((list) => {
+    for (const m of list) {
+      m.addedNodes.forEach((n) => n instanceof HTMLElement && run(n))
+      if (m.target instanceof HTMLElement && m.addedNodes.length && m.target.matches('[class*="gap-"]')) applyFlexGap(m.target)
+    }
+  }).observe(document.body, { childList: true, subtree: true })
+  run(document.body)
+}
+
 export function installTvGuards() {
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      const key = KEY_BY_CODE[e.keyCode]
+      if (key && e.key !== key) Object.defineProperty(e, 'key', { value: key })
+    },
+    true,
+  )
+  installFlexGap() // main.tsx e modulo: roda com o <body> ja no DOM
   // Campo de texto so abre o teclado da TV quando se aperta OK nele. Antes, so de passar pela busca com as setas o
   // teclado da tela subia, cobria metade da TV e empurrava a pagina (video do Christian numa TCL, 19/10).
   let reopening = false

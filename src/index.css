@@ -406,6 +406,10 @@ input[type='search']::-webkit-search-cancel-button {
    em px (--app-h, Layout.tsx) e a pagina inteira rolava. */
 html.tv {
   font-size: 100%;
+  /* O Inter variavel sai errado no Chromium ~76 da Samsung (espaco entre palavras some, letras muito afastadas, medido
+     no Chromium 76): na TV vale a fonte do sistema. */
+  --font-sans: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 @media (min-width: 1280px) {
   html.tv {
