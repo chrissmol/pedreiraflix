@@ -4,9 +4,9 @@ import { isFinished } from '../src/lib/finished.ts'
 
 const min = 60
 
-test('filme de 2h: nos creditos (faltando 8 min) conta como visto, faltando 10 min nao', () => {
-  assert.equal(isFinished('movie', 112 * min, 120 * min), true)
-  assert.equal(isFinished('movie', 110 * min, 120 * min), false)
+test('filme de 2h: faltando 10 min conta como visto, faltando 11 min nao', () => {
+  assert.equal(isFinished('movie', 110 * min, 120 * min), true)
+  assert.equal(isFinished('movie', 109 * min, 120 * min), false)
 })
 
 test('episodio de 45 min: faltando 3 min conta, faltando 5 min nao', () => {
@@ -22,4 +22,9 @@ test('episodio curto (22 min) nunca perde mais de 10% para os creditos', () => {
 test('filme de 3h usa os 95%, e sem duracao nada conta', () => {
   assert.equal(isFinished('movie', 172 * min, 180 * min), true)
   assert.equal(isFinished('movie', 0, 0), false)
+})
+
+test('video curto de 10 min nao e marcado no comeco (limite de 10%)', () => {
+  assert.equal(isFinished('movie', 2 * min, 10 * min), false)
+  assert.equal(isFinished('movie', 9 * min, 10 * min), true)
 })
