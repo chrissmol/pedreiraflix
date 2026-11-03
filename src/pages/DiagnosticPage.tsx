@@ -36,6 +36,8 @@ export default function DiagnosticPage() {
   const [rodando, setRodando] = useState(false)
   const [limpar, setLimpar] = useState(false)
   const [limpando, setLimpando] = useState<string | null>(null)
+  const [atual, setAtual] = useState('')
+  const [copiado, setCopiado] = useState(false)
 
   async function rodar() {
     if (!(client instanceof XtreamClient)) {
@@ -43,6 +45,7 @@ export default function DiagnosticPage() {
       return
     }
     setRodando(true)
+    setCopiado(false)
     const out: Linha[] = []
     const add = (l: Linha) => {
       out.push(l)
@@ -58,6 +61,7 @@ export default function DiagnosticPage() {
         if (!primeiro) await sleep(window.__DIAG_GAP_MS__ ?? 1300)
         primeiro = false
       }
+      setAtual(nome)
       try {
         const r = await fn()
         if (origem === 'Player' && !r.ok) appCaido = true
@@ -184,8 +188,21 @@ export default function DiagnosticPage() {
         })
       }
     }
+    setAtual('')
     setRodando(false)
   }
+
+  async function copiar() {
+    const texto = ['Diagnóstico PedreiraFlix', navigator.userAgent, ...linhas.map((l) => `${l.ok ? 'OK' : 'ERRO'} · ${l.nome} · ${l.ok ? l.origem : `problema do ${l.origem === 'Player' ? 'player' : 'provedor'}`}\n  ${l.detalhe}`)].join('\n')
+    try {
+      await navigator.clipboard.writeText(texto)
+      setCopiado(true)
+    } catch {
+      setCopiado(false)
+    }
+  }
+
+  const falhas = linhas.filter((l) => !l.ok)
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
@@ -198,6 +215,11 @@ export default function DiagnosticPage() {
         <button onClick={rodar} disabled={rodando} className="btn-primary">
           {rodando ? 'Testando…' : linhas.length ? 'Testar de novo' : 'Testar agora'}
         </button>
+        {!rodando && linhas.length > 0 && (
+          <button onClick={copiar} className="btn-secondary">
+            {copiado ? 'Copiado ✓' : 'Copiar resultado'}
+          </button>
+        )}
         {/* TV: o "Limpar cache" saiu do menu da conta e mora aqui, em Ajustes (TopNav.tsx). */}
         {isTv && (
           <button onClick={() => setLimpar(true)} className="btn-secondary">
@@ -215,12 +237,15 @@ export default function DiagnosticPage() {
           }}
         />
       )}
-      <TesteDeSom />
-      <TesteDeSetas />
-      <TesteAoVivo />
-      <ul className="max-w-3xl space-y-2" aria-live="polite">
+      {rodando && (
+        <p className="mb-3 max-w-3xl text-body-sm text-on-surface-variant" role="status">
+          Testando {atual ? `“${atual}”` : '…'} · {linhas.length} {linhas.length === 1 ? 'passo feito' : 'passos feitos'}
+        </p>
+      )}
+      {!rodando && linhas.length > 0 && <Veredito linhas={linhas} falhas={falhas} />}
+      <ul className="mb-8 max-w-3xl space-y-2" aria-live="polite">
         {linhas.map((l) => (
-          <li key={l.nome} className="rounded-2xl border border-outline-soft bg-surface-low px-4 py-3 text-body-sm">
+          <li key={l.nome} className={`rounded-2xl border border-l-4 border-outline-soft bg-surface-low px-4 py-3 text-body-sm ${l.ok ? 'border-l-done' : 'border-l-live'}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className={`text-label-md ${l.ok ? 'text-done' : 'text-live'}`}>
                 {l.ok ? '✓' : '✗'} {l.nome}
@@ -236,7 +261,27 @@ export default function DiagnosticPage() {
           </li>
         ))}
       </ul>
+      <h2 className="mb-3 max-w-3xl font-display text-headline-sm text-white">Testes extras</h2>
+      <TesteDeSom />
+      <TesteDeSetas />
+      <TesteAoVivo />
     </div>
+  )
+}
+
+// Resposta direta no topo: o que deu, de quem e o problema e o que fazer, para nao ter que ler linha por linha.
+function Veredito({ linhas, falhas }: { linhas: Linha[]; falhas: Linha[] }) {
+  const doPlayer = falhas.filter((l) => l.origem === 'Player')
+  const [titulo, texto, cor] = !falhas.length
+    ? ['Tudo certo', `Os ${linhas.length} testes passaram: este aparelho fala bem com o servidor do app e com o provedor.`, 'border-done text-done']
+    : doPlayer.length
+      ? ['Problema no app ou na rede deste aparelho', 'O servidor do app não respondeu como deveria, então os testes do provedor não valem. Confira a internet do aparelho e rode de novo; se persistir, mande o resultado.', 'border-live text-live']
+      : ['O app está bem, o problema é do provedor', `Falhou: ${falhas.map((l) => l.nome).join(', ')}. Isso vem do provedor (limite de telas, bloqueio ou instabilidade), não do app. Veja o motivo exato abaixo.`, 'border-live text-live']
+  return (
+    <section data-testid="veredito" className={`mb-4 max-w-3xl rounded-2xl border-2 bg-surface-low px-4 py-4 ${cor.split(' ')[0]}`}>
+      <h2 className={`font-display text-headline-sm ${cor.split(' ')[1]}`}>{titulo}</h2>
+      <p className="mt-1 text-body-md text-on-surface-variant">{texto}</p>
+    </section>
   )
 }
 

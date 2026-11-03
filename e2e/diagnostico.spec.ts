@@ -12,6 +12,7 @@ test('diagnostico: tudo ok contra o painel de teste', async ({ page }) => {
   await expect(page.getByText('✓ Início de um filme (o pedido do download)')).toBeVisible({ timeout: 30000 })
   await expect(page.getByText('ac3 · 6 canais (5.1(side))')).toBeVisible({ timeout: 10000 })
   await expect(page.getByText(/✗/)).toHaveCount(0)
+  await expect(page.getByTestId('veredito')).toContainText('Tudo certo')
   await expect(page.getByTestId('origem').first()).toHaveText('Player')
 })
 
@@ -25,6 +26,7 @@ test('diagnostico: acusa a pagina de bloqueio no lugar dos dados', async ({ page
   await expect(page.getByText('✗ Canais da primeira categoria')).toBeVisible({ timeout: 30000 })
   await expect(page.getByText(/PÁGINA: <html>Attention Required/)).toBeVisible()
   await expect(page.getByTestId('origem').filter({ hasText: 'Problema do provedor' }).first()).toBeVisible()
+  await expect(page.getByTestId('veredito')).toContainText('o problema é do provedor')
 })
 
 test('todas as categorias falham: a tela de canais mostra o erro, nao fica vazia', async ({ page }) => {
