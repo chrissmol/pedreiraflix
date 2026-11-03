@@ -149,7 +149,8 @@ export function useVideoSource({
         : 'Não foi possível reproduzir este arquivo. Formato pode não ser suportado pelo navegador.'
       fetch(video.currentSrc || src, { headers: { Range: 'bytes=0-0' } })
         .then(async (res) => {
-          const msg = res.status === 403 ? await refusedMessage() : fallback
+          // Anexa o corpo do 403 ("host not allowed" = nosso Worker; outro texto = provedor/Cloudflare) para a causa aparecer no cartao.
+          const msg = res.status === 403 ? `${await refusedMessage()} (${(await res.text().catch(() => '')).trim().slice(0, 80) || 'sem detalhe'})` : fallback
           if (!cancelled) setError(msg)
         })
         .catch(() => !cancelled && setError(fallback))

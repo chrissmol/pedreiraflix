@@ -43,6 +43,8 @@ function asList<T>(raw: unknown): T[] {
 export function proxyImage(url: string | null | undefined): string | null {
   if (!url) return null
   if (!/^https?:\/\//i.test(url)) return url // data:/blob:/relative — nothing to proxy
+  // Alguns provedores mandam a capa do TMDB sem o nome do arquivo (".../t/p/w600_and_h900_bestv2"): sempre 404 no console.
+  if (/^https?:\/\/image\.tmdb\.org\/t\/p\/[^/]+\/?$/i.test(url)) return null
   return `/api/stream?url=${encodeURIComponent(url)}`
 }
 
