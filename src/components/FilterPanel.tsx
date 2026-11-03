@@ -73,9 +73,9 @@ export default function FilterPanel({ active, children }: FilterPanelProps) {
         )}
       </button>
       {active.map((f) => (
-        <button key={f.key} onClick={f.clear} aria-label={`Remover filtro ${f.label}`} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-brand-500/15 px-4 text-label-md text-brand-300 hover:bg-brand-500/25">
-          {f.label}
-          <X className="h-3.5 w-3.5" />
+        <button key={f.key} onClick={f.clear} aria-label={`Remover filtro ${f.label}`} className="inline-flex h-11 max-w-full shrink-0 items-center gap-2 rounded-full bg-brand-500/15 px-4 text-label-md text-brand-300 hover:bg-brand-500/25">
+          <span className="truncate">{f.label}</span>
+          <X className="h-3.5 w-3.5 shrink-0" />
         </button>
       ))}
       {open && (
