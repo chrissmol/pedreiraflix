@@ -70,3 +70,12 @@ test('redirecionamento para endereco interno e barrado', async () => {
   assert.equal(res.status, 403)
   assert.equal(calls.length, 1)
 })
+
+// 403 do provedor passa com o corpo dele (o app mostra esse texto no cartao); "host not allowed" so sai do nosso Worker.
+test('403 do provedor chega ao app com o corpo original, sem retentar', async () => {
+  const calls = stubFetch([() => new Response('Forbidden by panel', { status: 403 })])
+  const res = await ask()
+  assert.equal(res.status, 403)
+  assert.equal(await res.text(), 'Forbidden by panel')
+  assert.equal(calls.length, 1)
+})
