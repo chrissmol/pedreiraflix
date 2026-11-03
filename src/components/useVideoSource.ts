@@ -150,7 +150,10 @@ export function useVideoSource({
       fetch(video.currentSrc || src, { headers: { Range: 'bytes=0-0' } })
         .then(async (res) => {
           const msg = res.status === 403 ? await refusedMessage() : fallback
-          if (!cancelled) setError(msg)
+          // Quem respondeu (nosso Worker diz "host not allowed"; o provedor/Cloudflare manda outro texto) aparece na
+          // tela para o erro ser reportado sem abrir o Web Inspector (Safari 03/11: 403 em todo episodio).
+          const motivo = res.ok ? '' : ` [HTTP ${res.status}: ${(await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 80)}]`
+          if (!cancelled) setError(msg + motivo)
         })
         .catch(() => !cancelled && setError(fallback))
     }
