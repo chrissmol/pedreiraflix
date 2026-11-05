@@ -24,7 +24,7 @@ function Card({ person }: { person: Person }) {
         </span>
       )}
       <span className="min-w-0">
-        <span className="block truncate text-body-sm font-semibold text-white">{person.name}</span>
+        <span className="block line-clamp-2 break-words text-body-sm font-semibold text-white">{person.name}</span>
         {person.character && <span className="block truncate text-label-badge text-on-surface-muted">{person.character}</span>}
       </span>
     </li>
