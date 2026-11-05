@@ -58,6 +58,8 @@ export interface Movie {
   containerExtension: string
   /** Só alguns painéis mandam o ano na lista; os outros põem no nome ("Duna (2024)"), ver movieYear. */
   year?: string | null
+  /** Só alguns painéis mandam o gênero na lista de filmes; os outros só no detalhe (MovieDetails). */
+  genre?: string | null
   /** A mesma obra cadastrada mais de uma vez pelo provedor (dublado, legendado, 4K), ver lib/versions. */
   versions?: Movie[]
 }

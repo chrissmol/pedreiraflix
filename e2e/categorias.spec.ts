@@ -19,6 +19,11 @@ test('perfil esconde uma categoria de canais e ela some da tela de canais', asyn
 })
 
 test('subir uma categoria de filmes muda a ordem das fileiras e o foco fica no botao', async ({ page }) => {
+  // Sem gênero na lista, valem as categorias do provedor (com gênero, as fileiras são os gêneros).
+  await page.route(/\/api\/xtream\?.*action=get_vod_streams(&|$)/, async (route) => {
+    const lista = await (await route.fetch()).json()
+    await route.fulfill({ json: lista.map((m: object) => ({ ...m, genre: undefined })) })
+  })
   await page.goto('/categorias')
   await page.getByRole('tab', { name: 'Filmes' }).click()
   await page.getByRole('button', { name: 'Subir Comédia' }).click()

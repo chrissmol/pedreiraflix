@@ -9,7 +9,7 @@ test('grade grande monta um bloco e acrescenta o resto ao rolar', async ({ page 
   }))
   await page.route(/action=get_vod_streams/, (r) => r.fulfill({ json: itens }))
   await seedSession(page)
-  await page.goto('/movies?category=10')
+  await page.goto('/movies?category=g:Acao')
   await expect(page.getByText('Titulo 5', { exact: true }).first()).toBeVisible()
   const montados = () => page.locator('main button[data-spatial]').count()
   expect(await montados()).toBeLessThan(300)

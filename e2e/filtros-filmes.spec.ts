@@ -10,7 +10,7 @@ test('filmes: categoria e ano juntos', async ({ page }) => {
   await page.getByRole('option', { name: '2019' }).click()
   await page.getByRole('button', { name: 'Categoria' }).click()
   await page.getByRole('option', { name: 'Ação' }).click()
-  await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Corrida Final/ }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Amor e Confusão/ })).toHaveCount(0)
 })

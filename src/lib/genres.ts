@@ -47,3 +47,38 @@ export function genresOf(genre?: string | null): string[] {
   }
   return [...seen.values()]
 }
+
+/** Gênero a partir do qual a lista deixa de seguir as categorias do provedor ("Filme Cinema Plus", "Lançamentos 2024"...). */
+const MIN_WITH_GENRE = 0.3
+
+interface GenreGroup<T> {
+  category: { categoryId: string; categoryName: string }
+  items: T[]
+  loading: boolean
+  error: string | null
+}
+
+/**
+ * Reagrupa os grupos do provedor por gênero (um título entra em cada gênero que tem, sem repetir na fileira).
+ * Devolve null quando poucos títulos trazem gênero na lista: aí vale a categoria do provedor, como antes.
+ */
+const idOf = (it: object) => ('streamId' in it ? it.streamId : 'seriesId' in it ? it.seriesId : it)
+
+export function groupByGenre<T extends { genre?: string | null }, G extends GenreGroup<T>>(groups: G[]): G[] | null {
+  const all = groups.flatMap((g) => g.items)
+  const withGenre = all.filter((it) => genresOf(it.genre).length > 0).length
+  if (all.length === 0 || withGenre / all.length < MIN_WITH_GENRE) return null
+  const byGenre = new Map<string, Map<unknown, T>>()
+  for (const it of all) {
+    const names = genresOf(it.genre)
+    for (const name of names.length ? names : ['Outros']) {
+      if (!byGenre.has(name)) byGenre.set(name, new Map())
+      byGenre.get(name)!.set(idOf(it), it)
+    }
+  }
+  const loading = groups.some((g) => g.loading)
+  const template = groups[0]
+  return [...byGenre.entries()]
+    .sort(([a], [b]) => (a === 'Outros' ? 1 : b === 'Outros' ? -1 : a.localeCompare(b, 'pt-BR')))
+    .map(([name, items]) => ({ ...template, category: { categoryId: `g:${name}`, categoryName: name }, items: [...items.values()], loading, error: null }))
+}

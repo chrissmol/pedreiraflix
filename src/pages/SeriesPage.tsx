@@ -10,7 +10,7 @@ import Row from '../components/Row'
 import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import { cleanCategoryName } from '../lib/channelGroups'
-import { genresOf } from '../lib/genres'
+import { genresOf, groupByGenre } from '../lib/genres'
 import type { SeriesItem } from '../types'
 import ErrorCard from '../components/ErrorCard'
 
@@ -56,7 +56,9 @@ function extractYears(items: SeriesItem[]): number[] {
 const ROW_LIMIT = 40
 
 export default function SeriesPage() {
-  const { groups, loading, error, retry } = useSeriesCatalog()
+  const { groups: providerGroups, loading, error, retry } = useSeriesCatalog()
+  // Navega por gênero quando a lista do provedor traz o gênero; senão fica nas categorias dele.
+  const groups = useMemo(() => groupByGenre(providerGroups) ?? providerGroups, [providerGroups])
   const [searchParams, setSearchParams] = useSearchParams()
   // A categoria mora na URL: o "Ver tudo" das fileiras desta mesma pagina so troca o ?category= (sem remontar a
   // pagina), e ler isso uma vez na montagem fazia o link nao abrir nada (Suporte, 21/10). Voltar sai da grade.
