@@ -9,18 +9,18 @@ import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, usePro
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
 const MAX_PROFILES = 6
 
-/** Adult categories are off by default. Turning them on needs the app PIN when there is one, otherwise an
- * "I am 18+" confirmation; turning them off again is free. */
-function AdultSetting() {
+/** Adult categories are off by default, per profile. Turning them on needs the app PIN when there is one, otherwise
+ * an "I am 18+" confirmation; turning them off again is free. */
+function AdultSetting({ accId, profile }: { accId: string; profile: Profile }) {
   const pin = useAppLockStore((s) => s.pin)
-  const showAdult = useAppLockStore((s) => s.showAdult)
-  const setShowAdult = useAppLockStore((s) => s.setShowAdult)
+  const setShowAdult = useProfilesStore((s) => s.setShowAdult)
+  const showAdult = Boolean(profile.showAdult)
   const [asking, setAsking] = useState(false)
   const [code, setCode] = useState('')
   const [wrong, setWrong] = useState(false)
 
   function toggle() {
-    if (showAdult) setShowAdult(false)
+    if (showAdult) setShowAdult(accId, profile.id, false)
     else setAsking(true)
   }
   function typeCode(next: string) {
@@ -29,14 +29,14 @@ function AdultSetting() {
     setWrong(false)
     if (digits.length < 4) return
     if (digits === pin) {
-      setShowAdult(true)
+      setShowAdult(accId, profile.id, true)
       setAsking(false)
     } else setWrong(true)
     setCode('')
   }
 
   return (
-    <div className="mt-12 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
+    <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-label-md text-white">
           <Shield className="h-3.5 w-3.5 shrink-0" /> Mostrar conteúdo adulto
@@ -58,11 +58,9 @@ function AdultSetting() {
           <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
         </span>
       </label>
-      <p className="mt-1 text-on-surface-variant">
-        Vale para todos os perfis deste aparelho: canais, filmes e séries de categorias adultas (+18) ficam ocultos até você ligar.
-      </p>
+      <p className="text-body-sm text-on-surface-variant">Canais, filmes e séries de categorias adultas (+18) ficam ocultos neste perfil até você ligar. Só neste aparelho.</p>
       {asking && pin && (
-        <div className="mt-3 flex flex-col gap-2">
+        <>
           <input
             inputMode="numeric"
             placeholder="PIN do app"
@@ -75,14 +73,14 @@ function AdultSetting() {
           <button onClick={() => setAsking(false)} className="btn-secondary h-10 w-full text-body-sm">
             Cancelar
           </button>
-        </div>
+        </>
       )}
       {asking && !pin && (
         <ConfirmDialog
           message="Este conteúdo é só para maiores de 18 anos. Você confirma que tem 18 anos ou mais?"
           confirmLabel="Tenho 18 anos ou mais"
           onConfirm={() => {
-            setShowAdult(true)
+            setShowAdult(accId, profile.id, true)
             setAsking(false)
           }}
           onCancel={() => setAsking(false)}
@@ -98,7 +96,7 @@ function AppPinSettings() {
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="mt-4 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
+    <div className="mt-12 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-label-md text-white">
           {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
@@ -174,6 +172,8 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
         </span>
       </label>
       <p className="text-body-sm text-on-surface-variant">Para crianças: sempre oculta conteúdo adulto e títulos para maiores de 14 anos neste perfil, mesmo com "Mostrar conteúdo adulto" ligado.</p>
+
+      <AdultSetting accId={accId} profile={profile} />
 
       <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
         <div className="flex min-h-8 items-center justify-between gap-2">
@@ -410,7 +410,6 @@ export default function ProfilesPage() {
           ))}
       </div>
 
-      <AdultSetting />
       <AppPinSettings />
 
       <button

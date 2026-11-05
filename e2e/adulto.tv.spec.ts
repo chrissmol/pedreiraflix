@@ -11,6 +11,7 @@ test('TV: conteúdo adulto vem bloqueado por padrão e o interruptor liga com OK
   await page.goto('/live')
   await expect(page.getByText('Canal Adulto')).toHaveCount(0)
   await page.goto('/profiles')
+  await page.getByRole('button', { name: 'Ajustes' }).click()
   await page.getByLabel('Mostrar conteúdo adulto').focus()
   await page.keyboard.press('Enter')
   await page.getByRole('button', { name: 'Tenho 18 anos ou mais' }).click()

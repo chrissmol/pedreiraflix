@@ -6,9 +6,6 @@ interface AppLockState {
   pin?: string
   /** Not persisted: resets on every reload, so the PIN is asked again each time the app opens. */
   unlocked: boolean
-  /** Adult categories stay hidden everywhere until someone turns this on (kids profiles ignore it). */
-  showAdult: boolean
-  setShowAdult: (on: boolean) => void
   setPin: (pin: string | null) => void
   unlock: () => void
 }
@@ -18,11 +15,9 @@ export const useAppLockStore = create<AppLockState>()(
     (set) => ({
       pin: undefined,
       unlocked: false,
-      showAdult: false,
-      setShowAdult: (showAdult) => set({ showAdult }),
       setPin: (pin) => set({ pin: pin || undefined, unlocked: !pin }),
       unlock: () => set({ unlocked: true }),
     }),
-    { name: 'iptv-app-lock', partialize: (s) => ({ pin: s.pin, showAdult: s.showAdult }) },
+    { name: 'iptv-app-lock', partialize: (s) => ({ pin: s.pin }) },
   ),
 )
