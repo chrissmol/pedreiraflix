@@ -190,7 +190,7 @@ test('TV: filtros de filmes (ano + categoria) so com setas e OK', async ({ page 
   await escolher('Categoria', 'Ação')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Filtros' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Corrida Final/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Corrida Final/ }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /Filme Explosivo/ })).toHaveCount(0)
 })
 

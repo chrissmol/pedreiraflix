@@ -15,7 +15,7 @@ test('catalog is cached across navigations/reloads within the session (no refetc
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(filmesHeading).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
   // Wait for every category to finish (not just the first one to render) — otherwise a still-in-flight
   // category would legitimately add one more real request later, which isn't the cache failing.
   await expect(page.getByText('Carregando filmes:')).toHaveCount(0)
@@ -26,13 +26,13 @@ test('catalog is cached across navigations/reloads within the session (no refetc
   await page.getByRole('link', { name: 'Início' }).click()
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(filmesHeading).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
   expect(vodCalls.length).toBe(firstLoadCalls) // no new requests — served from the in-memory cache
 
   // A full reload clears the in-memory cache, but should still hit sessionStorage instead of the network.
   await page.reload()
   await expect(filmesHeading).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
   expect(vodCalls.length).toBe(firstLoadCalls)
 })
 

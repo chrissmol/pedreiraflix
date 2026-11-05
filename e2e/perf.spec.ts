@@ -5,7 +5,7 @@ test('an already-loaded category row does not re-render when a later category fi
   await login(page)
   await page.goto('/movies')
   // Wait for the first category ("Ação", 2 movies) to actually be on screen.
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
 
   const firstCategoryCount = await page.evaluate(
     () => (window as any).__categoryRowRenders?.['Ação'],
