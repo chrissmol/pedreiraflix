@@ -572,3 +572,17 @@ html.tv .brand-focus:focus-visible {
 @utility card-panel {
   @apply rounded-3xl border border-outline-soft bg-surface-lowest shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)];
 }
+
+/* Cabecalho do celular/computador: desfoque fixo, mais forte no topo e some para baixo (mascara). Fixo de proposito,
+ * sem depender da rolagem, para nao voltar o pisca do fundo que alternava. A logo deixa de brigar com os cards. */
+.header-blur::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
+}
