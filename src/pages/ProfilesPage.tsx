@@ -59,7 +59,7 @@ function AdultSetting() {
         </span>
       </label>
       <p className="mt-1 text-on-surface-variant">
-        Canais, filmes e séries de categorias adultas ficam ocultos em todo o app. Perfil infantil sempre oculta.
+        Vale para todos os perfis deste aparelho: canais, filmes e séries de categorias adultas (+18) ficam ocultos até você ligar.
       </p>
       {asking && pin && (
         <div className="mt-3 flex flex-col gap-2">
@@ -173,7 +173,7 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
         </span>
       </label>
-      <p className="text-body-sm text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+      <p className="text-body-sm text-on-surface-variant">Para crianças: sempre oculta conteúdo adulto e títulos para maiores de 14 anos neste perfil, mesmo com "Mostrar conteúdo adulto" ligado.</p>
 
       <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
         <div className="flex min-h-8 items-center justify-between gap-2">
