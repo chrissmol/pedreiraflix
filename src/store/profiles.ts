@@ -10,6 +10,8 @@ export interface Profile {
   color: string
   /** Hides categories that look like adult content (see lib/parentalControl.ts) across every list, search and direct link. */
   isKids?: boolean
+  /** Libera as categorias adultas neste perfil neste aparelho (nao sincroniza; o padrao e esconder). Perfil infantil ignora. */
+  showAdult?: boolean
   /** 4-digit PIN required to switch into this profile, if set. Household-level friction, not real security. */
   pin?: string
   /** Categorias que o perfil escondeu e a ordem que escolheu (tela /categorias), por chave `${tipo}:${categoryId}`. */
@@ -42,6 +44,7 @@ interface ProfilesState {
   renameProfile: (accId: string, profileId: string, name: string) => void
   setActiveProfile: (accId: string, profileId: string) => void
   setKids: (accId: string, profileId: string, isKids: boolean) => void
+  setShowAdult: (accId: string, profileId: string, showAdult: boolean) => void
   setPin: (accId: string, profileId: string, pin: string | null) => void
   setCategoryPrefs: (accId: string, profileId: string, prefs: Pick<Profile, 'hiddenCategories' | 'categoryOrder'>) => void
 }
@@ -121,6 +124,7 @@ export const useProfilesStore = create<ProfilesState>()(
           return { byAccount: { ...state.byAccount, [accId]: { ...account, activeId: profileId } } }
         }),
       setKids: (accId, profileId, isKids) => set((state) => updateProfile(state, accId, profileId, { isKids })),
+      setShowAdult: (accId, profileId, showAdult) => set((state) => updateProfile(state, accId, profileId, { showAdult })),
       setPin: (accId, profileId, pin) => set((state) => updateProfile(state, accId, profileId, { pin: pin || undefined })),
       setCategoryPrefs: (accId, profileId, prefs) => set((state) => updateProfile(state, accId, profileId, prefs)),
     }),

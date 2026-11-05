@@ -9,6 +9,87 @@ import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, usePro
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
 const MAX_PROFILES = 6
 
+/** Adult categories are off by default, per profile. Turning them on needs the app PIN when there is one, otherwise
+ * an "I am 18+" confirmation; turning them off again is free. */
+function AdultSetting({ accId, profile }: { accId: string; profile: Profile }) {
+  const pin = useAppLockStore((s) => s.pin)
+  const setShowAdult = useProfilesStore((s) => s.setShowAdult)
+  const showAdult = Boolean(profile.showAdult)
+  const [asking, setAsking] = useState(false)
+  const [code, setCode] = useState('')
+  const [wrong, setWrong] = useState(false)
+
+  function toggle() {
+    if (showAdult) setShowAdult(accId, profile.id, false)
+    else setAsking(true)
+  }
+  function typeCode(next: string) {
+    const digits = next.replace(/\D/g, '').slice(0, 4)
+    setCode(digits)
+    setWrong(false)
+    if (digits.length < 4) return
+    if (digits === pin) {
+      setShowAdult(accId, profile.id, true)
+      setAsking(false)
+    } else setWrong(true)
+    setCode('')
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-label-md text-white">
+          <Shield className="h-3.5 w-3.5 shrink-0" /> Adulto +18
+        </span>
+        <span className="relative inline-flex shrink-0">
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label="Mostrar conteúdo adulto"
+            checked={showAdult}
+            onChange={toggle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                toggle()
+              }
+            }}
+            className="brand-focus peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-surface-highest transition-colors checked:bg-brand-fill"
+          />
+          <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </span>
+      </label>
+      {asking && pin && (
+        <>
+          <input
+            inputMode="numeric"
+            placeholder="PIN do app"
+            aria-label="PIN do app para liberar conteúdo adulto"
+            value={code}
+            onChange={(e) => typeCode(e.target.value)}
+            className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
+          />
+          {wrong && <p className="text-center text-live">PIN incorreto</p>}
+          <button onClick={() => setAsking(false)} className="btn-secondary h-10 w-full text-body-sm">
+            Cancelar
+          </button>
+        </>
+      )}
+      {asking && !pin && (
+        <ConfirmDialog
+          message="Este conteúdo é só para maiores de 18 anos. Você confirma que tem 18 anos ou mais?"
+          confirmLabel="Tenho 18 anos ou mais"
+          onConfirm={() => {
+            setShowAdult(accId, profile.id, true)
+            setAsking(false)
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
+    </div>
+  )
+}
+
 function AppPinSettings() {
   const pin = useAppLockStore((s) => s.pin)
   const setPin = useAppLockStore((s) => s.setPin)
@@ -91,7 +172,8 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
         </span>
       </label>
-      <p className="text-body-sm text-on-surface-variant">Oculta categorias de conteúdo adulto em todo o app para este perfil.</p>
+
+      <AdultSetting accId={accId} profile={profile} />
 
       <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
         <div className="flex min-h-8 items-center justify-between gap-2">

@@ -486,6 +486,8 @@ test('TV: ajustes do perfil so com setas e OK (interruptor infantil e PIN)', asy
   await page.keyboard.press('Enter') // OK do controle; checkbox nativo so liga com espaco
   await expect(sw).toBeChecked()
   await page.keyboard.press('ArrowDown')
+  await expect(card.getByRole('switch', { name: 'Mostrar conteúdo adulto' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
   await expect(card.getByPlaceholder('0000')).toBeFocused()
   await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/tv.png` : undefined })
 })

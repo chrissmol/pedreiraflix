@@ -19,9 +19,9 @@ test('429 com Retry-After: o app espera e o catalogo carrega', async ({ page }) 
   await page.goto('/live')
   await expect(page.getByText('Canal Notícias 24h')).toBeVisible({ timeout: 40000 })
   expect(limitadas).toBe(2)
-  // Os 3 primeiros pedidos saem juntos (uma por categoria); a nova tentativa das que levaram 429 so pode sair depois do
+  // Os 2 primeiros pedidos saem juntos (uma por categoria; a adulta fica oculta); a nova tentativa das que levaram 429 so pode sair depois do
   // Retry-After (4 s). O app antigo tentava de novo em ~2,5 s, sem ler o Retry-After.
-  const tentativasNovas = horarios.slice(3)
+  const tentativasNovas = horarios.slice(2)
   expect(tentativasNovas.length).toBeGreaterThan(0)
   expect(tentativasNovas[0] - horarios[0]).toBeGreaterThanOrEqual(3800)
 })

@@ -6,6 +6,7 @@ import DownloadButton from '../components/DownloadButton'
 import { Check, Eye, FileArrowDown, Play, Plus } from '../components/icons'
 import { cached } from '../lib/cache'
 import { useXtream } from '../hooks/useXtream'
+import { useHideAdult } from '../hooks/useHideAdult'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import { blockedForKids, getAiSynopsis, getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 import { formatRuntime } from '../components/videoPlayerUtils'
@@ -31,6 +32,7 @@ export default function MovieDetailPage() {
 
   const profileId = useActiveProfileId()
   const isKids = Boolean(useActiveProfile()?.isKids)
+  const hideAdult = useHideAdult()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'movie', Number(id)))
   const watched = useLibraryStore((s) => Boolean(s.watched[`${profileId}:movie-${id}`]))
@@ -48,7 +50,7 @@ export default function MovieDetailPage() {
         if (cancelled) return
         setMovie(data)
         // A direct link/bookmark bypasses the already-filtered catalog lists, so this is checked again here.
-        if (isKids) isCategoryBlocked(client, 'movie', data.categoryId).then((value) => !cancelled && setBlocked(value))
+        if (hideAdult) isCategoryBlocked(client, 'movie', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
       .catch((err) => {
         if (!cancelled) setError(friendlyCatalogError(err))
@@ -59,7 +61,7 @@ export default function MovieDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [client, id, isKids, attempt])
+  }, [client, id, hideAdult, attempt])
 
   const [tmdb, setTmdb] = useState<TmdbInfo | null>(null)
   useEffect(() => {

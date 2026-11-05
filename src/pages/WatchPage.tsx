@@ -10,6 +10,7 @@ import { displayTitle, episodeName, episodeTitle } from '../lib/displayTitle'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
+import { useHideAdult } from '../hooks/useHideAdult'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
@@ -43,6 +44,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
   const profile = useActiveProfile()
+  const hideAdult = useHideAdult()
   const isKids = Boolean(profile?.isKids)
   const hiddenCategories = profile?.hiddenCategories
   const categoryOrder = profile?.categoryOrder
@@ -217,7 +219,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   // below to resolve, and this flips back to false immediately for every other profile.
   const [checkingProfile, setCheckingProfile] = useState(isKids)
   useEffect(() => {
-    if (!client || !kind || !id || !isKids || kind === 'offline') {
+    if (!client || !kind || !id || !hideAdult || kind === 'offline') {
       setBlocked(false)
       setCheckingProfile(false)
       return
@@ -226,7 +228,8 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     // momentarily deciding "not blocked" before it's actually loaded.
     if (kind === 'live' && liveChannels.length === 0) return
     if (kind === 'series' && !seriesDetails) return
-    setCheckingProfile(true)
+    // Perfil infantil espera o resultado antes de tocar; os outros tocam enquanto a checagem roda (fica bloqueado se for adulto).
+    if (isKids) setCheckingProfile(true)
     let cancelled = false
     const watchKind = kind
     async function check() {
@@ -242,7 +245,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     return () => {
       cancelled = true
     }
-  }, [client, kind, id, isKids, liveChannels, seriesDetails])
+  }, [client, kind, id, hideAdult, isKids, liveChannels, seriesDetails])
 
   const nextEpisode = useMemo(() => {
     if (!seriesDetails || kind !== 'series') return null

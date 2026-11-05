@@ -17,3 +17,16 @@ for (const t of TELAS) {
     expect(sobra).toBeLessThanOrEqual(0)
   })
 }
+
+// Com os Ajustes do perfil abertos (infantil, adulto, PIN) tambem cabe num computador comum e no celular.
+for (const t of [{ nome: 'celular', width: 412, height: 915 }, { nome: 'computador', width: 1440, height: 800 }]) {
+  test(`perfis com ajustes abertos nao rola em ${t.nome}`, async ({ page }) => {
+    await seedSession(page)
+    await page.setViewportSize({ width: t.width, height: t.height })
+    await page.goto('/profiles')
+    await page.getByRole('button', { name: 'Ajustes' }).click()
+    await expect(page.getByLabel('Mostrar conteúdo adulto')).toBeVisible()
+    const sobra = await page.evaluate(() => { const m = document.querySelector('main')!; return m.scrollHeight - m.clientHeight })
+    expect(sobra).toBeLessThanOrEqual(0)
+  })
+}
