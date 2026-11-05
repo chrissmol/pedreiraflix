@@ -8,7 +8,7 @@
 
 import { junto } from './junto.js'
 import { molTv } from './moltv.js'
-import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
+import { openSession, panelBase, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
 // Workers send no User-Agent by default and Xtream panels commonly answer 404 to that.
 const UPSTREAM_HEADERS = { 'user-agent': 'Mozilla/5.0' }
@@ -162,7 +162,7 @@ async function xtream(request, url) {
   }
   let target
   try {
-    target = new URL(`${new URL(q.get('base')).origin}/${q.get('path') || 'player_api.php'}`)
+    target = new URL(`${panelBase(q.get('base'))}/${q.get('path') || 'player_api.php'}`)
   } catch {
     return new Response('invalid base url', { status: 400 })
   }

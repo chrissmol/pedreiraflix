@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { clearCache, setCacheScope } from '../lib/cache'
 import { type M3uEntry } from '../lib/m3u'
+import { deleteEntries, inIdb } from '../lib/m3uStore'
 import { obfuscatedStorage } from '../lib/obfuscatedStorage'
-import { accountId } from './accounts'
+import { accountId, useAccountsStore } from './accounts'
 import type { ProviderCredentials, ServerInfo, UserInfo } from '../types'
 
 interface AuthState {
@@ -38,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
       dismissWarning: () => set({ sessionWarning: null }),
       logout: () => {
         clearCache()
+        // Sessao sem "lembrar": ninguem mais volta a essa playlist, entao ela sai do IndexedDB.
+        const creds = useAuthStore.getState().credentials
+        if (creds && !useAccountsStore.getState().accounts.some((a) => a.id === accountId(creds))) deleteEntries(accountId(creds))
         set({ credentials: null, entries: null, user: null, server: null, sessionWarning: null })
       },
     }),
@@ -50,6 +54,7 @@ export const useAuthStore = create<AuthState>()(
       // differs from this one, and every session ever written by this app was written with version 0
       // (the default), so leaving this at 0 would make `migrate` below silently never run for anyone.
       version: 1,
+      partialize: (s) => ({ ...s, entries: s.credentials && inIdb.has(accountId(s.credentials)) ? null : s.entries }),
       // A session persisted before M3U support has credentials with no `type` field — tag it 'xtream'
       // on load instead of making every consumer handle both shapes forever.
       migrate: (state) => {

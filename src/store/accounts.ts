@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { type M3uEntry } from '../lib/m3u'
+import { deleteEntries, inIdb } from '../lib/m3uStore'
 import { obfuscatedStorage } from '../lib/obfuscatedStorage'
 import type { ProviderCredentials, XtreamCredentials } from '../types'
 
@@ -49,7 +50,10 @@ export const useAccountsStore = create<AccountsState>()(
           }
           return { accounts: [entry, ...state.accounts.filter((a) => a.id !== id)] }
         }),
-      removeAccount: (id) => set((state) => ({ accounts: state.accounts.filter((a) => a.id !== id) })),
+      removeAccount: (id) => {
+        deleteEntries(id)
+        set((state) => ({ accounts: state.accounts.filter((a) => a.id !== id) }))
+      },
       renameAccount: (id, label) =>
         set((state) => ({
           accounts: state.accounts.map((a) => (a.id === id ? { ...a, label: label.trim() || undefined } : a)),
@@ -62,6 +66,8 @@ export const useAccountsStore = create<AccountsState>()(
       // See the matching comment in store/auth.ts: this must differ from the implicit default (0) or
       // `migrate` below never runs, since every account list ever written by this app used version 0.
       version: 1,
+      // A playlist M3U ja guardada no IndexedDB (lib/m3uStore.ts) nao vai de novo para o localStorage.
+      partialize: (s) => ({ ...s, accounts: s.accounts.map((a) => (inIdb.has(a.id) ? { ...a, entries: undefined } : a)) }),
       // Pre-M3U-support accounts stored baseUrl/username/password directly on the account, not nested
       // under `credentials` — lift them into the new shape once instead of making every reader handle both.
       migrate: (state) => {

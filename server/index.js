@@ -3,7 +3,7 @@ import net from 'node:net'
 import cors from 'cors'
 import express from 'express'
 import { molTv } from '../worker/moltv.js'
-import { openSession, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
+import { openSession, panelBase, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
 
 const app = express()
 
@@ -81,7 +81,7 @@ function sanitizeBaseUrl(raw) {
     return null
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
-  return `${url.protocol}//${url.host}`
+  return panelBase(url.toString())
 }
 
 // Blocks requests to loopback, private, link-local and other non-public

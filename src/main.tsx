@@ -14,7 +14,7 @@ if (isTv) {
   document.documentElement.classList.add('tv')
   installTvGuards()
 }
-import { ensureActiveProfile, refreshSession } from './lib/session'
+import { ensureActiveProfile, refreshSession, restorePlaylists } from './lib/session'
 import { useAccountsStore } from './store/accounts'
 import { useAuthStore } from './store/auth'
 
@@ -31,6 +31,8 @@ if (credentials && useAccountsStore.getState().accounts.length === 0) {
 // Sessions from before profiles existed: ensure a default profile and fold in whatever
 // favorites/progress/watched history was saved under the old, unscoped format.
 if (credentials) ensureActiveProfile(credentials)
+
+void restorePlaylists()
 
 // Asks the browser not to evict our localStorage under storage pressure (where the login lives).
 navigator.storage?.persist?.().catch(() => {})
