@@ -8,6 +8,7 @@ import CatalogProgress from '../components/CatalogProgress'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
 import LiveNowRow from '../components/LiveNowRow'
+import NextGameBanner from '../components/NextGameBanner'
 import NewEpisodesRow from '../components/NewEpisodesRow'
 import HeroCarousel, { type FeaturedCandidate } from '../components/HeroCarousel'
 import { Shuffle } from '../components/icons'
@@ -193,6 +194,7 @@ export default function HomePage() {
       />
 
       <div className="relative z-10 pt-8 sm:pt-10">
+        <NextGameBanner />
         <ContinueWatchingRow />
         <NewEpisodesRow />
         <LiveNowRow />
