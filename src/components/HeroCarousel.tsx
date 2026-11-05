@@ -5,6 +5,7 @@ import { useActiveProfileId } from '../store/profiles'
 import { displayTitle } from '../lib/displayTitle'
 import { isTv } from '../lib/device'
 import { useTmdbInfo } from '../hooks/useImdbRating'
+import { bestRating } from '../lib/tmdb'
 import { proxyImage } from '../lib/xtream'
 
 export interface FeaturedCandidate {
@@ -70,7 +71,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
   const current = playable[index]
   // O destaque escolhe pela nota do provedor, mas mostra so a do IMDb.
   const tmdb = useTmdbInfo(current && { title: current.title, kind: current.kind === 'movie' ? 'movie' : 'tv' })
-  const imdbRating = tmdb?.imdbRating ?? null
+  const rating = bestRating(tmdb)
   // Logo do titulo no lugar do nome escrito, como nos streamings; se a imagem falhar, volta o nome.
   const [logoFailed, setLogoFailed] = useState<string | null>(null)
   const logo = tmdb?.logo && tmdb.logo !== logoFailed ? tmdb.logo : null
@@ -141,7 +142,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
           </h1>
         )}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">
-          {imdbRating && <span title="Nota do IMDb" className="font-semibold text-rating">★ {imdbRating}</span>}
+          {rating && <span title={`Nota do ${rating.source}`} className="font-semibold text-rating">★ {rating.value}{rating.source === 'TMDB' && ' TMDB'}</span>}
           {[current.kind === 'movie' ? 'Filme' : 'Série', ...current.meta].map((m) => (
             <span key={m} className="before:pr-2 before:text-on-surface-muted before:content-['·'] first:before:content-none">
               {m}

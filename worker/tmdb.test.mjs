@@ -69,7 +69,8 @@ test('series (kind=tv): busca em /search/tv e pega o codigo IMDb dos external_id
 // consultas/dia do OMDb. Falha do OMDb (limite do dia, fora do ar) nao fica guardada.
 function memoryKv() {
   const data = new Map()
-  return { data, get: async (k) => (data.has(k) ? JSON.parse(data.get(k)) : null), put: async (k, v) => void data.set(k, v) }
+  const ttls = {}
+  return { data, ttls, get: async (k) => (data.has(k) ? JSON.parse(data.get(k)) : null), put: async (k, v, o) => void (data.set(k, v), (ttls[k] = o?.expirationTtl)) }
 }
 
 test('nota guardada no KV: a segunda pergunta nao chama TMDB nem OMDb', async () => {
@@ -175,4 +176,15 @@ test('com Cache API: guarda nela, nao faz put no KV e a segunda pergunta nao cha
   } finally {
     delete globalThis.caches
   }
+})
+
+test('sem nota no IMDb guarda so 3 dias (a nota nova assume logo); com nota, 30 dias', async () => {
+  const NOTAS = memoryKv()
+  stubFetch(() => Response.json({ imdbRating: 'N/A' }))
+  await ask({ ...ENV, NOTAS })
+  assert.deepEqual(Object.values(NOTAS.ttls), [3 * 86400])
+  const COM = memoryKv()
+  stubFetch(() => Response.json({ imdbRating: '8.7' }))
+  await ask({ ...ENV, NOTAS: COM })
+  assert.deepEqual(Object.values(COM.ttls), [30 * 86400])
 })

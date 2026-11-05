@@ -516,10 +516,10 @@ async function notasGet(env, key) {
   if (saved && cache) await notasPut(env, key, saved)
   return saved
 }
-async function notasPut(env, key, body) {
+async function notasPut(env, key, body, days = 30) {
   const cache = globalThis.caches?.default
-  if (!cache) return env.NOTAS?.put(key, JSON.stringify(body), { expirationTtl: 30 * 86400 }).catch(() => {})
-  await cache.put(notasUrl(key), Response.json(body, { headers: { 'cache-control': 'public, max-age=2592000' } })).catch(() => {})
+  if (!cache) return env.NOTAS?.put(key, JSON.stringify(body), { expirationTtl: days * 86400 }).catch(() => {})
+  await cache.put(notasUrl(key), Response.json(body, { headers: { 'cache-control': `public, max-age=${days * 86400}` } })).catch(() => {})
 }
 
 // Optional movie-metadata enrichment (genre/year/rating/plot) from TMDB, which Xtream only half-fills.
@@ -577,8 +577,9 @@ async function tmdb(url, env) {
     certification: /^(L|10|12|14|16|18)$/.test(certification || '') ? certification : null,
     ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
   }
-  // shortcut: a nota fica 30 dias sem atualizar; encurte o prazo se alguem reclamar de nota velha.
-  if (imdb !== undefined) await notasPut(env, cacheKey, body)
+  // Com nota do IMDb: 30 dias. Sem nota (lancamento novo, o app mostra a do TMDB): so 3 dias, para a do IMDb
+  // assumir assim que existir e quando houver consultas do dia no OMDb. shortcut: cada refazer gasta 1 consulta.
+  if (imdb !== undefined) await notasPut(env, cacheKey, body, imdb ? 30 : 3)
   return answer(body)
 }
 
