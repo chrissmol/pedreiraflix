@@ -301,7 +301,7 @@ export default function TopNav() {
             aria-modal="true"
             aria-label="Menu da conta"
             // Com mais itens o menu passa da altura da TV (540) e de celular pequeno: rola por dentro em vez de sair da tela.
-            className={`overflow-y-auto overscroll-contain ${isTv ? 'menu-panel absolute bottom-full left-0 mb-2 max-h-[calc(100dvh-5rem)] w-64' : 'menu-panel absolute right-0 mt-2 max-h-[calc(100dvh-5rem)] w-64'}`}
+            className={`overflow-y-auto overscroll-contain ${isTv ? 'menu-panel absolute bottom-full left-0 mb-2 max-h-[calc(100dvh-5rem)] w-64' : 'menu-panel absolute right-0 mt-2 max-h-[calc(100dvh-9.5rem)] w-64 md:max-h-[calc(100dvh-5rem)]'}`}
           >
             <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
