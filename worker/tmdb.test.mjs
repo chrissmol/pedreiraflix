@@ -87,7 +87,8 @@ test('OMDb no limite do dia: responde sem nota e nao guarda no KV', async () => 
   stubFetch(() => Response.json({ Response: 'False', Error: 'Request limit reached!' }))
   const body = await (await ask({ ...ENV, NOTAS })).json()
   assert.equal(body.imdbRating, null)
-  assert.equal(NOTAS.data.size, 0)
+  assert.deepEqual([...NOTAS.data.keys()].filter((k) => k.startsWith('tmdb:')), [])
+  assert.equal(JSON.parse(NOTAS.data.get(`omdb:${new Date().toISOString().slice(0, 10)}`)).failed, 1)
 })
 
 test('series: elenco e miniaturas de episodio do TVmaze pelo codigo IMDb; TVmaze fora do ar nao quebra', async () => {

@@ -467,6 +467,12 @@ async function logError(request) {
 async function imdbRating(imdbId, env) {
   if (!env.OMDB_KEY) return undefined
   if (!/^tt\d+$/.test(imdbId || '')) return null
+  const result = await omdbLookup(imdbId, env)
+  await countOmdb(env, result === undefined ? 'failed' : result === null ? 'noRating' : 'rated')
+  return result
+}
+
+async function omdbLookup(imdbId, env) {
   try {
     const res = await fetch(`https://www.omdbapi.com/?${new URLSearchParams({ i: imdbId, apikey: String(env.OMDB_KEY).trim() })}`, {
       signal: AbortSignal.timeout(5000),
@@ -477,6 +483,19 @@ async function imdbRating(imdbId, env) {
   } catch {
     return undefined
   }
+}
+
+// Contador diario de consultas ao OMDb no KV NOTAS (chave omdb:AAAA-MM-DD, guardada 7 dias): rated / noRating /
+// failed (limite do dia, fora do ar). Ver: wrangler kv key get --binding NOTAS omdb:2026-11-05
+// shortcut: ler-e-gravar sem trava; no pico perde algumas contagens, serve para ter a ordem de grandeza.
+async function countOmdb(env, outcome) {
+  if (!env.NOTAS) return
+  const key = `omdb:${new Date().toISOString().slice(0, 10)}`
+  try {
+    const day = (await env.NOTAS.get(key, 'json')) || { rated: 0, noRating: 0, failed: 0 }
+    day[outcome]++
+    await env.NOTAS.put(key, JSON.stringify(day), { expirationTtl: 7 * 86400 })
+  } catch {}
 }
 
 // Series cast and episode thumbnails from TVmaze (free, no key; CC BY-SA, so the app credits it), keyed by
