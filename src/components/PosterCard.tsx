@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useImdbRating, type ImdbQuery } from '../hooks/useImdbRating'
 import { isTv } from '../lib/device'
-import { displayTitle } from '../lib/displayTitle'
+import { displayTitle, withoutYear } from '../lib/displayTitle'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import { Check, Play } from './icons'
@@ -22,11 +22,13 @@ interface PosterCardProps {
   fill?: boolean
   /** Filme visto ou serie concluida neste perfil ganha o ✓ no canto, como no Plex/Jellyfin, no verde do "Assistido" dos episodios. */
   watchedRef?: { kind: 'movie' | 'series'; id: number }
+  /** Mantem o "(2024)" no nome (resultados da busca, para separar refilmagens). */
+  showYear?: boolean
 }
 
-export default function PosterCard({ title: rawTitle, image, onClick, imdb, subtitle, progressPct, fill, watchedRef }: PosterCardProps) {
+export default function PosterCard({ title: rawTitle, image, onClick, imdb, subtitle, progressPct, fill, watchedRef, showYear }: PosterCardProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido) em todo poster do app — mesma limpeza do destaque (#86).
-  const title = displayTitle(rawTitle)
+  const title = showYear ? displayTitle(rawTitle) : withoutYear(displayTitle(rawTitle))
   const ref = useRef<HTMLButtonElement>(null)
   const [seen, setSeen] = useState(false)
   useEffect(() => {

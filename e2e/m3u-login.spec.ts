@@ -44,5 +44,5 @@ test('M3U: titulo com virgula aparece inteiro e a virgula de um atributo nao o c
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await page.goto('/movies')
-  await expect(page.getByText('Rock, Paper, Scissors (2020)').first()).toBeVisible()
+  await expect(page.getByText('Rock, Paper, Scissors').first()).toBeVisible()
 })

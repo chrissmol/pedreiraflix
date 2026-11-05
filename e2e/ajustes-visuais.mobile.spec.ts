@@ -115,6 +115,6 @@ test('poster mostra o titulo sem [L] e sem ano repetido', async ({ page }) => {
   await page.goto('/movies')
   const poster = page.getByRole('button', { name: /^Filme Explosivo/ }).first()
   await expect(poster).toBeVisible({ timeout: 15000 })
-  await expect(poster).toContainText('Filme Explosivo (2025)')
+  await expect(poster).toContainText('Filme Explosivo')
   await expect(poster).not.toContainText('[L]')
 })

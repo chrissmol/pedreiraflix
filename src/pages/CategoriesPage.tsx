@@ -140,7 +140,7 @@ export default function CategoriesPage() {
               <button
                 onClick={() => toggle(c)}
                 aria-pressed={!isHidden}
-                aria-label={`${isHidden ? 'Mostrar' : 'Esconder'} ${c.categoryName}`}
+                aria-label={`${isHidden ? 'Mostrar' : 'Esconder'} ${cleanCategoryName(c.categoryName)}`}
                 title={isHidden ? 'Mostrar' : 'Esconder'}
                 className="btn-icon"
               >
@@ -150,7 +150,7 @@ export default function CategoriesPage() {
                 id={`cat-up-${c.categoryId}`}
                 onClick={() => move(c, -1)}
                 disabled={index === 0}
-                aria-label={`Subir ${c.categoryName}`}
+                aria-label={`Subir ${cleanCategoryName(c.categoryName)}`}
                 title="Subir"
                 className="btn-icon disabled:opacity-30"
               >
@@ -160,7 +160,7 @@ export default function CategoriesPage() {
                 id={`cat-down-${c.categoryId}`}
                 onClick={() => move(c, 1)}
                 disabled={index === arranged.length - 1}
-                aria-label={`Descer ${c.categoryName}`}
+                aria-label={`Descer ${cleanCategoryName(c.categoryName)}`}
                 title="Descer"
                 className="btn-icon disabled:opacity-30"
               >

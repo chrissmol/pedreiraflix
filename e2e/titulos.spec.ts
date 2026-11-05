@@ -12,5 +12,5 @@ test('pagina do filme mostra o titulo sem [L] e sem ano repetido', async ({ page
   })
   await seedSession(page)
   await page.goto('/movies/1')
-  await expect(page.getByRole('heading', { level: 1, name: 'Filme Explosivo (2025)', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Filme Explosivo', exact: true })).toBeVisible()
 })

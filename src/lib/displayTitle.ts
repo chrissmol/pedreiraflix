@@ -41,6 +41,9 @@ export function displayTitle(name: string, keepCase = false): string {
   return keepCase ? t : fixCase(t)
 }
 
+/** Tira o "(2024)" do fim para cards e detalhe (o ano continua no nome cru, na busca e nos chips). */
+export const withoutYear = (t: string) => t.replace(/\s*\((?:19|20)\d{2}\)\s*$/, '') || t
+
 /** Canal: mesma limpeza, sem mexer na caixa. */
 export const displayChannel = (name: string) => displayTitle(name, true)
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { displayChannel, displayTitle } from '../src/lib/displayTitle'
+import { displayChannel, displayTitle, withoutYear } from '../src/lib/displayTitle'
 
 const casos: Array<[string, string]> = [
   ['- Dupla Perigosa', 'Dupla Perigosa'],
@@ -32,6 +32,12 @@ const casos: Array<[string, string]> = [
 
 test('displayTitle limpa símbolos e CAIXA ALTA sem estragar títulos legítimos', () => {
   for (const [entrada, saida] of casos) expect(displayTitle(entrada), entrada).toBe(saida)
+})
+
+test('withoutYear tira só o ano do fim', () => {
+  expect(withoutYear('Duna (2024)')).toBe('Duna')
+  expect(withoutYear('(1984)')).toBe('(1984)')
+  expect(withoutYear('2012')).toBe('2012')
 })
 
 test('displayChannel limpa símbolos mas mantém a caixa do canal', () => {
