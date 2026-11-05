@@ -14,7 +14,7 @@ test('going back restores the list scroll position', async ({ page }) => {
   await main.evaluate((el) => el.scrollTo(0, 150))
   await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(100)
 
-  await page.getByText('Risada Garantida').click()
+  await page.getByText('Risada Garantida').first().click()
   await expect(page).toHaveURL(/\/movies\/4/)
   // A fresh page still opens at the top.
   await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBe(0)

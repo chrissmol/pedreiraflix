@@ -37,8 +37,9 @@ const ALL = ['series-5011', 'series-5012', 'series-5013', 'series-5021', 'series
 test('filme visto e serie toda vista ganham o ✓ no poster e o selo na pagina', async ({ page }) => {
   await seed(page, ['movie-1', ...ALL])
   await page.goto('/movies')
-  await expect(page.getByRole('button', { name: /Filme Explosivo/ }).getByRole('img', { name: 'Assistido' })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Assistido' })).toHaveCount(1)
+  await expect(page.getByRole('button', { name: /Filme Explosivo/ }).first().getByRole('img', { name: 'Assistido' })).toBeVisible()
+  // O mesmo título aparece em Novidades e na fileira do gênero: 2 cartões.
+  await expect(page.getByRole('img', { name: 'Assistido' })).toHaveCount(2)
   await page.goto('/movies/1')
   await expect(page.getByText('Assistido', { exact: true })).toBeVisible()
 
@@ -46,19 +47,19 @@ test('filme visto e serie toda vista ganham o ✓ no poster e o selo na pagina',
   await page.goto('/series/50')
   await expect(page.getByText('Concluída', { exact: true })).toBeVisible()
   await page.goto('/series')
-  await expect(page.getByRole('button', { name: /Série Dramática/ }).getByRole('img', { name: 'Série concluída' })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Série concluída' })).toHaveCount(1)
+  await expect(page.getByRole('button', { name: /Série Dramática/ }).first().getByRole('img', { name: 'Série concluída' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Série concluída' })).toHaveCount(2)
 })
 
 test('serie concluida que ganhou episodios novos mostra "Novos episódios" e perde o ✓', async ({ page }) => {
   // Concluida quando tinha 5 episodios; agora o provedor lista 6.
   await seed(page, ALL.slice(0, 5), { 50: { episodes: 5, done: true, at: 1 } })
   await page.goto('/series')
-  await expect(page.getByRole('img', { name: 'Série concluída' })).toHaveCount(1)
+  await expect(page.getByRole('img', { name: 'Série concluída' })).toHaveCount(2)
   await page.goto('/series/50')
   await expect(page.getByText('Novos episódios', { exact: true })).toBeVisible()
   await page.goto('/series')
-  await expect(page.getByRole('button', { name: /Série Dramática/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Série Dramática/ }).first()).toBeVisible()
   await expect(page.getByRole('img', { name: 'Série concluída' })).toHaveCount(0)
 })
 
@@ -77,7 +78,7 @@ test.describe('TV', () => {
   test('o ✓ aparece no poster da TV e o OK abre o filme com o selo', async ({ page }) => {
     await seed(page, ['movie-1'])
     await page.goto('/movies')
-    const card = page.getByRole('button', { name: /Filme Explosivo/ })
+    const card = page.getByRole('button', { name: /Filme Explosivo/ }).first()
     await expect(card.getByRole('img', { name: 'Assistido' })).toBeVisible()
     await card.focus()
     await page.keyboard.press('Enter')

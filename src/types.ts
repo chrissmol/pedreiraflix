@@ -89,6 +89,8 @@ export interface SeriesItem {
   backdropPath: string[]
   cast: string | null
   director: string | null
+  /** Quando o provedor atualizou a serie (last_modified, segundos), para a fileira Novidades. */
+  added?: string | null
   /** A mesma serie cadastrada mais de uma vez pelo provedor (dublada, legendada), ver lib/versions. */
   versions?: SeriesItem[]
 }

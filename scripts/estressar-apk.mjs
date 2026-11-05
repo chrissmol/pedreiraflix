@@ -142,7 +142,7 @@ try {
       localStorage.setItem('iptv-session', JSON.stringify({ state: { credentials: creds, user, server, sessionWarning: null }, version: 0 }))
     }, MOCK)
     await page.goto('http://10.0.2.2:5173/')
-    await page.getByRole('heading', { name: /Adicionados recentemente|Continuar assistindo|Ação/ }).first().waitFor({ timeout: 30_000 })
+    await page.getByRole('heading', { name: /Novidades em filmes|Continuar assistindo|Ação/ }).first().waitFor({ timeout: 30_000 })
     await foto('01-inicio')
     await auditar('inicio')
   })

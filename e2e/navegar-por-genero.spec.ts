@@ -24,3 +24,16 @@ test('séries: o gênero vem na lista e as fileiras são gêneros', async ({ pag
   await page.goto('/series')
   await expect(page.getByRole('heading', { name: 'Drama', level: 2 }).first()).toBeVisible()
 })
+
+// Chris (5/11/2026): fileira "Novidades" (últimas adições do provedor) no Início, em Filmes e em Séries.
+test('Novidades: primeira fileira em Filmes e Séries, com o mais recente primeiro', async ({ page }) => {
+  await login(page)
+  for (const rota of ['/movies', '/series']) {
+    await page.goto(rota)
+    await expect(page.getByRole('heading', { name: 'Novidades', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText('Novidades')
+  }
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Novidades em filmes' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novidades em séries' })).toBeVisible()
+})

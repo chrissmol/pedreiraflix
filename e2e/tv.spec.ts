@@ -145,7 +145,7 @@ test('TV: o perfil aparece com nome no menu e cache/diagnostico ficam em Ajustes
 
 test('TV: da seta para a esquerda no primeiro poster de uma fileira chega ao menu', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByText('Adicionados recentemente')).toBeVisible()
+  await expect(page.getByText('Novidades em filmes')).toBeVisible()
   for (let i = 0; i < 6 && !(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))); i++) await page.keyboard.press('ArrowDown')
   for (let i = 0; i < 12 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowLeft')
   await expect(page.locator('header a[aria-current="page"]')).toBeFocused()

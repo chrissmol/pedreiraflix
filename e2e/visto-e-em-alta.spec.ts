@@ -38,7 +38,7 @@ test('Em alta: so o que existe no catalogo, pelo nome em portugues ou original',
 test('Em alta: sem TMDB (204) a fileira nao aparece', async ({ page }) => {
   await page.route('**/api/em-alta?*', (route) => route.fulfill({ status: 204 }))
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Adicionados recentemente' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novidades em filmes' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Em alta esta semana' })).toHaveCount(0)
 })
 

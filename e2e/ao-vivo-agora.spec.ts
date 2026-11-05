@@ -39,7 +39,7 @@ test('Ao vivo agora: sem canal recente nem favorito a fileira nao aparece e a li
   const pedidos: string[] = []
   page.on('request', (r) => pedidos.push(r.url()))
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Adicionados recentemente' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novidades em filmes' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Ao vivo agora' })).toHaveCount(0)
   expect(pedidos.filter((u) => u.includes('get_live_'))).toEqual([])
 })

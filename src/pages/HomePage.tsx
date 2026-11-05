@@ -1,6 +1,5 @@
 import { cleanCategoryName } from '../lib/channelGroups'
 import { useGenreGroups } from '../hooks/useGenreGroups'
-import { movieYear } from '../lib/displayTitle'
 import { firstPerWork } from '../lib/versions'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -87,8 +86,8 @@ export default function HomePage() {
     )
   }, [catalogSettled, movies.groups, series.groups, navigate])
 
-  const movieGenreGroups = useGenreGroups(movies.groups, 'movie')
-  const seriesGenreGroups = useGenreGroups(series.groups, 'series')
+  const movieGenreGroups = useGenreGroups(movies.groups, 'movie', 'Novidades em filmes')
+  const seriesGenreGroups = useGenreGroups(series.groups, 'series', 'Novidades em séries')
   const visibleMovieGroups = useMemo(
     () => movieGenreGroups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
     [movieGenreGroups],
@@ -97,15 +96,6 @@ export default function HomePage() {
     () => seriesGenreGroups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
     [seriesGenreGroups],
   )
-
-  // Only movies carry `added` in the basic catalog listing (get_vod_streams) — series' equivalent field
-  // isn't returned by this provider's get_series call, so this row is movies-only rather than mixed.
-  const recentMovies = useMemo(() => {
-    const recent = flattenGroups(movies.groups)
-      .filter((m) => m.added && Number(m.added) > 0)
-      .sort((a, b) => Number(b.added) - Number(a.added))
-    return firstPerWork(recent).slice(0, 25)
-  }, [movies.groups])
 
   // "Recomendado pra você": genre isn't available in the basic catalog listing for movies (only via a
   // per-title detail call, too expensive to do for the whole catalog), so this uses categoryId instead —
@@ -198,14 +188,6 @@ export default function HomePage() {
         <ContinueWatchingRow />
         <NewEpisodesRow />
         <LiveNowRow />
-
-        {recentMovies.length > 0 && (
-          <Row title="Adicionados recentemente">
-            {recentMovies.map((m) => (
-              <PosterCard key={m.streamId} title={m.name} image={m.streamIcon} imdb={{ title: m.name, year: movieYear(m), kind: 'movie' }} watchedRef={{ kind: 'movie', id: m.streamId }} onClick={() => navigate(`/movies/${m.streamId}`)} />
-            ))}
-          </Row>
-        )}
 
         <TrendingRow />
 

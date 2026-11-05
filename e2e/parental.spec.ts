@@ -14,7 +14,7 @@ test('a kids profile never sees adult categories, in any list or search', async 
   await markCurrentProfileKids(page)
   await page.goto('/movies')
   await expect(page.getByText('Filme Adulto')).toHaveCount(0)
-  await expect(page.getByText('Filme Explosivo')).toBeVisible()
+  await expect(page.getByText('Filme Explosivo').first()).toBeVisible()
 
   await page.goto('/live')
   await expect(page.getByText('Canal Adulto')).toHaveCount(0)
@@ -49,7 +49,7 @@ async function enableAdult(page: import('@playwright/test').Page) {
 test('adult content is hidden by default, in lists, search and direct links', async ({ page }) => {
   await login(page)
   await page.goto('/movies')
-  await expect(page.getByText('Filme Explosivo')).toBeVisible()
+  await expect(page.getByText('Filme Explosivo').first()).toBeVisible()
   await expect(page.getByText('Filme Adulto')).toHaveCount(0)
   await page.goto('/live')
   await expect(page.getByText('Canal Adulto')).toHaveCount(0)
@@ -64,7 +64,7 @@ test('turning on "Mostrar conteúdo adulto" shows it, and turning it off hides i
   await login(page)
   await enableAdult(page)
   await page.goto('/movies')
-  await expect(page.getByText('Filme Adulto')).toBeVisible()
+  await expect(page.getByText('Filme Adulto').first()).toBeVisible()
   await page.goto('/live')
   await expect(page.getByText('Canal Adulto')).toBeVisible()
 
@@ -90,7 +90,7 @@ test('with an app PIN, enabling adult content asks for the PIN; a kids profile h
   await page.getByLabel('PIN do app para liberar conteúdo adulto').fill('1234')
   await expect(page.getByLabel('Mostrar conteúdo adulto')).toBeChecked()
   await page.goto('/movies')
-  await expect(page.getByText('Filme Adulto')).toBeVisible()
+  await expect(page.getByText('Filme Adulto').first()).toBeVisible()
 })
 
 test('a PIN-protected profile cannot be entered without the correct PIN', async ({ page }) => {
