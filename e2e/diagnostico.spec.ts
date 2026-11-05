@@ -100,3 +100,13 @@ test('diagnostico: um canal bloqueado com outros ao vivo nao acusa erro', async 
   await expect(page.getByText('✓ Início de um canal ao vivo (a lista do canal)')).toBeVisible({ timeout: 30000 })
   await expect(page.getByText(/2 de 3 canais ao vivo.*bloqueou só naquele canal.*Canal 1: HTTP 200 · BLOQUEADO/)).toBeVisible()
 })
+
+test('diagnostico: Teste de telas mostra a linha do tempo antes, durante e depois de soltar', async ({ page }) => {
+  test.setTimeout(150_000)
+  await login(page)
+  await page.goto('/diagnostico')
+  await page.getByRole('button', { name: 'Testar telas' }).click()
+  await expect(page.getByText(/0 s · antes: 0 de 2 telas/)).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText(/tocando Canal Notícias 24h: 0 de 2 telas/)).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText(/soltos há 80 s: 0 de 2 telas/)).toBeVisible({ timeout: 120_000 })
+})
