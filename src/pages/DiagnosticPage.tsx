@@ -205,7 +205,7 @@ export default function DiagnosticPage() {
   const falhas = linhas.filter((l) => !l.ok)
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="min-h-full px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">{isTv ? 'Ajustes' : 'Diagnóstico de conexão'}</h1>
       <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">
         Roda as mesmas chamadas que o app faz e mostra o que este aparelho recebe do servidor e do provedor. Se algo não

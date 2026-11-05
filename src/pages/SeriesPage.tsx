@@ -92,7 +92,7 @@ export default function SeriesPage() {
   }, [groups, activeCategory, activeGenre, activeYear, minRating, sort])
 
   return (
-    <div className="min-h-screen pt-[calc(6rem+env(safe-area-inset-top))]">
+    <div className="min-h-full pt-[calc(6rem+env(safe-area-inset-top))]">
       <div className="mb-6 flex flex-wrap items-center gap-3 px-4 sm:px-10">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Séries</h1>
         <FilterPanel

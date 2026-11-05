@@ -521,7 +521,7 @@ export default function TeamsPage() {
   const follows = (slug: string) => teams.some((t) => t.slug === slug)
 
   return (
-    <div className="min-h-screen px-4 pb-32 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="min-h-full px-4 pb-32 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <div className="mb-1 flex items-center gap-2">
         <Trophy className="h-7 w-7 text-brand-400" />
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Esportes</h1>

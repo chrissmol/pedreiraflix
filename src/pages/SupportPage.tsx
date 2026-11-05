@@ -42,7 +42,7 @@ export default function SupportPage() {
 
   if (estado === 'enviado') {
     return (
-      <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+      <div className="min-h-full px-4 pb-8 pt-[calc(5rem+env(safe-area-inset-top))] sm:px-10">
         <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Recebido, valeu!</h1>
         <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">O Christian vai ler e ver o que dá para fazer.</p>
         <button
@@ -60,7 +60,7 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="min-h-full px-4 pb-8 pt-[calc(5rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Suporte</h1>
       <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">
         Algo não funcionou ou tem uma ideia? Conte aqui o que aconteceu. O nome do perfil, o usuário da conta, o aparelho e a tela em que você estava vão juntos, e a mensagem é apagada depois de 180 dias.
@@ -102,7 +102,7 @@ export default function SupportPage() {
         </button>
       </form>
       {/* Atribuicao exigida pelos termos da API do TMDB (logo + aviso de nao endosso). */}
-      <footer className="mt-12 flex max-w-2xl items-center gap-3 border-t border-outline-soft pt-6 text-body-sm text-on-surface-muted">
+      <footer className="mt-8 flex max-w-2xl items-center gap-3 border-t border-outline-soft pt-4 text-body-sm text-on-surface-muted">
         <img src="/tmdb.svg" alt="TMDB" className="h-8 w-8 shrink-0" />
         <p>Sinopses, gêneros e imagens extras vêm do TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p>
       </footer>

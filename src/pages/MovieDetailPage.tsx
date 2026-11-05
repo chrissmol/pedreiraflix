@@ -101,7 +101,7 @@ export default function MovieDetailPage() {
   const chips = [year, formatRuntime(movie.duration)].filter(Boolean) as string[]
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-full pb-16">
       <DetailHero
         title={movie.name}
         backdrop={backdrop}
