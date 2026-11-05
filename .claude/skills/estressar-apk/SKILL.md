@@ -43,7 +43,7 @@ emulador (`adb emu kill`, depois `emulator -avd pf36 -no-snapshot-load`) e rode 
 ## 2. Revisão visual (você)
 
 Abra **cada captura** com a ferramenta de leitura de imagem e compare com o brand book canônico,
-`design/stitch3/stitch_pedreiraflix_iptv_landing_page/pedreiraflix_brand_book_guia_de_estilo_oficial.md`
+`docs/design/stitch3/stitch_pedreiraflix_iptv_landing_page/pedreiraflix_brand_book_guia_de_estilo_oficial.md`
 (fundo `#06070C`, azul `#0F7BFF`, sem brilho azul difuso, escala tipográfica do brand book). Procure:
 
 - **Cortado ou fora do lugar**: texto cortado no meio, elemento encostando na borda, coisa por cima de

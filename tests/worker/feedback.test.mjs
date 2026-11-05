@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // Suporte: o feedback dos amigos tem que chegar ao KV com o contexto, e texto vazio nao grava nada.
 const post = (body, env, ip = '1.1.1.1') =>

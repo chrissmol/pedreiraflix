@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 const ask = (kind, env) => worker.fetch(new Request(`http://app/api/em-alta?kind=${kind}`, { headers: { 'cf-connecting-ip': String(Math.random()) } }), env)
 

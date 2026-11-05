@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // O caminho de producao (Worker) de ponta a ponta: sessao cifrada, video, playlist HLS reescrita, catalogo
 // com credenciais em cabecalho e o raw=1 da playlist M3U. Os e2e passam pelo server/index.js, nao por aqui.

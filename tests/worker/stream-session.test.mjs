@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { openSession, proxiedRef, sealSession, targetFor } from './streamSession.js'
+import { openSession, proxiedRef, sealSession, targetFor } from '../../worker/streamSession.js'
 
 const KEY = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
 const CREDS = { base: 'http://painel.exemplo:8080', username: 'usuario1', password: 's3nh@' }

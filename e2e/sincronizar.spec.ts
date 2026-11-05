@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import { login, seedSession } from './helpers'
 
-// /api/sync de mentira, dividido entre os dois "aparelhos" (o Worker com D1 tem teste proprio em worker/sync.test.mjs).
+// /api/sync de mentira, dividido entre os dois "aparelhos" (o Worker com D1 tem teste proprio em tests/worker/sync.test.mjs).
 async function sharedSync(context: BrowserContext, store: Map<string, string>) {
   // Busca mudancas dos outros aparelhos a cada 1 s em vez de 2 min.
   await context.addInitScript(() => ((window as { __SYNC_POLL_MS__?: number }).__SYNC_POLL_MS__ = 1000))

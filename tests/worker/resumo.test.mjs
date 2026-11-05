@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // /api/resumo ("Resumo ate aqui") e /api/sinopse (traducao): a IA so recebe o que veio do TMDB, e qualquer falha vira 204.
 const ask = (path, env) => worker.fetch(new Request(`http://app${path}`, { headers: { 'cf-connecting-ip': String(Math.random()) } }), env, {})
