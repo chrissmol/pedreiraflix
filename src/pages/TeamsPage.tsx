@@ -536,6 +536,12 @@ function FoldAll({ slugs, collapsed, onSet }: { slugs: string[]; collapsed: stri
   )
 }
 
+/** Um unico cartao aberto (os outros recolhidos) ocupa as duas colunas no computador: assim nao sobra um vazio ao lado. */
+function soloOpen(list: { slug: string }[], collapsed: string[], slug: string) {
+  const open = list.filter((x) => !collapsed.includes(x.slug))
+  return open.length === 1 && open[0].slug === slug && list.length > 1 ? 'lg:col-span-2' : ''
+}
+
 export default function TeamsPage() {
   const profileId = useActiveProfileId()
   const favoriteTeams = useLibraryStore((s) => s.favoriteTeams)
@@ -666,7 +672,9 @@ export default function TeamsPage() {
               <FoldAll slugs={teams.map((t) => t.slug)} collapsed={collapsed} onSet={setAll} />
               <div className="grid items-start gap-4 lg:grid-cols-2">
                 {teams.map((t) => (
-                  <TeamMatches key={t.slug} team={t} open={!collapsed.includes(t.slug)} onToggle={() => toggleOpen(t.slug)} onRemove={() => toggleTeam(profileId, t)} />
+                  <div key={t.slug} className={soloOpen(teams, collapsed, t.slug)}>
+                    <TeamMatches team={t} open={!collapsed.includes(t.slug)} onToggle={() => toggleOpen(t.slug)} onRemove={() => toggleTeam(profileId, t)} />
+                  </div>
                 ))}
               </div>
             </>
@@ -687,7 +695,9 @@ export default function TeamsPage() {
                     {comps
                       .filter((c) => c.group === g)
                       .map((c) => (
-                        <CompetitionCard key={c.slug} comp={c} followedTeams={teams} open={!collapsed.includes(c.slug)} onToggle={() => toggleOpen(c.slug)} onToggleTeam={(t) => toggleTeam(profileId, t)} onRemove={() => toggleComp(c)} />
+                        <div key={c.slug} className={soloOpen(comps, collapsed, c.slug)}>
+                          <CompetitionCard comp={c} followedTeams={teams} open={!collapsed.includes(c.slug)} onToggle={() => toggleOpen(c.slug)} onToggleTeam={(t) => toggleTeam(profileId, t)} onRemove={() => toggleComp(c)} />
+                        </div>
                       ))}
                   </div>
                 </div>
