@@ -170,6 +170,12 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     kind === 'live' && !isCatchup,
   )
   const zapPrev = useCallback(() => zap(-1), [zap])
+  // recentLive[0] e o canal aberto; [1] e o anterior. Voltar a ele o torna [0], entao repetir alterna entre os dois.
+  const lastChannel = useLibraryStore((s) => s.recentLive[profileId]?.[1])
+  const lastChannelData = liveChannels.find((c) => c.streamId === lastChannel)
+  const goLast = useCallback(() => {
+    if (lastChannelData) navigate(`/watch/live/${lastChannelData.streamId}?name=${encodeURIComponent(lastChannelData.name)}`, { replace: true })
+  }, [lastChannelData, navigate])
 
   // Series: fetch the whole series once so we know which episode follows this one.
   const [seriesDetails, setSeriesDetails] = useState<SeriesDetails | null>(null)
@@ -354,6 +360,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onChannelUp={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapNext : undefined}
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
         onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
+        onLastChannel={kind === 'live' && !isCatchup && lastChannelData ? goLast : undefined}
       />
       <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
       {showEpisodes && kind === 'series' && seriesDetails && id && (

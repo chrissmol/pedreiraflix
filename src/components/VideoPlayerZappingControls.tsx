@@ -7,6 +7,7 @@ interface VideoPlayerZappingControlsProps {
   onChannelUp?: () => void
   onChannelDown?: () => void
   onShowChannels?: () => void
+  onLastChannel?: () => void
 }
 
 export function VideoPlayerZappingControls({
@@ -16,6 +17,7 @@ export function VideoPlayerZappingControls({
   onChannelUp,
   onChannelDown,
   onShowChannels,
+  onLastChannel,
 }: VideoPlayerZappingControlsProps) {
   if (!isLive || (!onChannelUp && !onChannelDown && !onShowChannels)) return null
   // Com erro (canal fora do ar) so a lista fica: e por ela que se sai de um canal quebrado.
@@ -42,6 +44,11 @@ export function VideoPlayerZappingControls({
       {onShowChannels && (
         <button onClick={onShowChannels} aria-label="Lista de canais" title="Lista de canais (← →)" className="player-btn h-11 w-11">
           <ListIcon className="h-5 w-5" />
+        </button>
+      )}
+      {zap && onLastChannel && (
+        <button onClick={onLastChannel} aria-label="Último canal visto" title="Último canal (L)" className="player-btn h-11 w-11 text-label-md">
+          ↩
         </button>
       )}
       {zap && (
