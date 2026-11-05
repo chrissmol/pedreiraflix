@@ -19,9 +19,8 @@ test('filme removido pelo provedor mostra aviso, nao a tela de erro do app', asy
 })
 
 // Endereco que nao existe (link antigo, erro de digitacao) deixava a tela preta e vazia.
-test('endereco desconhecido volta para o inicio em vez de tela vazia', async ({ page }) => {
+test('endereco desconhecido mostra a pagina nao encontrada em vez de tela vazia', async ({ page }) => {
   await seedSession(page)
   await page.goto('/endereco-que-nao-existe')
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Página não encontrada' })).toBeVisible()
 })
