@@ -128,8 +128,8 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
               ))}
             </dl>
           )}
-          {cast}
           <div className="mt-6 flex flex-wrap items-center gap-3">{actions}</div>
+          {cast}
           {footnote}
         </div>
         {poster && (

@@ -141,7 +141,7 @@ test.describe('TV (setas e OK)', () => {
     await seedProgress(page, 5012)
     await page.goto('/series/50')
     await expect(page.getByRole('button', { name: 'Resumo até aqui' })).toBeVisible()
-    for (let i = 0; i < 8 && (await focado(page)) !== 'Resumo até aqui'; i++) await page.keyboard.press(i < 2 ? 'ArrowDown' : 'ArrowRight')
+    for (let i = 0; i < 8 && (await focado(page)) !== 'Resumo até aqui'; i++) await page.keyboard.press(i < 1 ? 'ArrowDown' : 'ArrowRight')
     expect(await focado(page)).toBe('Resumo até aqui')
     await page.keyboard.press('Enter')
     await expect(page.getByText('Resumo na TV.')).toBeVisible()
