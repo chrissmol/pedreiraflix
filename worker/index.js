@@ -582,6 +582,31 @@ async function tmdb(url, env) {
   return answer(body)
 }
 
+// Generos dos filmes: a lista do provedor nao traz o campo, so o tmdb_id. O app pergunta, por genero, quais filmes
+// populares do TMDB sao daquele genero e cruza pelo tmdb_id com o catalogo. Uma resposta por genero (ate 8 paginas
+// de 20), guardada no cache; sem token ou com erro: 204 e o app fica nas categorias do provedor.
+async function generos(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  const genre = url.searchParams.get('genre') || ''
+  if (!/^\d{1,6}$/.test(genre)) return none('bad-genre')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const key = `generos:movie:${genre}`
+  const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
+  const saved = await notasGet(env, key)
+  if (saved) return answer(saved)
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const pages = await Promise.all(
+    [1, 2, 3, 4, 5, 6, 7, 8].map((page) =>
+      fetch(`https://api.themoviedb.org/3/discover/movie?${new URLSearchParams({ with_genres: genre, sort_by: 'popularity.desc', 'vote_count.gte': '50', language: 'pt-BR', page: String(page) })}`, { headers }),
+    ),
+  )
+  if (!pages[0].ok) return none(`discover-${pages[0].status}`)
+  const ids = (await Promise.all(pages.filter((r) => r.ok).map((r) => r.json()))).flatMap((d) => (d.results || []).map((r) => r.id))
+  const body = { ids }
+  await notasPut(env, key, body)
+  return answer(body)
+}
+
 // "Em alta": a lista de tendencias da semana do TMDB (mundial; o TMDB nao tem uma so do Brasil). So nomes: o app
 // mostra o que existir no catalogo de cada um. Sem token ou com erro: 204 e a fileira nao aparece.
 async function trending(url, env) {
@@ -867,6 +892,10 @@ export default {
     if (url.pathname === '/api/em-alta') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await trending(url, env))
+    }
+    if (url.pathname === '/api/generos') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await generos(url, env))
     }
     if (url.pathname === '/api/sinopse') {
       if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))

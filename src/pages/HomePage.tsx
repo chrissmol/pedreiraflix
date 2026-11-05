@@ -1,4 +1,5 @@
 import { cleanCategoryName } from '../lib/channelGroups'
+import { useGenreGroups } from '../hooks/useGenreGroups'
 import { movieYear } from '../lib/displayTitle'
 import { firstPerWork } from '../lib/versions'
 import { useEffect, useMemo, useState } from 'react'
@@ -85,13 +86,15 @@ export default function HomePage() {
     )
   }, [catalogSettled, movies.groups, series.groups, navigate])
 
+  const movieGenreGroups = useGenreGroups(movies.groups, 'movie')
+  const seriesGenreGroups = useGenreGroups(series.groups, 'series')
   const visibleMovieGroups = useMemo(
-    () => movies.groups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
-    [movies.groups],
+    () => movieGenreGroups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
+    [movieGenreGroups],
   )
   const visibleSeriesGroups = useMemo(
-    () => series.groups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
-    [series.groups],
+    () => seriesGenreGroups.filter((g) => g.items.length > 0 || g.loading).slice(0, 12),
+    [seriesGenreGroups],
   )
 
   // Only movies carry `added` in the basic catalog listing (get_vod_streams) — series' equivalent field
