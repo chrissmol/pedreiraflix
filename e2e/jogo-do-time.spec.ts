@@ -50,7 +50,7 @@ test('perfil infantil nao ve o aviso nem busca jogos', async ({ page }) => {
   const pedidos: string[] = []
   page.on('request', (r) => pedidos.push(r.url()))
   await seguir(page, true)
-  await expect(page.getByRole('heading', { name: 'Adicionados recentemente' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novidades em filmes' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Jogo do seu time' })).toHaveCount(0)
   expect(pedidos.filter((u) => u.includes('/teams/') && u.includes('/next'))).toEqual([])
 })

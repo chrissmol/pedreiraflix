@@ -6,7 +6,7 @@ test('browses movies, series and live, and plays a video end to end', async ({ p
 
   await page.getByRole('link', { name: 'Filmes' }).click()
   // Confirms the Filmes page has actually mounted before matching on title text — Home's own "Ação" row
-  // (plus, now, its "Adicionados recentemente"/"Recomendado pra você" rows) shows the same movie, and the
+  // (plus, now, its "Novidades em filmes"/"Recomendado pra você" rows) shows the same movie, and the
   // app's single top-level Suspense boundary can briefly render both trees mid-navigation.
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
   await expect(page.getByText('Filme Explosivo').first()).toBeVisible()
