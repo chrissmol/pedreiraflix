@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import LiveChannelCard from '../components/LiveChannelCard'
 import PosterCard from '../components/PosterCard'
+import TrendingRow from '../components/TrendingRow'
 import { Clock, Search, X } from '../components/icons'
 import VoiceSearchButton from '../components/VoiceSearchButton'
 import { useLiveCatalog, useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
@@ -226,6 +227,8 @@ export default function SearchPage() {
           </div>
         </section>
       )}
+      {/* Sem busca a tela ficava quase vazia, principalmente no computador: as tendencias da semana preenchem. */}
+      {query.length === 0 && <div className="-mx-4 sm:-mx-10"><TrendingRow /></div>}
       {query.length === 1 && <p className="text-on-surface-variant">Digite pelo menos 2 letras.</p>}
 
       {query.length >= 2 && loading && <PageLoading label="Carregando catálogo" className="py-8" />}
