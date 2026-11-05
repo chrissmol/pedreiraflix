@@ -36,15 +36,16 @@ function AdultSetting({ accId, profile }: { accId: string; profile: Profile }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
+    <div className="flex flex-col gap-2">
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-label-md text-white">
-          <Shield className="h-3.5 w-3.5 shrink-0" /> Mostrar conteúdo adulto
+          <Shield className="h-3.5 w-3.5 shrink-0" /> Adulto +18
         </span>
         <span className="relative inline-flex shrink-0">
           <input
             type="checkbox"
             role="switch"
+            aria-label="Mostrar conteúdo adulto"
             checked={showAdult}
             onChange={toggle}
             onKeyDown={(e) => {
@@ -58,7 +59,6 @@ function AdultSetting({ accId, profile }: { accId: string; profile: Profile }) {
           <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
         </span>
       </label>
-      <p className="text-body-sm text-on-surface-variant">Canais, filmes e séries de categorias adultas (+18) ficam ocultos neste perfil até você ligar. Só neste aparelho.</p>
       {asking && pin && (
         <>
           <input
@@ -172,7 +172,6 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
           <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
         </span>
       </label>
-      <p className="text-body-sm text-on-surface-variant">Para crianças: sempre oculta conteúdo adulto e títulos para maiores de 14 anos neste perfil, mesmo com "Mostrar conteúdo adulto" ligado.</p>
 
       <AdultSetting accId={accId} profile={profile} />
 
