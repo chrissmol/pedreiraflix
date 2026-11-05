@@ -566,8 +566,8 @@ async function tmdb(url, env) {
   const cacheKey = `tmdb:${tv ? 'tv' : 'movie'}:${title.toLowerCase()}:${year}`
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
   const saved = await notasGet(env, cacheKey)
-  // Guardado antes do logo e da classificacao: refaz so o TMDB e reaproveita a nota (o OMDb so da 1.000/dia).
-  if (saved && 'logo' in saved) return answer(saved)
+  // Guardado antes do logo, da classificacao e do elenco: refaz so o TMDB e reaproveita a nota (o OMDb so da 1.000/dia).
+  if (saved && 'cast' in saved) return answer(saved)
   const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
   const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
   const hit = search.ok ? (await search.json()).results?.[0] : null
@@ -575,7 +575,7 @@ async function tmdb(url, env) {
   // Logo do titulo e classificacao indicativa vem no mesmo pedido (append_to_response), sem consulta a mais.
   const details = await get(tv ? `/tv/${hit.id}` : `/movie/${hit.id}`, {
     language: 'pt-BR',
-    append_to_response: tv ? 'external_ids,images,content_ratings' : 'images,release_dates',
+    append_to_response: tv ? 'external_ids,images,content_ratings,credits' : 'images,release_dates,credits',
     include_image_language: 'pt,en,null',
   })
   if (!details.ok) return saved ? answer(saved) : none(`details-${details.status}`)
@@ -594,6 +594,11 @@ async function tmdb(url, env) {
     imdbRating: imdb ?? null,
     logo: logo ? `https://image.tmdb.org/t/p/w500${logo}` : null,
     certification: /^(L|10|12|14|16|18)$/.test(certification || '') ? certification : null,
+    // Elenco na ordem de creditos do TMDB, com foto e personagem (a tela mostra os primeiros e deixa o resto expandir).
+    cast: (d.credits?.cast || [])
+      .filter((c) => c.name)
+      .slice(0, 30)
+      .map((c) => ({ name: c.name, character: c.character || null, photo: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : null })),
     ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
   }
   // Com nota do IMDb: 30 dias. Sem nota (lancamento novo, o app mostra a do TMDB): so 3 dias, para a do IMDb

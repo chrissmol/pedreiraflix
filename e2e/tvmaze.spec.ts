@@ -27,7 +27,8 @@ async function abrirSerie(page: Page) {
   )
   await seedSession(page)
   await page.goto('/series/50')
-  await expect(page.getByText('Ator Um, Atriz Dois')).toBeVisible()
+  await expect(page.getByText('Ator Um', { exact: true })).toBeVisible()
+  await expect(page.getByText('Atriz Dois', { exact: true })).toBeVisible()
   await expect(page.getByText(/TVmaze\.com/)).toBeVisible()
   await expect(page.locator('img[src*="static.tvmaze.com%2Fep1.jpg"]')).toHaveCount(1)
 }

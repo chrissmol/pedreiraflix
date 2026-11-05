@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import CastList from '../components/CastList'
 import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import SeasonDownloadButton from '../components/SeasonDownloadButton'
@@ -149,7 +150,7 @@ export default function SeriesDetailPage() {
   // Resumo dos episodios antes do que vai continuar; no primeiro episodio nao ha o que resumir.
   const recapEp = resume && (resume.ep.season > 1 || resume.ep.episodeNum > 1) ? resume.ep : null
   const recapOpen = recapEp && recap?.key === `${series.seriesId}:${recapEp.season}x${recapEp.episodeNum}` ? recap : null
-  const usesTvmaze = Boolean((!series.cast && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
+  const usesTvmaze = Boolean((!series.cast && !tmdb?.cast?.length && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
 
   return (
     <div className="min-h-full pb-16">
@@ -173,9 +174,9 @@ export default function SeriesDetailPage() {
         genre={series.genre}
         plot={plot}
         credits={[
-          { label: 'Elenco', value: cast },
           { label: 'Direção', value: series.director },
         ]}
+        cast={<CastList people={tmdb?.cast} fallback={cast} />}
         actions={
           <>
             {resume ? (
