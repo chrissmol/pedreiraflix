@@ -15,11 +15,11 @@ test('a lista de canais usa um unico relogio de 1 minuto, nao um por card', asyn
   })
   await login(page)
   await page.goto('/live')
-  // Os 6 canais do mock mostram programa (barra de progresso) — um card por canal.
-  await expect(page.locator('[data-testid^="live-card-"]')).toHaveCount(6)
+  // Os 5 canais do mock (fora o adulto, oculto por padrão) mostram programa — um card por canal.
+  await expect(page.locator('[data-testid^="live-card-"]')).toHaveCount(5)
   await expect(page.getByText(/Programa \d+h\d+/).first()).toBeVisible()
-  await expect(page.getByText(/Programa \d+h\d+/)).toHaveCount(6)
+  await expect(page.getByText(/Programa \d+h\d+/)).toHaveCount(5)
 
   const timers = await page.evaluate(() => (window as unknown as { __minuteTimers: number }).__minuteTimers)
-  expect(timers).toBe(1) // era 6 (um por canal) antes do relogio compartilhado
+  expect(timers).toBe(1) // era 5 (um por canal) antes do relogio compartilhado
 })

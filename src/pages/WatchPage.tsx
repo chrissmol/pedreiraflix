@@ -45,6 +45,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const profileId = useActiveProfileId()
   const profile = useActiveProfile()
   const hideAdult = useHideAdult()
+  const isKids = Boolean(profile?.isKids)
   const hiddenCategories = profile?.hiddenCategories
   const categoryOrder = profile?.categoryOrder
   const setProgress = useLibraryStore((s) => s.setProgress)
@@ -216,7 +217,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const [blocked, setBlocked] = useState(false)
   // Starts true for a kids profile: playback must not start even for the instant it'd take the check
   // below to resolve, and this flips back to false immediately for every other profile.
-  const [checkingProfile, setCheckingProfile] = useState(hideAdult)
+  const [checkingProfile, setCheckingProfile] = useState(isKids)
   useEffect(() => {
     if (!client || !kind || !id || !hideAdult || kind === 'offline') {
       setBlocked(false)
@@ -227,7 +228,8 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     // momentarily deciding "not blocked" before it's actually loaded.
     if (kind === 'live' && liveChannels.length === 0) return
     if (kind === 'series' && !seriesDetails) return
-    setCheckingProfile(true)
+    // Perfil infantil espera o resultado antes de tocar; os outros tocam enquanto a checagem roda (fica bloqueado se for adulto).
+    if (isKids) setCheckingProfile(true)
     let cancelled = false
     const watchKind = kind
     async function check() {
@@ -243,7 +245,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     return () => {
       cancelled = true
     }
-  }, [client, kind, id, hideAdult, liveChannels, seriesDetails])
+  }, [client, kind, id, hideAdult, isKids, liveChannels, seriesDetails])
 
   const nextEpisode = useMemo(() => {
     if (!seriesDetails || kind !== 'series') return null
