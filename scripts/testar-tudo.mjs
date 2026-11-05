@@ -30,7 +30,7 @@ const SPECS = {
   downloads: ['downloads', 'downloads-erros', 'downloads-partes', 'baixar-temporada', 'fila-para-no-403', 'serie-zip', 'sem-internet'],
   pwa: ['pwa.pwa', 'pwa-css', 'entrar-offline.pwa', 'instalar-app', 'update-prompt', 'fonte-propria'],
   proxy: ['security', 'respeita-429', 'diagnostico', 'error-reporting', 'suporte'],
-  telas: ['a11y', 'achados-estresse.mobile', 'ajustes-visuais.mobile', 'altura-iphone.mobile', 'iphone-shell', 'login-cabe.mobile', 'ui-mobile', 'foco-tv', 'navegacao-tv', 'tv', 'plataformas', 'lighthouse-login', 'anel'],
+  telas: ['a11y', 'achados-estresse.mobile', 'ajustes-visuais.mobile', 'altura-iphone.mobile', 'iphone-shell', 'login-cabe.mobile', 'ui-mobile', 'foco-tv', 'navegacao-tv', 'tv', 'telas-sem-rolagem', 'perfis-sem-rolagem', 'plataformas', 'lighthouse-login', 'anel'],
 }
 
 const pilarDe = Object.fromEntries(Object.entries(SPECS).flatMap(([p, l]) => l.map((s) => [`${s}.spec.ts`, p])))

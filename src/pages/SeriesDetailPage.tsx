@@ -152,7 +152,7 @@ export default function SeriesDetailPage() {
   const usesTvmaze = Boolean((!series.cast && tvmaze?.cast) || season?.episodes.some((ep) => !ep.image && tvmazeImage(ep)))
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-full pb-16">
       <DetailHero
         title={series.name}
         backdrop={backdrop}

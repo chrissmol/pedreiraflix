@@ -132,7 +132,7 @@ export default function SearchPage() {
   }, [movies.groups, series.groups, ai, person, query])
 
   return (
-    <div className="min-h-screen px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="min-h-full px-4 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <form
         role="search"
         onSubmit={(e) => {

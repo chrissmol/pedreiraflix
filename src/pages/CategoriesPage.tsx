@@ -86,7 +86,7 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="min-h-full px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Organizar categorias</h1>
       <p className="mt-2 max-w-2xl text-body-md text-on-surface-variant">
         Esconda o que {profile.name} não assiste e suba o que mais usa. Vale só para este perfil.

@@ -47,7 +47,7 @@ export default function RetrospectivePage() {
     navigate(i.kind === 'movie' ? `/movies/${i.id}` : i.kind === 'series' ? `/series/${i.id}` : `/watch/live/${i.id}?name=${encodeURIComponent(i.name)}`)
 
   return (
-    <div className="mx-auto min-h-screen max-w-5xl px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="mx-auto min-h-full max-w-5xl px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Sua retrospectiva</h1>
       <p className="mt-1 text-body-md text-on-surface-variant">
         {profile?.name ? `${profile.name}, o` : 'O'} que você assistiu neste aparelho.

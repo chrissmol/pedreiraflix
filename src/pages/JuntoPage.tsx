@@ -16,7 +16,7 @@ export default function JuntoPage() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-xl px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
+    <div className="mx-auto min-h-full max-w-xl px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">Assistir junto</h1>
       <p className="mt-2 text-body-md text-on-surface-variant">
         Duas ou mais pessoas, cada uma no seu aparelho, vendo o mesmo filme ou série ao mesmo tempo. Play, pausa e avançar
