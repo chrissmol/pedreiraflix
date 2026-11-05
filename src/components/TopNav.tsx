@@ -159,7 +159,7 @@ export default function TopNav() {
       className={
         isTv
           ? 'absolute inset-y-0 left-0 z-50 flex w-40 flex-col gap-5 border-r border-outline-soft bg-surface-low/95 px-3 py-6'
-          : 'absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-6 sm:px-10'
+          : 'header-blur absolute inset-x-0 top-0 z-50 flex items-center gap-3 border-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-6 sm:px-10'
       }
     >
       <span className="neon-text font-display bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
