@@ -11,6 +11,8 @@ interface DetailHeroProps {
   chips: string[]
   /** Unica nota exibida (o Chris preferiu so o IMDb); sem ela, nenhuma nota aparece. */
   imdbRating?: string | null
+  /** Nota do TMDB, mostrada so quando o IMDb nao tem a do titulo. */
+  tmdbRating?: number | null
   genre?: string | null
   plot?: string | null
   credits: { label: string; value: string | null }[]
@@ -38,7 +40,7 @@ const RATING_COLORS: Record<string, string> = {
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, chips, genre, plot, credits, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
+export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, tmdbRating, chips, genre, plot, credits, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
@@ -74,9 +76,9 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
                 {certification}
               </span>
             )}
-            {imdbRating && (
+            {(imdbRating || tmdbRating) && (
               <span className="rounded-md bg-surface-high/80 px-2 py-1 text-label-badge text-white">
-                <span className="font-extrabold text-rating">IMDb</span> {imdbRating}
+                <span className="font-extrabold text-rating">{imdbRating ? 'IMDb' : 'TMDB'}</span> {imdbRating || tmdbRating?.toFixed(1)}
               </span>
             )}
             {chips.map((chip) => (

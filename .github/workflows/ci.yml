@@ -21,8 +21,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
+  # Os 346 testes e2e rodavam em fila unica (workers: 1) e levavam ~14,5 dos ~15,5 minutos do CI; os testes
+  # sao independentes e bem distribuidos, entao 4 jobs em paralelo (--shard) cortam o tempo para ~5 min
+  # sem tirar nenhum teste. Cada job tem o proprio servidor de teste, entao nao ha estado compartilhado.
+  e2e:
+    name: e2e (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
 
@@ -34,28 +42,39 @@ jobs:
       - run: npm ci
 
       - name: Lint
+        if: matrix.shard == 1
         run: npm run lint
 
       - name: Typecheck + build
+        if: matrix.shard == 1
         run: npm run build
 
       # O Worker serve todo o video (proxy de API e stream) e nao tinha teste automatico nenhum.
       - name: Proxy tests
+        if: matrix.shard == 1
         run: npm run test:proxy
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
-        run: npm run test:e2e
+        run: npx playwright test --shard=${{ matrix.shard }}/4
 
       - name: Upload failure traces
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.shard }}
           # The reporter is `list` only (playwright.config.ts) — there's no playwright-report/ HTML
           # report to upload. test-results/ is what actually exists on a failing run: a per-test trace
           # (`npx playwright show-trace <file>.zip`) and screenshot for whatever failed.
           path: test-results/
           retention-days: 14
+
+  # Mantem o nome "ci" (check obrigatorio / gatilho do deploy.yml): so passa se todos os shards passarem.
+  ci:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.e2e.result }}" = success

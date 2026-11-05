@@ -6,6 +6,8 @@ export interface TmdbInfo {
   overview: string | null
   /** IMDb's rating ("7.8"), via OMDb in the Worker; absent/null when OMDB_KEY isn't set or there's no match. */
   imdbRating?: string | null
+  /** Nota do TMDB (0-10), reserva quando o IMDb nao tem nota do titulo. */
+  rating?: number | null
   /** Series only: cast and episode thumbnails ("1x1" -> url) from TVmaze, to fill what the provider leaves out. */
   tvmaze?: { cast: string | null; episodeImages: Record<string, string> } | null
   /** Logo do titulo (PNG transparente), em portugues quando existe. */
@@ -60,4 +62,10 @@ export function getRecap(name: string, releaseDate: string | null, season: numbe
     if (res.status !== 200) throw new Error('sem resumo')
     return ((await res.json()) as { summary: string }).summary
   }).catch(() => null)
+}
+
+/** Nota a mostrar: a do IMDb; sem ela, a do TMDB (marcada como tal). */
+export function bestRating(info: TmdbInfo | null | undefined): { value: string; source: 'IMDb' | 'TMDB' } | null {
+  if (info?.imdbRating) return { value: info.imdbRating, source: 'IMDb' }
+  return info?.rating ? { value: info.rating.toFixed(1), source: 'TMDB' } : null
 }

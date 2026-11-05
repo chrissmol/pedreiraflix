@@ -57,3 +57,16 @@ test('posteres mostram a nota do IMDb no lugar da nota do provedor', async ({ pa
   await expect(page.getByText('★ 8.1')).toHaveCount(0)
   await expect(page.getByText('★ 9.0')).toHaveCount(0)
 })
+
+// Sem nota no IMDb (lancamento novo), o poster mostra a do TMDB marcada como TMDB; com IMDb, so a do IMDb.
+test('poster sem nota do IMDb mostra a nota do TMDB marcada', async ({ page }) => {
+  await page.route('**/api/tmdb?*', (route) => {
+    const title = new URL(route.request().url()).searchParams.get('title')
+    return route.fulfill({ json: { genres: [], year: null, overview: null, rating: 5.67, imdbRating: title === 'Filme Explosivo' ? '6.6' : null } })
+  })
+  await login(page)
+  await page.goto('/movies')
+  await expect(page.getByText('★ 6.6').first()).toBeVisible()
+  await expect(page.getByText('★ 5.7').first()).toBeVisible()
+  await expect(page.getByText('TMDB').first()).toBeVisible()
+})
