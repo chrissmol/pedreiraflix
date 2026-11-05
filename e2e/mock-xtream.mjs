@@ -184,6 +184,14 @@ app.use((req, _res, next) => {
   next()
 })
 
+app.get('/__requests', (_req, res) => res.json(requests))
+
+// Painel instalado em subpasta (http://host/painel): o mesmo painel responde tambem sob /painel.
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/painel/')) req.url = req.url.slice('/painel'.length)
+  next()
+})
+
 app.get('/player_api.php', (req, res) => {
   const { username, password, action } = req.query
   if (username !== USER || password !== PASS) return res.json({ user_info: { auth: 0 } })

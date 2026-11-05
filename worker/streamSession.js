@@ -23,12 +23,18 @@ async function importKey(secret) {
   }
 }
 
-/** Cifra {b: origem do painel, u, p}. Devolve null sem chave valida (o cliente segue no modo antigo). */
+/** Endereco do painel: origem + subpasta (sem barra no fim). "http://h:80/painel/" -> "http://h:80/painel". Lanca se nao for URL. */
+export function panelBase(raw) {
+  const url = new URL(raw)
+  return url.origin + url.pathname.replace(/\/+$/, '')
+}
+
+/** Cifra {b: endereco do painel, u, p}. Devolve null sem chave valida (o cliente segue no modo antigo). */
 export async function sealSession(secret, { base, username, password }) {
   const key = await importKey(secret)
   if (!key) return null
   const iv = crypto.getRandomValues(new Uint8Array(12))
-  const plain = new TextEncoder().encode(JSON.stringify({ b: new URL(base).origin, u: username, p: password }))
+  const plain = new TextEncoder().encode(JSON.stringify({ b: panelBase(base), u: username, p: password }))
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plain))
   const out = new Uint8Array(iv.length + ct.length)
   out.set(iv)
@@ -56,7 +62,8 @@ export function targetFor(session, path) {
   const filled = path.replace(U, encodeURIComponent(session.u)).replace(P, encodeURIComponent(session.p))
   try {
     const url = new URL(session.b + filled)
-    return url.origin === session.b ? url : null
+    const root = new URL(session.b)
+    return url.origin === root.origin && url.pathname.startsWith(root.pathname.replace(/\/+$/, '') + '/') ? url : null
   } catch {
     return null
   }

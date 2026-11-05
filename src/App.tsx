@@ -5,6 +5,7 @@ import AutoLogout from "./components/AutoLogout";
 import GroupCodeGate from "./components/GroupCodeGate";
 import Layout from "./components/Layout";
 import LibrarySync from "./components/LibrarySync";
+import OpenLastChannel from "./components/OpenLastChannel";
 import ContinuarTv from "./components/ContinuarTv";
 import JuntoSync from "./components/JuntoSync";
 import RequireAuth from "./components/RequireAuth";
@@ -48,6 +49,7 @@ export default function App() {
         <AutoLogout />
         <LibrarySync />
         <ContinuarTv />
+        <OpenLastChannel />
         <JuntoSync />
         <Suspense fallback={<RouteFallback />}>
           <Routes>
