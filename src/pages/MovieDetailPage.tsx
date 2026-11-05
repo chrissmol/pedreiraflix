@@ -107,6 +107,7 @@ export default function MovieDetailPage() {
         backdrop={backdrop}
         poster={movie.streamIcon}
         imdbRating={tmdb?.imdbRating}
+        tmdbRating={tmdb?.rating}
         logo={tmdb?.logo}
         certification={tmdb?.certification}
         plotNote={plot && plot === aiText ? 'Sinopse traduzida por IA' : null}

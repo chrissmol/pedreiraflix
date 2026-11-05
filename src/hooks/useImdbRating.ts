@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
+import { bestRating, getTmdbInfo, type TmdbInfo } from '../lib/tmdb'
 
 export interface ImdbQuery {
   title: string
@@ -8,10 +8,10 @@ export interface ImdbQuery {
   kind: 'movie' | 'tv'
 }
 
-/** Nota do IMDb ("7.8") de um titulo, via /api/tmdb (o Worker guarda cada nota no KV NOTAS). So pergunta
+/** Nota ("7.8") de um titulo: a do IMDb ou, sem ela, a do TMDB. Via /api/tmdb (o Worker guarda cada nota no KV NOTAS). So pergunta
  * com `enabled`, para os posteres pedirem apenas quando aparecem na tela. */
-export function useImdbRating(query: ImdbQuery | null | undefined, enabled = true): string | null {
-  return useTmdbInfo(query, enabled)?.imdbRating ?? null
+export function useImdbRating(query: ImdbQuery | null | undefined, enabled = true) {
+  return bestRating(useTmdbInfo(query, enabled))
 }
 
 /** O que o /api/tmdb sabe do titulo (nota, logo...), do titulo atual e nunca do anterior. */

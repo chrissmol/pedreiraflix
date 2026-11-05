@@ -83,8 +83,8 @@ export default function PosterCard({ title: rawTitle, image, onClick, imdb, subt
 
 
       {rating && (
-        <span title="Nota do IMDb" className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
-          ★ {rating}
+        <span title={`Nota do ${rating.source}`} className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-label-badge font-bold text-rating backdrop-blur-sm">
+          ★ {rating.value}{rating.source === 'TMDB' && <span className="ml-1 text-[0.65em] font-semibold text-white/70">TMDB</span>}
         </span>
       )}
 
