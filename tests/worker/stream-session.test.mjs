@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { openSession, proxiedRef, sealSession, targetFor } from '../../worker/streamSession.js'
+import { openSession, panelBase, proxiedRef, sealSession, targetFor } from '../../worker/streamSession.js'
 
 const KEY = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
 const CREDS = { base: 'http://painel.exemplo:8080', username: 'usuario1', password: 's3nh@' }
@@ -42,4 +42,17 @@ test('playlist HLS: endereco do painel com credenciais volta cifrado; CDN segue 
   const cdn = proxiedRef('http://cdn.exemplo/hls/token/1.ts', s, sid)
   assert.equal(cdn, `/api/stream?url=${encodeURIComponent('http://cdn.exemplo/hls/token/1.ts')}`)
   assert.equal(proxiedRef('http://x/1.ts', null, null), `/api/stream?url=${encodeURIComponent('http://x/1.ts')}`)
+})
+
+test('painel em subpasta: a subpasta fica no codigo cifrado e nao da para sair dela', async () => {
+  const base = 'http://painel.exemplo:8080/painel/'
+  assert.equal(panelBase(base), 'http://painel.exemplo:8080/painel')
+  assert.equal(panelBase('http://painel.exemplo:8080'), 'http://painel.exemplo:8080')
+  const sid = await sealSession(KEY, { ...CREDS, base })
+  const s = await openSession(KEY, sid)
+  assert.equal(s.b, 'http://painel.exemplo:8080/painel')
+  assert.equal(targetFor(s, '/movie/~u/~p/1.mp4').toString(), 'http://painel.exemplo:8080/painel/movie/usuario1/s3nh%40/1.mp4')
+  assert.equal(targetFor(s, '/../outro/~u/~p/x'), null)
+  const doPainel = proxiedRef('http://painel.exemplo:8080/painel/live/usuario1/s3nh%40/101_1.ts', s, sid)
+  assert.equal(doPainel, `/api/stream?s=${sid}&p=${encodeURIComponent('/live/~u/~p/101_1.ts')}`)
 })

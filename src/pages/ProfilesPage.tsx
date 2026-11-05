@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, ChevronLeft, Lock, Plus, Settings, Shield, Trash, Unlock } from '../components/icons'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { isTv } from '../lib/device'
 import PinPrompt from '../components/PinPrompt'
 import { useAppLockStore } from '../store/appLock'
 import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, useProfilesStore } from '../store/profiles'
@@ -145,6 +146,7 @@ function AppPinSettings() {
 function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: Profile; onClose: () => void }) {
   const setKids = useProfilesStore((s) => s.setKids)
   const setPin = useProfilesStore((s) => s.setPin)
+  const setOpenLastChannel = useProfilesStore((s) => s.setOpenLastChannel)
   const [pinInput, setPinInput] = useState('')
 
   return (
@@ -174,6 +176,28 @@ function ProfileSettings({ accId, profile, onClose }: { accId: string; profile: 
       </label>
 
       <AdultSetting accId={accId} profile={profile} />
+
+      {isTv && (
+        <label className="flex cursor-pointer items-center justify-between gap-2">
+          <span className="text-label-md text-white">Abrir no último canal</span>
+          <span className="relative inline-flex shrink-0">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={Boolean(profile.openLastChannel)}
+              onChange={(e) => setOpenLastChannel(accId, profile.id, e.target.checked)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  setOpenLastChannel(accId, profile.id, !profile.openLastChannel)
+                }
+              }}
+              className="brand-focus peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-surface-highest transition-colors checked:bg-brand-fill"
+            />
+            <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+          </span>
+        </label>
+      )}
 
       <div className="flex flex-col gap-2 border-t border-outline-soft pt-3">
         <div className="flex min-h-8 items-center justify-between gap-2">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
+import CastList from '../components/CastList'
 import DetailHero from '../components/DetailHero'
 import DownloadButton from '../components/DownloadButton'
 import { Check, Eye, FileArrowDown, Play, Plus } from '../components/icons'
@@ -118,9 +119,9 @@ export default function MovieDetailPage() {
         genre={genre}
         plot={plot}
         credits={[
-          { label: 'Elenco', value: movie.cast },
           { label: 'Direção', value: movie.director },
         ]}
+        cast={<CastList people={tmdb?.cast} fallback={movie.cast} />}
         actions={
           <>
             <button

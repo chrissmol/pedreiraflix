@@ -49,6 +49,8 @@ interface VideoPlayerProps {
   onChannelDown?: () => void
   /** Live only: abre a lista de canais por cima do video (botao e setas esquerda/direita). */
   onShowChannels?: () => void
+  /** Live only: volta ao ultimo canal visto (alterna entre os dois ultimos) — tecla L, MediaLast e botao. */
+  onLastChannel?: () => void
 }
 
 export default function VideoPlayer({
@@ -69,6 +71,7 @@ export default function VideoPlayer({
   onChannelUp,
   onChannelDown,
   onShowChannels,
+  onLastChannel,
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -239,7 +242,7 @@ export default function VideoPlayer({
 
 
   useVideoPlayerKeys({
-    videoRef, containerRef, isLive, onChannelUp, onChannelDown, onShowChannels, wakeControls, togglePlay, skip, setSpeed,
+    videoRef, containerRef, isLive, onChannelUp, onChannelDown, onShowChannels, onLastChannel, wakeControls, togglePlay, skip, setSpeed,
     toggleFullscreen, togglePip, closeMenu: () => setOpenMenu(null),
   })
 
@@ -560,6 +563,7 @@ export default function VideoPlayer({
         onChannelUp={onChannelUp}
         onChannelDown={onChannelDown}
         onShowChannels={onShowChannels}
+        onLastChannel={onLastChannel}
       />
 
       <VideoPlayerCenterOverlays

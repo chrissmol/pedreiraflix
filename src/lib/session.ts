@@ -1,5 +1,6 @@
 import { type M3uEntry, M3uClient, parseM3u, parseM3uEpgUrl } from './m3u'
 import { accountId, type SavedAccount, useAccountsStore } from '../store/accounts'
+import { loadEntries, saveEntries } from './m3uStore'
 import { useAuthStore } from '../store/auth'
 import { useLibraryStore } from '../store/library'
 import { useProfilesStore } from '../store/profiles'
@@ -12,16 +13,36 @@ export function normalizeCredentials(creds: XtreamCredentials): XtreamCredential
   if (baseUrl && !/^https?:\/\//i.test(baseUrl)) baseUrl = `http://${baseUrl}`
   let { username, password } = creds
   try {
-    // So o endereco do painel conta (o Worker ja usa so a origem): quem cola o link inteiro que o provedor mandou
+    // So o endereco do painel conta : quem cola o link inteiro que o provedor mandou
     // (".../get.php?username=...&password=..." ou ".../player_api.php") tambem entra, com usuario e senha do link.
     const url = new URL(baseUrl)
-    baseUrl = url.origin
+    // Painel em subpasta ("host/painel") mantem a subpasta; so saem a barra final e o arquivo colado junto.
+    baseUrl = url.origin + url.pathname.replace(/\/(player_api|get|panel_api|xmltv)\.php$/i, '').replace(/\/+$/, '')
     if (!username.trim()) username = url.searchParams.get('username') ?? ''
     if (!password) password = url.searchParams.get('password') ?? ''
   } catch {
     // endereco que nem vira URL: segue como foi digitado e o login mostra o erro do provedor
   }
   return { baseUrl, username: username.trim(), password }
+}
+
+/** Move a playlist da conta para o IndexedDB e, so depois de confirmado, tira o peso do localStorage (os
+ * stores regravam sem ela). Tambem migra quem ja tinha a playlist no localStorage, sem perder nada. */
+export async function keepPlaylist(id: string, entries: M3uEntry[]): Promise<void> {
+  if (!(await saveEntries(id, entries))) return
+  useAccountsStore.setState((s) => ({ ...s }))
+  useAuthStore.setState((s) => ({ ...s }))
+}
+
+/** Na abertura do app: playlists ainda no localStorage migram; a sessao M3U volta do IndexedDB. */
+export async function restorePlaylists(): Promise<void> {
+  for (const a of useAccountsStore.getState().accounts) if (a.entries) await keepPlaylist(a.id, a.entries)
+  const { credentials, entries } = useAuthStore.getState()
+  if (credentials?.type !== 'm3u') return
+  const id = accountId(credentials)
+  if (entries) return keepPlaylist(id, entries)
+  const saved = await loadEntries(id)
+  if (saved) useAuthStore.setState({ entries: saved })
 }
 
 /** Link M3U colado com espaco ou sem "http://" (como o endereco do Xtream acima). */
@@ -165,6 +186,7 @@ export async function signInM3u(
   const { user, server } = await new M3uClient(entries, epgUrl).login()
   useAuthStore.getState().setSession(creds, user, server, accountWarning(user), entries)
   if (remember) useAccountsStore.getState().saveAccount(creds, label, entries)
+  void keepPlaylist(accountId(creds), entries)
   ensureActiveProfile(creds)
 }
 
@@ -188,11 +210,12 @@ export async function signInSavedAccount(account: SavedAccount): Promise<void> {
     }
     return
   }
-  if (!account.entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
+  const entries = account.entries ?? (await loadEntries(account.id))
+  if (!entries) throw new Error('Playlist da conta salva não encontrada — faça login novamente')
   const creds = account.credentials
-  const { user, server } = await new M3uClient(account.entries, creds.epgUrl).login()
-  useAuthStore.getState().setSession(creds, user, server, accountWarning(user), account.entries)
-  useAccountsStore.getState().saveAccount(creds, account.label, account.entries)
+  const { user, server } = await new M3uClient(entries, creds.epgUrl).login()
+  useAuthStore.getState().setSession(creds, user, server, accountWarning(user), entries)
+  useAccountsStore.getState().saveAccount(creds, account.label, entries)
   ensureActiveProfile(creds)
 }
 

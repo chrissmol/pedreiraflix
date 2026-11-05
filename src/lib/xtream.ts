@@ -517,14 +517,7 @@ export class XtreamClient implements ProviderClient {
   /** URL de video no proxy. `path` usa ~u/~p no lugar de usuario e senha (ex. /movie/~u/~p/1.mp4). */
   private mediaUrl(path: string): string {
     const sid = readSids()[sidKey(this.creds)]
-    // O codigo guarda so a origem do painel; um endereco com subpasta segue no formato antigo.
-    let sameOrigin = false
-    try {
-      sameOrigin = new URL(this.creds.baseUrl).origin === this.creds.baseUrl
-    } catch {
-      // URL invalida: formato antigo
-    }
-    if (sid && sameOrigin) return `/api/stream?s=${sid}&p=${encodeURIComponent(path)}`
+    if (sid) return `/api/stream?s=${sid}&p=${encodeURIComponent(path)}`
     const direct = this.creds.baseUrl + path.replace('~u', this.creds.username).replace('~p', this.creds.password)
     return `/api/stream?url=${encodeURIComponent(direct)}`
   }

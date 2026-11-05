@@ -10,6 +10,8 @@ export interface TmdbInfo {
   rating?: number | null
   /** Series only: cast and episode thumbnails ("1x1" -> url) from TVmaze, to fill what the provider leaves out. */
   tvmaze?: { cast: string | null; episodeImages: Record<string, string> } | null
+  /** Elenco na ordem dos creditos, com foto e personagem quando o TMDB tem. */
+  cast?: { name: string; character: string | null; photo: string | null }[]
   /** Logo do titulo (PNG transparente), em portugues quando existe. */
   logo?: string | null
   /** Classificacao indicativa do Brasil: L, 10, 12, 14, 16 ou 18. */

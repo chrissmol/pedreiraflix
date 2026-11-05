@@ -52,7 +52,7 @@ test('series (kind=tv): busca em /search/tv e pega o codigo IMDb dos external_id
     url = String(url)
     calls.push(url)
     if (url.includes('/search/tv')) return Response.json({ results: [{ id: 1396 }] })
-    if (url.includes('/tv/1396')) return Response.json({ genres: [{ name: 'Drama' }], first_air_date: '2008-01-20', vote_average: 8.9, overview: 'Serie.', external_ids: { imdb_id: 'tt0903747' } })
+    if (url.includes('/tv/1396')) return Response.json({ credits: { cast: [{ name: 'Bryan Cranston', character: 'Walter White', profile_path: '/bc.jpg' }, { name: 'Sem Foto' }] }, genres: [{ name: 'Drama' }], first_air_date: '2008-01-20', vote_average: 8.9, overview: 'Serie.', external_ids: { imdb_id: 'tt0903747' } })
     if (url.includes('omdbapi.com')) return Response.json({ imdbRating: '9.5' })
     throw new Error(`fetch inesperado: ${url}`)
   }
@@ -60,6 +60,10 @@ test('series (kind=tv): busca em /search/tv e pega o codigo IMDb dos external_id
   const body = await res.json()
   assert.equal(body.imdbRating, '9.5')
   assert.equal(body.year, '2008')
+  assert.deepEqual(body.cast, [
+    { name: 'Bryan Cranston', character: 'Walter White', photo: 'https://image.tmdb.org/t/p/w185/bc.jpg' },
+    { name: 'Sem Foto', character: null, photo: null },
+  ])
   assert.ok(calls.some((u) => u.includes('/search/tv') && u.includes('first_air_date_year=2008')))
   assert.ok(calls.some((u) => u.includes('append_to_response=external_ids')))
   assert.ok(calls.some((u) => u.includes('i=tt0903747')))
@@ -108,7 +112,7 @@ test('series: elenco e miniaturas de episodio do TVmaze pelo codigo IMDb; TVmaze
     globalThis.fetch = async (url) => {
       url = String(url)
       if (url.includes('/search/tv')) return Response.json({ results: [{ id: 1396 }] })
-      if (url.includes('/tv/1396')) return Response.json({ genres: [], first_air_date: '2008-01-20', external_ids: { imdb_id: 'tt0903747' } })
+      if (url.includes('/tv/1396')) return Response.json({ credits: { cast: [{ name: 'Bryan Cranston', character: 'Walter White', profile_path: '/bc.jpg' }, { name: 'Sem Foto' }] }, genres: [], first_air_date: '2008-01-20', external_ids: { imdb_id: 'tt0903747' } })
       if (url.includes('tvmaze.com')) return tvmaze(url)
       throw new Error(`fetch inesperado: ${url}`)
     }

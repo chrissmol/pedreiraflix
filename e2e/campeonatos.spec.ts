@@ -46,6 +46,9 @@ test('seguir um campeonato mostra os times, 5 jogos (ver mais ate 10) e so os de
   const card = page.getByRole('region', { name: 'Brasileirão Série A' })
   await expect(card.getByText('Flamengo × Vasco')).toBeVisible()
   // Times do campeonato (achados pela busca) e jogos de times diferentes na mesma lista, sem repetir o mesmo jogo.
+  // A lista de times vem fechada (sem dezenas de botoes soltos); "Adicionar time" abre uma lista rolavel.
+  await expect(card.getByRole('button', { name: 'Seguir Palmeiras' })).toBeHidden()
+  await card.getByRole('button', { name: 'Adicionar time' }).click()
   await expect(card.getByRole('button', { name: 'Seguir Palmeiras' })).toBeVisible()
   await expect(card.getByText('Palmeiras × Santos')).toBeVisible()
   await expect(card.getByText('Flamengo × Vasco')).toHaveCount(1)
@@ -63,7 +66,9 @@ test('seguir um campeonato mostra os times, 5 jogos (ver mais ate 10) e so os de
   await page.goBack()
 
   // Seguir um time daqui vai para a aba Times.
-  await page.getByRole('region', { name: 'Brasileirão Série A' }).getByRole('button', { name: 'Seguir Palmeiras' }).click()
+  await card.getByRole('button', { name: 'Seguir Palmeiras' }).click()
+  // Quem voce segue vira chip no card; tocar nele deixa de seguir.
+  await expect(card.getByRole('button', { name: 'Deixar de seguir Palmeiras' })).toBeVisible()
   await page.getByRole('tab', { name: /^Times/ }).click()
   await expect(page.getByRole('region', { name: 'Palmeiras' })).toBeVisible()
 
@@ -87,6 +92,7 @@ test('usa a rota por campeonato da API quando ela existe', async ({ page }) => {
   await page.getByRole('button', { name: 'Premier League' }).click()
   const card = page.getByRole('region', { name: 'Premier League' })
   await expect(card.getByText('Arsenal × Chelsea')).toBeVisible()
+  await card.getByRole('button', { name: 'Adicionar time' }).click()
   await expect(card.getByRole('button', { name: 'Seguir Arsenal' })).toBeVisible()
 })
 

@@ -48,3 +48,17 @@ test.describe('TV', () => {
     await expect(page).toHaveURL(/\/watch\/live\/102/)
   })
 })
+
+test('player ao vivo: L, botao e MediaLast alternam entre os dois ultimos canais', async ({ page }) => {
+  await page.goto('/watch/live/101?name=Canal')
+  await expect(page.locator('video')).toBeAttached()
+  await page.waitForTimeout(1000)
+  await page.keyboard.press('4')
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
+  await page.keyboard.press('l')
+  await expect(page).toHaveURL(/\/watch\/live\/101/)
+  await page.getByRole('button', { name: 'Último canal visto' }).click({ force: true })
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'MediaLast' })))
+  await expect(page).toHaveURL(/\/watch\/live\/101/)
+})

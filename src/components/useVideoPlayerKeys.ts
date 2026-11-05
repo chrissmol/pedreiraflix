@@ -11,6 +11,7 @@ interface Params {
   onChannelUp?: () => void
   onChannelDown?: () => void
   onShowChannels?: () => void
+  onLastChannel?: () => void
   closeMenu: () => void
   wakeControls: () => void
   togglePlay: () => void
@@ -27,6 +28,7 @@ export function useVideoPlayerKeys({
   onChannelUp,
   onChannelDown,
   onShowChannels,
+  onLastChannel,
   closeMenu,
   wakeControls,
   togglePlay,
@@ -122,6 +124,11 @@ export function useVideoPlayerKeys({
             wakeControls()
           }
           break
+        // Canal anterior (o ultimo visto): tecla L, ou o botao "Last"/"Recall" do controle (MediaLast).
+        case 'l':
+        case 'MediaLast':
+          if (isLive && onLastChannel) onLastChannel()
+          break
         case 'm':
           video.muted = !video.muted
           break
@@ -144,5 +151,5 @@ export function useVideoPlayerKeys({
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLive, onChannelUp, onChannelDown, onShowChannels])
+  }, [isLive, onChannelUp, onChannelDown, onShowChannels, onLastChannel])
 }

@@ -16,6 +16,8 @@ interface DetailHeroProps {
   genre?: string | null
   plot?: string | null
   credits: { label: string; value: string | null }[]
+  /** Elenco (CastList), mostrado abaixo dos creditos. */
+  cast?: ReactNode
   actions: ReactNode
   footnote?: ReactNode
   /** Selo de status antes da nota: "Assistido"/"Concluída" com ✓, ou "Novos episódios" quando a serie cresceu. */
@@ -40,7 +42,7 @@ const RATING_COLORS: Record<string, string> = {
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, tmdbRating, chips, genre, plot, credits, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
+export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, tmdbRating, chips, genre, plot, credits, cast, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = displayTitle(rawTitle)
   const shownCredits = credits.filter((c) => c.value)
@@ -126,6 +128,7 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
               ))}
             </dl>
           )}
+          {cast}
           <div className="mt-6 flex flex-wrap items-center gap-3">{actions}</div>
           {footnote}
         </div>
