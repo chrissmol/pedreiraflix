@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { displayTitle } from '../lib/displayTitle'
+import { displayTitle, withoutYear } from '../lib/displayTitle'
 import { proxyImage } from '../lib/xtream'
 import { Check } from './icons'
 
@@ -44,7 +44,7 @@ const RATING_COLORS: Record<string, string> = {
  * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
 export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, tmdbRating, chips, genre, plot, credits, cast, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
-  const title = displayTitle(rawTitle)
+  const title = withoutYear(displayTitle(rawTitle))
   const shownCredits = credits.filter((c) => c.value)
   const [plotOpen, setPlotOpen] = useState(false)
   const [logoFailed, setLogoFailed] = useState<string | null>(null)

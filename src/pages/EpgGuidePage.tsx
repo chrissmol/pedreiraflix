@@ -1,4 +1,4 @@
-import { displayTitle } from '../lib/displayTitle'
+import { displayChannel, displayTitle } from '../lib/displayTitle'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Calendar, ChevronLeft, Clock } from '../components/icons'
@@ -163,7 +163,7 @@ export default function EpgGuidePage() {
                         }}
                       />
                     )}
-                    <span className="line-clamp-2 break-words text-body-sm font-medium text-white sm:text-label-md">{displayTitle(ch.name)}</span>
+                    <span className="line-clamp-2 break-words text-body-sm font-medium text-white sm:text-label-md">{displayChannel(ch.name)}</span>
                   </button>
 
                   <div className="relative flex-1" style={{ height: 68 }}>

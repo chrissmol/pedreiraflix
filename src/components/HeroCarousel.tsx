@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Check, Info, Play, Plus } from './icons'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
-import { displayTitle } from '../lib/displayTitle'
+import { displayTitle, withoutYear } from '../lib/displayTitle'
 import { isTv } from '../lib/device'
 import { useTmdbInfo } from '../hooks/useImdbRating'
 import { bestRating } from '../lib/tmdb'
@@ -131,14 +131,14 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
             <img
               key={logo}
               src={proxyImage(logo) ?? undefined}
-              alt={displayTitle(current.title)}
+              alt={withoutYear(displayTitle(current.title))}
               onError={() => setLogoFailed(logo)}
               className="max-h-20 max-w-[70%] object-contain object-left drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:max-h-32 sm:max-w-md"
             />
           </h1>
         ) : (
           <h1 className="font-display line-clamp-2 max-w-xl text-balance text-headline-lg text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:text-display-hero">
-            {displayTitle(current.title)}
+            {withoutYear(displayTitle(current.title))}
           </h1>
         )}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-on-surface-variant drop-shadow">

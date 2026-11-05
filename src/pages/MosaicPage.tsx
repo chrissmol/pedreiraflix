@@ -8,7 +8,7 @@ import { useDialogA11y } from '../hooks/useDialogA11y'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { useXtream } from '../hooks/useXtream'
 import { isTv } from '../lib/device'
-import { displayTitle } from '../lib/displayTitle'
+import { displayChannel } from '../lib/displayTitle'
 import { matchesQuery } from '../lib/search'
 import { connectionStatus, refreshSession } from '../lib/session'
 import { moveFocusTv } from '../lib/spatialNav'
@@ -185,7 +185,7 @@ function MosaicTile({ channel, src, hasAudio, autoFocus, onSelect, onPick, onFul
   const [menu, setMenu] = useState(false)
   const barRef = useRef<HTMLDivElement>(null)
   const showBar = hasAudio && (!isTv || menu)
-  const name = displayTitle(channel.name)
+  const name = displayChannel(channel.name)
 
   useEffect(() => {
     if (menu) barRef.current?.querySelector('button')?.focus()

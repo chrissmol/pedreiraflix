@@ -97,7 +97,7 @@ test('titulo longo do destaque nao invade o cabecalho', async ({ page }) => {
     const titulo = page.locator('h1').filter({ hasText: 'Purgatorio' })
     await expect(titulo).toBeVisible({ timeout: 15000 })
     await expect(titulo).not.toContainText('[L]')
-    expect((await titulo.textContent())!.match(/\(2025\)/g)).toHaveLength(1)
+    await expect(titulo).not.toContainText('(2025)')
     const cabecalho = (await page.locator('header').boundingBox())!
     const caixa = (await titulo.boundingBox())!
     expect(caixa.y, `largura ${largura}`).toBeGreaterThanOrEqual(cabecalho.y + cabecalho.height - 8)
@@ -115,6 +115,6 @@ test('poster mostra o titulo sem [L] e sem ano repetido', async ({ page }) => {
   await page.goto('/movies')
   const poster = page.getByRole('button', { name: /^Filme Explosivo/ }).first()
   await expect(poster).toBeVisible({ timeout: 15000 })
-  await expect(poster).toContainText('Filme Explosivo (2025)')
+  await expect(poster).toContainText('Filme Explosivo')
   await expect(poster).not.toContainText('[L]')
 })

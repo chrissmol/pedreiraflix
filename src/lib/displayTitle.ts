@@ -1,16 +1,51 @@
-/** Nome para exibir: o provedor enfeita os titulos ("Bound by Fate [L] (2025) (2025) (2025)"). Tira as marcas
- * entre colchetes e os enfeites ★/⚽ e repete o ano uma vez so. O nome cru continua sendo usado para busca e para o TMDB. */
-export function displayTitle(name: string): string {
-  return name
+// Enfeites que o provedor poe nos nomes: estrelas, bolas, setas, bolinhas e emojis (menos (c) (R) e TM, que fazem parte de nomes).
+const DECOR = /(?![©®™])[\p{Extended_Pictographic}\uFE0F\u200D★☆✪✦●○•▪▫◆◇■□▶►◀◄▸▹»«]/gu
+// Palavras curtas de verdade que, em CAIXA ALTA, viram "Sem", "Uma"... (as demais de ate 3 letras sao siglas: FBI, CSI, TV).
+const SMALL_WORDS = new Set('a o as os um uns uma de do da dos das em no na nos nas e ou ao aos com sem por pra para que mas se ele ela eu tu meu seu sua the of and in on at to for one two her his you me my is it'.split(' '))
+const LOWER_WORDS = new Set('a o as os um uns uma de do da dos das em no na nos nas e ou ao aos com sem por pra para que mas se the of and in on at to for'.split(' '))
+const ROMAN = /^(?=[IVXLCDM]+$)(?:M{0,3})(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})$/
+
+function caseWord(w: string, first: boolean): string {
+  const letters = w.replace(/[^\p{L}]/gu, '')
+  if (!letters) return w
+  // Siglas e codigos ficam como vieram: S.W.A.T., 4K, S01E02, II, ABC.
+  if (/\./.test(w) || /\d/.test(w) || (ROMAN.test(letters) && letters.length > 1)) return w
+  if (letters.length <= 3 && !SMALL_WORDS.has(letters.toLowerCase())) return w
+  // "E" e "A" soltos (de "WALL-E" ou "PLANO B") ficam em maiuscula; so as palavras ligantes caem para minuscula.
+  if (!first && LOWER_WORDS.has(letters.toLowerCase()) && letters.length > 1) return w.toLowerCase()
+  if (!first && letters.length === 1 && /^[aeo]$/i.test(letters)) return w.toLowerCase()
+  return w.toLowerCase().replace(/(^|[-'’(:])(\p{L})/gu, (_, a: string, b: string) => a + b.toUpperCase())
+}
+
+/** Titulo todo em CAIXA ALTA vira "Caixa Alta"; titulo com alguma minuscula nunca e mexido (WALL-E, iCarly). */
+function fixCase(t: string): string {
+  if (/\p{Ll}/u.test(t) || (t.match(/\p{Lu}/gu)?.length ?? 0) < 4) return t
+  return t.split(' ').map((w, i) => caseWord(w, i === 0)).join(' ')
+}
+
+/** Nome para exibir: o provedor enfeita os titulos ("- Dupla Perigosa", "|BR| Bound by Fate [L] (2025) (2025)", "★ FILME ★").
+ * Tira marcas entre colchetes, enfeites/emojis, barras e hifens soltos nas pontas, repete o ano uma vez so e arruma CAIXA ALTA
+ * (sai com `keepCase`, para canais, onde ESPN/SPORTV/FHD sao assim mesmo). O nome cru continua sendo usado para busca e TMDB. */
+export function displayTitle(name: string, keepCase = false): string {
+  const t = name
     .replace(/\[[^\]]*\]/g, ' ')
-    .replace(/[★⚽]/g, ' ')
+    .replace(DECOR, ' ')
+    .replace(/^\s*\|[^|]{1,8}\|/, ' ')
     .replace(/(\((\d{4})\))(\s*\(\2\))+/g, '$1')
     .replace(/\s+/g, ' ')
-    .replace(/\s*[-–]\s*$/, '')
+    .replace(/\s*[-–|]+\s*$/, '')
     .trim()
-    // O provedor marca alguns titulos com "- " ou "+ " na frente ("- Dupla Perigosa").
-    .replace(/^[-–+]\s+/, '')
+    // "- ", "+ " ou "| " na frente; "+1", "-1" e "3 + 1" ficam como estao.
+    .replace(/^(?:[-–+|]+\s+|\|+)+/, '')
+    .trim()
+  return keepCase ? t : fixCase(t)
 }
+
+/** Tira o "(2024)" do fim para cards e detalhe (o ano continua no nome cru, na busca e nos chips). */
+export const withoutYear = (t: string) => t.replace(/\s*\((?:19|20)\d{2}\)\s*$/, '') || t
+
+/** Canal: mesma limpeza, sem mexer na caixa. */
+export const displayChannel = (name: string) => displayTitle(name, true)
 
 /** Ano do filme para o filtro: o campo `year` quando o painel manda, senao o "(2024)" do nome. */
 export function movieYear(m: { name: string; year?: string | null }): number | null {
