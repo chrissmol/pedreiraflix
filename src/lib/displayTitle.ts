@@ -8,6 +8,8 @@ export function displayTitle(name: string): string {
     .replace(/\s+/g, ' ')
     .replace(/\s*[-–]\s*$/, '')
     .trim()
+    // O provedor marca alguns titulos com "- " ou "+ " na frente ("- Dupla Perigosa").
+    .replace(/^[-–+]\s+/, '')
 }
 
 /** Ano do filme para o filtro: o campo `year` quando o painel manda, senao o "(2024)" do nome. */
