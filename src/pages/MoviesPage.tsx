@@ -13,6 +13,7 @@ import type { Movie } from '../types'
 import ErrorCard from '../components/ErrorCard'
 import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
+import { groupByGenre } from '../lib/genres'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
 const SORT_LABELS: Record<SortKey, string> = { default: 'Padrão', name: 'Nome (A-Z)', recent: 'Recentes', rating: 'Melhor avaliados' }
@@ -31,7 +32,9 @@ function sortMovies(items: Movie[], sort: SortKey): Movie[] {
 const ROW_LIMIT = 40
 
 export default function MoviesPage() {
-  const { groups, loading, error, retry } = useMovieCatalog()
+  const { groups: providerGroups, loading, error, retry } = useMovieCatalog()
+  // Navega por gênero quando a lista do provedor traz o gênero; senão fica nas categorias dele.
+  const groups = useMemo(() => groupByGenre(providerGroups) ?? providerGroups, [providerGroups])
   const [searchParams, setSearchParams] = useSearchParams()
   // A categoria mora na URL: o "Ver tudo" das fileiras desta mesma pagina so troca o ?category= (sem remontar a
   // pagina), e ler isso uma vez na montagem fazia o link nao abrir nada (Suporte, 21/10). Voltar sai da grade.

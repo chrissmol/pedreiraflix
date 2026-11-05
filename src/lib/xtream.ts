@@ -286,6 +286,7 @@ export class XtreamClient implements ProviderClient {
         added: string | null
         container_extension: string
         year?: string | null
+        genre?: string | null
       }[]
     >('get_vod_streams', categoryId ? { category_id: categoryId } : {})
     return asList<typeof raw[number]>(raw).map((s) => ({
@@ -298,6 +299,7 @@ export class XtreamClient implements ProviderClient {
       added: s.added,
       containerExtension: s.container_extension || 'mp4',
       year: s.year,
+      genre: s.genre,
     }))
   }
 
