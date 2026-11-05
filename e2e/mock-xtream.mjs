@@ -252,8 +252,30 @@ function checkCreds(req, res) {
 // counting from 1970 (~88 million) froze the page with two players at once (mosaico).
 // Multiplo do tamanho do loop: a DISCONTINUITY-SEQUENCE so bate com as tags (n % tamanho) assim; sem isto o hls.js dava levelParsingError FATAL.
 const LIVE_SEQ0 = Math.floor(Date.now() / 2000 / liveSegments.length) * liveSegments.length
+// Provedor real: /live/u/p/ID.m3u8 responde 302 para uma URL com token novo e cada pedido ao endereco original cria
+// uma "sessao" (tela) la. Ligado por /__mock/live-redirect?on=1; /__mock/live-sessions conta as sessoes criadas.
+let liveRedirect = false
+const liveSessions = []
+app.get('/__mock/live-redirect', (req, res) => { liveRedirect = req.query.on === '1'; liveSessions.length = 0; res.end('ok') })
+app.get('/__mock/live-sessions', (_req, res) => res.json(liveSessions))
+const livePlaylist = (res) => {
+  const seq = Math.floor(Date.now() / 2000)
+  const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:2', `#EXT-X-MEDIA-SEQUENCE:${seq}`,
+    `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor((seq - LIVE_SEQ0) / liveSegments.length)}`]
+  for (let k = 0; k < 5; k++) {
+    const n = seq + k
+    if (k > 0 && n % liveSegments.length === 0) lines.push('#EXT-X-DISCONTINUITY')
+    lines.push('#EXTINF:2.0,', `/fixtures/live/${liveSegments[n % liveSegments.length]}`)
+  }
+  res.type('application/vnd.apple.mpegurl').send(lines.join('\n') + '\n')
+}
+app.get('/hls/:token/:file', (_req, res) => livePlaylist(res))
 app.get('/live/:u/:p/:file', (req, res) => {
   if (!checkCreds(req, res)) return
+  if (liveRedirect) {
+    liveSessions.push(req.params.file)
+    return res.redirect(302, `/hls/${Math.random().toString(36).slice(2)}/${req.params.file}`)
+  }
   const seq = Math.floor(Date.now() / 2000)
   const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:2', `#EXT-X-MEDIA-SEQUENCE:${seq}`,
     `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor((seq - LIVE_SEQ0) / liveSegments.length)}`]

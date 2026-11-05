@@ -242,6 +242,11 @@ app.get('/api/stream', async (req, res) => {
     }
 
     const contentType = upstream.headers.get('content-type') || ''
+    // Mesmo que o Worker: lista ao vivo redirecionada pelo provedor volta como redirecionamento ao navegador.
+    if (upstream.redirected && upstream.ok && req.query.raw !== '1' && (contentType.includes('mpegurl') || target.pathname.endsWith('.m3u8'))) {
+      res.removeHeader('content-length')
+      return res.status(302).setHeader('cache-control', 'no-store').setHeader('location', proxiedRef(upstream.url, session, sid)).end()
+    }
     // Mirrors worker/index.js: posters/logos get real caching, video/HLS is untouched.
     if (contentType.startsWith('image/')) res.setHeader('cache-control', 'public, max-age=604800')
     // raw=1 (used to fetch a catalog M3U playlist for parsing, not playback) skips the HLS

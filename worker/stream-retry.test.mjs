@@ -79,3 +79,19 @@ test('403 do provedor chega ao app com o corpo original, sem retentar', async ()
   assert.equal(await res.text(), 'Forbidden by panel')
   assert.equal(calls.length, 1)
 })
+
+// Lista ao vivo que o provedor redireciona para URL com token novo: o navegador tem que receber o redirecionamento
+// (e recarregar a URL final), senao cada recarga da lista de 2 s abre uma sessao nova no provedor.
+test('lista m3u8 redirecionada pelo provedor volta como redirecionamento ao navegador', async () => {
+  const calls = []
+  globalThis.fetch = async (url) => {
+    calls.push(String(url))
+    if (calls.length === 1) return new Response(null, { status: 302, headers: { location: 'https://provedor.example.com/hls/tok123/c.m3u8' } })
+    const r = new Response('#EXTM3U\nseg1.ts\n', { status: 200, headers: { 'content-type': 'application/vnd.apple.mpegurl' } })
+    Object.defineProperty(r, 'url', { value: 'https://provedor.example.com/hls/tok123/c.m3u8' })
+    return r
+  }
+  const res = await worker.fetch(new Request(`http://app/api/stream?url=${encodeURIComponent('https://provedor.example.com/live/u/p/1.m3u8')}`), {})
+  assert.equal(res.status, 302)
+  assert.equal(res.headers.get('location'), `/api/stream?url=${encodeURIComponent('https://provedor.example.com/hls/tok123/c.m3u8')}`)
+})
