@@ -13,6 +13,8 @@ test('celular: painel Episodios abre no toque, cabe na tela e fecha tocando fora
   await botao.tap()
   const painel = page.getByRole('dialog', { name: 'Episódios' })
   await expect(painel.getByText('T1E3 - Episódio 3')).toBeVisible()
+  // O painel desliza ao abrir (#248): so mede depois da animacao.
+  await painel.locator('> div').last().evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
   const box = (await painel.locator('> div').last().boundingBox())!
   const vw = page.viewportSize()!.width
   expect(box.x).toBeGreaterThanOrEqual(0)

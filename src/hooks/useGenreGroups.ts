@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { movieGenreIndex } from '../lib/generos'
 import { groupByGenre } from '../lib/genres'
 import { firstPerWork } from '../lib/versions'
+import { STREAMINGS, streamingGroupId, streamingIndex, streamingsInName } from '../lib/streaming'
 import type { CategoryGroup } from './useCatalog'
 
 // Mesmo item com genero => mesmo objeto, e fileira igual => mesmo grupo: sem isso toda fileira renderiza de novo a cada
@@ -42,6 +43,14 @@ export function useGenreGroups<T extends Item>(
       alive = false
     }
   }, [kind])
+  const [streams, setStreams] = useState<Record<number, string[]>>({})
+  useEffect(() => {
+    let alive = true
+    void streamingIndex(kind).then((i) => alive && setStreams(i))
+    return () => {
+      alive = false
+    }
+  }, [kind])
   return useMemo(() => {
     const useIndex = kind === 'movie' && Object.keys(index).length > 0
     const source = useIndex ? groups.map((g) => ({ ...g, items: g.items.map((m) => enrich(m, index)) })) : groups
@@ -51,6 +60,23 @@ export function useGenreGroups<T extends Item>(
     const novidades: CategoryGroup<T>[] = latest.length
       ? [{ category: { categoryId: 'novidades', categoryName: latestTitle }, items: latest, loading: false, error: null }]
       : []
-    return [...novidades, ...byGenre].map((g) => stable(`${kind}:${latestTitle}`, g))
-  }, [groups, index, kind, latestTitle])
+    // Streaming: o TMDB (por tmdb_id) e o nome da categoria do provedor ("|NETFLIX|") dizem onde o titulo passa.
+    const byStream = new Map<string, Map<unknown, T>>()
+    for (const g of groups) {
+      const fromName = streamingsInName(g.category.categoryName)
+      for (const m of g.items) {
+        for (const key of new Set([...fromName, ...((m.tmdbId && streams[m.tmdbId]) || [])])) {
+          if (!byStream.has(key)) byStream.set(key, new Map())
+          byStream.get(key)!.set(('streamId' in m ? m.streamId : 'seriesId' in m ? m.seriesId : m) as unknown, m)
+        }
+      }
+    }
+    const streaming: CategoryGroup<T>[] = STREAMINGS.filter((s) => byStream.has(s.key)).map((s) => ({
+      category: { categoryId: streamingGroupId(s.key), categoryName: s.name },
+      items: firstPerWork([...byStream.get(s.key)!.values()]),
+      loading: false,
+      error: null,
+    }))
+    return [...novidades, ...streaming, ...byGenre].map((g) => stable(`${kind}:${latestTitle}`, g))
+  }, [groups, index, streams, kind, latestTitle])
 }
