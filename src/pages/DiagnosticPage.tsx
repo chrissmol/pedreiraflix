@@ -265,6 +265,7 @@ export default function DiagnosticPage() {
       <TesteDeSom />
       <TesteDeSetas />
       <TesteAoVivo />
+      <TesteTelas />
     </div>
   )
 }
@@ -443,6 +444,95 @@ function TesteAoVivo() {
       <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-sm rounded-lg bg-black" />
       <button onClick={testar} disabled={rodando} className="btn-primary mt-3">
         {rodando ? 'Testando…' : 'Testar canal ao vivo'}
+      </button>
+      {relatorio && <pre className="mt-3 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>}
+    </section>
+  )
+}
+
+// Teste de telas: o provedor so mostra "telas em uso" no login, entao medimos ali. Linha do tempo: antes, durante (3 canais
+// em sequencia, 6 s cada, do mesmo jeito que trocar de canal no player) e depois de soltar tudo (a cada 10 s por 90 s).
+// Diz se o app solta a conexao ou se o provedor e que segura a tela por um tempo (28/10, 3 de 3 com 1 aparelho).
+const TELAS_POLL_S = 90
+
+function TesteTelas() {
+  const client = useXtream()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [rodando, setRodando] = useState(false)
+  const [relatorio, setRelatorio] = useState('')
+
+  async function testar() {
+    const video = videoRef.current
+    if (!video || !(client instanceof XtreamClient)) {
+      setRelatorio('O teste vale para contas usuário/senha (Xtream).')
+      return
+    }
+    setRodando(true)
+    const t0 = performance.now()
+    const linhas: string[] = []
+    const medir = async (rotulo: string) => {
+      try {
+        const u = JSON.parse((await client.probe(null)).text)?.user_info
+        linhas.push(`${((performance.now() - t0) / 1000).toFixed(0)} s · ${rotulo}: ${u?.active_cons ?? '?'} de ${u?.max_connections ?? '?'} telas`)
+      } catch {
+        linhas.push(`${((performance.now() - t0) / 1000).toFixed(0)} s · ${rotulo}: sem resposta do provedor`)
+      }
+      setRelatorio(linhas.join('\n'))
+    }
+    let hls: { destroy: () => void } | null = null
+    try {
+      await medir('antes')
+      const cat = (await client.getLiveCategories())[0]
+      const canais = (await client.getLiveStreams(cat?.categoryId)).slice(0, 3)
+      if (canais.length < 2) throw new Error('poucos canais para o teste')
+      video.muted = true
+      for (const canal of canais) {
+        const src = client.streamUrl('live', canal.streamId, 'm3u8')
+        if (supportsNativeHls()) {
+          video.src = src
+        } else {
+          const { default: Hls } = await import('hls.js')
+          const h = new Hls()
+          hls = h
+          h.loadSource(src)
+          h.attachMedia(video)
+        }
+        video.play().catch(() => {})
+        await sleep(6000)
+        await medir(`tocando ${canal.name}`)
+        hls?.destroy()
+        hls = null
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
+      linhas.push('— canais soltos (mesmo código do player) —')
+      for (let i = 0; i < TELAS_POLL_S; i += 10) {
+        await medir(`soltos há ${i} s`)
+        await sleep(10_000)
+      }
+      linhas.push(navigator.userAgent)
+      setRelatorio(linhas.join('\n'))
+    } catch (err) {
+      setRelatorio(`${linhas.join('\n')}\nFalhou: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      hls?.destroy()
+      video.pause()
+      video.removeAttribute('src')
+      video.load()
+      setRodando(false)
+    }
+  }
+
+  return (
+    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
+      <h2 className="text-label-md text-white">Teste de telas</h2>
+      <p className="mt-1 text-body-sm text-on-surface-variant">
+        Toca 3 canais em sequência, solta tudo e mostra quantas telas o provedor conta ao longo de {TELAS_POLL_S} segundos. Feche o app nos outros aparelhos antes.
+      </p>
+      <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-sm rounded-lg bg-black" />
+      <button onClick={testar} disabled={rodando} className="btn-primary mt-3">
+        {rodando ? 'Testando…' : 'Testar telas'}
       </button>
       {relatorio && <pre className="mt-3 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>}
     </section>
