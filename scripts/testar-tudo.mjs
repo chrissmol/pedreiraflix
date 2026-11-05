@@ -23,7 +23,7 @@ const PILARES = {
   telas: 'Celular, iPhone, TV e acessibilidade',
 }
 const SPECS = {
-  player: ['smoke', 'player', 'voz-tv', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'live-travado-safari', 'live-queda-sinal', 'libera-conexao', 'assistir-junto'],
+  player: ['smoke', 'player', 'voz-tv', 'player-recursos', 'airplay', 'cast-airplay', 'live-fast-mode', 'live-travado-safari', 'live-queda-sinal', 'libera-conexao', 'sessoes-ao-vivo', 'assistir-junto'],
   'ao-vivo': ['live-epg', 'live-404', 'canal-bloqueado', 'canais-grupos', 'canais-grupos.mobile', 'epg', 'epg-manual', 'xmltv', 'xmltv-real', 'relogio', 'zap.mobile', 'ao-vivo-agora', 'numero-canal'],
   catalogo: ['busca-grande', 'busca-pessoa', 'titulos-duplicados', 'versoes', 'concluido', 'visto-e-em-alta', 'continuar-tv', 'search-suggestions', 'serie-detalhe', 'titulos', 'titulo-removido', 'tmdb', 'ia-gratis', 'ia-gratis.mobile', 'hero', 'grade-progressiva', 'filtros-painel', 'filtros-painel.mobile', 'filtros-filmes', 'scroll-restore', 'cache', 'prioridade', 'perf', 'erro-tentar', 'saga', 'novos-episodios', 'busca-voz', 'retrospectiva'],
   conta: ['auth', 'autologout', 'app-pin', 'account-label-profile-name', 'profiles', 'parental', 'credenciais', 'm3u-login', 'conexoes', 'limite-telas', 'trocar-conta', 'trocar-conta.mobile', 'provedores-fora-do-padrao'],

@@ -129,6 +129,8 @@ function isAllowed(url) {
 // shortcut: depende do nip.io; se ele sair do ar, trocar por sslip.io (mesmo formato).
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
 const MAX_REDIRECTS = 5
+// Respostas que vieram depois de seguir um redirecionamento (ver stream()).
+const followed = new WeakSet()
 
 async function fetchFollowing(target, init) {
   let url = new URL(target)
@@ -138,7 +140,10 @@ async function fetchFollowing(target, init) {
     if (IPV4.test(reach.hostname)) reach.hostname += '.nip.io'
     const res = await fetch(reach, { ...init, redirect: 'manual' })
     const loc = res.headers.get('location')
-    if (res.status < 300 || res.status > 399 || !loc || hop === MAX_REDIRECTS) return res
+    if (res.status < 300 || res.status > 399 || !loc || hop === MAX_REDIRECTS) {
+      if (hop > 0) followed.add(res)
+      return res
+    }
     res.body?.cancel()
     url = new URL(loc, url)
   }
@@ -237,6 +242,16 @@ async function stream(request, url, env) {
   } catch (e) {
     const timedOut = e.name === 'AbortError'
     return new Response(timedOut ? 'upstream timed out' : 'upstream fetch failed', { status: timedOut ? 504 : 502 })
+  }
+
+  // Lista de canal ao vivo que o provedor redireciona (URL com token novo a cada pedido): o hls.js recarrega a lista
+  // a cada ~2 s pelo endereco que pediu, e se o redirecionamento fica escondido aqui cada recarga abre uma sessao
+  // nova (uma tela) no provedor. Devolvendo o redirecionamento ao navegador, ele passa a recarregar a URL final.
+  if (
+    followed.has(up) && up.ok && url.searchParams.get('raw') !== '1' && up.url && isAllowed(new URL(up.url)) &&
+    (target.pathname.endsWith('.m3u8') || (up.headers.get('content-type') || '').includes('mpegurl'))
+  ) {
+    return new Response(null, { status: 302, headers: { location: proxiedRef(up.url, session, sid), 'cache-control': 'no-store' } })
   }
 
   const headers = new Headers()
