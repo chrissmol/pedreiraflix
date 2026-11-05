@@ -8,7 +8,7 @@ test('setas verticais movem o foco entre fileiras do catalogo', async ({ page })
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
 
-  const primeiro = page.getByRole('button', { name: 'Filme Explosivo Filme' })
+  const primeiro = page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()
   await primeiro.focus()
   await page.keyboard.press('ArrowDown')
 

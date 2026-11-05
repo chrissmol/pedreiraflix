@@ -12,7 +12,7 @@ test('arrow keys move focus between posters within a row', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Filme Explosivo Filme' }).first().focus()
   await page.keyboard.press('ArrowRight')
-  await expect(page.getByRole('button', { name: 'Corrida Final' }).first()).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Multi Áudio Teste' }).first()).toBeFocused()
   await page.keyboard.press('ArrowLeft')
   await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeFocused()
 

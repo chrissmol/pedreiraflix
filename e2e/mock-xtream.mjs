@@ -95,7 +95,7 @@ movies[1].stream_icon = `http://localhost:${PORT}/fixtures/poster.jpg`
 
 const seriesCategories = [{ category_id: '20', category_name: 'Drama' }]
 const series = [
-  { series_id: 50, name: 'Série Dramática', category_id: '20', rating: '8.7', genre: 'Drama', releaseDate: '2022-03-01', plot: 'Uma série de teste.' },
+  { series_id: 50, name: 'Série Dramática', category_id: '20', last_modified: '1700000500', rating: '8.7', genre: 'Drama', releaseDate: '2022-03-01', plot: 'Uma série de teste.' },
   { series_id: 51, name: 'Outra Série', category_id: '20', rating: '6.0', genre: 'Drama', releaseDate: '2018-01-01', plot: 'Mais uma.' },
 ].map((s, i) => ({ ...s, cover: img(s.name.split(' ')[0], 120 + i * 40), backdrop_path: [], cast: 'Fulano, Beltrano', director: 'Diretor X' }))
 

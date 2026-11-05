@@ -359,6 +359,7 @@ export class XtreamClient implements ProviderClient {
         backdrop_path?: string[] | string | null
         cast: string | null
         director: string | null
+        last_modified?: string | null
       }[]
     >('get_series', categoryId ? { category_id: categoryId } : {})
     return asList<typeof raw[number]>(raw).map((s) => ({
@@ -374,6 +375,7 @@ export class XtreamClient implements ProviderClient {
       backdropPath: toStringArray(s.backdrop_path).map((u) => proxyImage(u)!),
       cast: s.cast,
       director: s.director,
+      added: s.last_modified,
     }))
   }
 

@@ -31,7 +31,7 @@ test('Novos episódios: so a serie terminada que cresceu, com quantos sao novos'
 
 test('Novos episódios: sem serie nova a fileira nao aparece', async ({ page }) => {
   await seed(page, { '51': { episodes: 6, done: true, at: 1 } })
-  await expect(page.getByRole('heading', { name: 'Adicionados recentemente' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novidades em filmes' })).toBeVisible()
   await page.waitForTimeout(1000)
   await expect(page.getByRole('heading', { name: 'Novos episódios' })).toHaveCount(0)
 })
