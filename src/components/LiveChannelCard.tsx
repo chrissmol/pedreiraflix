@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Plus, X } from './icons'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
-import { displayTitle } from '../lib/displayTitle'
+import { displayChannel, displayTitle } from '../lib/displayTitle'
 import { useMinuteClock } from '../lib/minuteClock'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
@@ -28,7 +28,7 @@ export default function LiveChannelCard({ channel, onOpen, onRemove }: LiveChann
   const [visible, setVisible] = useState(false)
   const [program, setProgram] = useState<EpgProgram | null>(null)
   const [logoFalhou, setLogoFalhou] = useState(false)
-  const nome = displayTitle(channel.name)
+  const nome = displayChannel(channel.name)
 
   // A lineup is routinely hundreds of channels and each one's "what's on" is its own request, so this
   // only asks for the handful actually on screen — scrolling fetches the rest, and `cached` keeps a

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ErrorCard from '../components/ErrorCard'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveCatalog } from '../hooks/useCatalog'
-import { displayTitle } from '../lib/displayTitle'
+import { displayChannel } from '../lib/displayTitle'
 import { normalizeText, searchCatalog } from '../lib/search'
 import type { LiveChannel } from '../types'
 import { Check, ChevronDown, Plus, Trophy, Tv, X } from '../components/icons'
@@ -190,7 +190,7 @@ function ChannelPicker({ channel, onClose }: { channel: string; onClose: () => v
               <li key={c.streamId}>
                 <button onClick={() => open(c)} className="brand-focus inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-md text-white hover:bg-surface-low pointer-coarse:min-h-9">
                   <Tv className="h-3.5 w-3.5" />
-                  {displayTitle(c.name)}
+                  {displayChannel(c.name)}
                 </button>
               </li>
             ))}

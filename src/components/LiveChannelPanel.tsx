@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from './icons'
 import { cleanCategoryName } from '../lib/channelGroups'
-import { displayTitle } from '../lib/displayTitle'
+import { displayChannel } from '../lib/displayTitle'
 import type { Category, LiveChannel } from '../types'
 
 interface LiveChannelPanelProps {
@@ -81,7 +81,7 @@ export default function LiveChannelPanel({ categories, channels, currentId, onPi
                 }`}
               >
                 {ch.streamIcon && <img src={ch.streamIcon} alt="" loading="lazy" className="h-8 w-8 shrink-0 object-contain" />}
-                <span className="min-w-0 truncate">{displayTitle(ch.name)}</span>
+                <span className="min-w-0 truncate">{displayChannel(ch.name)}</span>
               </button>
             </li>
           ))}
