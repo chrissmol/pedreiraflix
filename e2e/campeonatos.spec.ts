@@ -112,3 +112,21 @@ test('cards de time e campeonato recolhem, mostram so o proximo jogo e lembram o
   await page.getByRole('region', { name: 'Flamengo' }).getByRole('button', { name: 'Expandir Flamengo' }).click()
   await expect(page.getByRole('region', { name: 'Flamengo' }).getByRole('button', { name: /^Esporte Total/ }).first()).toBeVisible()
 })
+
+test('computador: um unico cartao aberto ocupa as duas colunas, sem vazio ao lado', async ({ page }) => {
+  await mockApi(page)
+  await seedSession(page)
+  await page.goto('/times')
+  for (const nome of ['Flamengo', 'Palmeiras']) {
+    await page.getByLabel('Seguir um time').fill(nome)
+    await page.getByRole('button', { name: nome, exact: true }).click()
+    await expect(page.locator(`section[aria-labelledby="team-${nome.toLowerCase()}"]`)).toBeVisible()
+  }
+  const flamengo = page.locator('section[aria-labelledby="team-flamengo"]')
+  const palmeiras = page.locator('section[aria-labelledby="team-palmeiras"]')
+  const larguraLado = (await palmeiras.boundingBox())!.width
+  await palmeiras.getByRole('button', { name: 'Recolher Palmeiras' }).click()
+  await expect.poll(async () => (await flamengo.boundingBox())!.width).toBeGreaterThan(larguraLado * 1.6)
+  await palmeiras.getByRole('button', { name: 'Expandir Palmeiras' }).click()
+  await expect.poll(async () => (await flamengo.boundingBox())!.width).toBeLessThan(larguraLado * 1.2)
+})
