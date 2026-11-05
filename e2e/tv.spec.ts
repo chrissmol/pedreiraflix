@@ -331,6 +331,7 @@ test('TV: o teste de som dos Ajustes toca a voz do canal central com e sem a mis
     AudioContext.prototype.createMediaElementSource = function (el) { w.__mixados++; return original.call(this, el) }
   })
   await page.goto('/diagnostico')
+  await page.getByRole('heading', { name: /Teste de som/ }).click()
   const tocado = page.waitForRequest(/voz-centro-5\.1-aac\.mp4/)
   await page.getByRole('button', { name: 'AAC normal' }).click()
   await tocado
