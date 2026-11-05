@@ -47,7 +47,7 @@ export function VideoPlayerZappingControls({
         </button>
       )}
       {zap && onLastChannel && (
-        <button onClick={onLastChannel} aria-label="Canal anterior visto" title="Último canal (L)" className="player-btn h-11 w-11 text-label-md">
+        <button onClick={onLastChannel} aria-label="Último canal visto" title="Último canal (L)" className="player-btn h-11 w-11 text-label-md">
           ↩
         </button>
       )}

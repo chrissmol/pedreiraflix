@@ -57,7 +57,7 @@ test('player ao vivo: L, botao e MediaLast alternam entre os dois ultimos canais
   await expect(page).toHaveURL(/\/watch\/live\/201/)
   await page.keyboard.press('l')
   await expect(page).toHaveURL(/\/watch\/live\/101/)
-  await page.getByRole('button', { name: 'Canal anterior visto' }).click({ force: true })
+  await page.getByRole('button', { name: 'Último canal visto' }).click({ force: true })
   await expect(page).toHaveURL(/\/watch\/live\/201/)
   await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'MediaLast' })))
   await expect(page).toHaveURL(/\/watch\/live\/101/)
