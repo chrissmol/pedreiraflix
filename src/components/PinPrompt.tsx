@@ -31,7 +31,7 @@ export default function PinPrompt({ profile, onSuccess, onCancel }: PinPromptPro
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={onCancel}>
+    <div className="anim-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={onCancel}>
       <div
         ref={dialogRef}
         role="dialog"

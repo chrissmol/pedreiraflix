@@ -338,6 +338,50 @@ img {
   animation: pop-in 160ms ease-out;
 }
 
+/* Fundo escuro e paineis laterais/gaveta: o fundo faz fade e o painel desliza de onde veio (so opacity + transform,
+   sem fill-mode). Na TV o deslize vira so fade curto (CPU fraca). */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+.anim-backdrop {
+  animation: fade-in 180ms ease-out;
+}
+.anim-slide-right {
+  animation: slide-in-right 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.anim-slide-left {
+  animation: slide-in-left 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Gaveta de baixo no celular; do `sm` para cima o painel e centralizado e usa o pop normal. */
+.anim-sheet {
+  animation: sheet-up 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 640px) {
+  .anim-sheet {
+    animation: pop-in 160ms ease-out;
+  }
+}
+html.tv .anim-slide-right,
+html.tv .anim-slide-left,
+html.tv .anim-sheet {
+  animation: fade-in 120ms ease-out;
+}
+
 /* Entrada leve: ao carregar, os filhos diretos sobem e aparecem em escada (so os 8 primeiros, 45ms de intervalo).
    So opacity e transform; `backwards` segura o estado inicial durante o atraso e solta no fim, sem prender
    `fixed` de dentro. Desligado na TV (CPU fraca, e la o foco e que guia o olho). */
