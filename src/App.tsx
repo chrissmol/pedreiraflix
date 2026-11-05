@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AppLockGate from "./components/AppLockGate";
 import AutoLogout from "./components/AutoLogout";
 import GroupCodeGate from "./components/GroupCodeGate";
@@ -14,6 +14,7 @@ import RequireAuth from "./components/RequireAuth";
 // bundles, and vice versa. LoginPage stays eager (it's what everyone hits first, unauthenticated;
 // lazy-loading it would just add a network round trip before the very first screen can paint).
 import LoginPage from "./pages/LoginPage";
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
 const DiagnosticPage = lazy(() => import("./pages/DiagnosticPage"));
 const DownloadsPage = lazy(() => import("./pages/DownloadsPage"));
@@ -93,8 +94,8 @@ export default function App() {
               <Route path="/retrospectiva" element={<RetrospectivePage />} />
               <Route path="/junto" element={<JuntoPage />} />
               <Route path="/categorias" element={<CategoriesPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
