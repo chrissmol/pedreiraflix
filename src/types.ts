@@ -60,6 +60,8 @@ export interface Movie {
   year?: string | null
   /** Só alguns painéis mandam o gênero na lista de filmes; os outros só no detalhe (MovieDetails). */
   genre?: string | null
+  /** Codigo do filme no TMDB (a lista do provedor traz so isto, sem genero): src/lib/generos.ts cruza por ele. */
+  tmdbId?: number | null
   /** A mesma obra cadastrada mais de uma vez pelo provedor (dublado, legendado, 4K), ver lib/versions. */
   versions?: Movie[]
 }

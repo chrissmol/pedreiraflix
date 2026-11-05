@@ -64,10 +64,10 @@ interface GenreGroup<T> {
  */
 const idOf = (it: object) => ('streamId' in it ? it.streamId : 'seriesId' in it ? it.seriesId : it)
 
-export function groupByGenre<T extends { genre?: string | null }, G extends GenreGroup<T>>(groups: G[]): G[] | null {
+export function groupByGenre<T extends { genre?: string | null }, G extends GenreGroup<T>>(groups: G[], minShare = MIN_WITH_GENRE): G[] | null {
   const all = groups.flatMap((g) => g.items)
   const withGenre = all.filter((it) => genresOf(it.genre).length > 0).length
-  if (all.length === 0 || withGenre / all.length < MIN_WITH_GENRE) return null
+  if (withGenre === 0 || withGenre / all.length < minShare) return null
   const byGenre = new Map<string, Map<unknown, T>>()
   for (const it of all) {
     const names = genresOf(it.genre)
