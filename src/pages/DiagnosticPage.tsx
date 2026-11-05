@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useXtream } from '../hooks/useXtream'
 import { XtreamClient } from '../lib/xtream'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -38,6 +38,7 @@ export default function DiagnosticPage() {
   const [limpando, setLimpando] = useState<string | null>(null)
   const [atual, setAtual] = useState('')
   const [copiado, setCopiado] = useState(false)
+  const [abertos, setAbertos] = useState<Record<string, boolean>>({})
 
   async function rodar() {
     if (!(client instanceof XtreamClient)) {
@@ -203,15 +204,16 @@ export default function DiagnosticPage() {
   }
 
   const falhas = linhas.filter((l) => !l.ok)
+  const abrir = (l: Linha) => abertos[l.nome] ?? !l.ok
 
   return (
     <div className="min-h-full px-4 pb-16 pt-[calc(6rem+env(safe-area-inset-top))] sm:px-10">
       <h1 className="font-display text-headline-md text-white sm:text-headline-lg">{isTv ? 'Ajustes' : 'Diagnóstico de conexão'}</h1>
-      <p className="mb-6 mt-2 max-w-2xl text-body-md text-on-surface-variant">
+      <p className="mb-4 mt-2 max-w-2xl text-body-md text-on-surface-variant">
         Roda as mesmas chamadas que o app faz e mostra o que este aparelho recebe do servidor e do provedor. Se algo não
         carrega ou não baixa, rode e mande uma captura desta tela.
       </p>
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mb-4 flex flex-wrap gap-3">
         <button onClick={rodar} disabled={rodando} className="btn-primary">
           {rodando ? 'Testando…' : linhas.length ? 'Testar de novo' : 'Testar agora'}
         </button>
@@ -243,21 +245,31 @@ export default function DiagnosticPage() {
         </p>
       )}
       {!rodando && linhas.length > 0 && <Veredito linhas={linhas} falhas={falhas} />}
-      <ul className="mb-8 max-w-3xl space-y-2" aria-live="polite">
+      <ul className="mb-8 max-w-3xl divide-y divide-outline-soft overflow-hidden rounded-2xl border border-outline-soft bg-surface-low" aria-live="polite">
         {linhas.map((l) => (
-          <li key={l.nome} className={`rounded-2xl border border-l-4 border-outline-soft bg-surface-low px-4 py-3 text-body-sm ${l.ok ? 'border-l-done' : 'border-l-live'}`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className={`text-label-md ${l.ok ? 'text-done' : 'text-live'}`}>
+          <li key={l.nome} className={`border-l-4 ${l.ok ? 'border-l-done' : 'border-l-live'}`}>
+            <button
+              type="button"
+              aria-expanded={abrir(l)}
+              onClick={() => setAbertos((a) => ({ ...a, [l.nome]: !abrir(l) }))}
+              className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
+            >
+              <span className={`text-label-md ${l.ok ? 'text-done' : 'text-live'}`}>
                 {l.ok ? '✓' : '✗'} {l.nome}
-              </p>
-              <span
-                data-testid="origem"
-                className={l.ok ? 'text-label-badge text-on-surface-variant opacity-60' : 'rounded-full border border-live px-2 py-0.5 text-label-badge text-live'}
-              >
-                {l.ok ? l.origem : `Problema do ${l.origem === 'Player' ? 'player' : 'provedor'}`}
               </span>
-            </div>
-            <p className="mt-0.5 break-words text-on-surface-variant">{l.detalhe}</p>
+              <span className="flex shrink-0 items-center gap-2">
+                <span
+                  data-testid="origem"
+                  className={l.ok ? 'text-label-badge text-on-surface-variant opacity-60' : 'rounded-full border border-live px-2 py-0.5 text-label-badge text-live'}
+                >
+                  {l.ok ? l.origem : `Problema do ${l.origem === 'Player' ? 'player' : 'provedor'}`}
+                </span>
+                <Seta aberto={abrir(l)} />
+              </span>
+            </button>
+            <Colapsavel aberto={abrir(l)}>
+              <p className="break-words px-4 pb-3 text-body-sm text-on-surface-variant">{l.detalhe}</p>
+            </Colapsavel>
           </li>
         ))}
       </ul>
@@ -270,6 +282,48 @@ export default function DiagnosticPage() {
   )
 }
 
+// Seta que gira e area que abre/fecha com animacao suave (grid 0fr -> 1fr: anima a altura sem medir). `invisible`
+// fechado tira o conteudo do foco e dos leitores; o atraso so no fechar deixa a animacao terminar antes. O
+// prefers-reduced-motion global (index.css) zera as duracoes.
+function Seta({ aberto }: { aberto: boolean }) {
+  return (
+    <svg aria-hidden viewBox="0 0 20 20" className={`h-4 w-4 text-on-surface-variant transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m5 8 5 5 5-5" />
+    </svg>
+  )
+}
+
+function Colapsavel({ aberto, children }: { aberto: boolean; children: ReactNode }) {
+  return (
+    <div className={`grid transition-[grid-template-rows] duration-200 ${aberto ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+      <div className={`min-h-0 overflow-hidden ${aberto ? '' : 'invisible delay-200'}`} style={aberto ? undefined : { transitionProperty: 'visibility' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// Cartao dos testes extras: titulo + botao de acao numa linha so; a explicacao e o resultado ficam recolhidos.
+function Cartao({ titulo, ajuda, acao, children, aberto, onToggle }: { titulo: string; ajuda: string; acao: ReactNode; children?: ReactNode; aberto: boolean; onToggle: () => void }) {
+  return (
+    <section className="mb-3 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+        <button type="button" aria-expanded={aberto} onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          <h3 className="text-label-md text-white">{titulo}</h3>
+          <Seta aberto={aberto} />
+        </button>
+        {acao}
+      </div>
+      <Colapsavel aberto={aberto}>
+        <div className="px-4 pb-3">
+          <p className="text-body-sm text-on-surface-variant">{ajuda}</p>
+          {children}
+        </div>
+      </Colapsavel>
+    </section>
+  )
+}
+
 // Resposta direta no topo: o que deu, de quem e o problema e o que fazer, para nao ter que ler linha por linha.
 function Veredito({ linhas, falhas }: { linhas: Linha[]; falhas: Linha[] }) {
   const doPlayer = falhas.filter((l) => l.origem === 'Player')
@@ -279,9 +333,12 @@ function Veredito({ linhas, falhas }: { linhas: Linha[]; falhas: Linha[] }) {
       ? ['Problema no app ou na rede deste aparelho', 'O servidor do app não respondeu como deveria, então os testes do provedor não valem. Confira a internet do aparelho e rode de novo; se persistir, mande o resultado.', 'border-live text-live']
       : ['O app está bem, o problema é do provedor', `Falhou: ${falhas.map((l) => l.nome).join(', ')}. Isso vem do provedor (limite de telas, bloqueio ou instabilidade), não do app. Veja o motivo exato abaixo.`, 'border-live text-live']
   return (
-    <section data-testid="veredito" className={`mb-4 max-w-3xl rounded-2xl border-2 bg-surface-low px-4 py-4 ${cor.split(' ')[0]}`}>
-      <h2 className={`font-display text-headline-sm ${cor.split(' ')[1]}`}>{titulo}</h2>
-      <p className="mt-1 text-body-md text-on-surface-variant">{texto}</p>
+    <section data-testid="veredito" className={`mb-3 max-w-3xl rounded-2xl border-2 bg-surface-low px-4 py-3 ${cor.split(' ')[0]}`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <h2 className={`font-display text-headline-sm ${cor.split(' ')[1]}`}>{titulo}</h2>
+        <span className="text-label-badge text-on-surface-variant">{linhas.length - falhas.length} de {linhas.length} ok</span>
+      </div>
+      <p className="mt-1 text-body-sm text-on-surface-variant">{texto}</p>
     </section>
   )
 }
@@ -291,6 +348,7 @@ function Veredito({ linhas, falhas }: { linhas: Linha[]; falhas: Linha[] }) {
 function TesteDeSom() {
   const [tocando, setTocando] = useState<HTMLAudioElement | null>(null)
   const [aviso, setAviso] = useState('')
+  const [aberto, setAberto] = useState(false)
   async function tocar(codec: 'aac' | 'ac3', misturar: boolean) {
     tocando?.pause()
     // Elemento novo a cada toque: depois de ligado no Web Audio, o som dele nao volta para a saida normal.
@@ -304,11 +362,13 @@ function TesteDeSom() {
     }
   }
   return (
-    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
-      <h2 className="text-label-md text-white">Teste de som (voz dos atores)</h2>
-      <p className="mt-1 text-body-sm text-on-surface-variant">
-        Toca 8 segundos com música nos lados e uma voz só no canal central. Você ouve a voz em cada botão?
-      </p>
+    <Cartao
+      titulo="Teste de som (voz dos atores)"
+      ajuda="Toca 8 segundos com música nos lados e uma voz só no canal central. Você ouve a voz em cada botão?"
+      aberto={aberto}
+      onToggle={() => setAberto(!aberto)}
+      acao={null}
+    >
       <div className="mt-3 flex flex-wrap gap-2">
         <button onClick={() => tocar('aac', false)} className="chip">AAC normal</button>
         <button onClick={() => tocar('aac', true)} className="chip">AAC com mistura</button>
@@ -316,7 +376,7 @@ function TesteDeSom() {
         <button onClick={() => tocar('ac3', true)} className="chip">AC3 com mistura</button>
       </div>
       {aviso && <p className="mt-2 text-body-sm text-live">{aviso}</p>}
-    </section>
+    </Cartao>
   )
 }
 
@@ -324,17 +384,22 @@ function TesteDeSom() {
 // podem mexer so nele (a pagina nao recebe nada); aqui se ve se a seta chega e com que codigo.
 function TesteDeSetas() {
   const [teclas, setTeclas] = useState<string[]>([])
+  const [aberto, setAberto] = useState(false)
   useEffect(() => {
     const on = (e: KeyboardEvent) => setTeclas((t) => [`${e.key || '(vazio)'} · keyCode ${e.keyCode}`, ...t].slice(0, 4))
     window.addEventListener('keydown', on, true)
     return () => window.removeEventListener('keydown', on, true)
   }, [])
   return (
-    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
-      <h2 className="text-label-md text-white">Teste das setas</h2>
-      <p className="mt-1 text-body-sm text-on-surface-variant">Aperte as setas e o OK do controle. Aparece aqui o que a página recebeu; vazio quer dizer que o navegador não entregou a tecla.</p>
+    <Cartao
+      titulo="Teste das setas"
+      ajuda="Aperte as setas e o OK do controle. Aparece aqui o que a página recebeu; vazio quer dizer que o navegador não entregou a tecla."
+      aberto={aberto}
+      onToggle={() => setAberto(!aberto)}
+      acao={null}
+    >
       <p className="mt-2 min-h-[4.5rem] text-body-sm text-white">{teclas.length ? teclas.map((t, i) => <span key={i} className="block">{t}</span>) : 'Nenhuma tecla recebida ainda.'}</p>
-    </section>
+    </Cartao>
   )
 }
 
@@ -348,14 +413,17 @@ function TesteAoVivo() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [rodando, setRodando] = useState(false)
   const [relatorio, setRelatorio] = useState('')
+  const [aberto, setAberto] = useState(false)
 
   async function testar() {
     const video = videoRef.current
     if (!video || !(client instanceof XtreamClient)) {
       setRelatorio('O teste vale para contas usuário/senha (Xtream).')
+      setAberto(true)
       return
     }
     setRodando(true)
+    setAberto(true)
     setRelatorio('Procurando um canal…')
     let hls: { destroy: () => void } | null = null
     try {
@@ -435,18 +503,22 @@ function TesteAoVivo() {
     }
   }
 
+  // A caixa de video so aparece enquanto toca (escondida ela nao ocupa espaco; continua no DOM porque o teste precisa dela).
   return (
-    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
-      <h2 className="text-label-md text-white">Teste de canal ao vivo</h2>
-      <p className="mt-1 text-body-sm text-on-surface-variant">
-        Toca um canal por {TESTE_VIVO_S} segundos e conta travadas e erros. Rode no aparelho que está travando e mande a captura desta caixa.
-      </p>
-      <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-sm rounded-lg bg-black" />
-      <button onClick={testar} disabled={rodando} className="btn-primary mt-3">
-        {rodando ? 'Testando…' : 'Testar canal ao vivo'}
-      </button>
+    <Cartao
+      titulo="Teste de canal ao vivo"
+      ajuda={`Toca um canal por ${TESTE_VIVO_S} segundos e conta travadas e erros. Rode no aparelho que está travando e mande a captura desta caixa.`}
+      aberto={aberto}
+      onToggle={() => setAberto(!aberto)}
+      acao={
+        <button onClick={testar} disabled={rodando} className="btn-primary">
+          {rodando ? 'Testando…' : 'Testar canal ao vivo'}
+        </button>
+      }
+    >
+      <video ref={videoRef} muted playsInline className={rodando ? 'mt-3 aspect-video w-full max-w-sm rounded-lg bg-black' : 'hidden'} />
       {relatorio && <pre className="mt-3 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>}
-    </section>
+    </Cartao>
   )
 }
 
@@ -455,33 +527,76 @@ function TesteAoVivo() {
 // Diz se o app solta a conexao ou se o provedor e que segura a tela por um tempo (28/10, 3 de 3 com 1 aparelho).
 const TELAS_POLL_S = 90
 
+type Ponto = { t: number; rotulo: string; ativas: number | null; max: number | null; fase: 'antes' | 'tocando' | 'soltos' }
+const FASE = { antes: ['bg-on-surface-variant', 'Antes'], tocando: ['bg-brand-fill', 'Tocando'], soltos: ['bg-done', 'Soltos'] } as const
+
+// Mini grafico: uma barra por medida (telas em uso / limite), colorida pela fase. Troca a lista longa de linhas.
+function GraficoTelas({ pontos }: { pontos: Ponto[] }) {
+  const teto = Math.max(1, ...pontos.map((p) => p.max ?? p.ativas ?? 0))
+  return (
+    <div className="mt-3" data-testid="grafico-telas">
+      <div className="flex h-20 items-end gap-1" role="img" aria-label={`Telas em uso em ${pontos.length} medidas`}>
+        {pontos.map((p, i) => (
+          <div key={i} title={`${p.t} s · ${p.rotulo}: ${p.ativas ?? '?'} de ${p.max ?? '?'} telas`} className="flex h-full min-w-0 flex-1 items-end rounded-sm bg-surface-high/60">
+            <div className={`w-full rounded-sm transition-[height] duration-300 ${p.ativas === null ? 'bg-live' : FASE[p.fase][0]}`} style={{ height: `${p.ativas === null ? 8 : Math.max(6, ((p.ativas ?? 0) / teto) * 100)}%` }} />
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 flex flex-wrap gap-x-3 text-label-badge text-on-surface-variant">
+        {(Object.keys(FASE) as (keyof typeof FASE)[]).map((f) => (
+          <span key={f} className="inline-flex items-center gap-1">
+            <span className={`h-2 w-2 rounded-full ${FASE[f][0]}`} />
+            {FASE[f][1]}
+          </span>
+        ))}
+        <span>· altura = telas em uso (topo = {teto})</span>
+      </p>
+    </div>
+  )
+}
+
 function TesteTelas() {
   const client = useXtream()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [rodando, setRodando] = useState(false)
   const [relatorio, setRelatorio] = useState('')
+  const [pontos, setPontos] = useState<Ponto[]>([])
+  const [aberto, setAberto] = useState(false)
+  const [linhasAbertas, setLinhasAbertas] = useState(false)
 
   async function testar() {
     const video = videoRef.current
+    setAberto(true)
     if (!video || !(client instanceof XtreamClient)) {
       setRelatorio('O teste vale para contas usuário/senha (Xtream).')
       return
     }
     setRodando(true)
+    setPontos([])
     const t0 = performance.now()
     const linhas: string[] = []
+    const lista: Ponto[] = []
+    let fase: Ponto['fase'] = 'antes'
     const medir = async (rotulo: string) => {
+      const t = Math.round((performance.now() - t0) / 1000)
+      let ativas: number | null = null
+      let max: number | null = null
       try {
         const u = JSON.parse((await client.probe(null)).text)?.user_info
-        linhas.push(`${((performance.now() - t0) / 1000).toFixed(0)} s · ${rotulo}: ${u?.active_cons ?? '?'} de ${u?.max_connections ?? '?'} telas`)
+        ativas = u?.active_cons != null ? Number(u.active_cons) : null
+        max = u?.max_connections != null ? Number(u.max_connections) : null
+        linhas.push(`${t} s · ${rotulo}: ${u?.active_cons ?? '?'} de ${u?.max_connections ?? '?'} telas`)
       } catch {
-        linhas.push(`${((performance.now() - t0) / 1000).toFixed(0)} s · ${rotulo}: sem resposta do provedor`)
+        linhas.push(`${t} s · ${rotulo}: sem resposta do provedor`)
       }
+      lista.push({ t, rotulo, ativas, max, fase })
+      setPontos([...lista])
       setRelatorio(linhas.join('\n'))
     }
     let hls: { destroy: () => void } | null = null
     try {
       await medir('antes')
+      fase = 'tocando'
       const cat = (await client.getLiveCategories())[0]
       const canais = (await client.getLiveStreams(cat?.categoryId)).slice(0, 3)
       if (canais.length < 2) throw new Error('poucos canais para o teste')
@@ -507,6 +622,7 @@ function TesteTelas() {
         video.load()
       }
       linhas.push('— canais soltos (mesmo código do player) —')
+      fase = 'soltos'
       for (let i = 0; i < TELAS_POLL_S; i += 10) {
         await medir(`soltos há ${i} s`)
         await sleep(10_000)
@@ -525,16 +641,31 @@ function TesteTelas() {
   }
 
   return (
-    <section className="mb-6 max-w-3xl rounded-2xl border border-outline-soft bg-surface-low px-4 py-3">
-      <h2 className="text-label-md text-white">Teste de telas</h2>
-      <p className="mt-1 text-body-sm text-on-surface-variant">
-        Toca 3 canais em sequência, solta tudo e mostra quantas telas o provedor conta ao longo de {TELAS_POLL_S} segundos. Feche o app nos outros aparelhos antes.
-      </p>
-      <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-sm rounded-lg bg-black" />
-      <button onClick={testar} disabled={rodando} className="btn-primary mt-3">
-        {rodando ? 'Testando…' : 'Testar telas'}
-      </button>
-      {relatorio && <pre className="mt-3 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>}
-    </section>
+    <Cartao
+      titulo="Teste de telas"
+      ajuda={`Toca 3 canais em sequência, solta tudo e mostra quantas telas o provedor conta ao longo de ${TELAS_POLL_S} segundos. Feche o app nos outros aparelhos antes.`}
+      aberto={aberto}
+      onToggle={() => setAberto(!aberto)}
+      acao={
+        <button onClick={testar} disabled={rodando} className="btn-primary">
+          {rodando ? 'Testando…' : 'Testar telas'}
+        </button>
+      }
+    >
+      <video ref={videoRef} muted playsInline className={rodando ? 'mt-3 aspect-video w-full max-w-sm rounded-lg bg-black' : 'hidden'} />
+      {pontos.length > 0 && <GraficoTelas pontos={pontos} />}
+      {relatorio && (
+        <>
+          {pontos.length > 0 && (
+            <button type="button" aria-expanded={linhasAbertas} onClick={() => setLinhasAbertas(!linhasAbertas)} className="mt-2 inline-flex items-center gap-1 text-label-md text-on-surface-variant">
+              Linhas da medição <Seta aberto={linhasAbertas} />
+            </button>
+          )}
+          <Colapsavel aberto={pontos.length === 0 || linhasAbertas}>
+            <pre className="mt-2 whitespace-pre-wrap break-words text-body-sm text-on-surface-variant">{relatorio}</pre>
+          </Colapsavel>
+        </>
+      )}
+    </Cartao>
   )
 }

@@ -10,6 +10,9 @@ test('diagnostico: tudo ok contra o painel de teste', async ({ page }) => {
   await page.getByRole('button', { name: 'Diagnóstico' }).click()
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText('✓ Início de um filme (o pedido do download)')).toBeVisible({ timeout: 30000 })
+  // Linha que passou vem recolhida (a tela e compacta): o detalhe aparece ao abrir.
+  await expect(page.getByText('ac3 · 6 canais (5.1(side))')).toBeHidden()
+  await page.getByRole('button', { name: /Áudio de um filme/ }).click()
   await expect(page.getByText('ac3 · 6 canais (5.1(side))')).toBeVisible({ timeout: 10000 })
   await expect(page.getByText(/✗/)).toHaveCount(0)
   await expect(page.getByTestId('veredito')).toContainText('Tudo certo')
@@ -98,6 +101,7 @@ test('diagnostico: um canal bloqueado com outros ao vivo nao acusa erro', async 
   await page.goto('/diagnostico')
   await page.getByRole('button', { name: 'Testar agora' }).click()
   await expect(page.getByText('✓ Início de um canal ao vivo (a lista do canal)')).toBeVisible({ timeout: 30000 })
+  await page.getByRole('button', { name: /Início de um canal ao vivo/ }).click()
   await expect(page.getByText(/2 de 3 canais ao vivo.*bloqueou só naquele canal.*Canal 1: HTTP 200 · BLOQUEADO/)).toBeVisible()
 })
 
@@ -106,7 +110,20 @@ test('diagnostico: Teste de telas mostra a linha do tempo antes, durante e depoi
   await login(page)
   await page.goto('/diagnostico')
   await page.getByRole('button', { name: 'Testar telas' }).click()
+  await expect(page.getByTestId('grafico-telas')).toBeVisible({ timeout: 15000 })
+  await page.getByRole('button', { name: /Linhas da medição/ }).click()
   await expect(page.getByText(/0 s · antes: 0 de 2 telas/)).toBeVisible({ timeout: 15000 })
   await expect(page.getByText(/tocando Canal Notícias 24h: 0 de 2 telas/)).toBeVisible({ timeout: 20000 })
   await expect(page.getByText(/soltos há 80 s: 0 de 2 telas/)).toBeVisible({ timeout: 120_000 })
+})
+
+// Janela enxuta: caixas de video escondidas fora do teste e extras recolhidos (sem isso a pagina ficava enorme).
+test('diagnostico: extras recolhidos e sem caixas de video vazias', async ({ page }) => {
+  await login(page)
+  await page.goto('/diagnostico')
+  await expect(page.getByRole('button', { name: 'Testar telas' })).toBeVisible()
+  expect(await page.locator('video:visible').count()).toBe(0)
+  await expect(page.getByText('Toca 3 canais em sequência')).toBeHidden()
+  await page.getByRole('heading', { name: 'Teste de telas' }).click()
+  await expect(page.getByText('Toca 3 canais em sequência')).toBeVisible()
 })
