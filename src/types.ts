@@ -77,6 +77,7 @@ export interface MovieDetails extends Movie {
 }
 
 export interface SeriesItem {
+  tmdbId?: number | null
   kind: 'series'
   seriesId: number
   name: string

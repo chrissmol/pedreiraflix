@@ -632,6 +632,35 @@ async function generos(url, env) {
   return answer(body)
 }
 
+// Streaming (Netflix, Globoplay...): o provedor nao diz onde o titulo passa. O app pergunta, por plataforma, quais
+// titulos populares o TMDB lista nela no Brasil (discover com watch providers, so assinatura) e cruza pelo tmdb_id.
+// Mesmo estilo e cota de /api/generos; sem token ou com erro: 204 e as fileiras de streaming nao aparecem.
+async function streaming(url, env) {
+  const none = (why) => new Response(null, { status: 204, headers: { 'x-tmdb': why } })
+  const provider = url.searchParams.get('provider') || ''
+  if (!/^\d{1,6}$/.test(provider)) return none('bad-provider')
+  if (!env.TMDB_TOKEN) return none('no-token')
+  const kind = url.searchParams.get('kind') === 'tv' ? 'tv' : 'movie'
+  const key = `streaming:${kind}:${provider}`
+  const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
+  const saved = await notasGet(env, key)
+  if (saved) return answer(saved)
+  const headers = { authorization: `Bearer ${String(env.TMDB_TOKEN).trim()}`, accept: 'application/json' }
+  const pages = await Promise.all(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) =>
+      fetch(
+        `https://api.themoviedb.org/3/discover/${kind}?${new URLSearchParams({ with_watch_providers: provider, watch_region: 'BR', with_watch_monetization_types: 'flatrate', sort_by: 'popularity.desc', language: 'pt-BR', page: String(page) })}`,
+        { headers },
+      ),
+    ),
+  )
+  if (!pages[0].ok) return none(`discover-${pages[0].status}`)
+  const ids = (await Promise.all(pages.filter((r) => r.ok).map((r) => r.json()))).flatMap((d) => (d.results || []).map((r) => r.id))
+  const body = { ids }
+  await notasPut(env, key, body)
+  return answer(body)
+}
+
 // "Em alta": a lista de tendencias da semana do TMDB (mundial; o TMDB nao tem uma so do Brasil). So nomes: o app
 // mostra o que existir no catalogo de cada um. Sem token ou com erro: 204 e a fileira nao aparece.
 async function trending(url, env) {
@@ -921,6 +950,10 @@ export default {
     if (url.pathname === '/api/generos') {
       if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await generos(url, env))
+    }
+    if (url.pathname === '/api/streaming') {
+      if (isRateLimited(ip, 'tmdb', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await streaming(url, env))
     }
     if (url.pathname === '/api/sinopse') {
       if (isRateLimited(ip, 'ia', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))

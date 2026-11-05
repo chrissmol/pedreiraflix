@@ -360,6 +360,8 @@ export class XtreamClient implements ProviderClient {
         cast: string | null
         director: string | null
         last_modified?: string | null
+        tmdb?: string | number | null
+        tmdb_id?: string | number | null
       }[]
     >('get_series', categoryId ? { category_id: categoryId } : {})
     return asList<typeof raw[number]>(raw).map((s) => ({
@@ -376,6 +378,7 @@ export class XtreamClient implements ProviderClient {
       cast: s.cast,
       director: s.director,
       added: s.last_modified,
+      tmdbId: Number(s.tmdb ?? s.tmdb_id) || null,
     }))
   }
 

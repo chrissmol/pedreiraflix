@@ -4,6 +4,7 @@ import CatalogProgress from '../components/CatalogProgress'
 import FilterPanel, { ChipGroup, FilterSection } from '../components/FilterPanel'
 import CategoryRow from '../components/CategoryRow'
 import ContinueWatchingRow from '../components/ContinueWatchingRow'
+import StreamingChips from '../components/StreamingChips'
 import PosterGrid from '../components/PosterGrid'
 import RatingFilter from '../components/RatingFilter'
 import Row from '../components/Row'
@@ -150,6 +151,7 @@ export default function SeriesPage() {
         </FilterPanel>
       </div>
 
+      <StreamingChips groups={groups} active={activeCategory} onPick={setActiveCategory} />
       <ContinueWatchingRow kind="series" />
 
       {error && <ErrorCard message={error} onRetry={retry} className="mb-8" />}
