@@ -79,7 +79,7 @@ export default function FilterPanel({ active, children }: FilterPanelProps) {
         </button>
       ))}
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setOpen(false)}>
+        <div className="anim-backdrop fixed inset-0 z-[60] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setOpen(false)}>
           <div
             ref={panelRef}
             role="dialog"
@@ -92,7 +92,7 @@ export default function FilterPanel({ active, children }: FilterPanelProps) {
                 close()
               }
             }}
-            className="card-panel anim-pop max-h-[85vh] w-full overflow-y-auto rounded-b-none p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-2xl sm:rounded-b-3xl sm:p-7"
+            className="card-panel anim-sheet max-h-[85vh] w-full overflow-y-auto rounded-b-none p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-2xl sm:rounded-b-3xl sm:p-7"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-display text-headline-sm text-white">Filtros</h2>

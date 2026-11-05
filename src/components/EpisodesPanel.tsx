@@ -71,8 +71,8 @@ export default function EpisodesPanel({ series, currentId, onPick, onClose }: Ep
   return (
     <div className="absolute inset-0 z-40 flex items-end justify-end" role="dialog" aria-modal="true" aria-label="Episódios">
       {/* Tocar fora do painel fecha (celular/computador). */}
-      <button className="absolute inset-0 bg-black/40" aria-label="Fechar episódios" onClick={onClose} tabIndex={-1} />
-      <div className="relative m-2 flex max-h-[calc(100%-1rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-black/90 shadow-2xl backdrop-blur-md mb-[max(0.5rem,env(safe-area-inset-bottom))] mr-[max(0.5rem,env(safe-area-inset-right))] sm:m-6 sm:max-h-[calc(100%-3rem)]">
+      <button className="anim-backdrop absolute inset-0 bg-black/40" aria-label="Fechar episódios" onClick={onClose} tabIndex={-1} />
+      <div className="anim-slide-right relative m-2 flex max-h-[calc(100%-1rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-black/90 shadow-2xl backdrop-blur-md mb-[max(0.5rem,env(safe-area-inset-bottom))] mr-[max(0.5rem,env(safe-area-inset-right))] sm:m-6 sm:max-h-[calc(100%-3rem)]">
         <div className="flex items-center gap-1 border-b border-white/10 p-2">
           {seasons.length > 1 && (
             <button onClick={() => setIndex((i) => (i - 1 + seasons.length) % seasons.length)} aria-label="Temporada anterior" className="player-btn h-11 w-11 shrink-0" tabIndex={-1}>

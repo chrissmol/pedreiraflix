@@ -615,7 +615,7 @@ export default function TeamsPage() {
       </div>
 
       {tab === 'times' ? (
-        <div role="tabpanel" id="painel-times" aria-labelledby="tab-times">
+        <div role="tabpanel" id="painel-times" aria-labelledby="tab-times" className="anim-backdrop">
       <label htmlFor="team-search" className="mb-2 block text-label-md text-on-surface-variant">
         Seguir um time
       </label>
@@ -673,7 +673,7 @@ export default function TeamsPage() {
           )}
         </div>
       ) : (
-        <div role="tabpanel" id="painel-campeonatos" aria-labelledby="tab-campeonatos">
+        <div role="tabpanel" id="painel-campeonatos" aria-labelledby="tab-campeonatos" className="anim-backdrop">
           <CompetitionPicker followed={comps.map((c) => c.slug)} onToggle={toggleComp} />
           {comps.length === 0 ? (
             <p className="text-body-md text-on-surface-variant">Siga um campeonato para ver os times dele e onde passam os próximos jogos.</p>
