@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type ReactNode, useRef } from 'react'
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from './icons'
 import { isTv } from '../lib/device'
@@ -14,6 +14,22 @@ interface RowProps {
 
 export default function Row({ title, children, loading, seeAllHref }: RowProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
+  // Setas so aparecem quando ha para onde rolar (uma fileira com 1 card nao precisa delas).
+  const [edges, setEdges] = useState({ left: false, right: false })
+
+  function updateEdges() {
+    const el = scrollerRef.current
+    if (!el) return
+    const left = el.scrollLeft > 4
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+    setEdges((e) => (e.left === left && e.right === right ? e : { left, right }))
+  }
+  // Sem lista de dependencias de proposito: os filhos mudam a largura da fileira a cada render.
+  useEffect(updateEdges)
+  useEffect(() => {
+    window.addEventListener('resize', updateEdges)
+    return () => window.removeEventListener('resize', updateEdges)
+  }, [])
 
   function scrollBy(amount: number) {
     scrollerRef.current?.scrollBy({ left: amount, behavior: 'smooth' })
@@ -53,7 +69,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
       </h2>
       <div className="relative">
         {/* TV: as setas de rolar sao para mouse; no controle o foco caia nelas em vez de no poster. */}
-        {!isTv && <button
+        {!isTv && edges.left && <button
           onClick={() => scrollBy(-600)}
           aria-label={`Rolar "${title}" para a esquerda`}
           className="absolute inset-y-0 left-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-r from-surface to-transparent transition-opacity sm:flex"
@@ -64,6 +80,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         <div
           ref={scrollerRef}
           onKeyDown={onKeyDown}
+          onScroll={updateEdges}
           className="no-scrollbar stagger-fade flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-4 pt-6 sm:px-10"
         >
           {loading
@@ -76,7 +93,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
             : children}
         </div>
 
-        {!isTv && <button
+        {!isTv && edges.right && <button
           onClick={() => scrollBy(600)}
           aria-label={`Rolar "${title}" para a direita`}
           className="absolute inset-y-0 right-0 z-20 hidden w-12 items-center justify-center bg-gradient-to-l from-surface to-transparent transition-opacity sm:flex"
