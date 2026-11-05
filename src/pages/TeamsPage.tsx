@@ -3,7 +3,7 @@ import ErrorCard from '../components/ErrorCard'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveCatalog } from '../hooks/useCatalog'
 import { displayTitle } from '../lib/displayTitle'
-import { searchCatalog } from '../lib/search'
+import { normalizeText, searchCatalog } from '../lib/search'
 import type { LiveChannel } from '../types'
 import { Check, ChevronDown, Plus, Trophy, Tv, X } from '../components/icons'
 import { useMinuteClock } from '../lib/minuteClock'
@@ -27,6 +27,20 @@ function writeStore(key: string, value: unknown) {
   } catch {
     /* sem armazenamento (modo privado): so nao lembra */
   }
+}
+
+/** Corpo recolhivel animado (altura 0fr -> 1fr). Fechado fica invisivel: some do foco das setas e dos leitores de tela.
+ * Sem animacao com prefers-reduced-motion. */
+function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`grid transition-[grid-template-rows,opacity,visibility] duration-300 ease-out motion-reduce:transition-none ${
+        open ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0'
+      }`}
+    >
+      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
+    </div>
+  )
 }
 
 /** Cabecalho de card recolhivel: tocar no titulo abre/fecha; recolhido, mostra so o proximo jogo. */
@@ -106,7 +120,7 @@ function TeamMatches({ team, onRemove, open, onToggle }: { team: FavoriteTeam; o
         removeLabel={`Deixar de seguir ${team.name}`}
         summary={next}
       />
-      <div hidden={!open}>
+      <Collapse open={open}>
       {failed ? (
         <ErrorCard className="!mx-0" message="Não deu para buscar os jogos agora." onRetry={() => {
             setFailed(false)
@@ -128,7 +142,7 @@ function TeamMatches({ team, onRemove, open, onToggle }: { team: FavoriteTeam; o
           )}
         </>
       )}
-      </div>
+      </Collapse>
     </section>
   )
 }
@@ -289,6 +303,80 @@ function teamColor(slug: string) {
   return `hsl(${Math.abs(hash) % 360} 55% 36%)`
 }
 
+/** Times do campeonato: só os que você segue aparecem como chips (tocar deixa de seguir); o resto fica numa lista
+ * rolável, fechada por padrão, com filtro. Evita dezenas de botões "+" soltos (a NFL tem 32 times). */
+function CompetitionTeams({ teams, followedTeams, onToggleTeam }: { teams: FavoriteTeam[]; followedTeams: FavoriteTeam[]; onToggleTeam: (t: FavoriteTeam) => void }) {
+  const [open, setOpen] = useState(false)
+  const [filter, setFilter] = useState('')
+  const isOn = (t: FavoriteTeam) => followedTeams.some((f) => f.slug === t.slug)
+  const mine = teams.filter(isOn)
+  const q = normalizeText(filter.trim())
+  const rest = teams.filter((t) => !isOn(t) && (!q || normalizeText(t.name).includes(q)))
+  return (
+    <div className="mb-4">
+      {mine.length > 0 && (
+        <ul aria-label="Times que você segue" className="mb-2 flex flex-wrap gap-1.5">
+          {mine.map((t) => (
+            <li key={t.slug}>
+              <button
+                onClick={() => onToggleTeam(t)}
+                aria-label={`Deixar de seguir ${t.name}`}
+                className="brand-focus inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-1 text-label-md text-brand-300 hover:bg-brand-500/25 pointer-coarse:min-h-9"
+              >
+                {t.name}
+                <X className="h-3.5 w-3.5 opacity-70" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {teams.length > mine.length && (
+        <button
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="brand-focus inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-label-md text-brand-300 hover:bg-surface-high pointer-coarse:min-h-9"
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar time
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+      {open && (
+        <div className="mt-2 rounded-xl bg-surface-container p-2">
+          {teams.length > 8 && (
+            <input
+              type="search"
+              aria-label="Filtrar times"
+              placeholder="Filtrar times"
+              autoComplete="off"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value.slice(0, 40))}
+              className="brand-focus mb-1 h-10 w-full rounded-full border border-outline-soft bg-surface-low px-4 text-body-sm text-white"
+            />
+          )}
+          <ul aria-label="Times para seguir" className="max-h-56 overflow-y-auto overscroll-contain">
+            {rest.length === 0 ? (
+              <li className="px-3 py-2 text-body-sm text-on-surface-variant">Nenhum time encontrado.</li>
+            ) : (
+              rest.map((t) => (
+                <li key={t.slug}>
+                  <button
+                    onClick={() => onToggleTeam(t)}
+                    aria-label={`Seguir ${t.name}`}
+                    className="brand-focus w-full rounded-lg px-3 py-2 text-left text-body-md text-white hover:bg-surface-high pointer-coarse:min-h-11"
+                  >
+                    {t.name}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const PAGE_SIZE = 5
 const MAX_SHOWN = 10
 
@@ -335,29 +423,8 @@ function CompetitionCard({ comp, followedTeams, onToggleTeam, onRemove, open, on
         removeLabel={`Deixar de seguir ${comp.name}`}
         summary={next}
       />
-      <div hidden={!open}>
-      {data && data.teams.length > 0 && (
-        <ul aria-label="Times do campeonato" className="mb-4 flex flex-wrap gap-1.5">
-          {data.teams.map((t) => {
-            const on = followedTeams.some((f) => f.slug === t.slug)
-            return (
-              <li key={t.slug}>
-                <button
-                  onClick={() => onToggleTeam(t)}
-                  aria-pressed={on}
-                  aria-label={`${on ? 'Deixar de seguir' : 'Seguir'} ${t.name}`}
-                  className={`brand-focus inline-flex items-center gap-1 rounded-full px-3 py-1 text-label-md transition-colors pointer-coarse:min-h-9 ${
-                    on ? 'bg-brand-500/15 text-brand-300' : 'bg-surface-high text-white hover:bg-surface-container'
-                  }`}
-                >
-                  {on ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                  {t.name}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <Collapse open={open}>
+      {data && data.teams.length > 0 && <CompetitionTeams teams={data.teams} followedTeams={followedTeams} onToggleTeam={onToggleTeam} />}
       {failed ? (
         <ErrorCard className="!mx-0" message="Não deu para buscar os jogos agora." onRetry={() => {
             setFailed(false)
@@ -384,7 +451,7 @@ function CompetitionCard({ comp, followedTeams, onToggleTeam, onRemove, open, on
           )}
         </>
       )}
-      </div>
+      </Collapse>
     </section>
   )
 }
@@ -597,7 +664,7 @@ export default function TeamsPage() {
           ) : (
             <>
               <FoldAll slugs={teams.map((t) => t.slug)} collapsed={collapsed} onSet={setAll} />
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid items-start gap-4 lg:grid-cols-2">
                 {teams.map((t) => (
                   <TeamMatches key={t.slug} team={t} open={!collapsed.includes(t.slug)} onToggle={() => toggleOpen(t.slug)} onRemove={() => toggleTeam(profileId, t)} />
                 ))}
@@ -616,7 +683,7 @@ export default function TeamsPage() {
               {[...new Set(comps.map((c) => c.group))].map((g) => (
                 <div key={g} className="mb-6">
                   <h2 className="mb-2 text-label-md uppercase tracking-wide text-on-surface-variant">{g}</h2>
-                  <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid items-start gap-4 lg:grid-cols-2">
                     {comps
                       .filter((c) => c.group === g)
                       .map((c) => (
