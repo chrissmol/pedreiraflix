@@ -8,13 +8,13 @@ test('arrow keys move focus between posters within a row', async ({ page }) => {
   // shows the same movie, and the app's single top-level Suspense boundary can briefly render both trees
   // mid-navigation, which would otherwise make the locator below ambiguous for an instant.
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeVisible()
 
-  await page.getByRole('button', { name: 'Filme Explosivo Filme' }).focus()
+  await page.getByRole('button', { name: 'Filme Explosivo Filme' }).first().focus()
   await page.keyboard.press('ArrowRight')
-  await expect(page.getByRole('button', { name: 'Corrida Final' })).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Corrida Final' }).first()).toBeFocused()
   await page.keyboard.press('ArrowLeft')
-  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' })).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()).toBeFocused()
 
   // Enter activates the focused poster like a click would.
   await page.keyboard.press('Enter')
@@ -26,7 +26,7 @@ test('respects prefers-reduced-motion: no CSS transitions/animations run', async
   await login(page)
   await page.getByRole('link', { name: 'Filmes' }).click()
   await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
-  const poster = page.getByRole('button', { name: 'Filme Explosivo Filme' })
+  const poster = page.getByRole('button', { name: 'Filme Explosivo Filme' }).first()
   await expect(poster).toBeVisible()
   // The browser normalizes "0.01ms" to seconds in computed style ("1e-05s") — assert the value, not the unit spelling.
   const durationSeconds = await poster.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))
