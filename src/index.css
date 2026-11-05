@@ -1,5 +1,5 @@
 @import 'tailwindcss' source(none);
-/* So o codigo do app gera utilitarios: sem isto o Tailwind 4 varre o repositorio inteiro (design/, android/, e2e/...)
+/* So o codigo do app gera utilitarios: sem isto o Tailwind 4 varre o repositorio inteiro (docs/design/, android/, e2e/...)
    e cria CSS para qualquer palavra que pareca uma classe. */
 @source '../src';
 @source '../index.html';
@@ -15,13 +15,13 @@
 }
 
 @theme {
-  /* Inter, do design system adotado (design/stitch/DESIGN.md), com a pilha nativa de cada plataforma
+  /* Inter, do design system adotado (docs/design/stitch/DESIGN.md), com a pilha nativa de cada plataforma
    * como fallback — se o Google Fonts estiver fora, o texto continua legivel em vez de cair numa serifa
    * padrao do navegador. */
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  /* --- Design system "Cinematic Obsidian" (design/stitch3/BRAND-BOOK.md) --------------------------
+  /* --- Design system "Cinematic Obsidian" (docs/design/stitch3/BRAND-BOOK.md) --------------------------
    * O brand book e a referencia canonica, e e ele que vale quando conflita com o DESIGN.md da
    * primeira rodada (que trazia uma escala tipografica maior e a paleta generica do Material 3).
    * O brand book usa as cores que o app ja tinha e proibe explicitamente o brilho azul difuso — a

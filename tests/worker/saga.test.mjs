@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 const ask = (qs, env) => worker.fetch(new Request(`http://app/api/saga?${qs}`, { headers: { 'cf-connecting-ip': String(Math.random()) } }), env)
 

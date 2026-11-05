@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // Codigo do grupo: com GROUP_CODE o proxy so atende quem ja mandou o codigo; sem ele nada muda.
 const call = (path, env, { method = 'GET', body, cookie, token, ip = '7.7.7.7' } = {}) =>

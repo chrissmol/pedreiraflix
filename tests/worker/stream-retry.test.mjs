@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 const TARGET = 'https://provedor.example.com/live/seg.ts'
 const ask = (extra = {}) =>

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // /api/sugestoes: o modelo devolve titulos e o Worker so repassa os nomes. Qualquer falha (sem binding, limite
 // diario do plano gratis, resposta torta) vira 204 e o app fica com a busca normal.

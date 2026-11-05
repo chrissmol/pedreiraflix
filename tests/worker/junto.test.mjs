@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker, { SalaJunto } from './index.js'
-import { cleanState } from './junto.js'
+import worker, { SalaJunto } from '../../worker/index.js'
+import { cleanState } from '../../worker/junto.js'
 
 class FakeSocket {
   sent = []

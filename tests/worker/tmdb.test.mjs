@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 // /api/tmdb com a nota do IMDb (via OMDb, pelo codigo IMDb que o TMDB devolve). Opcional como o TMDB: sem
 // OMDB_KEY ou com qualquer falha do OMDb, a resposta sai igual a de antes, so sem a nota.
@@ -179,13 +179,16 @@ test('com Cache API: guarda nela, nao faz put no KV e a segunda pergunta nao cha
   }
 })
 
+// Ignora o contador diario de OMDb (omdb:AAAA-MM-DD), que tambem grava em NOTAS.
+const ttlsDasNotas = (kv) => Object.entries(kv.ttls).filter(([k]) => !k.startsWith('omdb:')).map(([, v]) => v)
+
 test('sem nota no IMDb guarda so 3 dias (a nota nova assume logo); com nota, 30 dias', async () => {
   const NOTAS = memoryKv()
   stubFetch(() => Response.json({ imdbRating: 'N/A' }))
   await ask({ ...ENV, NOTAS })
-  assert.deepEqual(Object.values(NOTAS.ttls), [3 * 86400])
+  assert.deepEqual(ttlsDasNotas(NOTAS), [3 * 86400])
   const COM = memoryKv()
   stubFetch(() => Response.json({ imdbRating: '8.7' }))
   await ask({ ...ENV, NOTAS: COM })
-  assert.deepEqual(Object.values(COM.ttls), [30 * 86400])
+  assert.deepEqual(ttlsDasNotas(COM), [30 * 86400])
 })

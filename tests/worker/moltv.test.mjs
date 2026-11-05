@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { molTv, molTvTarget } from './moltv.js'
+import { molTv, molTvTarget } from '../../worker/moltv.js'
 
 const target = (path) => molTvTarget(new URL(`https://x${path}`))
 

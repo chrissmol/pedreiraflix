@@ -41,3 +41,22 @@ android/local.properties
 android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
 android/app/src/main/assets/capacitor.plugins.json
+
+# Segredos e ambiente local
+.env
+.env.*
+!.env.example
+
+# Build, cobertura e caches de ferramentas
+coverage
+*.tsbuildinfo
+.vite
+.cache
+
+# Binarios gerados (instaladores saem pelo CI, nao pelo Git)
+*.exe
+*.msi
+*.apk
+*.aab
+*.dmg
+src-tauri/target/

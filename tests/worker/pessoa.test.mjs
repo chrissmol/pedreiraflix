@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import worker from './index.js'
+import worker from '../../worker/index.js'
 
 const ask = (q, env) => worker.fetch(new Request(`http://app/api/pessoa?q=${encodeURIComponent(q)}`, { headers: { 'cf-connecting-ip': String(Math.random()) } }), env)
 const env = { TMDB_TOKEN: 'a.b.c' }
