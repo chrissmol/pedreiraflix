@@ -151,6 +151,13 @@ export default function SearchPage() {
           autoFocus={!query}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Escape') return
+            e.preventDefault()
+            // Esc limpa o texto; com o campo vazio, fecha a busca e volta de onde veio.
+            if (text) { setText(''); commit('') } else if (window.history.state?.idx > 0) navigate(-1)
+            else navigate('/', { replace: true })
+          }}
           placeholder="Filmes, séries e canais"
           aria-label="Buscar no catálogo"
           className="brand-focus h-12 w-full appearance-none rounded-full border border-outline-soft bg-surface-container pl-12 pr-24 text-body-lg text-white placeholder:text-on-surface-muted focus:border-brand-500/60"
