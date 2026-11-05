@@ -37,8 +37,55 @@ test('a kids profile is blocked from a direct link into an adult category', asyn
   await expect(page.locator('video')).toHaveCount(0)
 })
 
-test('a non-kids profile still sees everything (filter is per profile)', async ({ page }) => {
+async function enableAdult(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
+  await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
+  await page.getByLabel('Mostrar conteúdo adulto').click()
+  await page.getByRole('button', { name: 'Tenho 18 anos ou mais' }).click()
+  await expect(page.getByLabel('Mostrar conteúdo adulto')).toBeChecked()
+}
+
+test('adult content is hidden by default, in lists, search and direct links', async ({ page }) => {
   await login(page)
+  await page.goto('/movies')
+  await expect(page.getByText('Filme Explosivo')).toBeVisible()
+  await expect(page.getByText('Filme Adulto')).toHaveCount(0)
+  await page.goto('/live')
+  await expect(page.getByText('Canal Adulto')).toHaveCount(0)
+  await page.goto('/search?q=adulto')
+  await expect(page.getByText('Canal Adulto')).toHaveCount(0)
+  await page.goto('/watch/live/901')
+  await expect(page.getByText('Conteúdo bloqueado para este perfil')).toBeVisible()
+  await expect(page.locator('video')).toHaveCount(0)
+})
+
+test('turning on "Mostrar conteúdo adulto" shows it, and turning it off hides it again', async ({ page }) => {
+  await login(page)
+  await enableAdult(page)
+  await page.goto('/movies')
+  await expect(page.getByText('Filme Adulto')).toBeVisible()
+  await page.goto('/live')
+  await expect(page.getByText('Canal Adulto')).toBeVisible()
+
+  await page.goto('/profiles')
+  await page.getByLabel('Mostrar conteúdo adulto').uncheck()
+  await page.goto('/movies')
+  await expect(page.getByText('Filme Adulto')).toHaveCount(0)
+})
+
+test('with an app PIN, enabling adult content asks for the PIN; a kids profile hides it anyway', async ({ page }) => {
+  await login(page)
+  await page.getByRole('button', { name: 'Conta', exact: true }).click()
+  await page.getByRole('button', { name: 'Gerenciar perfis' }).click()
+  await page.getByPlaceholder('0000').fill('1234')
+  await page.getByRole('button', { name: 'Definir' }).click()
+  // Definir o PIN tranca o app na hora: destranca para chegar ao interruptor.
+  await page.getByLabel('PIN do app', { exact: true }).fill('1234')
+  await page.getByLabel('Mostrar conteúdo adulto').click()
+  await page.getByLabel('PIN do app para liberar conteúdo adulto').fill('0000')
+  await expect(page.getByText('PIN incorreto')).toBeVisible()
+  await page.getByLabel('PIN do app para liberar conteúdo adulto').fill('1234')
+  await expect(page.getByLabel('Mostrar conteúdo adulto')).toBeChecked()
   await page.goto('/movies')
   await expect(page.getByText('Filme Adulto')).toBeVisible()
 })

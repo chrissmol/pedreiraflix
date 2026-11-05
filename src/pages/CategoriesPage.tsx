@@ -6,6 +6,7 @@ import { useXtream } from '../hooks/useXtream'
 import { cleanCategoryName } from '../lib/channelGroups'
 import { cached } from '../lib/cache'
 import { arrangeCategories } from '../lib/categoryPrefs'
+import { useHideAdult } from '../hooks/useHideAdult'
 import { isAdultCategoryName } from '../lib/parentalControl'
 import { matchesQuery } from '../lib/search'
 import { useActiveAccountId, useActiveProfile, useProfilesStore } from '../store/profiles'
@@ -24,6 +25,7 @@ export default function CategoriesPage() {
   const client = useXtream()
   const accId = useActiveAccountId()
   const profile = useActiveProfile()
+  const hideAdult = useHideAdult()
   const setCategoryPrefs = useProfilesStore((s) => s.setCategoryPrefs)
   const [kind, setKind] = useState<Kind>('live')
   const [categories, setCategories] = useState<Category[] | null>(null)
@@ -49,9 +51,9 @@ export default function CategoriesPage() {
   const order = useMemo(() => profile?.categoryOrder ?? [], [profile?.categoryOrder])
   // Todas, inclusive as escondidas, na ordem do perfil. Perfil infantil nem ve as adultas aqui.
   const arranged = useMemo(() => {
-    const allowed = (categories ?? []).filter((c) => !profile?.isKids || !isAdultCategoryName(c.categoryName))
+    const allowed = (categories ?? []).filter((c) => !hideAdult || !isAdultCategoryName(c.categoryName))
     return arrangeCategories(kind, allowed, [], order)
-  }, [categories, profile?.isKids, kind, order])
+  }, [categories, hideAdult, kind, order])
   const shown = query.trim() ? arranged.filter((c) => matchesQuery(c.categoryName, query)) : arranged
 
   if (!accId || !profile) return null

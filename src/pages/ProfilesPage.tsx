@@ -9,13 +9,96 @@ import { type Profile, useActiveAccountId, useActiveProfile, useProfiles, usePro
 const COLORS = ['#0f7bff', '#e0479e', '#f5a623', '#22c55e', '#a855f7', '#ef4444']
 const MAX_PROFILES = 6
 
+/** Adult categories are off by default. Turning them on needs the app PIN when there is one, otherwise an
+ * "I am 18+" confirmation; turning them off again is free. */
+function AdultSetting() {
+  const pin = useAppLockStore((s) => s.pin)
+  const showAdult = useAppLockStore((s) => s.showAdult)
+  const setShowAdult = useAppLockStore((s) => s.setShowAdult)
+  const [asking, setAsking] = useState(false)
+  const [code, setCode] = useState('')
+  const [wrong, setWrong] = useState(false)
+
+  function toggle() {
+    if (showAdult) setShowAdult(false)
+    else setAsking(true)
+  }
+  function typeCode(next: string) {
+    const digits = next.replace(/\D/g, '').slice(0, 4)
+    setCode(digits)
+    setWrong(false)
+    if (digits.length < 4) return
+    if (digits === pin) {
+      setShowAdult(true)
+      setAsking(false)
+    } else setWrong(true)
+    setCode('')
+  }
+
+  return (
+    <div className="mt-12 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-label-md text-white">
+          <Shield className="h-3.5 w-3.5 shrink-0" /> Mostrar conteúdo adulto
+        </span>
+        <span className="relative inline-flex shrink-0">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={showAdult}
+            onChange={toggle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                toggle()
+              }
+            }}
+            className="brand-focus peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-surface-highest transition-colors checked:bg-brand-fill"
+          />
+          <span aria-hidden className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </span>
+      </label>
+      <p className="mt-1 text-on-surface-variant">
+        Canais, filmes e séries de categorias adultas ficam ocultos em todo o app. Perfil infantil sempre oculta.
+      </p>
+      {asking && pin && (
+        <div className="mt-3 flex flex-col gap-2">
+          <input
+            inputMode="numeric"
+            placeholder="PIN do app"
+            aria-label="PIN do app para liberar conteúdo adulto"
+            value={code}
+            onChange={(e) => typeCode(e.target.value)}
+            className="brand-focus h-10 w-full rounded-full border border-outline-soft bg-surface-container px-3 text-center tracking-widest text-white"
+          />
+          {wrong && <p className="text-center text-live">PIN incorreto</p>}
+          <button onClick={() => setAsking(false)} className="btn-secondary h-10 w-full text-body-sm">
+            Cancelar
+          </button>
+        </div>
+      )}
+      {asking && !pin && (
+        <ConfirmDialog
+          message="Este conteúdo é só para maiores de 18 anos. Você confirma que tem 18 anos ou mais?"
+          confirmLabel="Tenho 18 anos ou mais"
+          onConfirm={() => {
+            setShowAdult(true)
+            setAsking(false)
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
+    </div>
+  )
+}
+
 function AppPinSettings() {
   const pin = useAppLockStore((s) => s.pin)
   const setPin = useAppLockStore((s) => s.setPin)
   const [pinInput, setPinInput] = useState('')
 
   return (
-    <div className="mt-12 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
+    <div className="mt-4 w-full max-w-md rounded-2xl border border-outline-soft bg-surface-low p-4 text-left text-body-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-label-md text-white">
           {pin ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
@@ -327,6 +410,7 @@ export default function ProfilesPage() {
           ))}
       </div>
 
+      <AdultSetting />
       <AppPinSettings />
 
       <button

@@ -10,6 +10,7 @@ import { formatRemaining, formatRuntime } from '../components/videoPlayerUtils'
 import { cached } from '../lib/cache'
 import { episodeName, episodeTitle } from '../lib/displayTitle'
 import { useXtream } from '../hooks/useXtream'
+import { useHideAdult } from '../hooks/useHideAdult'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
 import { useActiveProfile, useActiveProfileId } from '../store/profiles'
@@ -35,6 +36,7 @@ export default function SeriesDetailPage() {
 
   const profileId = useActiveProfileId()
   const isKids = Boolean(useActiveProfile()?.isKids)
+  const hideAdult = useHideAdult()
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite)
   const isFavorite = useLibraryStore((s) => s.isFavorite(profileId, 'series', Number(id)))
   const episodeProgress = useLibraryStore((s) => s.progress)
@@ -54,7 +56,7 @@ export default function SeriesDetailPage() {
         if (cancelled) return
         setSeries(data)
         setActiveSeason(data.seasons[0]?.seasonNumber ?? 1)
-        if (isKids) isCategoryBlocked(client, 'series', data.categoryId).then((value) => !cancelled && setBlocked(value))
+        if (hideAdult) isCategoryBlocked(client, 'series', data.categoryId).then((value) => !cancelled && setBlocked(value))
       })
       .catch((err) => {
         if (!cancelled) setError(friendlyCatalogError(err))
@@ -65,7 +67,7 @@ export default function SeriesDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [client, id, isKids, attempt])
+  }, [client, id, hideAdult, attempt])
 
   // Nota do IMDb, logo, classificacao, sinopse que faltar e, do TVmaze, elenco/miniaturas que faltarem (via
   // /api/tmdb, kind=tv); genero continua vindo so do provedor.

@@ -10,6 +10,7 @@ import { displayTitle, episodeName, episodeTitle } from '../lib/displayTitle'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
+import { useHideAdult } from '../hooks/useHideAdult'
 import { isCategoryBlocked } from '../lib/parentalControl'
 import OfflineWatchPage from './OfflineWatchPage'
 import { updateSeriesDone, useLibraryStore } from '../store/library'
@@ -43,7 +44,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const navigate = useNavigate()
   const profileId = useActiveProfileId()
   const profile = useActiveProfile()
-  const isKids = Boolean(profile?.isKids)
+  const hideAdult = useHideAdult()
   const hiddenCategories = profile?.hiddenCategories
   const categoryOrder = profile?.categoryOrder
   const setProgress = useLibraryStore((s) => s.setProgress)
@@ -215,9 +216,9 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
   const [blocked, setBlocked] = useState(false)
   // Starts true for a kids profile: playback must not start even for the instant it'd take the check
   // below to resolve, and this flips back to false immediately for every other profile.
-  const [checkingProfile, setCheckingProfile] = useState(isKids)
+  const [checkingProfile, setCheckingProfile] = useState(hideAdult)
   useEffect(() => {
-    if (!client || !kind || !id || !isKids || kind === 'offline') {
+    if (!client || !kind || !id || !hideAdult || kind === 'offline') {
       setBlocked(false)
       setCheckingProfile(false)
       return
@@ -242,7 +243,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     return () => {
       cancelled = true
     }
-  }, [client, kind, id, isKids, liveChannels, seriesDetails])
+  }, [client, kind, id, hideAdult, liveChannels, seriesDetails])
 
   const nextEpisode = useMemo(() => {
     if (!seriesDetails || kind !== 'series') return null
