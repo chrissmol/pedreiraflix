@@ -6,7 +6,7 @@ import LiveChannelPanel from '../components/LiveChannelPanel'
 import VideoPlayer from '../components/VideoPlayer'
 import { useXtream } from '../hooks/useXtream'
 import { cached } from '../lib/cache'
-import { displayTitle, episodeName, episodeTitle } from '../lib/displayTitle'
+import { displayChannel, displayTitle, episodeName, episodeTitle } from '../lib/displayTitle'
 import { formatEpgTime, useShortEpg } from '../hooks/useShortEpg'
 import { arrangeCategories } from '../lib/categoryPrefs'
 import { isFinished } from '../lib/finished'
@@ -347,7 +347,7 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         src={src}
         isHls={isHls}
         isLive={kind === 'live' && !isCatchup}
-        title={name}
+        title={kind === 'live' ? displayChannel(name) : displayTitle(name)}
         subtitle={subtitle}
         poster={image}
         onBack={() => navigate(-1)}

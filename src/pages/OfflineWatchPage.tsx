@@ -7,6 +7,7 @@ import type { DownloadRecord } from '../lib/offlineStore'
 import { useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
 import PageLoading from '../components/PageLoading'
+import { displayTitle } from '../lib/displayTitle'
 
 interface OfflineWatchPageProps {
   /** The IndexedDB record key, `${profileId}:${kind}-${id}` — see store/downloads.ts. */
@@ -106,7 +107,7 @@ export default function OfflineWatchPage({ downloadKey }: OfflineWatchPageProps)
         src={objectUrl}
         isHls={false}
         isLive={false}
-        title={params.get('name') || record.name}
+        title={displayTitle(params.get('name') || record.name)}
         subtitle="Baixado · assistindo offline"
         poster={record.image}
         onBack={() => navigate(-1)}
