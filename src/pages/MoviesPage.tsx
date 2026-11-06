@@ -146,12 +146,15 @@ export default function MoviesPage() {
             />
           </FilterSection>
           {allGenres.length > 0 && (
-            <ChipGroup
-              title="Gênero"
-              value={activeGenre ?? ''}
-              onChange={(v) => setActiveGenre(v || null)}
-              options={[{ value: '', label: 'Todos' }, ...allGenres.map((g) => ({ value: g, label: g }))]}
-            />
+            <FilterSection title="Gênero">
+              <Select
+                inline
+                label="Gênero"
+                value={activeGenre ?? ''}
+                onChange={(v) => setActiveGenre(v || null)}
+                options={[{ value: '', label: 'Todos os gêneros' }, ...allGenres.map((g) => ({ value: g, label: g }))]}
+              />
+            </FilterSection>
           )}
         </FilterPanel>
       </div>

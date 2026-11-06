@@ -64,7 +64,10 @@ test('streaming: fileira e atalho da Netflix em Filmes e Séries, e o genero con
     // Escolher um genero (filtro) mostra a grade filtrada dentro do streaming.
     const nome = (await fileiras.first().innerText()).trim()
     await page.getByRole('button', { name: /Filtros/ }).click()
-    await page.getByRole('button', { name: nome, exact: true }).click()
+    if (rota === '/movies') {
+      await page.getByRole('button', { name: 'Gênero', exact: true }).click()
+      await page.getByRole('option', { name: nome, exact: true }).click()
+    } else await page.getByRole('button', { name: nome, exact: true }).click()
     await expect(page).toHaveURL(/category=s%3Anetflix&genre=/)
     await expect(page.getByRole('heading', { name: nome, level: 2 })).toHaveCount(0)
   }
