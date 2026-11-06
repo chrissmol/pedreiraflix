@@ -11,7 +11,7 @@ import Row from '../components/Row'
 import Select from '../components/Select'
 import { useSeriesCatalog } from '../hooks/useCatalog'
 import { cleanCategoryName } from '../lib/channelGroups'
-import { genresOf } from '../lib/genres'
+import { genresOf, groupByGenre } from '../lib/genres'
 import { useGenreGroups } from '../hooks/useGenreGroups'
 import type { SeriesItem } from '../types'
 import ErrorCard from '../components/ErrorCard'
@@ -66,7 +66,13 @@ export default function SeriesPage() {
   // pagina), e ler isso uma vez na montagem fazia o link nao abrir nada (Suporte, 21/10). Voltar sai da grade.
   const activeCategory = searchParams.get('category')
   const setActiveCategory = (id: string | null) => setSearchParams(id ? { category: id } : {}, { replace: true })
-  const [activeGenre, setActiveGenre] = useState<string | null>(null)
+  const activeGenre = searchParams.get('genre')
+  const setActiveGenre = (g: string | null) => {
+    const next = new URLSearchParams(searchParams)
+    if (g) next.set('genre', g)
+    else next.delete('genre')
+    setSearchParams(next, { replace: true })
+  }
   const [activeYear, setActiveYear] = useState<number | null>(null)
   const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState<SortKey>('default')
@@ -92,6 +98,14 @@ export default function SeriesPage() {
       }))
       .filter((g) => g.items.length > 0 || g.loading)
   }, [groups, activeCategory, activeGenre, activeYear, minRating, sort])
+
+  // Dentro de um streaming (Netflix, Globoplay...) as fileiras sao os generos daquele streaming, como na tela normal.
+  // Com um genero escolhido (filtro ou "Ver tudo" da fileira) vira grade; sem genero nos titulos, tambem grade.
+  const streamRows = useMemo(() => {
+    const g = visibleGroups[0]
+    if (!activeCategory?.startsWith('s:') || activeGenre || !g) return null
+    return groupByGenre([{ ...g, error: null }], 0)
+  }, [visibleGroups, activeCategory, activeGenre])
 
   return (
     <div className="min-h-full pt-[calc(6rem+env(safe-area-inset-top))]">
@@ -158,7 +172,20 @@ export default function SeriesPage() {
       <CatalogProgress groups={groups} label="Carregando séries" />
       {loading && groups.length === 0 && <Row title="" loading />}
 
-      {activeCategory ? (
+      {streamRows ? (
+        streamRows.map(({ category, items, loading: groupLoading }) => (
+          <CategoryRow
+            key={category.categoryId}
+            kind="series"
+            title={category.categoryName}
+            loading={groupLoading && items.length === 0}
+            items={items}
+            limit={ROW_LIMIT}
+            categoryId={activeCategory ?? undefined}
+            extraQuery={`&genre=${encodeURIComponent(category.categoryName)}`}
+          />
+        ))
+      ) : activeCategory ? (
         <PosterGrid kind="series" items={visibleGroups[0]?.items ?? []} loading={visibleGroups[0]?.loading} />
       ) : (
         visibleGroups.map(({ category, items, loading: groupLoading }) => (

@@ -62,7 +62,8 @@ export function useGenreGroups<T extends Item>(
       : []
     // Streaming: o TMDB (por tmdb_id) e o nome da categoria do provedor ("|NETFLIX|") dizem onde o titulo passa.
     const byStream = new Map<string, Map<unknown, T>>()
-    for (const g of groups) {
+    // `source` e nao `groups`: com o indice do TMDB so ela traz o genero, e as fileiras por genero dentro do streaming precisam dele.
+    for (const g of source) {
       const fromName = streamingsInName(g.category.categoryName)
       for (const m of g.items) {
         for (const key of new Set([...fromName, ...((m.tmdbId && streams[m.tmdbId]) || [])])) {

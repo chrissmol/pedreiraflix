@@ -56,7 +56,38 @@ test('streaming: fileira e atalho da Netflix em Filmes e Séries, e o genero con
     await page.getByRole('navigation', { name: 'Streaming' }).getByRole('button', { name: 'Netflix' }).click()
     await expect(page).toHaveURL(/category=s%3Anetflix/)
     await expect(page.getByRole('heading', { name: 'Novidades', level: 2 })).toHaveCount(0)
+    // Dentro do streaming: fileiras por genero (so dos titulos dele), nao uma grade unica.
+    const fileiras = page.getByRole('heading', { level: 2 })
+    await expect(fileiras.first()).toBeVisible()
+    expect(await fileiras.count()).toBeGreaterThan(0)
+    await expect(page.getByRole('heading', { name: 'Netflix', level: 2 })).toHaveCount(0)
+    // Escolher um genero (filtro) mostra a grade filtrada dentro do streaming.
+    const nome = (await fileiras.first().innerText()).trim()
+    await page.getByRole('button', { name: /Filtros/ }).click()
+    if (rota === '/movies') {
+      await page.getByRole('button', { name: 'Gênero', exact: true }).click()
+      await page.getByRole('option', { name: nome, exact: true }).click()
+    } else await page.getByRole('button', { name: nome, exact: true }).click()
+    await expect(page).toHaveURL(/category=s%3Anetflix&genre=/)
+    await expect(page.getByRole('heading', { name: nome, level: 2 })).toHaveCount(0)
   }
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Netflix', level: 2 }).first()).toBeVisible()
+})
+
+// TV: setas + OK dentro das fileiras por genero de um streaming.
+test('streaming: setas descem entre fileiras de genero e OK abre o titulo', async ({ page }) => {
+  await page.route(/\/api\/xtream\?.*action=get_vod_streams(&|$)/, async (route) => {
+    const lista = await (await route.fetch()).json()
+    await route.fulfill({ json: lista.map((m: { stream_id: number }) => ({ ...m, tmdb_id: String(m.stream_id) })) })
+  })
+  await page.route('**/api/streaming?*', (r) => r.fulfill({ json: { ids: new URL(r.request().url()).searchParams.get('provider') === '8' ? [1, 2, 3, 4, 5, 6, 7, 8] : [] } }))
+  await login(page)
+  await page.goto('/movies?category=s%3Anetflix')
+  await expect(page.getByRole('heading', { name: 'Aventura', level: 2 })).toBeVisible()
+  await page.getByRole('button', { name: 'Filme Explosivo Filme' }).first().focus()
+  await page.keyboard.press('ArrowDown')
+  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-spatial') !== null)).toBe(true)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/movies\/\d+/)
 })
