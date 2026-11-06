@@ -25,6 +25,8 @@ export interface NativeAudioTrackList extends EventTarget {
 export const NATIVE_FAST_MAX_LAG = 6
 export const NATIVE_STALL_MS = 15_000
 export const LIVE_AUTO_RETRY_MS = 20_000
+// Espera ao trocar de canal antes de abrir o novo no provedor: quem passa por varios canais seguidos nao abre uma sessao por canal.
+export const LIVE_ZAP_DELAY_MS = 600
 
 export function nativeSubtitleTracks(video: HTMLVideoElement | null) {
   return Array.from(video?.textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions')

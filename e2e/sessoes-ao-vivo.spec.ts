@@ -31,3 +31,16 @@ test('mosaico com 2 canais abre 1 sessao por canal', async ({ page }) => {
   await page.waitForTimeout(8000)
   expect((await sessoes(page)).sort()).toEqual(['101.m3u8', '102.m3u8'])
 })
+
+test('zapear por varios canais seguidos so abre sessao no canal onde parou', async ({ page }) => {
+  await page.goto('/watch/live/101?name=A')
+  await expect.poll(() => sessoes(page)).toEqual(['101.m3u8'])
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('ArrowUp')
+    await page.waitForTimeout(150)
+  }
+  await expect(page).toHaveURL(/\/watch\/live\/201/)
+  await page.waitForTimeout(4000)
+  // Canais 102 e 103 foram so de passagem: abrir cada um deixava uma tela ocupada no provedor sem ninguem assistindo.
+  expect(await sessoes(page)).toEqual(['101.m3u8', '201.m3u8'])
+})
