@@ -17,6 +17,8 @@ interface CategoryRowProps {
   /** Needed to build the "Ver tudo" link — only Home passes this (Filmes/Séries' own rows already show
    * every item in the category, so there's nothing more to link to). */
   categoryId?: string
+  /** Dentro de um streaming, "Ver tudo" de um gênero mantém o streaming e soma `&genre=`. */
+  extraQuery?: string
 }
 
 // Memoized deliberately: Filmes/Séries/Início load categories progressively (one API call per
@@ -25,12 +27,12 @@ interface CategoryRowProps {
 // loading — visible as jank/flicker the more categories a provider has. React.memo's default shallow
 // prop comparison only skips that work if `items` is the *same array reference* when nothing about this
 // specific row changed, which is exactly what the callers below preserve (see their comments).
-function CategoryRow({ title, loading, items, kind, limit, categoryId }: CategoryRowProps) {
+function CategoryRow({ title, loading, items, kind, limit, categoryId, extraQuery }: CategoryRowProps) {
   const navigate = useNavigate()
   const visible = limit != null ? items.slice(0, limit) : items
   const seeAllHref =
     categoryId && limit != null && items.length > limit
-      ? `/${kind === 'movie' ? 'movies' : 'series'}?category=${encodeURIComponent(categoryId)}`
+      ? `/${kind === 'movie' ? 'movies' : 'series'}?category=${encodeURIComponent(categoryId)}${extraQuery ?? ''}`
       : undefined
 
   // Dev-only render counter (statically stripped from the production bundle — `import.meta.env.DEV` is

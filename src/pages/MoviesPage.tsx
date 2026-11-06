@@ -14,6 +14,7 @@ import type { Movie } from '../types'
 import ErrorCard from '../components/ErrorCard'
 import { cleanCategoryName } from '../lib/channelGroups'
 import { movieYear } from '../lib/displayTitle'
+import { genresOf, groupByGenre } from '../lib/genres'
 import { useGenreGroups } from '../hooks/useGenreGroups'
 
 type SortKey = 'default' | 'name' | 'recent' | 'rating'
@@ -41,6 +42,13 @@ export default function MoviesPage() {
   // pagina), e ler isso uma vez na montagem fazia o link nao abrir nada (Suporte, 21/10). Voltar sai da grade.
   const activeCategory = searchParams.get('category')
   const setActiveCategory = (id: string | null) => setSearchParams(id ? { category: id } : {}, { replace: true })
+  const activeGenre = searchParams.get('genre')
+  const setActiveGenre = (g: string | null) => {
+    const next = new URLSearchParams(searchParams)
+    if (g) next.set('genre', g)
+    else next.delete('genre')
+    setSearchParams(next, { replace: true })
+  }
   const [activeYear, setActiveYear] = useState<number | null>(null)
   const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState<SortKey>('default')
@@ -64,6 +72,8 @@ export default function MoviesPage() {
     return [...set].sort((a, b) => b - a)
   }, [groups])
 
+  const allGenres = useMemo(() => [...new Set(groups.flatMap((g) => g.items.flatMap((m) => genresOf(m.genre))))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [groups])
+
   const visibleGroups = useMemo(() => {
     const filtered = activeCategory ? groups.filter((g) => g.category.categoryId === activeCategory) : groups
     return filtered
@@ -71,14 +81,22 @@ export default function MoviesPage() {
         category: g.category,
         loading: g.loading,
         items: sortMovies(
-          minRating > 0 || activeYear
-            ? g.items.filter((m) => (!activeYear || movieYear(m) === activeYear) && (minRating === 0 || Number(m.rating) >= minRating))
+          minRating > 0 || activeYear || activeGenre
+            ? g.items.filter((m) => (!activeYear || movieYear(m) === activeYear) && (!activeGenre || genresOf(m.genre).includes(activeGenre)) && (minRating === 0 || Number(m.rating) >= minRating))
             : g.items,
           sort,
         ),
       }))
       .filter((g) => g.items.length > 0 || g.loading)
-  }, [groups, activeCategory, activeYear, minRating, sort])
+  }, [groups, activeCategory, activeGenre, activeYear, minRating, sort])
+
+  // Dentro de um streaming (Netflix, Globoplay...) as fileiras sao os generos daquele streaming, como na tela normal.
+  // Com um genero escolhido (filtro ou "Ver tudo" da fileira) vira grade; sem genero nos titulos, tambem grade.
+  const streamRows = useMemo(() => {
+    const g = visibleGroups[0]
+    if (!activeCategory?.startsWith('s:') || activeGenre || !g) return null
+    return groupByGenre([{ ...g, error: null }], 0)
+  }, [visibleGroups, activeCategory, activeGenre])
 
   return (
     <div className="min-h-full pt-[calc(6rem+env(safe-area-inset-top))]">
@@ -89,6 +107,7 @@ export default function MoviesPage() {
             sort !== 'default' && { key: 'sort', label: SORT_LABELS[sort], clear: () => setSort('default') },
             minRating > 0 && { key: 'rating', label: `★ ${minRating}+`, clear: () => setMinRating(0) },
             activeYear != null && { key: 'year', label: String(activeYear), clear: () => setActiveYear(null) },
+            activeGenre != null && { key: 'genre', label: activeGenre, clear: () => setActiveGenre(null) },
             activeCategory != null && {
               key: 'category',
               label: cleanCategoryName(groups.find((g) => g.category.categoryId === activeCategory)?.category.categoryName ?? ''),
@@ -126,6 +145,14 @@ export default function MoviesPage() {
               ]}
             />
           </FilterSection>
+          {allGenres.length > 0 && (
+            <ChipGroup
+              title="Gênero"
+              value={activeGenre ?? ''}
+              onChange={(v) => setActiveGenre(v || null)}
+              options={[{ value: '', label: 'Todos' }, ...allGenres.map((g) => ({ value: g, label: g }))]}
+            />
+          )}
         </FilterPanel>
       </div>
 
@@ -136,7 +163,20 @@ export default function MoviesPage() {
       <CatalogProgress groups={groups} label="Carregando filmes" />
       {loading && groups.length === 0 && <Row title="" loading />}
 
-      {activeCategory ? (
+      {streamRows ? (
+        streamRows.map(({ category, items, loading: groupLoading }) => (
+          <CategoryRow
+            key={category.categoryId}
+            kind="movie"
+            title={category.categoryName}
+            loading={groupLoading && items.length === 0}
+            items={items}
+            limit={ROW_LIMIT}
+            categoryId={activeCategory ?? undefined}
+            extraQuery={`&genre=${encodeURIComponent(category.categoryName)}`}
+          />
+        ))
+      ) : activeCategory ? (
         // A single category picked (category filter, or the "Ver tudo" deep link) — a grid to browse
         // the whole thing beats a horizontal-scroll row, which only made sense as a compact preview
         // sitting among a stack of other categories.
