@@ -57,8 +57,12 @@ test('player ao vivo: L, botao e MediaLast alternam entre os dois ultimos canais
   await expect(page).toHaveURL(/\/watch\/live\/201/)
   await page.keyboard.press('l')
   await expect(page).toHaveURL(/\/watch\/live\/101/)
-  await page.getByRole('button', { name: 'Último canal visto' }).click({ force: true })
-  await expect(page).toHaveURL(/\/watch\/live\/201/)
+  // O botao e redesenhado ao trocar de canal e um clique no meio disso se perde: repete so enquanto nao trocou.
+  await expect(async () => {
+    if (!/\/watch\/live\/201/.test(page.url())) await page.getByRole('button', { name: 'Último canal visto' }).click({ force: true, timeout: 2000 })
+    await expect(page).toHaveURL(/\/watch\/live\/201/, { timeout: 1500 })
+  }).toPass()
+  await page.waitForTimeout(500) // o canal novo entra em "recentes" num efeito; MediaLast usa o "ultimo" de la
   await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'MediaLast' })))
   await expect(page).toHaveURL(/\/watch\/live\/101/)
 })
