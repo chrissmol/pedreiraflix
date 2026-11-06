@@ -2,7 +2,7 @@ import type Hls from 'hls.js'
 import type { RefObject } from 'react'
 import { useEffect, useRef } from 'react'
 import { useJunto } from '../lib/junto'
-import { LIVE_AUTO_RETRY_MS, type AudioTrack, type Setter, type SubtitleTrack } from './videoPlayerTracks'
+import { LIVE_AUTO_RETRY_MS, LIVE_ZAP_DELAY_MS, type AudioTrack, type Setter, type SubtitleTrack } from './videoPlayerTracks'
 import type { QualityLevel } from './VideoPlayerQualityMenu'
 import {
   CHANNEL_BLOCKED_MESSAGE,
@@ -89,6 +89,10 @@ export function useVideoSource({
   const volumeSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   // No HLS nativo o "Rápido" nao reconfigura nada (ver useNativeHls), entao nao recarrega o video.
   const hlsJsFastLive = nativeHls ? false : fastLive
+  // Trocar de canal em sequencia (zapear) abria o endereco de cada canal pelo caminho: cada abertura vira uma sessao
+  // (tela) no provedor, que so a solta depois de um tempo. Passar por 3 canais deixava 3 telas ocupadas sem ninguem
+  // assistindo. Por isso, depois do primeiro canal, so abre quando a pessoa para (ver LIVE_ZAP_DELAY_MS).
+  const opened = useRef(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -363,10 +367,13 @@ export function useVideoSource({
       }
     }
 
-    setup()
+    const wait = isLive && opened.current ? LIVE_ZAP_DELAY_MS : 0
+    opened.current = true
+    const openTimer = setTimeout(setup, wait)
 
     return () => {
       cancelled = true
+      clearTimeout(openTimer)
       video.removeEventListener('loadedmetadata', onLoadedMetadata)
       video.removeEventListener('timeupdate', onTimeUpdate)
       video.removeEventListener('durationchange', onDurationChange)
