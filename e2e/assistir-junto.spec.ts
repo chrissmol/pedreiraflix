@@ -486,3 +486,32 @@ test('saida sincronizada: quem sai do filme (ou troca por outro) tira os amigos;
   await b.getByRole('button', { name: 'Voltar', exact: true }).click()
   await expect(a).not.toHaveURL(/\/watch\//)
 })
+
+// Dona da sala (WebKit/iOS): o toque que abriu o filme ja passou quando a sala manda comecar; o som nao pode virar mudo.
+test('dona da sala: play da sala sem toque recente nao deixa o video parado; um toque devolve o som', async ({ browser }) => {
+  const room = fakeRoom()
+  const a = await person(browser, room, 'a')
+  const b = await person(browser, room, 'b', {}, true)
+  await a.addInitScript(() => {
+    let last = -1e9
+    addEventListener('click', (e) => { if (e.isTrusted) last = performance.now() }, true)
+    const orig = HTMLMediaElement.prototype.play
+    HTMLMediaElement.prototype.play = function () {
+      if (!this.muted && performance.now() - last > 1000) return Promise.reject(new DOMException('blocked', 'NotAllowedError'))
+      return orig.call(this)
+    }
+    ;(window as any).__log = []
+  })
+  await join(a, b)
+  await a.goto('/watch/movie/1?ext=mp4&name=Filme%20Explosivo')
+  await a.mouse.click(5, 5)
+  await expect(aviso(a, 'Esperando outra pessoa carregar…')).toBeVisible()
+  await a.waitForTimeout(1500)
+  await carregar(b)
+  await expect.poll(() => paused(a)).toBe(false)
+  await a.waitForTimeout(500)
+  await expect(a.getByRole('button', { name: 'Ativar som' })).toBeVisible()
+  await video(a).click({ position: { x: 20, y: 20 } })
+  await expect.poll(() => video(a).evaluate((v: HTMLVideoElement) => v.muted)).toBe(false)
+  expect(await paused(a)).toBe(false)
+})
