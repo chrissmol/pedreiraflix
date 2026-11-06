@@ -26,6 +26,10 @@ const SUPPRESS_MS = 1500
 
 /** "Assistir junto", montado uma vez no app: segue o titulo da sala, aplica play/pausa/posicao no video da tela e manda
  * para a sala o que a pessoa faz no proprio player. So age com uma sala aberta (lib/junto.ts). */
+// Play vindo da sala nao e um toque: se o navegador recusar o som (WebKit/iOS), o evento "canplay" aciona o autoplay do
+// player, que cai no mudo com o botao "Ativar som" em vez de deixar a dona da sala com o video parado.
+const tocar = (video: HTMLVideoElement) => void video.play().catch(() => video.dispatchEvent(new Event('canplay')))
+
 export default function JuntoSync() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -113,7 +117,7 @@ export default function JuntoSync() {
       const play = target.playing && video.paused
       const pause = !target.playing && !video.paused
       if (seek) video.currentTime = expected
-      if (play) video.play().catch(() => {})
+      if (play) tocar(video)
       if (pause) video.pause()
       // Conferido de novo depois do pulo do proprio player: dali em diante o que a pessoa fizer vai para a sala.
       if (last) suppressUntil.current = 0
@@ -177,7 +181,8 @@ export default function JuntoSync() {
 
   useEffect(() => {
     if (!go?.toca || !path || room.current?.path !== path) return
-    document.querySelector('video')?.play().catch(() => {})
+    const v = document.querySelector('video')
+    if (v) tocar(v)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- so quando a sala manda tocar
   }, [go])
 
