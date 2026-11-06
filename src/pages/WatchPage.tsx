@@ -113,12 +113,21 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
     async function load() {
       // Mesma ordem e categorias escondidas da tela de canais, para o zapping nao cair numa categoria escondida.
       const categories = arrangeCategories('live', await cached('live:categories', () => client!.getLiveCategories()), hiddenCategories, categoryOrder)
-      const lists = await Promise.all(
-        categories.map((c) => cached(`live:items:${c.categoryId}`, () => client!.getLiveStreams(c.categoryId))),
-      )
       if (cancelled) return
       setLiveCategories(categories)
-      setLiveChannels(lists.flat())
+      // Canal a canal, sem derrubar tudo se uma categoria falhar (429/instavel do provedor): antes um Promise.all
+      // unico deixava a lista de canais e o zapping sem aparecer enquanto qualquer categoria nao carregasse.
+      const lists: LiveChannel[][] = categories.map(() => [])
+      await Promise.all(
+        categories.map((c, i) =>
+          cached(`live:items:${c.categoryId}`, () => client!.getLiveStreams(c.categoryId))
+            .then((items) => {
+              lists[i] = items
+              if (!cancelled) setLiveChannels(lists.flat())
+            })
+            .catch(() => {}),
+        ),
+      )
     }
     load().catch(() => {})
     return () => {
