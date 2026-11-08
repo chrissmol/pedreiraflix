@@ -10,7 +10,7 @@ import type {
   UserInfo,
 } from '../types'
 import type { ProviderClient } from './provider'
-import { proxyImage } from './xtream.ts'
+import { liveLogo, proxyImage } from './xtream.ts'
 import { loadXmltv } from './xmltv.ts'
 
 // ponytail: name/group-title heuristic, not a real catalog API. It won't classify every provider's
@@ -171,7 +171,7 @@ export class M3uClient implements ProviderClient {
         kind: 'live',
         streamId: e.id,
         name: e.name,
-        streamIcon: proxyImage(e.logo),
+        streamIcon: liveLogo(e.logo),
         categoryId: e.group,
         epgChannelId: e.tvgId ?? null,
         hasArchive: false,

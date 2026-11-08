@@ -262,6 +262,7 @@ function checkCreds(req, res) {
 const LIVE_SEQ0 = Math.floor(Date.now() / 2000 / liveSegments.length) * liveSegments.length
 // Provedor real: /live/u/p/ID.m3u8 responde 302 para uma URL com token novo e cada pedido ao endereco original cria
 // uma "sessao" (tela) la. Ligado por /__mock/live-redirect?on=1; /__mock/live-sessions conta as sessoes criadas.
+const LIVE_WIN = Number(process.env.LIVE_WIN) || 5
 let liveRedirect = false
 const liveSessions = []
 app.get('/__mock/live-redirect', (req, res) => { liveRedirect = req.query.on === '1'; liveSessions.length = 0; res.end('ok') })
@@ -270,7 +271,7 @@ const livePlaylist = (res) => {
   const seq = Math.floor(Date.now() / 2000)
   const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:2', `#EXT-X-MEDIA-SEQUENCE:${seq}`,
     `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor((seq - LIVE_SEQ0) / liveSegments.length)}`]
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < LIVE_WIN; k++) {
     const n = seq + k
     if (k > 0 && n % liveSegments.length === 0) lines.push('#EXT-X-DISCONTINUITY')
     lines.push('#EXTINF:2.0,', `/fixtures/live/${liveSegments[n % liveSegments.length]}`)
@@ -287,7 +288,7 @@ app.get('/live/:u/:p/:file', (req, res) => {
   const seq = Math.floor(Date.now() / 2000)
   const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:2', `#EXT-X-MEDIA-SEQUENCE:${seq}`,
     `#EXT-X-DISCONTINUITY-SEQUENCE:${Math.floor((seq - LIVE_SEQ0) / liveSegments.length)}`]
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < LIVE_WIN; k++) {
     const n = seq + k
     if (k > 0 && n % liveSegments.length === 0) lines.push('#EXT-X-DISCONTINUITY')
     lines.push('#EXTINF:2.0,', `/fixtures/live/${liveSegments[n % liveSegments.length]}`)

@@ -48,6 +48,14 @@ export function proxyImage(url: string | null | undefined): string | null {
   return `/api/stream?url=${encodeURIComponent(url)}`
 }
 
+// Alguns provedores usam como "logo" do canal uma etiqueta de qualidade (".../SD.png", "FHD.png", "H265.png") hospedada
+// no ibb.co, que recusa o nosso proxy (520/404). Eram dezenas de pedidos falhando a cada tela de canais, na mesma cota
+// do proxy que leva os segmentos do video. Sem logo, o card mostra as iniciais do canal.
+const QUALITY_BADGE = /\/(?:SD|HD|FHD|UHD|4K|H265|HEVC)\.(?:png|jpe?g|webp)(?:\?.*)?$/i
+export function liveLogo(url: string | null | undefined): string | null {
+  return url && QUALITY_BADGE.test(url) ? null : proxyImage(url)
+}
+
 // O que o app baixa em massa sozinho (listas de cada categoria e guia). Todo o resto — detalhes de filme e
 // serie, login, listas de categorias — e alguem esperando na tela, e fura a fila (ver requestQueue.ts).
 const BACKGROUND_ACTIONS = new Set(['get_vod_streams', 'get_series', 'get_live_streams', 'get_short_epg', 'get_simple_data_table'])
@@ -266,7 +274,7 @@ export class XtreamClient implements ProviderClient {
       kind: 'live',
       streamId: Number(s.stream_id),
       name: s.name,
-      streamIcon: proxyImage(s.stream_icon),
+      streamIcon: liveLogo(s.stream_icon),
       categoryId: String(s.category_id),
       epgChannelId: s.epg_channel_id,
       hasArchive: Number(s.tv_archive) === 1,

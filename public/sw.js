@@ -6,7 +6,7 @@
 // Bump this on any change to the strategy below (not on every deploy — the HTML/JS/CSS themselves are
 // versioned by Vite's content-hashed filenames, and the network-first navigation handler below already
 // keeps index.html itself fresh on every load with a connection).
-const VERSION = 'v4'
+const VERSION = 'v5'
 const RUNTIME_CACHE = `pedreiraflix-${VERSION}`
 
 // No skipWaiting() on install, on purpose: a new worker waits until the page asks it to take over, so an
@@ -64,7 +64,11 @@ const NAV_TIMEOUT_MS = 4000
 async function networkFirst(request) {
   const cached = (await caches.match(request, MATCH)) ?? (await caches.match('/index.html', MATCH))
   const network = fetch(request).then((response) => {
-    if (response.ok) caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()))
+    // Clonar ja, de forma sincrona: dentro do .then do caches.open o navegador ja consumiu o corpo ("body is already used").
+    if (response.ok) {
+      const copy = response.clone()
+      caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {})
+    }
     return response
   })
   if (!cached) return network
