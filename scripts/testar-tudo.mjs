@@ -28,7 +28,7 @@ const SPECS = {
   catalogo: ['busca-grande', 'busca-pessoa', 'titulos-duplicados', 'versoes', 'concluido', 'visto-e-em-alta', 'continuar-tv', 'search-suggestions', 'serie-detalhe', 'titulos', 'titulo-removido', 'tmdb', 'ia-gratis', 'ia-gratis.mobile', 'hero', 'grade-progressiva', 'filtros-painel', 'filtros-painel.mobile', 'filtros-filmes', 'scroll-restore', 'cache', 'prioridade', 'perf', 'erro-tentar', 'saga', 'novos-episodios', 'busca-voz', 'retrospectiva'],
   conta: ['auth', 'autologout', 'app-pin', 'account-label-profile-name', 'profiles', 'parental', 'credenciais', 'm3u-login', 'conexoes', 'limite-telas', 'trocar-conta', 'trocar-conta.mobile', 'provedores-fora-do-padrao'],
   downloads: ['downloads', 'downloads-erros', 'downloads-partes', 'baixar-temporada', 'fila-para-no-403', 'serie-zip', 'sem-internet'],
-  pwa: ['pwa.pwa', 'pwa-css', 'entrar-offline.pwa', 'instalar-app', 'update-prompt', 'fonte-propria'],
+  pwa: ['pwa.pwa', 'sw-clone.pwa', 'pwa-css', 'entrar-offline.pwa', 'instalar-app', 'update-prompt', 'fonte-propria'],
   proxy: ['security', 'respeita-429', 'diagnostico', 'error-reporting', 'suporte'],
   telas: ['a11y', 'achados-estresse.mobile', 'ajustes-visuais.mobile', 'altura-iphone.mobile', 'iphone-shell', 'login-cabe.mobile', 'ui-mobile', 'foco-tv', 'navegacao-tv', 'tv', 'telas-sem-rolagem', 'perfis-sem-rolagem', 'plataformas', 'lighthouse-login', 'anel'],
 }
