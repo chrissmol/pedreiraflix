@@ -262,10 +262,12 @@ export function useVideoSource({
             // 4-segment/90s config's delay. `fastLive` trades that cushion
             // away on request (see the toggle in the controls bar) — less
             // delay, more risk of rebuffering on this same flaky origin.
-            maxBufferLength: fastLive ? 8 : 20,
-            maxMaxBufferLength: fastLive ? 16 : 40,
-            liveSyncDurationCount: fastLive ? 2 : 3,
-            liveMaxLatencyDurationCount: fastLive ? 4 : 8,
+            // Em segundos, nao em segmentos: com segmentos curtos (2 s) "3 segmentos" davam so 6 s de folga. Simulando
+            // picos de 3-9 s e 5% de 502 por 100 s: 6 s de folga = 6 travadas; 10 s = 2-4; 20 s = 1 (0 s parado).
+            maxBufferLength: fastLive ? 8 : 30,
+            maxMaxBufferLength: fastLive ? 16 : 60,
+            liveSyncDuration: fastLive ? 6 : 16,
+            liveMaxLatencyDuration: fastLive ? 14 : 48,
             manifestLoadingMaxRetry: 6,
             manifestLoadingRetryDelay: 1000,
             levelLoadingMaxRetry: 6,
