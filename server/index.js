@@ -2,6 +2,7 @@ import dns from 'node:dns/promises'
 import net from 'node:net'
 import cors from 'cors'
 import express from 'express'
+import { f1Next } from '../worker/f1.js'
 import { molTv } from '../worker/moltv.js'
 import { openSession, panelBase, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
 
@@ -138,6 +139,12 @@ app.get('/api/moltv/*path', async (req, res) => {
   if (isRateLimited(req.ip, 'moltv', 60, 10_000)) return res.status(429).send('rate limited')
   const out = await molTv(new URL(req.originalUrl, 'http://localhost'))
   res.status(out.status).type('json').set('cache-control', out.headers.get('cache-control')).send(await out.text())
+})
+
+app.get('/api/f1', async (req, res) => {
+  if (isRateLimited(req.ip, 'f1', 30, 10_000)) return res.status(429).send('rate limited')
+  const out = await f1Next()
+  res.status(out.status).type('json').set('cache-control', out.headers.get('cache-control') || 'no-store').send(await out.text())
 })
 
 app.get('/api/xtream', async (req, res) => {

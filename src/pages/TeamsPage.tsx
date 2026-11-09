@@ -9,7 +9,7 @@ import { Check, ChevronDown, Plus, Trophy, Tv, X } from '../components/icons'
 import { useMinuteClock } from '../lib/minuteClock'
 import { matchWhen } from '../lib/matchTime'
 import { type FavoriteTeam, teamsFor, useLibraryStore } from '../store/library'
-import { COMPETITIONS, COMPETITION_PREFIX, type Broadcast, type Competition, type CompetitionData, type NextMatchData, competitionBySlug, getJson, loadCompetition } from '../lib/competitions'
+import { COMPETITIONS, COMPETITION_PREFIX, F1_SLUG, type Broadcast, type Competition, type CompetitionData, type NextMatchData, competitionBySlug, getJson, loadCompetition } from '../lib/competitions'
 import { useActiveProfileId } from '../store/profiles'
 
 const STORE_COLLAPSED = 'pf-teams-collapsed'
@@ -377,6 +377,68 @@ function CompetitionTeams({ teams, followedTeams, onToggleTeam }: { teams: Favor
   )
 }
 
+interface F1Race {
+  name: string
+  round: number
+  circuit: string
+  place: string
+  sessions: { key: string; name: string; start: string }[]
+}
+
+/** Fórmula 1: sessões da próxima etapa (treinos, classificação, corrida) no horário do aparelho, via /api/f1. */
+function F1Card({ comp, open, onToggle, onRemove }: { comp: Competition; open: boolean; onToggle: () => void; onRemove: () => void }) {
+  const [race, setRace] = useState<F1Race | null | undefined>(undefined)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/f1')
+      .then((r) => (r.ok ? (r.json() as Promise<{ race: F1Race | null }>) : Promise.reject(new Error(String(r.status)))))
+      .then((d) => alive && setRace(d.race))
+      .catch(() => alive && setFailed(true))
+    return () => {
+      alive = false
+    }
+  }, [attempt])
+  const now = useMinuteClock(Boolean(race))
+  return (
+    <section aria-labelledby={`comp-${comp.slug}`} className="rounded-2xl border border-outline-soft bg-surface-low p-4 sm:p-5">
+      <CardHeader id={`comp-${comp.slug}`} lead={<Trophy aria-hidden className="h-6 w-6 shrink-0 text-brand-400" />} title={comp.name} open={open} onToggle={onToggle} onRemove={onRemove} removeLabel={`Deixar de seguir ${comp.name}`} />
+      <Collapse open={open}>
+        {failed ? (
+          <ErrorCard className="!mx-0" message="O calendário da F1 está indisponível agora." onRetry={() => {
+            setFailed(false)
+            setAttempt((n) => n + 1)
+          }} />
+        ) : race === undefined ? (
+          <p className="text-body-sm text-on-surface-variant">Buscando calendário…</p>
+        ) : race === null ? (
+          <p className="text-body-sm text-on-surface-variant">Nenhuma corrida marcada por enquanto.</p>
+        ) : (
+          <>
+            <p className="text-body-md font-medium text-white">{race.round > 0 && `Etapa ${race.round} · `}{race.name}</p>
+            <p className="mb-2 text-body-sm text-on-surface-variant">{[race.circuit, race.place].filter(Boolean).join(' · ')}</p>
+            <ul aria-label="Sessões" className="divide-y divide-outline-soft">
+              {race.sessions.map((s) => {
+                const w = matchWhen(s.start, '', now)
+                return (
+                  <li key={s.key} className="flex items-baseline justify-between gap-3 py-2">
+                    <span className="text-body-md text-white">{s.name}</span>
+                    <span className="text-right text-body-sm text-on-surface-variant">
+                      {w.live ? 'Ao vivo' : `${w.day} · ${w.time}`}
+                      {w.countdown && !w.live ? ` · ${w.countdown}` : ''}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
+      </Collapse>
+    </section>
+  )
+}
+
 const PAGE_SIZE = 5
 const MAX_SHOWN = 10
 
@@ -696,7 +758,11 @@ export default function TeamsPage() {
                       .filter((c) => c.group === g)
                       .map((c) => (
                         <div key={c.slug} className={soloOpen(comps, collapsed, c.slug)}>
-                          <CompetitionCard comp={c} followedTeams={teams} open={!collapsed.includes(c.slug)} onToggle={() => toggleOpen(c.slug)} onToggleTeam={(t) => toggleTeam(profileId, t)} onRemove={() => toggleComp(c)} />
+                          {c.slug === F1_SLUG ? (
+                            <F1Card comp={c} open={!collapsed.includes(c.slug)} onToggle={() => toggleOpen(c.slug)} onRemove={() => toggleComp(c)} />
+                          ) : (
+                            <CompetitionCard comp={c} followedTeams={teams} open={!collapsed.includes(c.slug)} onToggle={() => toggleOpen(c.slug)} onToggleTeam={(t) => toggleTeam(profileId, t)} onRemove={() => toggleComp(c)} />
+                          )}
                         </div>
                       ))}
                   </div>

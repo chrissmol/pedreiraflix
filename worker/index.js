@@ -7,6 +7,7 @@
 // just needed the same "block internal, allow public" policy dev already had instead of a strict list.
 
 import { junto } from './junto.js'
+import { f1Next } from './f1.js'
 import { molTv } from './moltv.js'
 import { openSession, panelBase, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
@@ -980,6 +981,10 @@ export default {
     if (url.pathname.startsWith('/api/moltv/')) {
       if (isRateLimited(ip, 'moltv', 60, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
       return withSecurityHeaders(await molTv(url, env))
+    }
+    if (url.pathname === '/api/f1') {
+      if (isRateLimited(ip, 'f1', 30, 10_000)) return withSecurityHeaders(new Response('rate limited', { status: 429 }))
+      return withSecurityHeaders(await f1Next())
     }
     if (url.pathname === '/api/stream') {
       // Media/segments: generous — one viewer can easily fire off a dozen HLS segment/key/subtitle
