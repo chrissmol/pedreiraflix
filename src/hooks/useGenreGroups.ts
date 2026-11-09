@@ -66,7 +66,9 @@ export function useGenreGroups<T extends Item>(
     for (const g of source) {
       const fromName = streamingsInName(g.category.categoryName)
       for (const m of g.items) {
-        for (const key of new Set([...fromName, ...((m.tmdbId && streams[m.tmdbId]) || [])])) {
+        // O TMDB manda: titulo que alguma plataforma lista vale so por ela; o nome da categoria (que o provedor mistura) so vale para o que o TMDB nao lista.
+        const known = m.tmdbId ? streams[m.tmdbId] : undefined
+        for (const key of new Set(known ?? fromName)) {
           if (!byStream.has(key)) byStream.set(key, new Map())
           byStream.get(key)!.set(('streamId' in m ? m.streamId : 'seriesId' in m ? m.seriesId : m) as unknown, m)
         }
