@@ -14,11 +14,18 @@ function baseKey(item: Named): string {
  * Guerra" e "Maquina de Guerra (2026)"): sem ano a copia entra na obra que ja tem ano; anos diferentes (refilmagens) ficam separados. */
 export function workKeys(items: Named[]): string[] {
   const groups = new Map<string, { id: string; year: number | null }[]>()
+  const years = new Map<string, Set<number>>()
+  for (const item of items) {
+    const y = movieYear(item)
+    if (y) (years.get(baseKey(item)) ?? years.set(baseKey(item), new Set()).get(baseKey(item))!).add(y)
+  }
   return items.map((item) => {
     const base = baseKey(item)
     const year = movieYear(item)
+    // Jumanji (1995) e Jumanji (2017): um "Jumanji" sem ano nao da para saber de qual e, fica sozinho.
+    const lone = year === null && (years.get(base)?.size ?? 0) > 1
     const list = groups.get(base) ?? groups.set(base, []).get(base)!
-    const g = list.find((x) => year === null || x.year === null || x.year === year)
+    const g = lone ? undefined : list.find((x) => year === null || x.year === null || x.year === year)
     if (g) {
       g.year ??= year
       return g.id

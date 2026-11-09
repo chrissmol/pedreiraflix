@@ -40,3 +40,9 @@ test('juntar de novo itens ja juntados (fileira de genero) nao repete versoes', 
   assert.equal(out.length, 1)
   assert.deepEqual(out[0].versions.map((x) => x.streamId).sort(), [1, 2, 3])
 })
+
+test('Jumanji 1995 e 2017 ficam separados, e um "Jumanji" sem ano nao entra em nenhum', () => {
+  const out = mergeVersions([m(1, 'Jumanji (1995)'), m(2, 'Jumanji (2017)'), m(3, 'Jumanji'), m(4, 'Jumanji [L] (2017)')])
+  assert.deepEqual(out.map((x) => x.streamId), [1, 2, 3])
+  assert.deepEqual(out[1].versions.map((x) => x.streamId), [2, 4])
+})
