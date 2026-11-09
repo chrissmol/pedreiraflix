@@ -61,7 +61,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
         {seeAllHref && (
           <Link
             to={seeAllHref}
-            className="brand-focus ml-1 rounded-full px-2.5 py-0.5 text-label-badge font-semibold text-brand-400 transition-colors hover:bg-surface-high hover:text-brand-300"
+            className="brand-focus ml-1 inline-flex items-center pointer-coarse:-my-3 pointer-coarse:min-h-11 rounded-full px-2.5 py-0.5 text-label-badge font-semibold text-brand-400 transition-colors hover:bg-surface-high hover:text-brand-300"
           >
             Ver tudo
           </Link>
