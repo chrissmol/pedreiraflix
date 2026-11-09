@@ -1,34 +1,62 @@
-import { itemKey } from './search.ts'
+import { displayTitle, movieYear, withoutYear } from './displayTitle.ts'
+import { searchKey } from './search.ts'
+
+type Named = { name: string; year?: string | null }
+
+const baseCache = new WeakMap<object, string>()
+function baseKey(item: Named): string {
+  let k = baseCache.get(item)
+  if (k === undefined) baseCache.set(item, (k = searchKey(withoutYear(displayTitle(item.name)))))
+  return k
+}
+
+/** Uma chave por obra para cada item: nome limpo mais o ano. O provedor poe o "(2026)" so em algumas copias ("Maquina de
+ * Guerra" e "Maquina de Guerra (2026)"): sem ano a copia entra na obra que ja tem ano; anos diferentes (refilmagens) ficam separados. */
+export function workKeys(items: Named[]): string[] {
+  const groups = new Map<string, { id: string; year: number | null }[]>()
+  return items.map((item) => {
+    const base = baseKey(item)
+    const year = movieYear(item)
+    const list = groups.get(base) ?? groups.set(base, []).get(base)!
+    const g = list.find((x) => year === null || x.year === null || x.year === year)
+    if (g) {
+      g.year ??= year
+      return g.id
+    }
+    list.push({ id: `${base} ${year ?? ''}${list.length ? ` #${list.length}` : ''}`, year })
+    return list[list.length - 1].id
+  })
+}
 
 /** O provedor cadastra a mesma obra mais de uma vez (dublado, legendado, 4K): sem os enfeites ("[L]", "[4K]"), que o
  * app tira dos nomes, os cartoes ficavam iguais lado a lado. Fica um cartao por obra (nome limpo, com o ano, para nao
  * juntar refilmagens); as outras ficam em `versions`, para escolher na pagina do titulo. Nao muda os itens recebidos:
- * eles ficam no cache e a mesma lista e juntada de novo a cada leitura. */
-export function mergeVersions<T extends { name: string; versions?: T[] }>(items: T[]): T[] {
+ * eles ficam no cache e a mesma lista e juntada de novo a cada leitura. Aceita itens ja juntados (fileiras que misturam
+ * categorias). */
+export function mergeVersions<T extends Named & { streamId?: number; seriesId?: number; versions?: T[] }>(items: T[]): T[] {
+  const keys = workKeys(items)
   const at = new Map<string, number>()
   const out: T[] = []
-  for (const item of items) {
-    const key = itemKey(item)
-    const i = at.get(key)
+  items.forEach((item, n) => {
+    const i = at.get(keys[n])
     if (i === undefined) {
-      at.set(key, out.length)
+      at.set(keys[n], out.length)
       out.push(item)
     } else {
-      out[i] = { ...out[i], versions: [...(out[i].versions ?? [out[i]]), item] }
+      const have = out[i].versions ?? [out[i]]
+      const idOf = (v: T) => v.streamId ?? v.seriesId
+      const extra = (item.versions ?? [item]).filter((v) => !have.some((h) => idOf(h) !== undefined && idOf(h) === idOf(v)))
+      if (extra.length) out[i] = { ...out[i], versions: [...have, ...extra] }
     }
-  }
+  })
   return out
 }
 
 /** Um cartao por obra numa lista que junta categorias (busca, "Adicionados recentemente"). */
-export function firstPerWork<T extends { name: string }>(items: T[]): T[] {
+export function firstPerWork<T extends Named>(items: T[]): T[] {
+  const keys = workKeys(items)
   const seen = new Set<string>()
-  return items.filter((item) => {
-    const key = itemKey(item)
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  return items.filter((_, i) => !seen.has(keys[i]) && seen.add(keys[i]))
 }
 
 const TAGS: [RegExp, string][] = [

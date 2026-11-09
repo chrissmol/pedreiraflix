@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMovieCatalog, useSeriesCatalog } from '../hooks/useCatalog'
-import { itemKey } from '../lib/search'
-import { versionLabel } from '../lib/versions'
+import { versionLabel, workKeys } from '../lib/versions'
 
 /** "Versoes": as outras vezes que o provedor cadastrou esta obra (dublado, legendado, 4K). Nas listas elas viram um
  * cartao so (lib/versions); aqui se escolhe qual abrir. Procura no catalogo todo, porque cada versao pode estar numa
@@ -24,9 +23,10 @@ function Versions({ items, id, path }: { items: { id: number; name: string }[]; 
   const versions = useMemo(() => {
     const self = items.find((i) => i.id === id)
     if (!self) return []
-    const key = itemKey(self)
+    const keys = workKeys(items)
+    const key = keys[items.indexOf(self)]
     const seen = new Set<number>()
-    return items.filter((i) => itemKey(i) === key && !seen.has(i.id) && seen.add(i.id))
+    return items.filter((i, n) => keys[n] === key && !seen.has(i.id) && seen.add(i.id))
   }, [items, id])
   if (versions.length < 2) return null
   return (

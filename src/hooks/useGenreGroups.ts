@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { movieGenreIndex } from '../lib/generos'
 import { groupByGenre } from '../lib/genres'
-import { firstPerWork } from '../lib/versions'
+import { firstPerWork, mergeVersions } from '../lib/versions'
 import { STREAMINGS, streamingGroupId, streamingIndex, streamingsInName } from '../lib/streaming'
 import type { CategoryGroup } from './useCatalog'
 
@@ -55,7 +55,8 @@ export function useGenreGroups<T extends Item>(
     const useIndex = kind === 'movie' && Object.keys(index).length > 0
     const source = useIndex ? groups.map((g) => ({ ...g, items: g.items.map((m) => enrich(m, index)) })) : groups
     // Com o indice do TMDB so os populares tem genero: os demais vao para "Outros", sem exigir uma fatia minima.
-    const byGenre = groupByGenre(source, useIndex ? 0 : undefined) ?? groups
+    // A mesma obra em categorias diferentes (cada uma ja juntada) vira um cartao so na fileira do genero.
+    const byGenre = (groupByGenre(source, useIndex ? 0 : undefined) ?? groups).map((g) => ({ ...g, items: mergeVersions(g.items) }))
     const latest = firstPerWork(groups.flatMap((g) => g.items).filter((m) => Number(m.added) > 0).sort((a, b) => Number(b.added) - Number(a.added))).slice(0, 100)
     const novidades: CategoryGroup<T>[] = latest.length
       ? [{ category: { categoryId: 'novidades', categoryName: latestTitle }, items: latest, loading: false, error: null }]
