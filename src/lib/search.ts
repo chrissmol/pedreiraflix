@@ -1,4 +1,5 @@
 import { displayTitle } from './displayTitle.ts'
+import { workKeys } from './versions.ts'
 
 /** Lowercases and strips accents so "Ação" matches a search for "acao". */
 export function normalizeText(value: string): string {
@@ -78,8 +79,10 @@ export function searchCatalog<T extends { name: string; streamId?: number; serie
   if (!query) return []
   const words = query.split(' ')
   const best = new Map<unknown, SearchHit<T>>()
+  const all = byWork ? groups.flatMap((g) => g.items) : []
+  const keys = byWork ? new Map(workKeys(all).map((k, i) => [all[i], k])) : null
   const keep = (item: T, r: number) => {
-    const id = byWork ? itemKey(item) : (item.streamId ?? item.seriesId ?? item.name)
+    const id = keys ? keys.get(item) : (item.streamId ?? item.seriesId ?? item.name)
     const prev = best.get(id)
     if (!prev || r < prev.rank) best.set(id, { item, rank: r })
   }
