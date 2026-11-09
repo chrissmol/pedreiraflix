@@ -31,6 +31,8 @@ export interface Competition {
   seeds: string[]
 }
 
+export const F1_SLUG = 'formula-1'
+
 // A ordem importa: o primeiro que casa vence ("serie a" do Brasil antes da italiana, eliminatorias antes da Copa).
 export const COMPETITIONS: Competition[] = [
   { slug: 'brasileirao-a', name: 'Brasileirão Série A', group: 'Brasil', test: /brasileir\w*( serie)? a\b|brazil\w* serie a|^brasileirao$|^serie a.*brasil/, seeds: ['Flamengo', 'Palmeiras', 'Corinthians', 'São Paulo', 'Fluminense', 'Botafogo', 'Cruzeiro', 'Atlético Mineiro'] },
@@ -49,6 +51,8 @@ export const COMPETITIONS: Competition[] = [
   { slug: 'copa-do-mundo', name: 'Copa do Mundo', group: 'Seleções', test: /copa do mundo|world cup|fifa/, seeds: ['Brasil', 'Argentina', 'França', 'Alemanha', 'Espanha', 'Inglaterra', 'Portugal', 'Itália'] },
   { slug: 'eurocopa', name: 'Eurocopa', group: 'Seleções', test: /eurocopa|european championship|euro 20/, seeds: ['França', 'Alemanha', 'Espanha', 'Inglaterra', 'Portugal', 'Itália', 'Holanda', 'Bélgica'] },
   { slug: 'copa-america', name: 'Copa América', group: 'Seleções', test: /copa america/, seeds: ['Brasil', 'Argentina', 'Uruguai', 'Colômbia', 'Equador', 'Paraguai', 'Chile', 'México'] },
+  // Nao e futebol: o card vem do /api/f1 (calendario da proxima etapa), nao da Mol TV API; `test` nunca casa.
+  { slug: F1_SLUG, name: 'Fórmula 1', group: 'Automobilismo', test: /a^/, seeds: [] },
   { slug: 'nba', name: 'NBA', group: 'EUA', test: /^nba\b|national basketball/, seeds: ['Lakers', 'Celtics', 'Warriors', 'Knicks', 'Heat', 'Bucks', 'Nuggets', 'Mavericks'] },
   { slug: 'nfl', name: 'NFL', group: 'EUA', test: /^nfl\b|national football/, seeds: ['Chiefs', 'Cowboys', '49ers', 'Eagles', 'Patriots', 'Packers', 'Bills', 'Ravens'] },
 ]
