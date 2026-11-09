@@ -91,3 +91,24 @@ test('streaming: setas descem entre fileiras de genero e OK abre o titulo', asyn
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/movies\/\d+/)
 })
+
+// Chris (9/11/2026): categoria do provedor mistura plataformas ("Séries NETFLIX PLUS" com séries da Max); o TMDB manda.
+test('streaming: o TMDB vale mais que o nome da categoria do provedor', async ({ page }) => {
+  await page.route(/\/api\/xtream\?.*action=get_series_categories/, async (route) => {
+    const cats = await (await route.fetch()).json()
+    await route.fulfill({ json: cats.map((c: { category_name: string }) => ({ ...c, category_name: 'Séries NETFLIX PLUS' })) })
+  })
+  await page.route(/\/api\/xtream\?.*action=get_series(&|$)/, async (route) => {
+    const lista = await (await route.fetch()).json()
+    await route.fulfill({ json: lista.map((m: { series_id: number }) => ({ ...m, tmdb: String(m.series_id) })) })
+  })
+  // 50 é da Max pelo TMDB, 51 não está em nenhuma lista: 50 sai da Netflix, 51 fica (só tem o nome da categoria).
+  await page.route('**/api/streaming?*', (route) => {
+    const p = new URL(route.request().url()).searchParams.get('provider')
+    return route.fulfill({ json: { ids: p === '1899' ? [50] : [] } })
+  })
+  await login(page)
+  await page.goto('/series?category=s:netflix')
+  await expect(page.getByRole('button', { name: /Outra Série/ }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /Série Dramática/ })).toHaveCount(0)
+})
