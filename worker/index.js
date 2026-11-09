@@ -188,7 +188,8 @@ async function xtream(request, url) {
 // Retentar aqui transforma uma falha passageira do provedor numa resposta um pouco mais lenta, em vez de
 // um erro que a TV nao tenta de novo. GET e idempotente, inclusive com Range, entao repetir e seguro.
 // Nao se retenta 4xx (nao adianta) nem 429 (seria insistir em quem ja pediu para parar).
-const RETRY_STATUSES = new Set([502, 503, 504])
+// 520-530: erros da Cloudflare na frente do provedor (origem fora do ar, DNS da origem falhando).
+const RETRY_STATUSES = new Set([502, 503, 504, 520, 521, 522, 523, 524, 530])
 const UPSTREAM_ATTEMPTS = 3
 
 async function fetchUpstream(target, request) {
@@ -289,6 +290,8 @@ async function stream(request, url, env) {
     headers.delete('content-length')
     return new Response(text, { status: up.status, headers })
   }
+  // Prova de que o erro veio do provedor e nao do Worker (o Worker nunca gera 52x).
+  if (up.status >= 500) headers.set('x-upstream-status', String(up.status))
   return new Response(up.body, { status: up.status, headers })
 }
 

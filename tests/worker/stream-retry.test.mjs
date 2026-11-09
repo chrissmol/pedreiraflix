@@ -95,3 +95,11 @@ test('lista m3u8 redirecionada pelo provedor volta como redirecionamento ao nave
   assert.equal(res.status, 302)
   assert.equal(res.headers.get('location'), `/api/stream?url=${encodeURIComponent('https://provedor.example.com/hls/tok123/c.m3u8')}`)
 })
+
+test('530 do provedor e retentado e, se persistir, chega marcado com x-upstream-status', async () => {
+  const calls = stubFetch([() => new Response('error code: 1016', { status: 530 })])
+  const res = await ask()
+  assert.equal(res.status, 530)
+  assert.equal(res.headers.get('x-upstream-status'), '530')
+  assert.equal(calls.length, 3)
+})
