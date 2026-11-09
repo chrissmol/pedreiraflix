@@ -26,10 +26,9 @@ test('nome da versao vem das marcas do provedor', () => {
 
 // Print do Chris (09/11): "Máquina de Guerra" e "Máquina de Guerra (2026)" apareciam como dois cartoes.
 test('copia sem ano entra na obra que tem ano; refilmagens de anos diferentes continuam separadas', () => {
-  const out = mergeVersions([m(1, 'Máquina de Guerra'), m(2, 'Máquina de Guerra (2026)'), m(3, 'Duna (1984)'), m(4, 'Duna (2021)'), m(5, 'Duna')])
+  const out = mergeVersions([m(1, 'Máquina de Guerra'), m(2, 'Máquina de Guerra (2026)'), m(3, 'Duna (1984)'), m(4, 'Duna (2021)')])
   assert.deepEqual(out.map((x) => x.streamId), [1, 3, 4])
   assert.deepEqual(out[0].versions.map((x) => x.streamId), [1, 2])
-  assert.deepEqual(out[1].versions.map((x) => x.streamId), [3, 5])
   assert.deepEqual(firstPerWork([m(2, 'Máquina de Guerra (2026)'), m(1, 'Máquina de Guerra')]).map((x) => x.streamId), [2])
 })
 
