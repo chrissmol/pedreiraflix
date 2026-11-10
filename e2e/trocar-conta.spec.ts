@@ -79,3 +79,54 @@ test.describe('TV', () => {
     await expect(page).toHaveURL(/\/$/)
   })
 })
+
+async function esquecerContas(page: Page, qtd: number) {
+  await abrirTrocarConta(page)
+  for (let i = 0; i < qtd; i++) await page.getByRole('button', { name: /^Esquecer conta/ }).first().click()
+}
+
+test('Esquecer a ultima conta salva mostra o formulario de conectar, sem recarregar', async ({ page }) => {
+  await login(page)
+  await esquecerContas(page, 1)
+  await expect(page.getByRole('heading', { name: 'Conecte sua conta ou lista' })).toBeVisible()
+  await expect(page.getByLabel('Endereço do servidor')).toBeVisible()
+})
+
+test('Esquecer so uma de duas contas continua na lista das salvas', async ({ page }) => {
+  await login(page)
+  await abrirTrocarConta(page)
+  await page.getByRole('button', { name: '+ Usar outra conta' }).click()
+  await page.getByRole('button', { name: 'Link M3U' }).click()
+  await page.getByLabel('Link da playlist M3U').fill(PLAYLIST_URL)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await esquecerContas(page, 1)
+  await expect(page.getByRole('heading', { name: 'Escolha uma conta salva' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Esquecer conta/ })).toHaveCount(1)
+})
+
+test.describe('TV esquecer', () => {
+  test.use({
+    userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7633) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36',
+    viewport: { width: 960, height: 540 },
+  })
+  test('TV: esquecer a ultima conta com OK cai no formulario de conectar', async ({ page }) => {
+    await seedSession(page)
+    await page.addInitScript((creds) => {
+      const account = { id: `xtream|${creds.baseUrl}|${creds.username}`, lastUsedAt: 1, credentials: { type: 'xtream', ...creds } }
+      localStorage.setItem('iptv-accounts', JSON.stringify({ state: { accounts: [account] }, version: 1 }))
+    }, MOCK)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Conta', exact: true }).focus()
+    await page.keyboard.press('Enter')
+    const trocar = page.getByRole('button', { name: 'Trocar conta' })
+    for (let i = 0; i < 20 && !(await trocar.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: /^Esquecer conta/ }).focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('heading', { name: 'Conecte sua conta ou lista' })).toBeVisible()
+    await expect(page.getByLabel('Endereço do servidor')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await expect(page.locator(':focus')).toBeVisible()
+  })
+})

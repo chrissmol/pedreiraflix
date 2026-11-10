@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
+import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Calendar, Eye, EyeOff, FileArrowDown, ListIcon, Lock, Pencil, Shield, Trash, Tv, User } from '../components/icons'
 import { normalizeCredentials, signIn, signInM3u, signInSavedAccount } from '../lib/session'
@@ -76,6 +76,15 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
+  // Esquecer a ultima conta tira da tela o botao focado; sem mover o foco, na TV as setas nao acham mais nada.
+  const refocusForm = useRef(false)
+  useEffect(() => {
+    if (accounts.length === 0 && refocusForm.current) {
+      refocusForm.current = false
+      document.getElementById('server')?.focus()
+    }
+  }, [accounts.length])
+
   const [showForm, setShowForm] = useState(accounts.length === 0)
   const [method, setMethod] = useState<LoginMethod>('xtream')
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -215,7 +224,10 @@ export default function LoginPage() {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => removeAccount(account.id)}
+                    onClick={() => {
+                      refocusForm.current = accounts.length === 1
+                      removeAccount(account.id)
+                    }}
                     aria-label={`Esquecer conta ${accountLabel(account)}`}
                     title="Esquecer esta conta"
                     className="shrink-0 rounded-2xl border border-outline-soft bg-surface-container px-3 text-on-surface-muted transition-colors hover:border-live/40 hover:text-live sm:px-3.5"
@@ -250,7 +262,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {showForm && (
+        {(showForm || accounts.length === 0) && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
             <div className="mb-5 grid grid-cols-3 gap-1 rounded-full sm:mb-6 border border-outline-soft bg-surface-container p-1">
