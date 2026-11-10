@@ -38,8 +38,10 @@ export default function LiveChannelPanel({ categories, channels, currentId, onPi
   useEffect(() => {
     const step = (delta: number) => setIndex((i) => (i + delta + withChannels.length) % withChannels.length)
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') onClose()
-      else if (e.key === 'ArrowLeft') step(-1)
+      if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') {
+        e.preventDefault() // tratado aqui: o Voltar geral da TV (spatialNav) nao volta mais uma tela
+        onClose()
+      } else if (e.key === 'ArrowLeft') step(-1)
       else if (e.key === 'ArrowRight') step(1)
       else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         const items = Array.from(listRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])

@@ -60,6 +60,7 @@ export default function EpisodesPanel({ series, currentId, onPick, onClose }: Ep
     }
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') {
+        e.preventDefault() // tratado aqui: o Voltar geral da TV (spatialNav) nao volta mais uma tela
         if (picking) setPicking(false)
         else onClose()
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
