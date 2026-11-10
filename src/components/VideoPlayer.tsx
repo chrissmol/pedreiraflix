@@ -2,7 +2,7 @@ import type Hls from 'hls.js'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
-import { isTv } from '../lib/device'
+import { isInstalledApp, isTv } from '../lib/device'
 import { usePlayerPrefs } from '../store/playerPrefs'
 import { useActiveProfileId } from '../store/profiles'
 import { VideoPlayerBottomControls } from './VideoPlayerBottomControls'
@@ -209,6 +209,11 @@ export default function VideoPlayer({
       if (videoRef.current && !videoRef.current.paused) setControlsVisible(false)
     }, 3000)
   }
+  // TV fora do app instalado (navegador da TV): entra em tela cheia sozinho, com a ativacao do OK que abriu o video.
+  // No app (APK, casca da Samsung) a pagina ja e a tela inteira. Sem ativacao o navegador recusa e fica como esta.
+  useEffect(() => {
+    if (isTv && !isInstalledApp && !document.fullscreenElement) void containerRef.current?.requestFullscreen?.().catch(() => {})
+  }, [])
   // TV: controles sumiram com o foco num botao invisivel -> solta o foco, para as setas voltarem a pular/zapear.
   useEffect(() => {
     if (isTv && !controlsVisible && document.activeElement instanceof HTMLElement && containerRef.current?.contains(document.activeElement)) {

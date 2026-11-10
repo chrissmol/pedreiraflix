@@ -98,6 +98,9 @@ export function useVideoPlayerKeys({
         if (e.key === 'Enter' || (!isLive && (dir === 'up' || dir === 'down'))) {
           e.preventDefault()
           wakeControls()
+          // OK direto no video pausa/retoma na hora, como na Netflix (antes o primeiro OK so mostrava os controles e
+          // era preciso um segundo para pausar). No ao vivo o OK so mostra os controles.
+          if (e.key === 'Enter' && !isLive) togglePlay()
           // Ha dois Play/Pause (o do centro so aparece no toque); o primeiro do DOM pode estar escondido e nao pega foco.
           const playPause = Array.from(containerRef.current?.querySelectorAll<HTMLElement>('[aria-label="Play/Pause"]') ?? []).find((el) => el.offsetParent)
           if (playPause) playPause.focus()

@@ -1,3 +1,4 @@
+import { isTv } from '../lib/device'
 import { Pause, Play, SkipNext, SkipSeconds, VolumeMute } from './icons'
 import { SKIP_SECONDS } from './videoPlayerUtils'
 
@@ -54,6 +55,8 @@ export function VideoPlayerCenterOverlays({
             <p className="truncate text-label-md text-white">{next.label}</p>
             <div className="flex gap-2">
               <button
+                // TV: o aviso ja nasce com o foco em Reproduzir, para o OK ir ao proximo episodio (como na Netflix).
+                autoFocus={isTv}
                 onClick={onPlayNext}
                 className="btn-primary h-10 flex-1 px-4 sm:px-4"
               >
