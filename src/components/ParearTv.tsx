@@ -4,7 +4,7 @@ import { decifrar, formatarCodigo, novoPar, type PareamentoCifrado, type Pareame
 
 /** TV: mostra o QR e o codigo curto, pergunta ao Worker ate o celular confirmar e entrega a conta ja aberta.
  * Sem WebCrypto (navegador de TV antigo) ou sem rede some, e a pessoa digita como sempre. */
-export default function ParearTv({ onDone }: { onDone: (p: PareamentoPayload) => void }) {
+export default function ParearTv({ onDone, onOff }: { onDone: (p: PareamentoPayload) => void; onOff?: () => void }) {
   const [par, setPar] = useState<{ code: string; expiresAt: number } | null>(null)
   const [round, setRound] = useState(0) // sobe quando expira: pede um codigo novo sozinho
   const [off, setOff] = useState(!temCripto())
@@ -12,6 +12,10 @@ export default function ParearTv({ onDone }: { onDone: (p: PareamentoPayload) =>
   useEffect(() => {
     done.current = onDone
   })
+  // Sem como parear, quem chama mostra o formulario no lugar do QR.
+  useEffect(() => {
+    if (off) onOff?.()
+  }, [off, onOff])
 
   useEffect(() => {
     if (off) return

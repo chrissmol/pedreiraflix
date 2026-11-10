@@ -46,13 +46,16 @@ test('TV mostra QR e codigo; o celular confirma e a TV entra sem digitar nada', 
 test('TV sem login ainda deixa digitar usuario e senha como antes', async ({ page }) => {
   await page.goto('/login')
   await expect(page.getByTestId('parear-qr')).toBeVisible()
-  await expect(page.getByLabel('Endereço do servidor')).toBeAttached()
+  expect(await page.evaluate(() => document.querySelector('main')!.scrollHeight - document.querySelector('main')!.clientHeight)).toBeLessThanOrEqual(0)
+  await page.getByRole('button', { name: 'Digitar usuário e senha' }).click()
+  await expect(page.getByLabel('Endereço do servidor')).toBeVisible()
 })
 
 test('com o codigo do grupo ligado, o QR da TV entrega tambem o grupo', async ({ page, browser }) => {
   await page.route('**/api/grupo', (route) => route.fulfill({ json: { required: true, ok: route.request().headers()['x-grupo'] === 'hash-do-grupo' } }))
   await page.goto('/')
   await expect(page.getByRole('textbox', { name: 'Código do grupo' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(540)
   const code = (await page.getByTestId('parear-codigo').innerText()).replace('-', '')
 
   const phone = await celular(browser, 'hash-do-grupo')

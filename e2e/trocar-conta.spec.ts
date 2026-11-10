@@ -140,6 +140,7 @@ test.describe('TV login sem rolagem', () => {
       })
       const page = await ctx.newPage()
       await page.goto('/login')
+      await page.getByRole('button', { name: 'Digitar usuário e senha' }).click() // a TV abre no QR
       for (const metodo of ['Usuário/senha', 'Link M3U', 'Arquivo M3U']) {
         await page.getByRole('button', { name: metodo }).click()
         const folga = await page.evaluate(() => {
