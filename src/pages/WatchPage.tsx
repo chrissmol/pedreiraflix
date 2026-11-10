@@ -370,20 +370,21 @@ function OnlineWatchPage({ kind, id }: { kind?: 'live' | 'movie' | 'series' | 'o
         onChannelDown={kind === 'live' && !isCatchup && liveChannels.length > 1 ? zapPrev : undefined}
         onShowChannels={kind === 'live' && !isCatchup && liveChannels.length > 1 ? openChannels : undefined}
         onLastChannel={kind === 'live' && !isCatchup && lastChannelData ? goLast : undefined}
-      />
-      <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
-      {showEpisodes && kind === 'series' && seriesDetails && id && (
-        <EpisodesPanel series={seriesDetails} currentId={id} onClose={closeChannels} onPick={goToEpisode} />
-      )}
-      {showChannels && kind === 'live' && liveChannels.length > 0 && (
-        <LiveChannelPanel
-          categories={liveCategories}
-          channels={liveChannels}
-          currentId={Number(id)}
-          onClose={closeChannels}
-          onPick={(ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true })}
-        />
-      )}
+      >
+        <ChannelNumberOverlay typed={channelNumber.typed} missing={channelNumber.missing} />
+        {showEpisodes && kind === 'series' && seriesDetails && id && (
+          <EpisodesPanel series={seriesDetails} currentId={id} onClose={closeChannels} onPick={goToEpisode} />
+        )}
+        {showChannels && kind === 'live' && liveChannels.length > 0 && (
+          <LiveChannelPanel
+            categories={liveCategories}
+            channels={liveChannels}
+            currentId={Number(id)}
+            onClose={closeChannels}
+            onPick={(ch) => navigate(`/watch/live/${ch.streamId}?name=${encodeURIComponent(ch.name)}`, { replace: true })}
+          />
+        )}
+      </VideoPlayer>
     </div>
   )
 }

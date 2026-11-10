@@ -58,7 +58,7 @@ export default function LiveChannelPanel({ categories, channels, currentId, onPi
   }, [withChannels.length, onClose])
 
   return (
-    <div className="absolute inset-0 z-40 flex" role="dialog" aria-modal="true" aria-label="Lista de canais">
+    <div data-controls className="absolute inset-0 z-40 flex" role="dialog" aria-modal="true" aria-label="Lista de canais">
       <div className="anim-slide-left flex h-full w-[85%] max-w-sm flex-col bg-black/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="flex items-center gap-1 border-b border-white/10 p-2">
           <button onClick={() => setIndex((i) => (i - 1 + withChannels.length) % withChannels.length)} aria-label="Categoria anterior" className="player-btn h-11 w-11 shrink-0" tabIndex={-1}>

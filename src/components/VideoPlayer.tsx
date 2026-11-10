@@ -1,5 +1,5 @@
 import type Hls from 'hls.js'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useAirPlay } from '../hooks/useAirPlay'
 import { castMedia, ensureCastSdk } from '../lib/cast'
 import { isTv } from '../lib/device'
@@ -51,6 +51,8 @@ interface VideoPlayerProps {
   onShowChannels?: () => void
   /** Live only: volta ao ultimo canal visto (alterna entre os dois ultimos) — tecla L, MediaLast e botao. */
   onLastChannel?: () => void
+  /** Paineis por cima do video (episodios, canais): ficam dentro do container para continuarem visiveis em tela cheia. */
+  children?: ReactNode
 }
 
 export default function VideoPlayer({
@@ -68,6 +70,7 @@ export default function VideoPlayer({
   next,
   previous,
   onShowEpisodes,
+  children,
   onChannelUp,
   onChannelDown,
   onShowChannels,
@@ -619,6 +622,7 @@ export default function VideoPlayer({
           onToggleFullscreen={toggleFullscreen}
         />
       )}
+      {children}
     </div>
   )
 }
