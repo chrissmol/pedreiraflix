@@ -26,6 +26,7 @@ export function VideoPlayerZappingControls({
   return (
     <div
       data-controls
+      data-nav-group
       className={`absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 transition-opacity duration-200 sm:right-4 ${
         controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}

@@ -38,7 +38,8 @@ test('TV: so com as setas da para chegar nos posteres, no cabecalho e abrir um f
     await page.waitForTimeout(250)
   }
   expect(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
-  for (let i = 0; i < 6 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowLeft')
+  // Descer dos filtros cai no primeiro cartao da fileira: dali segue para a direita ate o filme.
+  for (let i = 0; i < 6 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowRight')
   expect(await focado()).toMatch(/Filme Explosivo/)
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/movies\/1$/)
@@ -501,8 +502,8 @@ test('TV: so com as setas e OK da para limpar o historico de busca', async ({ pa
   await page.goto('/search')
   const limpar = page.getByRole('button', { name: 'Limpar', exact: true })
   await expect(limpar).toBeVisible()
-  // O foco comeca no campo; descer cai nos humores, subir pela esquerda volta as buscas e a direita chega no Limpar.
-  for (const tecla of ['ArrowDown', 'ArrowLeft', 'ArrowLeft', 'ArrowLeft', 'ArrowUp', 'ArrowRight']) await page.keyboard.press(tecla)
+  // O foco comeca no campo; descer cai na busca recente (a linha logo abaixo) e a direita chega no Limpar.
+  for (const tecla of ['ArrowDown', 'ArrowRight']) await page.keyboard.press(tecla)
   await expect(limpar).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(limpar).toHaveCount(0)
@@ -545,13 +546,16 @@ test('TV: cima/baixo entre fileiras lembram a coluna e a fileira nao tem "Ver tu
   expect(await onde()).toEqual(origem) // voltou ao mesmo cartao, mesmo que a fileira de baixo seja mais curta
 })
 
-test('TV: do menu lateral a seta para a direita entra no conteudo e para baixo percorre o menu ate sair', async ({ page }) => {
+test('TV: no menu lateral para baixo percorre o menu e para no fim; a direita entra no conteudo', async ({ page }) => {
   await page.goto('/movies')
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
   await page.keyboard.press('ArrowDown')
   for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowLeft')
   expect(await page.evaluate(() => !!document.activeElement?.closest('header'))).toBe(true)
-  for (let i = 0; i < 12 && (await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowDown')
+  // No fim do menu a seta para baixo nao joga o foco no catalogo (como nos apps de streaming): so a direita entra.
+  for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toBeFocused()
+  await page.keyboard.press('ArrowRight')
   expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 })
 

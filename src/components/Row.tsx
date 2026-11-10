@@ -42,7 +42,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
     const scroller = scrollerRef.current
     if (!scroller) return
-    const focusables = Array.from(scroller.querySelectorAll<HTMLElement>('button, [href], [tabindex]'))
+    const focusables = Array.from(scroller.querySelectorAll<HTMLElement>('button, [href], [tabindex]')).filter((el) => el.tabIndex >= 0)
     const currentIndex = focusables.indexOf(document.activeElement as HTMLElement)
     if (currentIndex === -1) return
     const next = focusables[currentIndex + (e.key === 'ArrowRight' ? 1 : -1)]
@@ -50,7 +50,10 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
     if (!next) return
     e.preventDefault()
     next.focus()
-    next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    // TV: o foco fica sempre na mesma posicao (a primeira da fileira) e a fileira corre por baixo, como nos apps de
+    // streaming. Com o cartao no meio, cada fileira parava num ponto e subir/descer trocava de coluna.
+    if (isTv) scroller.scrollTo({ left: next.offsetLeft - focusables[0].offsetLeft, behavior: 'smooth' })
+    else next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }
 
   return (
