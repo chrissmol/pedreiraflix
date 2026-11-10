@@ -19,7 +19,8 @@
     "testar-tudo": "node scripts/testar-tudo.mjs",
     "checar-producao": "node scripts/checar-producao.mjs",
     "estressar-web": "node scripts/estressar-web.mjs",
-    "medir-desempenho": "node scripts/medir-desempenho.mjs"
+    "medir-desempenho": "node scripts/medir-desempenho.mjs",
+    "simular-tv": "node scripts/simular-tv.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
