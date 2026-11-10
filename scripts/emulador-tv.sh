@@ -18,6 +18,10 @@ if ! avdmanager list avd | grep -q "Name: pftv"; then
   echo no | avdmanager create avd -n pftv -k "$IMG" -d tv_1080p --force
 fi
 
+# O AVD de TV vem com hw.keyboard=no e o emulador ignorava o teclado do Mac (medido no Mac do Chris, 10/11).
+CFG="$ANDROID_AVD_HOME/pftv.avd/config.ini"
+sed -i.bak "s/^hw.keyboard *= *.*/hw.keyboard = yes/" "$CFG"
+grep -q "^hw.keyboard" "$CFG" || echo "hw.keyboard = yes" >> "$CFG"
 adb start-server >/dev/null
 if ! adb devices | grep -q "emulator-.*device"; then
   nohup emulator -avd pftv -no-audio -no-boot-anim -gpu auto >/tmp/emulador-tv.log 2>&1 &
