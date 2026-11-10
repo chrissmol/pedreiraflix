@@ -42,7 +42,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
     const scroller = scrollerRef.current
     if (!scroller) return
-    const focusables = Array.from(scroller.querySelectorAll<HTMLElement>('button, [href], [tabindex]'))
+    const focusables = Array.from(scroller.querySelectorAll<HTMLElement>('button, [href], [tabindex]')).filter((el) => el.tabIndex >= 0)
     const currentIndex = focusables.indexOf(document.activeElement as HTMLElement)
     if (currentIndex === -1) return
     const next = focusables[currentIndex + (e.key === 'ArrowRight' ? 1 : -1)]

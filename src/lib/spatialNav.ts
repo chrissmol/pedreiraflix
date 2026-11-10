@@ -61,8 +61,8 @@ function visible(el: HTMLElement) {
 // seguidas (passar por uma fileira curta nao faz o foco "escorregar" para a esquerda).
 let column: { el: Element; x: number } | null = null
 function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean {
-  const own = active.parentElement
-  if (!own?.matches('[data-row]')) return false
+  const own = active.closest<HTMLElement>('[data-row]') // o cartao pode estar dentro de um wrapper (Continuar assistindo)
+  if (!own) return false
   const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]')).filter((r) => r.querySelector(FOCUSABLE) && visible(r))
   const i = rows.indexOf(own)
   const target = rows[i + (direction === 'down' ? 1 : -1)]
@@ -71,6 +71,7 @@ function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean 
   let best: HTMLElement | null = null
   let gap = Infinity
   for (const el of target.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+    if (el.tabIndex < 0) continue
     const c = center(el).x
     if (c < 0 || c > innerWidth) continue // so cartoes que aparecem na tela
     if (Math.abs(c - x) < gap) {
@@ -88,7 +89,7 @@ function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean 
 export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
   // Painel aberto (Filtros): as setas andam so dentro dele, nao pelo catalogo escondido atras.
   const modal = document.querySelector('[aria-modal="true"]')
-  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => visible(el) && (!modal || modal.contains(el)))
+  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.tabIndex >= 0 && visible(el) && (!modal || modal.contains(el)))
   const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
   if (!active || !all.includes(active)) {
     // Primeira seta: o primeiro item do conteudo (nao o logo do cabecalho).

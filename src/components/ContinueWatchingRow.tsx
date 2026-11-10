@@ -6,6 +6,7 @@ import Row from './Row'
 import { formatRemaining } from './videoPlayerUtils'
 import { progressFor, useLibraryStore } from '../store/library'
 import { useActiveProfileId } from '../store/profiles'
+import { isTv } from '../lib/device'
 
 interface ContinueWatchingRowProps {
   /** Restricts the row to one kind (Filmes/Séries pages); omit to show everything (Home). */
@@ -34,7 +35,17 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
   return (
     <Row title="Continuar assistindo">
       {items.map((p) => (
-        <div key={`${p.kind}-${p.id}`} className="group relative shrink-0">
+        <div
+          key={`${p.kind}-${p.id}`}
+          className="group relative shrink-0"
+          // TV: o X nao e parada de foco; a tecla Menu do controle (keyCode 82) abre a remocao.
+          onKeyDown={(e) => {
+            if (isTv && (e.key === 'ContextMenu' || e.keyCode === 82)) {
+              e.preventDefault()
+              setRemoveTarget({ key: `${p.kind}-${p.id}`, name: p.name })
+            }
+          }}
+        >
           <PosterCard
             title={p.name}
             image={p.image}
@@ -55,6 +66,7 @@ export default function ContinueWatchingRow({ kind }: ContinueWatchingRowProps) 
             }}
             // Area de toque de 44px (o circulo visivel continua pequeno): com 28px o dedo errava e abria o
             // titulo em vez de remover (estresse do APK, 08/10).
+            tabIndex={isTv ? -1 : undefined}
             className="group/x absolute right-0 top-0 z-10 flex h-11 w-11 items-center justify-center"
             title="Remover de continuar assistindo"
             aria-label="Remover de continuar assistindo"
