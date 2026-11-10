@@ -119,9 +119,17 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
     seen.add(target)
     const to = target.getBoundingClientRect()
     let main = horizontal ? (sign > 0 ? to.left - from.right : from.left - to.right) : sign > 0 ? to.top - from.bottom : from.top - to.bottom
-    // Um dentro do outro (o microfone dentro do campo de busca): ai vale de que lado esta o centro.
-    const inside = (a: DOMRect, b: DOMRect) => a.left >= b.left && a.right <= b.right && a.top >= b.top && a.bottom <= b.bottom
-    if (inside(to, from) || inside(from, to)) main = ((horizontal ? to.left + to.width / 2 - from.left - from.width / 2 : to.top + to.height / 2 - from.top - from.height / 2) * sign > 8 ? 0 : -9)
+    // Bordas que se sobrepoem (quadros do mosaico encostados, o microfone dentro do campo de busca): vale o centro.
+    const overlap = horizontal ? to.left < from.right && to.right > from.left : to.top < from.bottom && to.bottom > from.top
+    if (main < -8 && overlap) {
+      const entre = (horizontal ? to.left + to.width / 2 - from.left - from.width / 2 : to.top + to.height / 2 - from.top - from.height / 2) * sign
+      // So vale se o alvo avanca de verdade naquela direcao (quadro vizinho encostado) ou esta todo dentro do atual
+      // (o microfone dentro do campo de busca). Sem isso, um botao atras de um quadro grande "parecia" estar ao lado.
+      const avanca = (horizontal ? (sign > 0 ? to.right - from.right : from.left - to.left) : sign > 0 ? to.bottom - from.bottom : from.top - to.top) > 8
+      const dentro = to.left >= from.left && to.right <= from.right && to.top >= from.top && to.bottom <= from.bottom
+      const cruzado = horizontal ? to.top < from.bottom && to.bottom > from.top : to.left < from.right && to.right > from.left
+      main = entre > 8 && cruzado && (avanca || dentro) ? entre : -9 // sem sobrepor tambem no outro eixo, seria um salto diagonal
+    }
     if (main < -8) continue
     const cross = Math.max(0, horizontal ? Math.max(to.top - from.bottom, from.top - to.bottom) : Math.max(to.left - from.right, from.left - to.right))
     // Para o lado so vale a mesma linha: no fim da linha a seta nao faz nada, em vez de cair na linha de baixo ou de cima.
