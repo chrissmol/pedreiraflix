@@ -6,7 +6,6 @@ import { Check } from './icons'
 interface DetailHeroProps {
   title: string
   backdrop: string | null
-  poster: string | null
   /** Selos curtos ao lado da nota: ano, duracao, "3 temporadas"... */
   chips: string[]
   /** Unica nota exibida (o Chris preferiu so o IMDb); sem ela, nenhuma nota aparece. */
@@ -41,8 +40,8 @@ const RATING_COLORS: Record<string, string> = {
 }
 
 /** Topo das paginas de filme e de serie no layout do Stitch: fundo em tela cheia, selos, genero em
- * destaque, titulo grande, sinopse, creditos, botoes em pilula e o poster a direita no desktop. */
-export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRating, tmdbRating, chips, genre, plot, credits, cast, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
+ * destaque, titulo grande, sinopse, creditos, botoes em pilula. */
+export default function DetailHero({ title: rawTitle, backdrop, imdbRating, tmdbRating, chips, genre, plot, credits, cast, actions, footnote, status, logo, certification, plotNote }: DetailHeroProps) {
   // Sem os enfeites do provedor ("[L]", ano repetido), como no destaque e nos posteres.
   const title = withoutYear(displayTitle(rawTitle))
   const shownCredits = credits.filter((c) => c.value)
@@ -132,13 +131,6 @@ export default function DetailHero({ title: rawTitle, backdrop, poster, imdbRati
           {cast}
           {footnote}
         </div>
-        {poster && (
-          <img
-            src={poster}
-            alt={title}
-            className="ml-auto hidden w-56 shrink-0 rounded-2xl border border-outline-soft shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] lg:block"
-          />
-        )}
       </div>
     </section>
   )

@@ -159,7 +159,7 @@ test('recovers from a stray first autoplay rejection instead of getting stuck on
 test('posters served from a non-proxy-friendly host are routed through our own proxy', async ({ page }) => {
   // "Corrida Final" (movie id 2) is seeded with a real http:// image URL in the mock panel, instead of
   // the data: URIs every other fixture uses — see e2e/mock-xtream.mjs.
-  await page.goto('/movies/2')
+  await page.goto('/movies')
   const poster = page.locator('img[alt="Corrida Final"]').first()
   await expect(poster).toBeVisible()
   const src = await poster.getAttribute('src')

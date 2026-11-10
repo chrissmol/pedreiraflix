@@ -157,7 +157,6 @@ export default function SeriesDetailPage() {
       <DetailHero
         title={series.name}
         backdrop={backdrop}
-        poster={series.cover}
         imdbRating={tmdb?.imdbRating ?? null}
         tmdbRating={tmdb?.rating}
         logo={tmdb?.logo}

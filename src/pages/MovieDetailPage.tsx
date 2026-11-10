@@ -108,7 +108,6 @@ export default function MovieDetailPage() {
       <DetailHero
         title={movie.name}
         backdrop={backdrop}
-        poster={movie.streamIcon}
         imdbRating={tmdb?.imdbRating}
         tmdbRating={tmdb?.rating}
         logo={tmdb?.logo}
