@@ -184,7 +184,8 @@ export function VideoPlayerBottomControls({
               <Episodes className="h-5 w-5" />
             </button>
           )}
-          {fsSupported && (
+          {/* Na TV o player ja ocupa a tela toda: o botao era so mais uma parada das setas. */}
+          {fsSupported && !isTv && (
             <button onClick={onToggleFullscreen} className="player-btn bg-transparent" aria-label="Tela cheia">
               {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
             </button>

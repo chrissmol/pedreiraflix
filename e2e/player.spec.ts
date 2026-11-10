@@ -239,3 +239,20 @@ test('o idioma de audio e a legenda escolhidos valem para o proximo video do per
   await page.getByRole('button', { name: 'Áudio' }).click()
   await expect(page.getByRole('button', { name: 'English' })).toHaveClass(/menu-option-active/)
 })
+
+// Auditoria da TV (10/11): pausar e pular 10 s religava o video sozinho (o `canplay` do salto chamava o autoplay).
+test('pausado, pular 10 s deixa o video pausado', async ({ page }) => {
+  await page.goto('/movies/1')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  const video = page.locator('video')
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused && v.currentTime > 0.5)).toBe(true)
+  await page.keyboard.press('k')
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
+  const t = await video.evaluate((v: HTMLVideoElement) => v.currentTime)
+  await page.keyboard.press('ArrowRight')
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(t + 5)
+  await page.waitForTimeout(800) // tempo de o `canplay` do salto chegar
+  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
+  await page.keyboard.press('k') // o play de quem assiste retoma
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
+})

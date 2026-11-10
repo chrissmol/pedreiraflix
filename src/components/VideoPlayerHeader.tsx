@@ -1,3 +1,4 @@
+import { isTv } from '../lib/device'
 import { AirPlay, Cast, ChevronLeft, PictureInPicture } from './icons'
 import type { SubtitleBackground, SubtitleSize, VideoFit } from '../store/playerPrefs'
 import { VideoPlayerAudioMenu } from './VideoPlayerAudioMenu'
@@ -162,7 +163,7 @@ export function VideoPlayerHeader({
           onSelectSleep={onSelectSleep}
         />
 
-        {pipSupported && (
+        {pipSupported && !isTv && (
           <button
             onClick={onTogglePip}
             aria-label="Picture-in-Picture"

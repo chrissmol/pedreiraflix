@@ -140,8 +140,12 @@ export function useVideoSource({
     // player was stuck showing the big play button forever even though nothing was actually blocking
     // playback. Retrying from every readiness event (loadedmetadata, canplay, and again once buffering
     // clears) catches that instead of committing to whichever event happened to fire first.
-    function onCanPlay() {
+    function onCanPlay(e: Event) {
       setBuffering(false)
+      // Pausou e pulou 10 s (ou arrastou a barra): o `canplay` do salto religava o video sozinho. O autoplay e para comecar
+      // a tocar; video que ja tocou e esta pausado fica pausado. O `canplay` feito na mao pelo Assistir junto
+      // (JuntoSync.tocar, isTrusted falso) e um pedido de play de verdade e segue valendo.
+      if (e.isTrusted && video?.paused && video.played.length > 0) return
       attemptAutoplay()
     }
     // O <video> nao expoe o status HTTP, entao quando ele falha (MP4, ou HLS nativo do Safari/AirPlay —

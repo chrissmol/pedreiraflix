@@ -447,14 +447,16 @@ for (const tecla of [{ key: 'Escape' }, { key: 'GoBack' }, { key: 'XF86Back', ke
   })
 }
 
-test('TV: no ao vivo, de Tela cheia as setas sobem pela coluna dos botoes de canal e descem de volta', async ({ page }) => {
+test('TV: no ao vivo, dos botoes de baixo as setas chegam na coluna dos botoes de canal e sobem por ela', async ({ page }) => {
   await page.goto('/watch/live/101?name=Canal')
   const focado = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
   await expect(page.getByRole('button', { name: 'Lista de canais' })).toBeAttached()
   await page.keyboard.press('Enter') // foca o Play/Pause
-  for (let i = 0; i < 6 && (await focado()) !== 'Tela cheia'; i++) await page.keyboard.press('ArrowRight')
-  expect(await focado()).toBe('Tela cheia')
-  for (const esperado of ['Canal anterior', 'Lista de canais', 'Próximo canal']) {
+  // Na TV nao ha botao de tela cheia (o player ja e a tela toda): a direita dos botoes de baixo cai na coluna de canais.
+  await expect(page.getByRole('button', { name: 'Tela cheia' })).toHaveCount(0)
+  for (let i = 0; i < 6 && (await focado()) !== 'Canal anterior'; i++) await page.keyboard.press('ArrowRight')
+  expect(await focado()).toBe('Canal anterior')
+  for (const esperado of ['Lista de canais', 'Próximo canal']) {
     await page.keyboard.press('ArrowUp')
     expect(await focado()).toBe(esperado)
   }
