@@ -586,3 +586,25 @@ html.tv .brand-focus:focus-visible {
   mask-image: linear-gradient(to bottom, #000 40%, transparent);
   -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
 }
+
+/* TV: o login cabe em 960x540 (a TV sempre mostra 60rem de largura, ver html.tv acima) sem rolar ate o "Entrar":
+   cartao mais largo, espacos menores, Nome e "Lembrar" lado a lado. O aviso legal continua inteiro. */
+html.tv .login-page { padding: 0.5rem 1rem; justify-content: center; }
+html.tv .login-page > span { margin-bottom: 0.5rem; font-size: 1.25rem; }
+html.tv .login-card { max-width: 48rem; padding: 0.75rem 2rem; }
+html.tv .login-head { margin-bottom: 0.5rem; }
+html.tv .login-head h1 { font-size: 1.5rem; line-height: 2rem; }
+html.tv .login-head p { display: none; }
+html.tv .login-card form > div:first-child { margin-bottom: 0.5rem; }
+html.tv .login-card form > div:first-child > button { padding-block: 0.375rem; }
+html.tv .login-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; align-items: end; }
+html.tv .login-fields > * { grid-column: span 2; margin: 0; }
+html.tv .login-fields > :nth-last-child(-n + 2) { grid-column: span 1; }
+html.tv .login-fields label:not(.login-remember) { margin-bottom: 0; }
+html.tv .login-fields > div > div:first-child, html.tv .login-fields .grid > div > div:first-child { margin-bottom: 0.25rem; }
+html.tv .login-fields input:not([type='checkbox']) { height: 2.5rem; }
+html.tv .login-remember { padding: 0.5rem 0.75rem; height: 2.5rem; align-items: center; }
+html.tv .login-remember-hint { display: none; }
+html.tv .login-card form > button[type='submit'] { margin-top: 0.75rem; height: 2.5rem; }
+html.tv .login-note { margin-top: 0.75rem; padding: 0.5rem 0.75rem; }
+html.tv .login-epg-hint { display: none; }

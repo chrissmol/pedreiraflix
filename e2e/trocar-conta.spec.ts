@@ -130,3 +130,27 @@ test.describe('TV esquecer', () => {
     await expect(page.locator(':focus')).toBeVisible()
   })
 })
+
+test.describe('TV login sem rolagem', () => {
+  for (const [w, h] of [[960, 540], [1920, 1080]]) {
+    test(`TV ${w}x${h}: o Entrar aparece sem rolar, em cada metodo`, async ({ browser }) => {
+      const ctx = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7633) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36',
+        viewport: { width: w, height: h },
+      })
+      const page = await ctx.newPage()
+      await page.goto('/login')
+      for (const metodo of ['Usuário/senha', 'Link M3U', 'Arquivo M3U']) {
+        await page.getByRole('button', { name: metodo }).click()
+        const folga = await page.evaluate(() => {
+          const m = document.querySelector('main')!
+          const b = [...m.querySelectorAll('button')].find((x) => x.textContent?.trim() === 'Entrar')!
+          return { rola: m.scrollHeight - m.clientHeight, fundo: innerHeight - b.getBoundingClientRect().bottom }
+        })
+        expect(folga.rola, metodo).toBeLessThanOrEqual(0)
+        expect(folga.fundo, metodo).toBeGreaterThan(0)
+      }
+      await ctx.close()
+    })
+  }
+})
