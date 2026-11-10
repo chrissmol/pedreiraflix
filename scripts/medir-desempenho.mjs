@@ -53,7 +53,7 @@ const browser = await chromium.launch({ args: ['--no-sandbox'] })
 const out = []
 for (const [nome, p] of Object.entries(PERFIS)) {
   if (alvo !== 'todos' && alvo !== nome) continue
-  for (const rota of ['/', '/movies', '/live']) out.push(await medir(browser, nome, p, rota))
+  for (const rota of (arg('rotas', '/,/movies,/series,/live').split(','))) out.push(await medir(browser, nome, p, rota))
 }
 await browser.close()
 console.table(out)
