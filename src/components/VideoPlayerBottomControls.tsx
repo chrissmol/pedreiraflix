@@ -1,4 +1,5 @@
 import { Episodes, Maximize, Minimize, Pause, Play, SkipNext, SkipPrevious, SkipSeconds, VolumeHigh, VolumeMute, Zap } from './icons'
+import { isTv } from '../lib/device'
 import { useState } from 'react'
 import { SKIP_SECONDS, formatTime } from './videoPlayerUtils'
 
@@ -138,7 +139,8 @@ export function VideoPlayerBottomControls({
           </>
         )}
 
-        <div className="hidden items-center gap-2 sm:flex pointer-coarse:hidden">
+        {/* Na TV o volume e do controle da TV; aqui o deslizante era uma parada a mais das setas e nem mudava de valor. */}
+        <div className={`hidden items-center gap-2 pointer-coarse:hidden ${isTv ? '' : 'sm:flex'}`}>
           <button onClick={onToggleMute} className="player-btn bg-transparent" aria-label="Mudo">
             {isMuted || volume === 0 ? <VolumeMute className="h-5 w-5" /> : <VolumeHigh className="h-5 w-5" />}
           </button>

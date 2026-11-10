@@ -466,6 +466,13 @@ html.tv {
   }
 }
 
+/* TV: o menu fica na lateral, entao o espaco que cada pagina reserva em cima para o cabecalho do topo (5 a 6rem) era
+   so tela vazia: 1/6 da altura da TV. Fica uma margem. shortcut: pega as paginas pelo pt-[calc(...)] que todas usam;
+   pagina nova com outro jeito de reservar o topo precisa entrar aqui. */
+html.tv #main-content > [class*='pt-[calc('] {
+  padding-top: 2rem;
+}
+
 /* TV: o foco e a unica forma de saber onde se esta. Estilo Netflix: contorno fino e claro + leve aumento de escala
    (cartoes um pouco mais, botoes e menu menos), em vez do anel branco grosso de 3px que ficava feio. */
 html.tv :focus-visible,

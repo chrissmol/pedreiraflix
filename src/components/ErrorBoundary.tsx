@@ -35,6 +35,8 @@ export default class ErrorBoundary extends Component<Props, State> {
           O app encontrou um erro inesperado. Recarregar a página costuma resolver.
         </p>
         <button
+          // Ja nasce focado: esta tela fica fora do Layout, onde ninguem trata as setas, e na TV nao dava para chegar no botao.
+          autoFocus
           onClick={() => window.location.reload()}
           className="btn-primary"
         >
