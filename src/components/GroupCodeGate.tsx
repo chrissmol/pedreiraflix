@@ -1,9 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { CHAVE, guardarGrupo, lerGrupo } from '../lib/grupo'
-import { isTv } from '../lib/device'
-import { entrarComPareamento } from '../lib/pareamento'
+import { CHAVE, lerGrupo } from '../lib/grupo'
 import { Lock } from './icons'
-import ParearTv from './ParearTv'
 
 // Alguns navegadores (TV Samsung/Tizen) nao guardam o cookie do codigo e o app voltava a pedir sem fim: o hash que o
 // Worker devolve fica tambem no localStorage e vai em x-grupo nas chamadas a /api (o Worker aceita cookie ou header).
@@ -100,12 +97,6 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
           {estado === 'enviando' ? 'Conferindo…' : 'Entrar'}
         </button>
       </form>
-      {isTv && (
-        // TV: o celular manda o codigo do grupo junto com a conta, entao nao precisa digitar nenhum dos dois.
-        <div className="mt-4 w-full max-w-xl">
-          <ParearTv onDone={(p) => void entrarComPareamento(p, guardarGrupo).then(() => location.reload()).catch(() => setEstado('erro'))} />
-        </div>
-      )}
     </main>
   )
 }

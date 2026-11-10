@@ -51,19 +51,9 @@ test('TV sem login ainda deixa digitar usuario e senha como antes', async ({ pag
   await expect(page.getByLabel('Endereço do servidor')).toBeVisible()
 })
 
-test('com o codigo do grupo ligado, o QR da TV entrega tambem o grupo', async ({ page, browser }) => {
-  await page.route('**/api/grupo', (route) => route.fulfill({ json: { required: true, ok: route.request().headers()['x-grupo'] === 'hash-do-grupo' } }))
+test('com o codigo do grupo ligado, a tela do codigo vem sem QR (o QR fica no login, depois)', async ({ page }) => {
+  await page.route('**/api/grupo', (route) => route.fulfill({ json: { required: true, ok: false } }))
   await page.goto('/')
   await expect(page.getByRole('textbox', { name: 'Código do grupo' })).toBeVisible()
-  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(540)
-  const code = (await page.getByTestId('parear-codigo').innerText()).replace('-', '')
-
-  const phone = await celular(browser, 'hash-do-grupo')
-  await phone.goto(`/parear?c=${code}`)
-  await phone.getByRole('button', { name: /demo/ }).first().click()
-  await expect(phone.getByRole('status')).toContainText('Pronto')
-
-  await expect(page.getByRole('textbox', { name: 'Código do grupo' })).toBeHidden({ timeout: 20_000 })
-  await expect(page.getByRole('button', { name: 'Conta', exact: true })).toBeVisible()
-  await phone.context().close()
+  await expect(page.getByTestId('parear-qr')).toHaveCount(0)
 })
