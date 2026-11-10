@@ -32,8 +32,12 @@ test('TV: so com as setas da para chegar nos posteres, no cabecalho e abrir um f
   await page.keyboard.press('ArrowRight') // e volta para o conteudo
   await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 
-  await page.keyboard.press('ArrowDown') // filtros -> primeira fileira
-  await expect.poll(() => page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
+  // filtros -> primeira fileira (volta ao ultimo item focado, que pode estar acima dos filtros: desce ate um cartao)
+  for (let i = 0; i < 4 && !(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))); i++) {
+    await page.keyboard.press('ArrowDown')
+    await page.waitForTimeout(250)
+  }
+  expect(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
   for (let i = 0; i < 6 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowLeft')
   expect(await focado()).toMatch(/Filme Explosivo/)
   await page.keyboard.press('Enter')
