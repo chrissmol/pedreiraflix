@@ -514,6 +514,7 @@ test('TV: cima/baixo entre fileiras lembram a coluna e a fileira nao tem "Ver tu
   await page.goto('/movies')
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ver tudo' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Comédia' })).toBeVisible() // todas as fileiras carregadas
   const onde = () =>
     page.evaluate(() => {
       const a = document.activeElement as HTMLElement
@@ -521,7 +522,7 @@ test('TV: cima/baixo entre fileiras lembram a coluna e a fileira nao tem "Ver tu
     })
   await page.keyboard.press('ArrowDown') // filtros
   await page.keyboard.press('ArrowDown') // primeira fileira: ja cai num cartao, nao num botao do titulo
-  expect((await onde()).fileira).not.toBe('')
+  await expect.poll(async () => (await onde()).fileira).not.toBe('')
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('ArrowRight')
   const origem = await onde()
