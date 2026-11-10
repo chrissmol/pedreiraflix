@@ -26,6 +26,8 @@ interface CategorizedCatalogState<T> {
 
 export type CatalogState<T> = CategorizedCatalogState<T> & { retry: () => void }
 
+const FLUSH_MS = 250
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -124,6 +126,26 @@ function useCategorizedCatalog<T>(
         }))
         setState({ categories, groups, loading: false, error: null })
 
+        // Cada categoria que termina mudava o estado e refazia genero/versoes/filtros sobre TODOS os itens ja carregados
+        // (custo = categorias x itens: 27 s de CPU parada em /filmes com 25 mil itens). As que terminam juntas entram
+        // numa atualizacao so, no maximo a cada FLUSH_MS.
+        const pending = new Map<string, Partial<CategoryGroup<T>>>()
+        let timer: ReturnType<typeof setTimeout> | null = null
+        const flush = () => {
+          timer = null
+          if (cancelled || myRequest !== requestId.current || pending.size === 0) return
+          const batch = new Map(pending)
+          pending.clear()
+          setState((s) => ({
+            ...s,
+            groups: s.groups.map((g) => (batch.has(g.category.categoryId) ? { ...g, ...batch.get(g.category.categoryId) } : g)),
+          }))
+        }
+        const update = (id: string, patch: Partial<CategoryGroup<T>>) => {
+          pending.set(id, patch)
+          timer ??= setTimeout(flush, FLUSH_MS)
+        }
+
         const tasks = categories.map((category) => async () => {
           try {
             const raw = await cached(`${kind}:items:${category.categoryId}`, () =>
@@ -132,21 +154,10 @@ function useCategorizedCatalog<T>(
             // Canal com o mesmo nome pode ser um reserva: so filmes e series juntam versoes.
             const items = kind === 'live' ? raw : (mergeVersions(raw as Movie[]) as T[])
             if (cancelled || myRequest !== requestId.current) return
-            setState((s) => ({
-              ...s,
-              groups: s.groups.map((g) =>
-                g.category.categoryId === category.categoryId ? { ...g, items, loading: false } : g,
-              ),
-            }))
+            update(category.categoryId, { items, loading: false })
           } catch (err) {
             if (cancelled || myRequest !== requestId.current) return
-            const message = friendlyCatalogError(err)
-            setState((s) => ({
-              ...s,
-              groups: s.groups.map((g) =>
-                g.category.categoryId === category.categoryId ? { ...g, loading: false, error: message } : g,
-              ),
-            }))
+            update(category.categoryId, { loading: false, error: friendlyCatalogError(err) })
           }
         })
 
@@ -154,6 +165,8 @@ function useCategorizedCatalog<T>(
         // for this pool to hand it more work — the queue is what actually paces requests now.
         runWithConcurrency(tasks, 8).then(() => {
           if (cancelled || myRequest !== requestId.current) return
+          if (timer) clearTimeout(timer)
+          flush()
           // Todas as categorias falharam: sem isto a tela ficava vazia, sem dizer nada (erro por categoria e silencioso
           // de proposito, mas todas juntas e um erro de verdade).
           setState((s) =>
