@@ -214,25 +214,6 @@ test('TV: so com as setas e OK da para abrir um campeonato nos canais', async ({
   await expect(page.getByText('Futebol HD')).toHaveCount(0)
 })
 
-test('TV: "Ver tudo" de uma fileira em Filmes e Series abre a categoria inteira so com setas e OK', async ({ page }) => {
-  // Suporte 21/10: o link so trocava o ?category= da propria pagina, que lia isso uma vez ao montar.
-  const itens = (campo: string) => Array.from({ length: 60 }, (_, i) => ({ [campo]: 9000 + i, name: `Titulo ${i}`, category_id: '10', rating: '7.0', cover: '', stream_icon: '' }))
-  await page.route(/action=get_vod_streams/, (r) => r.fulfill({ json: itens('stream_id') }))
-  await page.route(/action=get_series(&|$)/, (r) => r.fulfill({ json: itens('series_id') }))
-  for (const rota of ['/movies', '/series']) {
-    await page.goto(rota)
-    await page.getByRole('button', { name: /Titulo 0/ }).first().focus()
-    await page.keyboard.press('ArrowUp')
-    await expect(page.locator(':focus')).toHaveText('Ver tudo')
-    await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/category=\d+/)
-    await expect(page.getByRole('button', { name: /Titulo 59/ })).toBeAttached()
-    await page.goBack()
-    await expect(page).not.toHaveURL(/category=/)
-    await expect(page.getByRole('link', { name: 'Ver tudo' }).first()).toBeVisible()
-  }
-})
-
 test('TV: nos times favoritos, so com setas e OK chega no canal do jogo e abre o canal ao vivo', async ({ page }) => {
   await page.route('**/api/moltv/v1/search?*', (route) => route.fulfill({ json: { results: [{ type: 'team', slug: 'flamengo', name: 'Flamengo' }] } }))
   await page.route('**/api/moltv/v1/teams/flamengo/next', (route) =>
@@ -527,4 +508,38 @@ test('TV: controle que manda so o keyCode (key vazio, como algumas Samsung) tamb
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
   await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Unidentified', keyCode: 40, bubbles: true } as KeyboardEventInit)))
   await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
+})
+
+test('TV: cima/baixo entre fileiras lembram a coluna e a fileira nao tem "Ver tudo"', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ver tudo' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Comédia' })).toBeVisible() // todas as fileiras carregadas
+  const onde = () =>
+    page.evaluate(() => {
+      const a = document.activeElement as HTMLElement
+      return { fileira: a.closest('section')?.querySelector('h2')?.textContent?.trim() ?? '', indice: [...(a.parentElement?.children ?? [])].indexOf(a) }
+    })
+  await page.keyboard.press('ArrowDown') // filtros
+  await page.keyboard.press('ArrowDown') // primeira fileira: ja cai num cartao, nao num botao do titulo
+  await expect.poll(async () => (await onde()).fileira).not.toBe('')
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  const origem = await onde()
+  expect(origem.indice).toBeGreaterThan(1)
+  await page.keyboard.press('ArrowDown')
+  const abaixo = await onde()
+  expect(abaixo.fileira).not.toBe(origem.fileira)
+  await page.keyboard.press('ArrowUp')
+  expect(await onde()).toEqual(origem) // voltou ao mesmo cartao, mesmo que a fileira de baixo seja mais curta
+})
+
+test('TV: do menu lateral a seta para a direita entra no conteudo e para baixo percorre o menu ate sair', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  await page.keyboard.press('ArrowDown')
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowLeft')
+  expect(await page.evaluate(() => !!document.activeElement?.closest('header'))).toBe(true)
+  for (let i = 0; i < 12 && (await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowDown')
+  expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 })

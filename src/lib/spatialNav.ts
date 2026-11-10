@@ -16,7 +16,8 @@ function center(el: Element) {
 
 export function moveFocusVertically(direction: 'up' | 'down'): boolean {
   const active = document.activeElement
-  if (!(active instanceof HTMLElement) || !active.closest(SELECTOR)) return false
+  // O menu do topo conta: de la a seta para baixo entra no conteudo (antes nao fazia nada e o foco ficava preso no menu).
+  if (!(active instanceof HTMLElement) || !(active.closest(SELECTOR) || active.closest('header nav'))) return false
 
   const current = center(active)
   const candidates = Array.from(document.querySelectorAll<HTMLElement>(SELECTOR)).filter((el) => {
@@ -55,6 +56,35 @@ function visible(el: HTMLElement) {
   return cs.visibility !== 'hidden' && cs.display !== 'none' && !el.closest('[aria-hidden="true"], .sr-only')
 }
 
+// Fileira (Row.tsx marca o rolador com data-row): cima/baixo vao para o cartao da fileira vizinha que esta na mesma coluna
+// da tela, como na Netflix, em vez de cair no que estiver mais perto por acaso. A coluna e lembrada por varias fileiras
+// seguidas (passar por uma fileira curta nao faz o foco "escorregar" para a esquerda).
+let column: { el: Element; x: number } | null = null
+function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean {
+  const own = active.parentElement
+  if (!own?.matches('[data-row]')) return false
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]')).filter((r) => r.querySelector(FOCUSABLE) && visible(r))
+  const i = rows.indexOf(own)
+  const target = rows[i + (direction === 'down' ? 1 : -1)]
+  if (i < 0 || !target) return false
+  const x = column?.el === active ? column.x : center(active).x
+  let best: HTMLElement | null = null
+  let gap = Infinity
+  for (const el of target.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+    const c = center(el).x
+    if (c < 0 || c > innerWidth) continue // so cartoes que aparecem na tela
+    if (Math.abs(c - x) < gap) {
+      best = el
+      gap = Math.abs(c - x)
+    }
+  }
+  if (!best) return false
+  column = { el: best, x }
+  best.focus()
+  best.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+  return true
+}
+
 export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
   // Painel aberto (Filtros): as setas andam so dentro dele, nao pelo catalogo escondido atras.
   const modal = document.querySelector('[aria-modal="true"]')
@@ -67,6 +97,7 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
     first?.scrollIntoView({ block: 'center', inline: 'nearest' })
     return !!first
   }
+  if ((direction === 'up' || direction === 'down') && moveAcrossRows(active, direction)) return true
   // Menu lateral e a borda esquerda: dali para a esquerda nao ha nada (sem isso caia no avatar, mais a esquerda).
   if (direction === 'left' && active.closest('header')) return true
   const from = center(active)
