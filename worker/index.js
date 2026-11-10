@@ -8,6 +8,7 @@
 
 import { junto } from './junto.js'
 import { f1Next } from './f1.js'
+import { d1Store, parear } from './pareamento.js'
 import { molTv } from './moltv.js'
 import { openSession, panelBase, proxiedRef, sealSession, targetFor } from './streamSession.js'
 
@@ -370,6 +371,7 @@ async function feedback(request, env) {
 // faz de servidor+usuario+senha: aqui nunca chega login nenhum, e sem o login nao da para adivinhar a chave.
 // O app junta os dados (ultimo vence) e manda o resultado inteiro; isto so guarda e devolve.
 let syncTable
+const pareamentoStores = new WeakMap() // por banco D1: a tabela e criada uma vez por isolate
 async function sync(request, env) {
   const key = request.headers.get('x-sync-key') || ''
   if (!/^[0-9a-f]{64}$/.test(key)) return new Response('invalid key', { status: 400 })
@@ -923,6 +925,13 @@ export default {
       // Apertado de proposito: e o unico lugar onde alguem poderia tentar adivinhar o codigo.
       if (request.method === 'POST' && isRateLimited(ip, 'grupo', 10, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
       return withSecurityHeaders(await grupo(request, env))
+    }
+    if (url.pathname === '/api/parear' || url.pathname.startsWith('/api/parear/')) {
+      // Criar, perguntar (a cada 3s) e buscar/confirmar com codigo: tres baldes, e o de achar o codigo e o mais apertado.
+      const [bucket, limit] = request.method === 'POST' && url.pathname === '/api/parear' ? ['parear-novo', 10] : url.pathname.endsWith('/token') ? ['parear-token', 40] : ['parear-codigo', 15]
+      if (isRateLimited(ip, bucket, limit, 60_000)) return withSecurityHeaders(new Response(null, { status: 429 }))
+      if (!env.SYNC) return withSecurityHeaders(new Response('storage not configured', { status: 503 }))
+      return withSecurityHeaders(await parear(request, url, (pareamentoStores.get(env.SYNC) ?? pareamentoStores.set(env.SYNC, d1Store(env.SYNC)).get(env.SYNC)), await noGrupo(request, env)))
     }
     const proxy = url.pathname === '/api/xtream' || url.pathname === '/api/session' || (url.pathname === '/api/stream' && !url.searchParams.get('s'))
     if (proxy && !(await noGrupo(request, env))) return withSecurityHeaders(foraDoGrupo())

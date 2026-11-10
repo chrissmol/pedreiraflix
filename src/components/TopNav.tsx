@@ -409,6 +409,17 @@ export default function TopNav() {
             {isTv ? (
               // TV: so Ajustes e Suporte, planos (poucos itens, e cada passo a mais custa um OK no controle).
               <>
+            {!isTv && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/parear')
+                }}
+                className="menu-option"
+              >
+                <Tv className="h-4 w-4 text-on-surface-variant" /> Entrar na TV
+              </button>
+            )}
             {/* TV: cache e diagnostico ficam dentro de Ajustes, longe de um OK por engano (video do Christian, 19/10). */}
             {!isTv && (
               <button
@@ -461,6 +472,17 @@ export default function TopNav() {
                 className="menu-option"
               >
                 <Plus className="h-4 w-4 text-on-surface-variant" /> Instalar o app
+              </button>
+            )}
+            {!isTv && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/parear')
+                }}
+                className="menu-option"
+              >
+                <Tv className="h-4 w-4 text-on-surface-variant" /> Entrar na TV
               </button>
             )}
             {/* TV: cache e diagnostico ficam dentro de Ajustes, longe de um OK por engano (video do Christian, 19/10). */}

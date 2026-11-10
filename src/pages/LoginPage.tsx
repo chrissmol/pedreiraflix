@@ -1,5 +1,9 @@
 import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import ParearTv from '../components/ParearTv'
+import { guardarGrupo } from '../lib/grupo'
+import { isTv } from '../lib/device'
+import { entrarComPareamento } from '../lib/pareamento'
 import { Calendar, Eye, EyeOff, FileArrowDown, ListIcon, Lock, Pencil, Shield, Trash, Tv, User } from '../components/icons'
 import { normalizeCredentials, signIn, signInM3u, signInSavedAccount } from '../lib/session'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
@@ -87,6 +91,8 @@ export default function LoginPage() {
 
   const [showForm, setShowForm] = useState(accounts.length === 0)
   const [method, setMethod] = useState<LoginMethod>('xtream')
+  const [manual, setManual] = useState(false)
+  const [pairOff, setPairOff] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -136,6 +142,8 @@ export default function LoginPage() {
   }
 
   const choosing = accounts.length > 0 && !showForm
+  // TV: o QR e a primeira tela (cabe sem rolar, o formulario nao); "Digitar usuario e senha" abre o formulario de sempre.
+  const qrScreen = isTv && !switching && !choosing && !manual && !pairOff
 
   return (
     // Rolavel por conta propria: o body do app nao rola (index.css) e o login fica fora do Layout, entao numa tela
@@ -156,6 +164,15 @@ export default function LoginPage() {
               : 'Use os dados que o seu provedor de IPTV enviou para carregar canais, filmes e séries.'}
           </p>
         </div>
+
+        {qrScreen && (
+          <>
+            <ParearTv onDone={(p) => void run('pareamento', () => entrarComPareamento(p, guardarGrupo))} onOff={() => setPairOff(true)} />
+            <button type="button" onClick={() => setManual(true)} className="brand-focus h-12 w-full rounded-full border border-dashed border-outline-strong text-label-md text-on-surface-variant">
+              Digitar usuário e senha
+            </button>
+          </>
+        )}
 
         {choosing && (
           <div className="space-y-3" data-testid="saved-accounts">
@@ -262,7 +279,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {(showForm || accounts.length === 0) && (
+        {(showForm || accounts.length === 0) && !qrScreen && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
             <div className="mb-5 grid grid-cols-3 gap-1 rounded-full sm:mb-6 border border-outline-soft bg-surface-container p-1">
