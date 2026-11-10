@@ -30,5 +30,5 @@ PEDREIRAFLIX_TEST_URL="$TEST_URL" npx cap sync android
 (cd android && ./gradlew assembleDebug -q)
 npx cap sync android
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n com.pedreiraflix.app/.MainActivity
+adb shell am start -n com.pedreiraflix.app.teste/com.pedreiraflix.app.MainActivity
 echo "PedreiraFlix aberto no emulador de TV. Setas, Enter = OK, Esc = Voltar na janela do emulador."
