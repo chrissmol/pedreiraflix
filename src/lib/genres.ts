@@ -40,13 +40,21 @@ export function normalizeGenre(raw: string): string {
 /** Gêneros de um título (campo livre do provedor, separado por vírgula ou barra), já normalizados e sem repetir. */
 export function genresOf(genre?: string | null): string[] {
   if (!genre) return []
+  const hit = genresCache.get(genre)
+  if (hit) return hit
   const seen = new Map<string, string>()
   for (const part of genre.split(/[,/]/)) {
     const name = normalizeGenre(part)
     if (name) seen.set(strip(name), name)
   }
-  return [...seen.values()]
+  const out = [...seen.values()]
+  // shortcut: sem limite de tamanho; o numero de textos de genero distintos e pequeno (dezenas), nao o de titulos.
+  genresCache.set(genre, out)
+  return out
 }
+// O catalogo tem dezenas de milhares de titulos e so dezenas de textos de genero distintos; cada categoria que
+// termina de carregar reagrupava tudo e refazia a normalizacao (NFD + regex) de cada titulo (medido: ~3 s de CPU em /movies).
+const genresCache = new Map<string, string[]>()
 
 /** Gênero a partir do qual a lista deixa de seguir as categorias do provedor ("Filme Cinema Plus", "Lançamentos 2024"...). */
 const MIN_WITH_GENRE = 0.3

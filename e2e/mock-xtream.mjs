@@ -130,6 +130,24 @@ if (FEIO) {
   })
 }
 
+// MOCK_BIG=1 (npm run medir-desempenho): catalogo do tamanho de um provedor real (dezenas de milhares de itens em
+// ~100 categorias), para medir o custo de carregar e desenhar o catalogo em aparelhos fracos (TV, PC antigo).
+if (process.env.MOCK_BIG) {
+  const CATS = 100, PER = 250
+  for (let c = 0; c < CATS; c++) {
+    const cid = String(500 + c)
+    liveCategories.push({ category_id: cid, category_name: `Canais ${c}` })
+    vodCategories.push({ category_id: cid, category_name: `Filmes ${c}` })
+    seriesCategories.push({ category_id: cid, category_name: `Series ${c}` })
+    for (let i = 0; i < PER; i++) {
+      const id = 10000 + c * PER + i
+      liveStreams.push({ stream_id: id, num: id, name: `Canal ${c}-${i} HD`, category_id: cid, tv_archive: 0, tv_archive_duration: 0, stream_icon: '', epg_channel_id: `ch${id}` })
+      movies.push({ stream_id: id, name: `Filme ${c} numero ${i}`, category_id: cid, rating: String((i % 10) + 0.5), added: String(1700000000 + id), year: String(1990 + (i % 35)), genre: 'Ação, Drama', stream_icon: '', container_extension: 'mp4' })
+      series.push({ series_id: id, name: `Serie ${c} numero ${i}`, category_id: cid, rating: '7', genre: 'Drama', releaseDate: `${1990 + (i % 35)}-01-01`, plot: 'x', cover: '', backdrop_path: [], cast: '', director: '', last_modified: String(1700000000 + id) })
+    }
+  }
+}
+
 function episodesFor(seriesId) {
   const out = {}
   const temporadas = seriesId === 59 ? 12 : 2
