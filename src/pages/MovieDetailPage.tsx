@@ -1,3 +1,4 @@
+import { isTv } from '../lib/device'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
@@ -163,7 +164,7 @@ export default function MovieDetailPage() {
               name={movie.name}
               image={movie.streamIcon}
             />
-            {client && (
+            {client && !isTv && (
               <a
                 href={client.downloadUrl('movie', movie.streamId, movie.containerExtension, movie.name)}
                 download

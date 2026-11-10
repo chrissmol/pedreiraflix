@@ -1,3 +1,4 @@
+import { isTv } from '../lib/device'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BlockedByProfile from '../components/BlockedByProfile'
@@ -412,7 +413,7 @@ export default function SeriesDetailPage() {
                         compact
                       />
                     </span>
-                    {client && (
+                    {client && !isTv && (
                       <a
                         href={client.downloadUrl('series', ep.id, ep.containerExtension, episodeName(series.name, ep.title))}
                         download
