@@ -85,6 +85,10 @@ function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean 
   return true
 }
 
+// Ultimo item do conteudo que tinha o foco antes de ir para o menu lateral: Direita no menu volta para ele (como na Netflix),
+// em vez de cair no cartao que estiver mais perto da altura do item do menu (que mandava de volta ao topo da tela).
+let lastContent: HTMLElement | null = null
+
 export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
   // Painel aberto (Filtros): as setas andam so dentro dele, nao pelo catalogo escondido atras.
   const modal = document.querySelector('[aria-modal="true"]')
@@ -100,6 +104,11 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
   if ((direction === 'up' || direction === 'down') && moveAcrossRows(active, direction)) return true
   // Menu lateral e a borda esquerda: dali para a esquerda nao ha nada (sem isso caia no avatar, mais a esquerda).
   if (direction === 'left' && active.closest('header')) return true
+  if (direction === 'right' && active.closest('header') && lastContent && lastContent.isConnected && all.includes(lastContent)) {
+    lastContent.focus()
+    lastContent.scrollIntoView({ block: 'center', inline: 'nearest' })
+    return true
+  }
   const from = center(active)
   const horizontal = direction === 'left' || direction === 'right'
   const sign = direction === 'down' || direction === 'right' ? 1 : -1
@@ -126,6 +135,7 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
   // Do conteudo para o menu lateral (TopNav na TV): cai na secao aberta, nao no item do menu mais perto na altura.
   if (horizontal && fromContent && best.closest('header')) {
     best = document.querySelector<HTMLElement>('header [aria-current="page"]') ?? best
+    lastContent = active
   }
   best.focus()
   best.scrollIntoView({ block: 'center', inline: 'nearest' })
