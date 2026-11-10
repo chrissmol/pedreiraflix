@@ -150,7 +150,15 @@ function editable(el: unknown): el is HTMLInputElement | HTMLTextAreaElement {
 
 // Controles de TV (Tizen, webOS) as vezes mandam so o keyCode, com `key` vazio ou "Unidentified". Todo o app le `e.key`:
 // no capture da janela, completa o `key` antes de qualquer outro tratador ver o evento.
-const KEY_BY_CODE: Record<number, string> = { 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter', 10009: 'GoBack', 461: 'GoBack' }
+const KEY_BY_CODE: Record<number, string> = {
+  37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter', 10009: 'GoBack', 461: 'GoBack',
+  // Botoes de midia e de canal do controle (mesmos codigos na Samsung e na LG; 10xxx so na Samsung).
+  415: 'MediaPlay', 19: 'MediaPause', 10252: 'MediaPlayPause', 413: 'MediaStop', 412: 'MediaRewind', 417: 'MediaFastForward',
+  427: 'ChannelUp', 428: 'ChannelDown',
+}
+// Voltar da Samsung (10009) e da LG (461). No Android quem volta e o app nativo (MainActivity), sem tecla para a pagina.
+const TV_BACK = [10009, 461]
+type Tizen = { tvinputdevice?: { registerKeyBatch?: (keys: string[]) => void }; application?: { getCurrentApplication?: () => { exit: () => void } } }
 
 // Navegador sem `gap` em flex (Chromium < 84, TVs Samsung antigas): botoes e textos ficavam colados. Copia o gap
 // calculado para margens dos filhos. shortcut: so olha containers com classe gap-* e nao reage a mudar de classe depois.
@@ -214,6 +222,27 @@ export function installTvGuards() {
     true,
   )
   installFlexGap() // main.tsx e modulo: roda com o <body> ja no DOM
+  // Samsung: fora setas, OK e Voltar, a TV so entrega as teclas que o app registra (midia, canal e numeros).
+  const tizen = (window as unknown as { tizen?: Tizen }).tizen
+  try {
+    tizen?.tvinputdevice?.registerKeyBatch?.(['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaRewind', 'MediaFastForward', 'ChannelUp', 'ChannelDown', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+  } catch {
+    // tecla que o modelo da TV nao tem: fica sem ela
+  }
+  // Samsung e LG entregam o Voltar como tecla e esperam que o app resolva. So os paineis tratavam: fora deles o Voltar
+  // nao fazia nada e nao dava nem para sair do player. Depois de todo mundo ver a tecla (setTimeout): quem tratou marcou
+  // preventDefault; senao vale como Esc (fecha dialogo ou menu aberto) e, se ninguem quis, volta uma tela ou sai do app.
+  window.addEventListener('keydown', (e) => {
+    if (!TV_BACK.includes(e.keyCode)) return
+    setTimeout(() => {
+      if (e.defaultPrevented) return
+      const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      if (!(document.activeElement ?? document.body).dispatchEvent(esc)) return
+      if (history.state?.idx > 0) history.back()
+      else if (tizen?.application?.getCurrentApplication) tizen.application.getCurrentApplication().exit()
+      else window.close()
+    })
+  })
   // Campo de texto so abre o teclado da TV quando se aperta OK nele. Antes, so de passar pela busca com as setas o
   // teclado da tela subia, cobria metade da TV e empurrava a pagina (video do Christian numa TCL, 19/10).
   let reopening = false

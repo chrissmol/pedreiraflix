@@ -55,6 +55,23 @@ export function useVideoPlayerKeys({
       if ((focused instanceof HTMLInputElement && !(isTv && focused.type === 'range')) || focused instanceof HTMLTextAreaElement) {
         return
       }
+      // Botoes de midia e de canal do controle (Fire TV, Samsung, LG). Antes do bloco da TV: valem com qualquer foco.
+      const media: Record<string, (() => void) | undefined> = {
+        MediaPlayPause: togglePlay,
+        MediaPlay: () => void video.play().catch(() => {}),
+        MediaPause: () => video.pause(),
+        MediaStop: () => video.pause(),
+        MediaRewind: isLive ? undefined : () => skip(-SKIP_SECONDS),
+        MediaFastForward: isLive ? undefined : () => skip(SKIP_SECONDS),
+        ChannelUp: isLive ? onChannelUp : undefined,
+        ChannelDown: isLive ? onChannelDown : undefined,
+      }
+      if (e.key in media) {
+        e.preventDefault()
+        media[e.key]?.()
+        wakeControls()
+        return
+      }
       // TV (controle remoto: so setas e OK). Com um botao do player focado, as setas andam entre os botoes e o OK
       // aperta o botao (o navegador ja faz isso). Sem nada focado, o OK mostra os controles e foca o Play/Pause;
       // fora do ao vivo subir/descer tambem (a TV tem volume proprio). Esquerda/direita seguem pulando 10 s e, no
