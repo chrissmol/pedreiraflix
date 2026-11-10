@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
+import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import ParearTv from '../components/ParearTv'
 import { guardarGrupo } from '../lib/grupo'
@@ -80,6 +80,15 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
+  // Esquecer a ultima conta tira da tela o botao focado; sem mover o foco, na TV as setas nao acham mais nada.
+  const refocusForm = useRef(false)
+  useEffect(() => {
+    if (accounts.length === 0 && refocusForm.current) {
+      refocusForm.current = false
+      document.getElementById('server')?.focus()
+    }
+  }, [accounts.length])
+
   const [showForm, setShowForm] = useState(accounts.length === 0)
   const [method, setMethod] = useState<LoginMethod>('xtream')
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -135,13 +144,13 @@ export default function LoginPage() {
   return (
     // Rolavel por conta propria: o body do app nao rola (index.css) e o login fica fora do Layout, entao numa tela
     // baixa o "Entrar" ficava inalcancavel (APK no Motorola, 08/10). No celular o login e compacto para caber sem rolar.
-    <main className="flex h-full flex-col items-center overflow-y-auto bg-surface px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:justify-[safe_center] sm:pb-10 sm:pt-10">
+    <main className="login-page flex h-full flex-col items-center overflow-y-auto bg-surface px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:justify-[safe_center] sm:pb-10 sm:pt-10">
       <span className="neon-text font-display mb-4 bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:mb-6">
         PedreiraFlix
       </span>
 
-      <div className="w-full max-w-xl rounded-3xl border border-outline-soft bg-surface-lowest p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] sm:px-10 sm:py-8">
-        <div className="mb-5 text-center sm:mb-6">
+      <div className="login-card w-full max-w-xl rounded-3xl border border-outline-soft bg-surface-lowest p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] sm:px-10 sm:py-8">
+        <div className="login-head mb-5 text-center sm:mb-6">
           <h1 className="font-display text-headline-md text-white sm:text-headline-lg">
             {choosing ? 'Escolha uma conta salva' : 'Conecte sua conta ou lista'}
           </h1>
@@ -221,7 +230,10 @@ export default function LoginPage() {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => removeAccount(account.id)}
+                    onClick={() => {
+                      refocusForm.current = accounts.length === 1
+                      removeAccount(account.id)
+                    }}
                     aria-label={`Esquecer conta ${accountLabel(account)}`}
                     title="Esquecer esta conta"
                     className="shrink-0 rounded-2xl border border-outline-soft bg-surface-container px-3 text-on-surface-muted transition-colors hover:border-live/40 hover:text-live sm:px-3.5"
@@ -256,7 +268,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {showForm && (
+        {(showForm || accounts.length === 0) && (
           // Real name/autocomplete attributes let the browser's password manager offer to save and autofill these.
           <form onSubmit={handleSubmit} autoComplete="on">
             <div className="mb-5 grid grid-cols-3 gap-1 rounded-full sm:mb-6 border border-outline-soft bg-surface-container p-1">
@@ -279,7 +291,7 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <div className="space-y-4 sm:space-y-5">
+            <div className="login-fields space-y-4 sm:space-y-5">
               {method === 'xtream' && (
                 <>
                   <Field id="server" label="Endereço do servidor" hint="http ou https" icon={<Tv className="h-5 w-5" />}>
@@ -396,7 +408,7 @@ export default function LoginPage() {
                       className={inputClass}
                     />
                   </Field>
-                  <p className="mt-2 text-body-sm text-on-surface-muted">
+                  <p className="login-epg-hint mt-2 text-body-sm text-on-surface-muted">
                     Arquivo XMLTV (.xml ou .xml.gz). Deixe em branco se a playlist já trouxer o guia.
                   </p>
                 </div>
@@ -416,7 +428,7 @@ export default function LoginPage() {
                 />
               </Field>
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-outline-soft bg-surface-container p-3 sm:p-4">
+              <label className="login-remember flex cursor-pointer items-start gap-3 rounded-2xl border border-outline-soft bg-surface-container p-3 sm:p-4">
                 <input
                   type="checkbox"
                   checked={remember}
@@ -425,7 +437,7 @@ export default function LoginPage() {
                 />
                 <span>
                   <span className="block text-label-md text-white">Lembrar esses dados neste aparelho</span>
-                  <span className="hidden text-body-sm text-on-surface-variant sm:block">
+                  <span className="login-remember-hint hidden text-body-sm text-on-surface-variant sm:block">
                     Ficam salvos só aqui, para entrar com um toque da próxima vez.
                   </span>
                 </span>
@@ -459,7 +471,7 @@ export default function LoginPage() {
 
         {/* Texto honesto de proposito: o do Stitch dizia que as credenciais nunca passam por servidor
             nenhum, o que e falso — o proxy do Worker existe justamente para o video tocar no navegador. */}
-        <div className="mt-8 flex gap-3 rounded-2xl bg-surface-container p-4">
+        <div className="login-note mt-8 flex gap-3 rounded-2xl bg-surface-container p-4">
           <Shield className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
           <p className="text-body-sm text-on-surface-variant">
             <span className="block text-label-md text-white">O PedreiraFlix é só o player</span>
