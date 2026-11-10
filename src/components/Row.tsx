@@ -58,7 +58,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
       <h2 className="font-display mb-3 flex items-center gap-2 px-4 text-headline-sm text-white sm:px-10 sm:text-headline-md">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-400 to-brand-600 shadow-none" />
         {title || <span className="skeleton h-5 w-40 rounded" />}
-        {seeAllHref && (
+        {seeAllHref && !isTv && (
           <Link
             to={seeAllHref}
             className="brand-focus ml-1 rounded-full px-2.5 py-0.5 text-label-badge font-semibold text-brand-400 transition-colors hover:bg-surface-high hover:text-brand-300"
@@ -79,6 +79,7 @@ export default function Row({ title, children, loading, seeAllHref }: RowProps) 
 
         <div
           ref={scrollerRef}
+          data-row
           onKeyDown={onKeyDown}
           onScroll={updateEdges}
           className="no-scrollbar stagger-fade flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-4 pt-6 sm:px-10"

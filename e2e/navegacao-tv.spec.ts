@@ -33,3 +33,14 @@ test('com o foco fora do catalogo as setas continuam rolando a pagina', async ({
   await page.keyboard.press('ArrowDown')
   await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(antes)
 })
+
+// Menu do topo (computador): antes a seta para baixo nao fazia nada ali e o foco ficava preso no menu.
+test('seta para baixo no menu do topo entra no catalogo', async ({ page }) => {
+  await login(page)
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Filmes', level: 1 })).toBeVisible()
+  await expect(page.locator('#main-content [data-spatial]').first()).toBeVisible()
+  await page.getByRole('link', { name: 'Séries' }).first().focus()
+  await page.keyboard.press('ArrowDown')
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content [data-spatial]'))).toBe(true)
+})
