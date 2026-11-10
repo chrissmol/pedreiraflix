@@ -1,5 +1,9 @@
 import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import ParearTv from '../components/ParearTv'
+import { guardarGrupo } from '../lib/grupo'
+import { isTv } from '../lib/device'
+import { entrarComPareamento } from '../lib/pareamento'
 import { Calendar, Eye, EyeOff, FileArrowDown, ListIcon, Lock, Pencil, Shield, Trash, Tv, User } from '../components/icons'
 import { normalizeCredentials, signIn, signInM3u, signInSavedAccount } from '../lib/session'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
@@ -147,6 +151,8 @@ export default function LoginPage() {
               : 'Use os dados que o seu provedor de IPTV enviou para carregar canais, filmes e séries.'}
           </p>
         </div>
+
+        {isTv && !switching && <ParearTv onDone={(p) => void run('pareamento', () => entrarComPareamento(p, guardarGrupo))} />}
 
         {choosing && (
           <div className="space-y-3" data-testid="saved-accounts">

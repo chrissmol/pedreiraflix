@@ -30,6 +30,7 @@ const SeriesDetailPage = lazy(() => import("./pages/SeriesDetailPage"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
 const RetrospectivePage = lazy(() => import("./pages/RetrospectivePage"));
+const ParearPage = lazy(() => import("./pages/ParearPage"));
 const JuntoPage = lazy(() => import("./pages/JuntoPage"));
 const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const WatchPage = lazy(() => import("./pages/WatchPage"));
@@ -55,6 +56,7 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/parear" element={<ParearPage />} />
             <Route
               path="/watch/:kind/:id"
               element={

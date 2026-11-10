@@ -4,6 +4,7 @@ import cors from 'cors'
 import express from 'express'
 import { f1Next } from '../worker/f1.js'
 import { molTv } from '../worker/moltv.js'
+import { memoryStore, parear } from '../worker/pareamento.js'
 import { openSession, panelBase, proxiedRef, sealSession, targetFor } from '../worker/streamSession.js'
 
 const app = express()
@@ -306,6 +307,15 @@ app.get('/api/stream', async (req, res) => {
       res.status(isAbort ? 504 : 502).send(isAbort ? 'upstream timed out' : `upstream fetch failed: ${err}`)
     }
   }
+})
+
+// Login na TV (worker/pareamento.js): aqui o pareamento fica na memoria e nao ha codigo do grupo.
+const pareamentos = memoryStore()
+app.all(['/api/parear', '/api/parear/*path'], express.json({ limit: '16kb' }), async (req, res) => {
+  if (isRateLimited(req.ip, 'parear', 120, 60_000)) return res.status(429).end()
+  const text = req.method === 'POST' ? JSON.stringify(req.body ?? {}) : undefined
+  const out = await parear(new Request(`http://local${req.originalUrl}`, { method: req.method, body: text }), new URL(`http://local${req.originalUrl}`), pareamentos, true)
+  res.status(out.status).set('content-type', out.headers.get('content-type') || 'text/plain').send(await out.text())
 })
 
 app.listen(PORT, () => {
