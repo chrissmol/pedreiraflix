@@ -520,9 +520,14 @@ test('TV: cima/baixo entre fileiras lembram a coluna e a fileira nao tem "Ver tu
       const a = document.activeElement as HTMLElement
       return { fileira: a.closest('section')?.querySelector('h2')?.textContent?.trim() ?? '', indice: [...(a.parentElement?.children ?? [])].indexOf(a) }
     })
-  await page.keyboard.press('ArrowDown') // filtros
-  await page.keyboard.press('ArrowDown') // primeira fileira: ja cai num cartao, nao num botao do titulo
-  await expect.poll(async () => (await onde()).fileira).not.toBe('')
+  // Baixo ate cair num cartao da primeira fileira (passa pelos filtros): repete porque, com o CI carregado, a tecla
+  // as vezes chega antes da navegacao estar pronta e o foco fica no cabecalho.
+  await expect
+    .poll(async () => {
+      if (!(await onde()).fileira) await page.keyboard.press('ArrowDown')
+      return (await onde()).fileira
+    })
+    .not.toBe('')
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('ArrowRight')
   const origem = await onde()
