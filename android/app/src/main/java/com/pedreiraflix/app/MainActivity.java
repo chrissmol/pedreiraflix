@@ -1,6 +1,7 @@
 package com.pedreiraflix.app;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebView;
@@ -16,6 +17,12 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ContinuarTvPlugin.class);
         registerPlugin(VozPlugin.class);
         super.onCreate(savedInstanceState);
+        // A WebView do Android TV nao se anuncia como TV no user agent e o emulador finge ter tela de toque: o app
+        // avisa o site (src/lib/device.ts le "Android TV") pelo recurso leanback, que so a TV tem.
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK) && getBridge() != null) {
+            android.webkit.WebSettings ws = getBridge().getWebView().getSettings();
+            ws.setUserAgentString(ws.getUserAgentString() + " Android TV");
+        }
         // Aberto por um item da fileira "Continuar assistindo" da TV: o site ainda nao carregou, entao guarda o
         // caminho e o site pede ao plugin quando abrir (src/lib/continuarTv.ts).
         ContinuarTvPlugin.pendente = caminho(getIntent());
