@@ -76,12 +76,6 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-surface p-4">
-      {isTv && (
-        // TV: o celular manda o codigo do grupo junto com a conta, entao nao precisa digitar nenhum dos dois.
-        <div className="mb-4 w-full max-w-xl">
-          <ParearTv onDone={(p) => void entrarComPareamento(p, guardarGrupo).then(() => location.reload()).catch(() => setEstado('erro'))} />
-        </div>
-      )}
       <form onSubmit={enviar} className="card-panel w-full max-w-sm p-6 text-center sm:p-8">
         <span style={{ width: 56, height: 56, overflow: 'hidden' }} className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/15 text-brand-400"><Lock className="h-7 w-7" /></span>
         <h1 className="font-display text-headline-sm text-white">Código do grupo</h1>
@@ -106,6 +100,12 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
           {estado === 'enviando' ? 'Conferindo…' : 'Entrar'}
         </button>
       </form>
+      {isTv && (
+        // TV: o celular manda o codigo do grupo junto com a conta, entao nao precisa digitar nenhum dos dois.
+        <div className="mt-4 w-full max-w-xl">
+          <ParearTv onDone={(p) => void entrarComPareamento(p, guardarGrupo).then(() => location.reload()).catch(() => setEstado('erro'))} />
+        </div>
+      )}
     </main>
   )
 }
