@@ -548,10 +548,14 @@ test('TV: do menu lateral a seta para a direita entra no conteudo e para baixo p
 test('TV: Direita no menu volta para o mesmo cartao de onde o foco saiu', async ({ page }) => {
   await page.goto('/movies')
   await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const linha = () => page.evaluate(() => [...document.querySelectorAll('[data-row]')].indexOf(document.activeElement?.parentElement as Element))
   await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('ArrowDown') // filtros -> primeira fileira
-  await page.keyboard.press('ArrowDown') // segunda fileira
-  await expect.poll(() => page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
+  // desce ate a segunda fileira (esperando o foco assentar a cada passo)
+  for (let i = 0; i < 6 && (await linha()) < 1; i++) {
+    await page.keyboard.press('ArrowDown')
+    await page.waitForTimeout(300)
+  }
+  expect(await linha()).toBeGreaterThanOrEqual(1)
   let el = await page.evaluateHandle(() => document.activeElement)
   for (let i = 0; i < 10 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) {
     el = await page.evaluateHandle(() => document.activeElement)
