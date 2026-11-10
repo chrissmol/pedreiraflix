@@ -97,3 +97,7 @@ Para rodar o Worker local, crie `.dev.vars` com os mesmos nomes e rode `npx wran
 | `docs/` | Documentação e material de design |
 | `tools/` | Ferramentas internas (`claude-worker`) |
 | `.github/` | Workflows, templates e política de segurança |
+
+## Simulador de TV (Mac/PC)
+
+`npm run simular-tv` abre uma janela 960x540 que se anuncia como TV (modo TV do app: menu lateral, só setas + OK). Teclado = controle: setas, Enter = OK, Backspace/Esc = Voltar. Opções: `-- --tv samsung` (user agent Tizen; padrão `firetv`), `--url http://localhost:5173` (versão local; padrão é o site publicado), `--cpu 6` (CPU 6x mais lenta, como TV fraca). Na primeira vez: `npx playwright install chromium`. Não é o emulador oficial da Samsung (Tizen Studio), mas roda o mesmo código do app nesse user agent.
