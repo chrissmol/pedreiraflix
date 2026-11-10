@@ -575,6 +575,7 @@ export default function VideoPlayer({
       />
 
       <VideoPlayerCenterOverlays
+        onBack={onBack}
         error={error}
         nextUpVisible={nextUpVisible}
         next={next}

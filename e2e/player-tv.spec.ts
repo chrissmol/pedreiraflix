@@ -43,3 +43,18 @@ test('TV: o player nao mostra tela cheia nem PiP; fora do app instalado pede tel
   await expect(page.getByRole('button', { name: 'Tela cheia' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Picture-in-Picture' })).toHaveCount(0)
 })
+
+// Chris (10/11): o filme nao carregava na TV e, so com o controle, nao dava para tentar de novo nem sair da tela de erro.
+test('TV: quando o video falha, o foco nasce em "Tentar novamente" e as setas chegam no Voltar', async ({ page }) => {
+  await page.route(/\/api\/stream\b/, (route) => route.fulfill({ status: 404, body: 'nao' }))
+  await page.goto('/movies')
+  await page.goto('/movies/1')
+  await page.getByRole('button', { name: 'Assistir' }).click()
+  await expect(page).toHaveURL(/\/watch\/movie\/1/)
+  const tentar = page.getByRole('button', { name: 'Tentar novamente' })
+  await expect(tentar).toBeFocused()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('button', { name: 'Voltar', exact: true }).last()).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/movies\/1$/)
+})
