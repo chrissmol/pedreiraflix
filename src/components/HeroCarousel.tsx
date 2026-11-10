@@ -123,7 +123,7 @@ export default function HeroCarousel({ items, slotMs = TWO_HOURS_MS, action, loa
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
       <div className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-[100px]" />
 
-      <div key={current.key} className="stagger absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
+      <div key={`${current.key}-texto`} className="stagger absolute inset-x-0 bottom-0 flex flex-col gap-4 px-4 pb-10 sm:px-10 sm:pb-16">
         {/* No maximo 2 linhas e sem os enfeites do provedor: um titulo longo subia ate o cabecalho e ficava por
             cima do logo (painel de 654px, 08/10). */}
         {logo ? (
