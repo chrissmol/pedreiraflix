@@ -17,11 +17,24 @@ test('painel Episodios: lista a temporada atual, troca de temporada e toca o esc
   await expect(painel.getByText('Plot 1x2')).toBeVisible()
   await expect(painel.locator('li')).toHaveCount(3)
 
-  await painel.getByRole('button', { name: 'Próxima temporada' }).click()
-  await expect(painel.getByText('Temporada 2')).toBeVisible()
+  await painel.getByRole('button', { name: 'Escolher temporada' }).click()
+  await painel.getByText('Temporada 2', { exact: true }).click()
+  await expect(painel.getByRole('button', { name: 'Escolher temporada' })).toContainText('Temporada 2')
   await painel.getByText('T2E1 - Episódio 1').click()
   await expect(page).toHaveURL(/\/watch\/series\/5021\?/)
   await expect(painel).toHaveCount(0)
+})
+
+test('tela cheia: o painel Episodios fica dentro do elemento em tela cheia', async ({ page }) => {
+  await abrirEpisodio2(page)
+  await page.locator('video').hover()
+  await page.getByRole('button', { name: /tela cheia/i }).first().click()
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true)
+  await page.locator('video').hover()
+  await page.getByRole('button', { name: 'Episódios' }).click()
+  const painel = page.getByRole('dialog', { name: 'Episódios' })
+  await expect(painel).toBeVisible()
+  expect(await painel.evaluate((el) => document.fullscreenElement?.contains(el))).toBe(true)
 })
 
 test('filme e ao vivo nao tem botao Episodios', async ({ page }) => {
