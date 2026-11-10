@@ -32,8 +32,12 @@ test('TV: so com as setas da para chegar nos posteres, no cabecalho e abrir um f
   await page.keyboard.press('ArrowRight') // e volta para o conteudo
   await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
 
-  await page.keyboard.press('ArrowDown') // filtros -> primeira fileira
-  await expect.poll(() => page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
+  // filtros -> primeira fileira (volta ao ultimo item focado, que pode estar acima dos filtros: desce ate um cartao)
+  for (let i = 0; i < 4 && !(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))); i++) {
+    await page.keyboard.press('ArrowDown')
+    await page.waitForTimeout(250)
+  }
+  expect(await page.evaluate(() => document.activeElement?.hasAttribute('data-spatial'))).toBe(true)
   for (let i = 0; i < 6 && !/Filme Explosivo/.test(await focado()); i++) await page.keyboard.press('ArrowLeft')
   expect(await focado()).toMatch(/Filme Explosivo/)
   await page.keyboard.press('Enter')
@@ -547,4 +551,35 @@ test('TV: do menu lateral a seta para a direita entra no conteudo e para baixo p
   expect(await page.evaluate(() => !!document.activeElement?.closest('header'))).toBe(true)
   for (let i = 0; i < 12 && (await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) await page.keyboard.press('ArrowDown')
   expect(await page.evaluate(() => !!document.activeElement?.closest('#main-content'))).toBe(true)
+})
+
+// Video do Chris (10/11): ir ate o menu com a seta esquerda e voltar com a direita jogava o foco para a primeira fileira.
+test('TV: Direita no menu volta para o mesmo cartao de onde o foco saiu', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  const linha = () => page.evaluate(() => [...document.querySelectorAll('[data-row]')].indexOf(document.activeElement?.parentElement as Element))
+  await page.keyboard.press('ArrowDown')
+  // desce ate a segunda fileira (esperando o foco assentar a cada passo)
+  for (let i = 0; i < 6 && (await linha()) < 1; i++) {
+    await page.keyboard.press('ArrowDown')
+    await page.waitForTimeout(300)
+  }
+  expect(await linha()).toBeGreaterThanOrEqual(1)
+  let el = await page.evaluateHandle(() => document.activeElement)
+  for (let i = 0; i < 10 && !(await page.evaluate(() => !!document.activeElement?.closest('header'))); i++) {
+    el = await page.evaluateHandle(() => document.activeElement)
+    await page.keyboard.press('ArrowLeft')
+  }
+  expect(await page.evaluate(() => !!document.activeElement?.closest('header'))).toBe(true)
+  await page.keyboard.press('ArrowRight')
+  expect(await page.evaluate((e) => document.activeElement === e, el)).toBe(true)
+})
+
+test('TV: foco com contorno fino, sem anel branco grosso', async ({ page }) => {
+  await page.goto('/movies')
+  await expect(page.getByRole('heading', { name: 'Ação' })).toBeVisible()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown')
+  const w = await page.evaluate(() => parseFloat(getComputedStyle(document.activeElement!).outlineWidth))
+  expect(w).toBeLessThanOrEqual(2)
 })
