@@ -34,6 +34,7 @@ test('Limpar cache esvazia os caches, mostra o espaco liberado e preserva os dad
   expect(antes.idb).toBeGreaterThan(0)
 
   await page.getByRole('button', { name: 'Conta', exact: true }).click()
+  await page.getByRole('button', { name: 'Mais' }).click()
   await page.getByRole('button', { name: 'Limpar cache' }).click()
   await page.getByRole('button', { name: 'Limpar', exact: true }).click()
   await expect(page.getByText(/Cache limpo: .* liberados/)).toBeVisible()

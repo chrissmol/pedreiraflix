@@ -6,6 +6,7 @@ test('suporte: envia o feedback com a tela de onde veio', async ({ page }) => {
   await login(page)
   await page.goto('/movies')
   await page.getByRole('button', { name: 'Conta', exact: true }).click()
+  await page.getByRole('button', { name: 'Mais' }).click()
   await page.getByRole('button', { name: 'Suporte' }).click()
   await expect(page.getByRole('heading', { name: 'Suporte' })).toBeVisible()
 

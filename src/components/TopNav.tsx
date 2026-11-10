@@ -6,7 +6,7 @@ import { connectionStatus, refreshSession, subscriptionStatus } from '../lib/ses
 import { useAuthStore } from '../store/auth'
 import { type Profile, useActiveAccountId, useActiveProfile, useActiveProfileId, useProfiles, useProfilesStore } from '../store/profiles'
 import ConfirmDialog from './ConfirmDialog'
-import { Download, Info, ListIcon, Plus, RefreshCw, Search, Settings, Trophy, Tv, User, X } from './icons'
+import { ChevronDown, ChevronUp, Download, Info, ListIcon, Plus, RefreshCw, Search, Settings, Trophy, Tv, User, X } from './icons'
 import LoadingRing from './LoadingRing'
 import PinPrompt from './PinPrompt'
 import SearchSuggestions from './SearchSuggestions'
@@ -27,6 +27,7 @@ export default function TopNav() {
   const [query, setQuery] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuPanelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLFormElement>(null)
@@ -270,7 +271,10 @@ export default function TopNav() {
 
       <div ref={menuRef} className={isTv ? 'relative mt-auto' : 'relative'}>
         <button
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={() => {
+            setMoreOpen(false)
+            setMenuOpen((v) => !v)
+          }}
           aria-label="Conta"
           style={activeProfile && !isTv ? { background: activeProfile.color } : undefined}
           className={
@@ -306,34 +310,32 @@ export default function TopNav() {
             <p className="truncate px-3 py-2 text-body-sm text-on-surface-variant">
               {activeProfile?.name} <span className="text-on-surface-variant">· {user?.username}</span>
             </p>
-            {connections && (
-              // "Telas" e quantas pessoas/aparelhos o provedor deixa tocar ao mesmo tempo com este login. Quando
-              // enche, o provedor recusa o video (403) — o numero explica isso antes de o filme falhar.
-              <div
-                data-testid="conexoes"
-                className={`mx-1.5 mb-1 rounded-xl px-3 py-2 text-body-sm ${connections.full ? 'bg-live/10 text-red-200' : 'bg-surface-container text-on-surface-variant'}`}
-              >
-                <p className="flex items-center gap-2 text-label-md text-white">
-                  <span className={`h-2 w-2 rounded-full ${connections.full ? 'bg-live' : 'bg-done'}`} />
-                  Telas em uso: {connections.active} de {connections.max}
-                </p>
-                <p className="mt-0.5">
-                  {connections.full
-                    ? 'Limite cheio: o provedor vai recusar novos vídeos. Feche em outro aparelho ou espere uns minutos.'
-                    : 'Inclui este aparelho se estiver tocando.'}
-                </p>
-              </div>
-            )}
-            {subscription && (
-              <div
-                data-testid="assinatura"
-                className={`mx-1.5 mb-1 rounded-xl px-3 py-2 text-body-sm ${subscription.tone === 'expired' ? 'bg-live/10 text-red-200' : subscription.tone === 'soon' ? 'bg-amber-500/10 text-amber-200' : 'bg-surface-container text-on-surface-variant'}`}
-              >
-                <p className="flex items-center gap-2 text-label-md text-white">
-                  <span className={`h-2 w-2 rounded-full ${subscription.tone === 'expired' ? 'bg-live' : subscription.tone === 'soon' ? 'bg-amber-400' : 'bg-done'}`} />
-                  {subscription.title}
-                </p>
-                <p className="mt-0.5">{subscription.detail}</p>
+            {(connections || subscription) && (
+              // Telas e assinatura num cartao so, uma linha cada. O detalhe so aparece quando ha problema; fora disso
+              // fica so para leitor de tela.
+              <div className="mx-1.5 mb-1 space-y-1 rounded-xl bg-surface-container px-3 py-2 text-body-sm text-on-surface-variant">
+                {connections && (
+                  <div data-testid="conexoes" className={connections.full ? 'text-red-200' : ''}>
+                    <p className="flex items-center gap-2 text-label-md text-white">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${connections.full ? 'bg-live' : 'bg-done'}`} />
+                      Telas em uso: {connections.active} de {connections.max}
+                    </p>
+                    <p className={connections.full ? 'mt-0.5' : 'sr-only'}>
+                      {connections.full
+                        ? 'Limite cheio: o provedor vai recusar novos vídeos. Feche em outro aparelho ou espere uns minutos.'
+                        : 'Inclui este aparelho se estiver tocando.'}
+                    </p>
+                  </div>
+                )}
+                {subscription && (
+                  <div data-testid="assinatura" className={subscription.tone === 'expired' ? 'text-red-200' : subscription.tone === 'soon' ? 'text-amber-200' : ''}>
+                    <p className="flex items-center gap-2 text-label-md text-white">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${subscription.tone === 'expired' ? 'bg-live' : subscription.tone === 'soon' ? 'bg-amber-400' : 'bg-done'}`} />
+                      {subscription.title}
+                    </p>
+                    <p className={subscription.tone === 'ok' ? 'sr-only' : 'mt-0.5'}>{subscription.detail}</p>
+                  </div>
+                )}
               </div>
             )}
             {profiles.length > 1 && (
@@ -404,6 +406,52 @@ export default function TopNav() {
                 <Download className="h-4 w-4 text-on-surface-variant" /> Downloads
               </button>
             )}
+            {isTv ? (
+              // TV: so Ajustes e Suporte, planos (poucos itens, e cada passo a mais custa um OK no controle).
+              <>
+            {/* TV: cache e diagnostico ficam dentro de Ajustes, longe de um OK por engano (video do Christian, 19/10). */}
+            {!isTv && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  setConfirmClearCache(true)
+                }}
+                className="menu-option"
+              >
+                <RefreshCw className="h-4 w-4 text-on-surface-variant" /> Limpar cache
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/diagnostico')
+              }}
+              className="menu-option"
+            >
+              <Settings className="h-4 w-4 text-on-surface-variant" /> {isTv ? 'Ajustes' : 'Diagnóstico'}
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/suporte', { state: { from: location.pathname + location.search } })
+              }}
+              className="menu-option"
+            >
+              <Info className="h-4 w-4 text-on-surface-variant" /> Suporte
+            </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setMoreOpen((v) => !v)}
+                  aria-expanded={moreOpen}
+                  className="menu-option"
+                >
+                  <Settings className="h-4 w-4 text-on-surface-variant" /> Mais
+                  {moreOpen ? <ChevronUp className="ml-auto h-4 w-4 text-on-surface-variant" /> : <ChevronDown className="ml-auto h-4 w-4 text-on-surface-variant" />}
+                </button>
+                {moreOpen && (
+                  <div className="ml-3 border-l border-outline-soft pl-1">
             {canInstall && (
               <button
                 onClick={() => {
@@ -445,6 +493,10 @@ export default function TopNav() {
             >
               <Info className="h-4 w-4 text-on-surface-variant" /> Suporte
             </button>
+                  </div>
+                )}
+              </>
+            )}
             <button
               onClick={() => {
                 setMenuOpen(false)
