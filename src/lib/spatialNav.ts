@@ -127,7 +127,9 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
       // (o microfone dentro do campo de busca). Sem isso, um botao atras de um quadro grande "parecia" estar ao lado.
       const avanca = (horizontal ? (sign > 0 ? to.right - from.right : from.left - to.left) : sign > 0 ? to.bottom - from.bottom : from.top - to.top) > 8
       const dentro = to.left >= from.left && to.right <= from.right && to.top >= from.top && to.bottom <= from.bottom
-      const cruzado = horizontal ? to.top < from.bottom && to.bottom > from.top : to.left < from.right && to.right > from.left
+      // Com folga de 8px: o cartao focado cresce (scale 1.07) e encostava 4px na barra de cima, e com a fonte do CI
+      // um botao da barra "parecia" vizinho de lado. Sobrepor de verdade nos dois eixos, nao so o respingo do foco.
+      const cruzado = horizontal ? to.top < from.bottom - 8 && to.bottom > from.top + 8 : to.left < from.right - 8 && to.right > from.left + 8
       main = entre > 8 && cruzado && (avanca || dentro) ? entre : -9 // sem sobrepor tambem no outro eixo, seria um salto diagonal
     }
     if (main < -8) continue
