@@ -209,7 +209,7 @@ export function installTvGuards() {
   let reopening = false
   document.addEventListener('focusin', (e) => {
     const el = e.target
-    if (reopening || !editable(el) || el.readOnly) return
+    if (reopening || !editable(el) || el.readOnly || 'tvOpen' in el.dataset) return // tvOpen: campo unico da tela (codigo do grupo), ja nasce digitavel
     el.readOnly = true
     el.dataset.tvLock = ''
   })

@@ -79,6 +79,7 @@ export default function GroupCodeGate({ children }: { children: ReactNode }) {
         <p className="mb-5 mt-2 text-body-sm text-on-surface-variant">O PedreiraFlix é só para o grupo. Digite o código que o Christian passou; é só uma vez neste aparelho.</p>
         <input
           autoFocus
+          data-tv-open
           value={value}
           onChange={(e) => {
             setValue(e.target.value)
