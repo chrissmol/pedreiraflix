@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Emulador de Android TV (o mesmo que Fire TV/Android TV usam) no Mac: cria o AVD `pftv` (1080p, imagem Android TV),
 # liga, instala o app e abre. Teclado na janela do emulador: setas = controle, Enter = OK, Esc = Voltar.
+# Dica: para testar mudanca local use `npx vite build && npx vite preview --port 5173 --host 127.0.0.1` (o `vite` de dev pesa no emulador).
 # Uso: scripts/emulador-tv.sh [--url http://10.0.2.2:5173]   (sem --url o app abre o site publicado)
 # Pre-requisitos (os mesmos do estressar-apk): JDK em ~/.local/jdk, Android SDK + emulador em ~/.local/android.
 set -euo pipefail
@@ -22,9 +23,12 @@ fi
 CFG="$ANDROID_AVD_HOME/pftv.avd/config.ini"
 sed -i.bak "s/^hw.keyboard *= *.*/hw.keyboard = yes/" "$CFG"
 grep -q "^hw.keyboard" "$CFG" || echo "hw.keyboard = yes" >> "$CFG"
+# Desempenho (medido no MacBook Air 8 GB, 10/11): GPU do host + 2 GB de RAM derrubaram os frames travados de 75% para 26%
+# (p95 85ms -> 46ms). O padrao do AVD vinha com GPU desligada (render por software) e 1,5 GB.
+sed -i.bak -e "s/^hw.gpu.enabled *= *.*/hw.gpu.enabled = yes/" -e "s/^hw.gpu.mode *= *.*/hw.gpu.mode = host/" -e "s/^hw.ramSize *= *.*/hw.ramSize = 2048M/" "$CFG"
 adb start-server >/dev/null
 if ! adb devices | grep -q "emulator-.*device"; then
-  nohup emulator -avd pftv -no-audio -no-boot-anim -gpu auto >/tmp/emulador-tv.log 2>&1 &
+  nohup emulator -avd pftv -no-audio -no-boot-anim -gpu host >/tmp/emulador-tv.log 2>&1 &
   adb wait-for-device
 fi
 until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do sleep 3; done
