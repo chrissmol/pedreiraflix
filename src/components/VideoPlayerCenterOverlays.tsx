@@ -25,6 +25,7 @@ interface VideoPlayerCenterOverlaysProps {
   onTogglePlay: () => void
   onSkip: (seconds: number) => void
   onRetry: () => void
+  onBack?: () => void
 }
 
 export function VideoPlayerCenterOverlays({
@@ -45,6 +46,7 @@ export function VideoPlayerCenterOverlays({
   onTogglePlay,
   onSkip,
   onRetry,
+  onBack,
 }: VideoPlayerCenterOverlaysProps) {
   return (
     <>
@@ -158,14 +160,20 @@ export function VideoPlayerCenterOverlays({
       )}
 
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface/95 px-6 text-center text-body-md text-red-200">
+        // data-controls: na TV as setas andam entre os dois botoes (useVideoPlayerKeys). O foco nasce em "Tentar novamente":
+        // antes ficava no fundo do player e, so com setas e OK, nao dava para tentar de novo nem para sair.
+        <div data-controls className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface/95 px-6 text-center text-body-md text-red-200">
           <p className="max-w-xs">{error}</p>
-          <button
-            onClick={onRetry}
-            className="btn-primary"
-          >
-            Tentar novamente
-          </button>
+          <div className="flex flex-wrap justify-center gap-3">
+            <button autoFocus onClick={onRetry} className="btn-primary">
+              Tentar novamente
+            </button>
+            {onBack && (
+              <button onClick={onBack} className="btn-secondary">
+                Voltar
+              </button>
+            )}
+          </div>
         </div>
       )}
     </>
