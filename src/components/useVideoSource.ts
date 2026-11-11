@@ -8,7 +8,11 @@ import {
   CHANNEL_BLOCKED_MESSAGE,
   CHANNEL_NOT_FOUND_MESSAGE,
   estimateInitialBandwidthBps,
+  liveOpenedRecently,
+  markLiveOpen,
   refusedMessage,
+  SCREEN_RELEASE_NOTE,
+  SCREEN_RELEASE_RETRY_MS,
 } from './videoPlayerUtils'
 
 interface Params {
@@ -122,6 +126,13 @@ export function useVideoSource({
 
     let hls: Hls | null = null
     let cancelled = false
+    // Recusa (403) logo depois de abrir canais ao vivo: o provedor ainda segura essas telas. Explica e tenta de novo.
+    function refused(msg: string) {
+      if (cancelled) return
+      if (!liveOpenedRecently()) return setError(msg)
+      setError(msg + SCREEN_RELEASE_NOTE)
+      setTimeout(() => !cancelled && setRetryToken((t) => t + 1), SCREEN_RELEASE_RETRY_MS)
+    }
     let networkRetries = 0
     const MAX_NETWORK_RETRIES = 4
     // Mudo imposto pela regra de autoplay (nao escolha da pessoa): nao vai para as preferencias, senao o proximo titulo
@@ -159,7 +170,8 @@ export function useVideoSource({
         .then(async (res) => {
           // Anexa o corpo do 403 ("host not allowed" = nosso Worker; outro texto = provedor/Cloudflare) para a causa aparecer no cartao.
           const msg = res.status === 403 ? `${await refusedMessage()} (${(await res.text().catch(() => '')).trim().slice(0, 80) || 'sem detalhe'})` : fallback
-          if (!cancelled) setError(msg)
+          if (res.status === 403) refused(msg)
+          else if (!cancelled) setError(msg)
         })
         .catch(() => !cancelled && setError(fallback))
     }
@@ -341,7 +353,7 @@ export function useVideoSource({
                 // Recusa do provedor nao melhora tentando de novo — so gastaria as 4 tentativas.
                 if (data.response?.code === 403) {
                   hls?.destroy()
-                  refusedMessage().then((msg) => !cancelled && setError(msg))
+                  refusedMessage().then(refused)
                   break
                 }
                 networkRetries += 1
@@ -375,7 +387,10 @@ export function useVideoSource({
 
     const wait = isLive && opened.current ? LIVE_ZAP_DELAY_MS : 0
     opened.current = true
-    const openTimer = setTimeout(setup, wait)
+    const openTimer = setTimeout(() => {
+      if (isLive) markLiveOpen()
+      setup()
+    }, wait)
 
     return () => {
       cancelled = true
