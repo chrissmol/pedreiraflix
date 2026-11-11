@@ -147,18 +147,16 @@ export default function MovieDetailPage() {
               {isFavorite ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               <span className="hidden sm:inline">{isFavorite ? 'Na lista' : 'Minha lista'}</span>
             </button>
-            {!isTv && (
-              <button
-                onClick={() => setWatched(profileId, [`movie-${movie.streamId}`], !watched)}
-                aria-pressed={watched}
-                aria-label={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
-                title={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
-                className={`btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md ${watched ? 'text-done' : ''}`}
-              >
-                {watched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                <span className="hidden sm:inline">{watched ? 'Visto' : 'Marcar como visto'}</span>
-              </button>
-            )}
+            <button
+              onClick={() => setWatched(profileId, [`movie-${movie.streamId}`], !watched)}
+              aria-pressed={watched}
+              aria-label={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+              title={watched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+              className={`btn-icon sm:w-auto sm:gap-2 sm:px-6 sm:text-label-md ${watched ? 'text-done' : ''}`}
+            >
+              {watched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              <span className="hidden sm:inline">{watched ? 'Visto' : 'Marcar como visto'}</span>
+            </button>
             <DownloadButton
               kind="movie"
               id={movie.streamId}
