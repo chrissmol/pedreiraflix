@@ -500,6 +500,14 @@ html.tv * {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+/* Cartao dentro de uma caixa que corta o que passa da borda (lista de canais com content-visibility, quadro do mosaico com
+   overflow-hidden): crescer cortava o contorno nos lados, so sobravam as barras de cima e de baixo. Ai o contorno fica dentro. */
+html.tv [data-spatial][data-no-scale]:focus-visible {
+  transform: none;
+}
+html.tv [data-spatial][data-tight]:focus-visible {
+  outline-offset: -3px;
+}
 /* Campos: sem anel afastado nem sombra; so a borda do proprio campo fica clara e uma luz fina ao redor. */
 html.tv input:focus-visible,
 html.tv textarea:focus-visible,

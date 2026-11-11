@@ -270,7 +270,7 @@ export default function SeriesDetailPage() {
         <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
           <h2 className="font-display text-headline-md text-white">Episódios</h2>
           <span className="text-body-sm text-on-surface-muted">{season?.episodes.length ?? 0} nesta temporada</span>
-          {season && season.episodes.length > 0 && (
+          {season && season.episodes.length > 0 && !isTv && (
             <button
               type="button"
               onClick={() => setWatched(profileId, season.episodes.map((ep) => `series-${ep.id}`), !seasonWatched)}
@@ -387,21 +387,23 @@ export default function SeriesDetailPage() {
                         </span>
                       ) : null}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setWatched(profileId, [`series-${ep.id}`], !isWatched)
-                      }}
-                      aria-pressed={isWatched}
-                      aria-label={isWatched ? `Desmarcar episódio ${ep.episodeNum} como visto` : `Marcar episódio ${ep.episodeNum} como visto`}
-                      title={isWatched ? 'Visto (desmarcar)' : 'Marcar como visto'}
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-highest ${
-                        isWatched ? 'text-done' : 'text-on-surface-variant hover:text-white'
-                      }`}
-                    >
-                      {isWatched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
+                    {!isTv && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setWatched(profileId, [`series-${ep.id}`], !isWatched)
+                        }}
+                        aria-pressed={isWatched}
+                        aria-label={isWatched ? `Desmarcar episódio ${ep.episodeNum} como visto` : `Marcar episódio ${ep.episodeNum} como visto`}
+                        title={isWatched ? 'Visto (desmarcar)' : 'Marcar como visto'}
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-highest ${
+                          isWatched ? 'text-done' : 'text-on-surface-variant hover:text-white'
+                        }`}
+                      >
+                        {isWatched ? <Check className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    )}
                     <span onClick={(e) => e.stopPropagation()}>
                       <DownloadButton
                         kind="series"

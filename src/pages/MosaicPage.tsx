@@ -148,6 +148,7 @@ export default function MosaicPage() {
               <button
                 key={i}
                 data-spatial
+                data-no-scale
                 autoFocus={isTv && i === 0 && filled === 0}
                 onClick={() => setParams({ n: String(count), c: ids.join(','), pick: String(i) })}
                 className="brand-focus flex items-center justify-center rounded-lg border border-dashed border-outline-soft text-label-md text-on-surface-variant hover:text-white"
@@ -277,6 +278,8 @@ function MosaicTile({ channel, src, hasAudio, autoFocus, onSelect, onPick, onFul
       {/* O quadro inteiro e o botao: toque, clique ou OK da TV passam o som para ele. */}
       <button
         data-spatial
+        data-no-scale
+        data-tight
         autoFocus={autoFocus}
         onClick={() => (isTv ? setMenu(true) : onSelect())}
         aria-label={`Ouvir ${name}`}

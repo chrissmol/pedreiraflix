@@ -257,7 +257,7 @@ export default function LivePage() {
 
       <div className="md:grid md:grid-cols-[15rem_minmax(0,1fr)] md:gap-8">
         {/* Computador e tablet: lista lateral com as categorias em grupos que abrem e fecham. */}
-        <aside aria-label="Categorias" data-nav-group className="hidden md:sticky md:top-24 md:block md:max-h-[calc(100dvh-8rem)] md:self-start md:overflow-y-auto">
+        <aside aria-label="Categorias" data-nav-group data-enter-selected className="hidden md:sticky md:top-24 md:-mx-2 md:block md:max-h-[calc(100dvh-8rem)] md:self-start md:overflow-y-auto md:px-2 md:py-1">
           <div className="relative mb-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted" />
             <input
@@ -269,11 +269,11 @@ export default function LivePage() {
               className="brand-focus h-10 w-full rounded-xl border border-outline-soft bg-surface-container pl-9 pr-3 text-body-sm text-white placeholder-on-surface-muted"
             />
           </div>
-          <button onClick={() => setSelection('all')} aria-pressed={selection === 'all' || (selection === 'recent' && !showingRecent)} className={sideItem(selection === 'all' || (selection === 'recent' && !showingRecent))}>
+          <button data-tv-enter="[data-testid^='live-card'] [data-spatial]" onClick={() => setSelection('all')} aria-pressed={selection === 'all' || (selection === 'recent' && !showingRecent)} className={sideItem(selection === 'all' || (selection === 'recent' && !showingRecent))}>
             Todos os canais <span className="text-label-badge text-on-surface-muted">{totalChannels}</span>
           </button>
           {recentChannels.length > 0 && (
-            <button onClick={() => setSelection('recent')} aria-pressed={showingRecent} className={sideItem(showingRecent)}>
+            <button data-tv-enter="[data-testid^='live-card'] [data-spatial]" onClick={() => setSelection('recent')} aria-pressed={showingRecent} className={sideItem(showingRecent)}>
               Recentes <span className="text-label-badge text-on-surface-muted">{recentChannels.length}</span>
             </button>
           )}
@@ -293,7 +293,7 @@ export default function LivePage() {
                 </button>
                 {open &&
                   shown.map(([name, items]) => (
-                    <button key={name} onClick={() => setSelection(`k:${name}`)} aria-pressed={activeChampionship === name} className={`${sideItem(activeChampionship === name)} pl-5`}>
+                    <button data-tv-enter="[data-testid^='live-card'] [data-spatial]" key={name} onClick={() => setSelection(`k:${name}`)} aria-pressed={activeChampionship === name} className={`${sideItem(activeChampionship === name)} pl-5`}>
                       <span className="truncate">{name}</span>
                       <span className="text-label-badge text-on-surface-muted">{items.length}</span>
                     </button>
@@ -319,6 +319,7 @@ export default function LivePage() {
                   shown.map((g) => (
                     <button
                       key={g.category.categoryId}
+                      data-tv-enter="[data-testid^='live-card'] [data-spatial]" 
                       onClick={() => setSelection(`c:${g.category.categoryId}`)}
                       aria-pressed={activeCategory === g.category.categoryId}
                       className={`${sideItem(activeCategory === g.category.categoryId)} pl-5`}
@@ -332,7 +333,7 @@ export default function LivePage() {
           })}
         </aside>
 
-        <div data-nav-group className="min-w-0">
+        <div data-nav-group data-enter-first className="min-w-0">
       <div className={`mb-4 items-center gap-3 ${showingRecent ? 'flex' : 'hidden md:flex'}`}>
         <h2 className="font-display hidden text-headline-sm text-white md:block">{selectionTitle}</h2>
         {showingRecent && (

@@ -18,6 +18,7 @@ export default function StreamingChips({ groups, active, onPick }: {
           <button
             key={s.key}
             type="button"
+            data-tv-enter="#main-content [data-spatial]"
             aria-pressed={on}
             onClick={() => onPick(on ? null : id)}
             className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-label-md transition-colors ${on ? 'border-white bg-white/15 text-white' : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10'}`}

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { isTv } from '../lib/device'
-import { moveFocusTv, moveFocusVertically } from '../lib/spatialNav'
+import { moveFocusTv, moveFocusVertically, tvEnter } from '../lib/spatialNav'
 import MobileNav from './MobileNav'
 import TopNav from './TopNav'
 import UpdatePrompt from './UpdatePrompt'
@@ -84,6 +84,14 @@ export default function Layout() {
 
   const navigationType = useNavigationType()
   const { key } = useLocation()
+  // TV: pagina nova (menu, cartao, busca) ja abre com o foco no primeiro item; voltar (POP) deixa como estava.
+  const firstPage = useRef(true)
+  useEffect(() => {
+    // O primeiro carregamento tambem vem como POP: abrir o app ja deixa o foco no primeiro item.
+    if (isTv && (firstPage.current || navigationType !== 'POP')) tvEnter()
+    firstPage.current = false
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
   useEffect(() => {
     const main = mainRef.current
     if (!main) return

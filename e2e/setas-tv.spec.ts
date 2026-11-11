@@ -38,8 +38,7 @@ for (const rota of ['/movies']) {
     await expect.poll(() => page.locator('[data-row] [data-spatial]').count()).toBeGreaterThan(3)
     // Fileiras estreitas para a de cima precisar rolar, como acontece com o catalogo de verdade (40 titulos por fileira).
     await page.addStyleTag({ content: '[data-row] { max-width: 22rem }' })
-    await tecla(page, 'ArrowDown')
-    await expect(page.getByRole('button', { name: 'Filtros' })).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Filtros' })).toBeFocused() // a tela ja abre com o foco no primeiro item
     await tecla(page, 'ArrowRight') // fim da linha: nao cai num poster da linha de baixo
     await expect(page.getByRole('button', { name: 'Filtros' })).toBeFocused()
 
@@ -94,7 +93,7 @@ test('TV Canais: ferramentas, categorias e canais sao tres blocos e as setas nao
   await expect(canal).toBeVisible()
   const busca = page.getByRole('searchbox', { name: 'Filtrar categorias' })
 
-  await tecla(page, 'ArrowDown')
+  await expect(page.getByRole('searchbox', { name: 'Filtrar canais…' })).toBeFocused() // a tela ja abre no primeiro item
   await tecla(page, 'ArrowRight', 5) // linha de ferramentas: para no ultimo botao
   await expect(page.getByRole('link', { name: 'Mosaico' }).or(page.getByRole('button', { name: 'Mosaico' }))).toBeFocused()
   await tecla(page, 'ArrowDown') // de la para o primeiro canal, nao para o "+" de favoritar

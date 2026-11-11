@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { displayTitle, withoutYear } from '../lib/displayTitle'
 import { proxyImage } from '../lib/xtream'
+import { isTv } from '../lib/device'
 import { Check } from './icons'
 
 interface DetailHeroProps {
@@ -102,12 +103,12 @@ export default function DetailHero({ title: rawTitle, backdrop, imdbRating, tmdb
             <h1 className="font-display text-headline-lg text-white sm:text-display-hero">{title}</h1>
           )}
           {plot && (
-            <p className={`mt-4 max-w-2xl text-body-md text-on-surface-variant sm:text-body-lg ${longPlot && !plotOpen ? 'line-clamp-4' : ''}`}>
+            <p className={`mt-4 max-w-2xl text-body-md text-on-surface-variant sm:text-body-lg ${longPlot && (isTv || !plotOpen) ? 'line-clamp-4' : ''}`}>
               {plot}
             </p>
           )}
           {plot && plotNote && <p className="mt-1 text-body-sm text-on-surface-muted">{plotNote}</p>}
-          {longPlot && (
+          {longPlot && !isTv && (
             <button
               type="button"
               aria-expanded={plotOpen}
