@@ -65,11 +65,16 @@ function visible(el: HTMLElement) {
 const GROUP = '[data-row], [data-nav-group]'
 const remembered = new WeakMap<Element, HTMLElement>()
 
-function enterGroup(group: Element, from: DOMRect): HTMLElement | null {
+function enterGroup(group: Element, from: DOMRect, direction: 'up' | 'down' | 'left' | 'right'): HTMLElement | null {
   const kept = remembered.get(group)
   if (kept && group.contains(kept) && visible(kept)) return kept
   const items = Array.from(group.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.tabIndex >= 0 && visible(el))
   if (group.matches('[data-row]')) return items[0] ?? null
+  // Vindo do lado: a lista de canais (data-enter-first) cai no PRIMEIRO item (antes caia no mais perto da altura da categoria,
+  // que era o segundo canal) e a lista de categorias (data-enter-selected) na categoria aberta. Outros grupos, como a coluna
+  // de botoes do player, seguem pelo item na altura de onde se veio.
+  if (direction === 'right' && group.matches('[data-enter-first]')) return items[0] ?? null
+  if (direction === 'left' && group.matches('[data-enter-selected]')) return items.find((el) => el.matches('[aria-pressed="true"], [aria-current]')) ?? items[0] ?? null
   // Lista: o item na altura de onde se veio.
   const y = from.top + from.height / 2
   return items.reduce<HTMLElement | null>((best, el) => (!best || Math.abs(center(el).y - y) < Math.abs(center(best).y - y) ? el : best), null)
@@ -151,7 +156,57 @@ export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: 
     if (menu) lastContent = active
     return go(menu)
   }
-  return go(best instanceof HTMLElement && all.includes(best) ? best : enterGroup(best, from))
+  return go(best instanceof HTMLElement && all.includes(best) ? best : enterGroup(best, from, direction))
+}
+
+// Entrar no conteudo depois de OK no menu, numa categoria ou numa pagina nova: o foco vai sozinho para o primeiro item,
+// sem o "OK e depois seta para a direita". Espera a tela assentar (150 ms sem mudar o DOM ou 1,2 s, vigiando ate 8 s: filmes e canais
+// chegam aos poucos) e desiste se a pessoa apertar uma seta antes. `selector` escolhe o alvo (senao, o 1o item do conteudo).
+let cancelEnter = () => {}
+export function tvEnter(selector?: string) {
+  cancelEnter()
+  const main = document.getElementById('main-content')
+  if (!main) return
+  const deadline = Date.now() + 8000
+  let timer = 0
+  let late = 0
+  let focused = false // depois de dado, segue de olho: a tela ainda pode trocar os cartoes (catalogo chegando) e levar o foco embora
+  const stop = () => {
+    clearTimeout(timer)
+    clearTimeout(late)
+    observer.disconnect()
+    window.removeEventListener('keydown', onKey, true)
+  }
+  const onKey = (e: KeyboardEvent) => e.key.startsWith('Arrow') && stop()
+  const settle = () => {
+    const active = document.activeElement
+    const editing = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement
+    const lost = !active || active === document.body
+    if (focused) return Date.now() > deadline ? stop() : lost ? tryFocus() : undefined
+    // Sem seletor (troca de pagina): quem ja tem foco na pagina (campo da busca, autoFocus) nao e tirado de la.
+    if (editing || (!selector && !lost && main.contains(active))) return stop()
+    tryFocus()
+  }
+  const tryFocus = () => {
+    const pool = Array.from((selector ? document : main).querySelectorAll<HTMLElement>(selector ?? FOCUSABLE))
+    const el = pool.find((e) => e.tabIndex >= 0 && visible(e) && !e.closest('header') && (selector || e.getBoundingClientRect().top >= 0))
+    if (el) {
+      el.focus()
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      focused = true
+    } else if (Date.now() >= deadline) stop()
+  }
+  const arm = () => {
+    clearTimeout(timer)
+    timer = window.setTimeout(settle, 150)
+  }
+  const observer = new MutationObserver(arm)
+  observer.observe(main, { childList: true, subtree: true })
+  window.addEventListener('keydown', onKey, true)
+  cancelEnter = stop
+  late = window.setTimeout(settle, 1200) // tela que nao para de mudar (catalogo chegando) tambem recebe o foco
+  arm()
+  window.setTimeout(() => cancelEnter === stop && stop(), 8200)
 }
 
 // --- TV: protecoes que so aparecem numa TV de verdade -----------------------------------------------------------
@@ -233,6 +288,11 @@ export function installTvGuards() {
     },
     true,
   )
+  // OK num item marcado com data-tv-enter (categoria, filtro): o foco vai para o primeiro resultado.
+  document.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target.closest('[data-tv-enter]') : null
+    if (t) tvEnter(t.getAttribute('data-tv-enter') || undefined)
+  }, true) // captura: paineis que chamam stopPropagation no clique (Filtros) nao chegam ao document
   installFlexGap() // main.tsx e modulo: roda com o <body> ja no DOM
   // Samsung: fora setas, OK e Voltar, a TV so entrega as teclas que o app registra (midia, canal e numeros).
   const tizen = (window as unknown as { tizen?: Tizen }).tizen

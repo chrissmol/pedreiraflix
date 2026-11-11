@@ -103,7 +103,7 @@ export default function FilterPanel({ active, children }: FilterPanelProps) {
               )}
             </div>
             {children}
-            <button onClick={() => setOpen(false)} className="btn-primary sticky bottom-0 w-full">
+            <button onClick={() => setOpen(false)} data-tv-enter="#main-content [data-spatial]" className="btn-primary sticky bottom-0 w-full">
               Ver resultados
             </button>
           </div>
