@@ -112,6 +112,16 @@ export function supportsNativeHls() {
 
 // 403 nem sempre e o limite de telas (09/10: era a Cloudflare barrando IP puro e o app culpava as telas).
 // So culpa as telas quando o provedor confirma, pelo numero de conexoes da conta.
+// O provedor so solta a tela de um canal ao vivo uns instantes depois que o app para de pedir (sair do canal fecha tudo
+// aqui, provado em e2e/sair-canal-tv.spec.ts). Abrir 3 canais e logo depois um filme estoura o limite sem o app
+// estar com nada aberto: quem recebe a recusa tenta de novo sozinho enquanto a ultima abertura e recente.
+export const SCREEN_RELEASE_MS = 90_000
+export const SCREEN_RELEASE_RETRY_MS = 12_000
+let lastLiveOpen = 0
+export const markLiveOpen = () => void (lastLiveOpen = Date.now())
+export const liveOpenedRecently = () => Date.now() - lastLiveOpen < SCREEN_RELEASE_MS
+export const SCREEN_RELEASE_NOTE = ' Você abriu canais ao vivo há pouco e o provedor ainda não liberou a tela: tentando de novo sozinho.'
+
 export async function refusedMessage(fallback = REFUSED_MESSAGE): Promise<string> {
   if (useAuthStore.getState().credentials?.type !== 'xtream') return fallback
   await refreshSession()
