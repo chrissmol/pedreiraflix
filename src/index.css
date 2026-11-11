@@ -479,12 +479,26 @@ html.tv :focus-visible,
 html.tv .brand-focus:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.85);
   outline-offset: 2px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
 }
 /* So os cartoes crescem: botoes e menu mudando de tamanho mexiam na escolha do proximo item da navegacao por setas. */
 html.tv [data-spatial]:focus-visible {
   transform: scale(1.07);
-  transition: transform 0.15s ease-out;
+}
+/* TV: desempenho a cada tecla. Medido com catalogo grande, user agent Samsung e CPU 6x mais lenta: sombras grandes (a do
+   cartao e a do foco), desfoque de fundo e filtro de imagem eram redesenhados a cada seta e custavam ~metade do tempo de
+   desenho (1220 ms -> 625 ms em 10 teclas em Filmes). Fica so o transform do foco (barato, vai para a GPU). */
+html.tv [data-spatial] {
+  box-shadow: none;
+  transition: transform 0.12s ease-out;
+}
+html.tv [data-spatial] * {
+  transition: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+html.tv * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 /* Campos: sem anel afastado nem sombra; so a borda do proprio campo fica clara e uma luz fina ao redor. */
 html.tv input:focus-visible,
