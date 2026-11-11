@@ -82,7 +82,7 @@ test('TV Mosaico: seta para a esquerda no quadro da direita vai ao quadro 1, nao
   expect(await nome(page)).toMatch(/Sair/)
 })
 
-test('TV Filme: abre com o foco em Assistir e a sinopse longa nao tem Ler mais nem botao de marcar como visto', async ({ page }) => {
+test('TV Filme: abre com o foco em Assistir e a sinopse longa nao tem Ler mais', async ({ page }) => {
   await page.route(/\/api\/xtream\?.*action=get_vod_info/, async (route) => {
     const res = await route.fetch()
     const json = await res.json()
@@ -93,7 +93,6 @@ test('TV Filme: abre com o foco em Assistir e a sinopse longa nao tem Ler mais n
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect.poll(() => nome(page)).toBe('Assistir')
   await expect(page.getByRole('button', { name: 'Ler mais' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Marcar como visto/ })).toHaveCount(0)
 })
 
 test('TV Filmes: OK em "Ver resultados" do painel de Filtros leva o foco ao primeiro filme', async ({ page }) => {

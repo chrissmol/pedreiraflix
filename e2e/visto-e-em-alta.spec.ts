@@ -53,7 +53,7 @@ test.describe('TV', () => {
     for (let i = 0; i < 12; i++) {
       const label = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))
       if (label === 'Marcar como visto') break
-      await page.keyboard.press(i === 0 ? 'ArrowDown' : 'ArrowRight')
+      await page.keyboard.press('ArrowRight') // a tela ja abre com o foco em Assistir
     }
     await page.keyboard.press('Enter')
     await expect(page.getByText('Assistido', { exact: true })).toBeVisible()
