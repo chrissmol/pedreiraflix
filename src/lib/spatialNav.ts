@@ -51,38 +51,28 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), texta
 
 function visible(el: HTMLElement) {
   const r = el.getBoundingClientRect()
-  if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > innerHeight * 3) return false
+  // Ate 3 telas acima ou abaixo: so "abaixo" deixava o foco preso ao subir depressa (a rolagem suave ainda nao tinha
+  // trazido a linha de cima para a tela).
+  if (r.width < 2 || r.height < 2 || r.bottom < -innerHeight * 3 || r.top > innerHeight * 3) return false
   const cs = getComputedStyle(el)
   return cs.visibility !== 'hidden' && cs.display !== 'none' && !el.closest('[aria-hidden="true"], .sr-only')
 }
 
-// Fileira (Row.tsx marca o rolador com data-row): cima/baixo vao para o cartao da fileira vizinha que esta na mesma coluna
-// da tela, como na Netflix, em vez de cair no que estiver mais perto por acaso. A coluna e lembrada por varias fileiras
-// seguidas (passar por uma fileira curta nao faz o foco "escorregar" para a esquerda).
-let column: { el: Element; x: number } | null = null
-function moveAcrossRows(active: HTMLElement, direction: 'up' | 'down'): boolean {
-  const own = active.parentElement
-  if (!own?.matches('[data-row]')) return false
-  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]')).filter((r) => r.querySelector(FOCUSABLE) && visible(r))
-  const i = rows.indexOf(own)
-  const target = rows[i + (direction === 'down' ? 1 : -1)]
-  if (i < 0 || !target) return false
-  const x = column?.el === active ? column.x : center(active).x
-  let best: HTMLElement | null = null
-  let gap = Infinity
-  for (const el of target.querySelectorAll<HTMLElement>(FOCUSABLE)) {
-    const c = center(el).x
-    if (c < 0 || c > innerWidth) continue // so cartoes que aparecem na tela
-    if (Math.abs(c - x) < gap) {
-      best = el
-      gap = Math.abs(c - x)
-    }
-  }
-  if (!best) return false
-  column = { el: best, x }
-  best.focus()
-  best.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
-  return true
+// Grupos de foco, como nos apps de streaming: uma fileira (Row.tsx marca o rolador com data-row) ou uma coluna/lista
+// (data-nav-group) conta como um bloco so para quem vem de fora, e ao entrar o foco volta para o item em que estava da
+// ultima vez (na fileira nunca visitada, o primeiro cartao). Antes o alvo era "o cartao mais perto na tela": com fileiras
+// roladas em pontos diferentes, ou com a rolagem suave ainda no meio do caminho, descer ou subir mudava de coluna sozinho.
+const GROUP = '[data-row], [data-nav-group]'
+const remembered = new WeakMap<Element, HTMLElement>()
+
+function enterGroup(group: Element, from: DOMRect): HTMLElement | null {
+  const kept = remembered.get(group)
+  if (kept && group.contains(kept) && visible(kept)) return kept
+  const items = Array.from(group.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.tabIndex >= 0 && visible(el))
+  if (group.matches('[data-row]')) return items[0] ?? null
+  // Lista: o item na altura de onde se veio.
+  const y = from.top + from.height / 2
+  return items.reduce<HTMLElement | null>((best, el) => (!best || Math.abs(center(el).y - y) < Math.abs(center(best).y - y) ? el : best), null)
 }
 
 // Ultimo item do conteudo que tinha o foco antes de ir para o menu lateral: Direita no menu volta para ele (como na Netflix),
@@ -92,54 +82,76 @@ let lastContent: HTMLElement | null = null
 export function moveFocusTv(direction: 'up' | 'down' | 'left' | 'right', skip?: Element | null): boolean {
   // Painel aberto (Filtros): as setas andam so dentro dele, nao pelo catalogo escondido atras.
   const modal = document.querySelector('[aria-modal="true"]')
-  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => visible(el) && (!modal || modal.contains(el)))
+  const all = Array.from(document.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.tabIndex >= 0 && visible(el) && (!modal || modal.contains(el)))
   const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
-  if (!active || !all.includes(active)) {
-    // Primeira seta: o primeiro item do conteudo (nao o logo do cabecalho).
-    const first = all.find((el) => el.closest('#main-content') && el.getBoundingClientRect().top >= 0) ?? all[0]
-    first?.focus()
-    first?.scrollIntoView({ block: 'center', inline: 'nearest' })
-    return !!first
+  const first = () => all.find((el) => el.closest('#main-content') && el.getBoundingClientRect().top >= 0) ?? all[0]
+  const go = (el: HTMLElement | null | undefined) => {
+    el?.focus()
+    el?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+    return !!el
   }
-  if ((direction === 'up' || direction === 'down') && moveAcrossRows(active, direction)) return true
-  // Menu lateral e a borda esquerda: dali para a esquerda nao ha nada (sem isso caia no avatar, mais a esquerda).
-  if (direction === 'left' && active.closest('header')) return true
-  if (direction === 'right' && active.closest('header') && lastContent && lastContent.isConnected && all.includes(lastContent)) {
-    lastContent.focus()
-    lastContent.scrollIntoView({ block: 'center', inline: 'nearest' })
-    return true
-  }
-  const from = center(active)
+  // Primeira seta: o primeiro item do conteudo (nao o logo do cabecalho).
+  if (!active || !all.includes(active)) return go(first())
+  const own = active.closest(GROUP)
+  if (own) remembered.set(own, active)
   const horizontal = direction === 'left' || direction === 'right'
-  const sign = direction === 'down' || direction === 'right' ? 1 : -1
-  let best: HTMLElement | null = null
-  let bestScore = Infinity
   // O menu lateral fica ao lado do conteudo: do conteudo so se entra nele pela esquerda (subir/descer no fim da pagina
-  // nao cai no menu) e do menu a direita sempre vai para o conteudo (nao para a busca, que fica no proprio menu).
+  // nao cai no menu), dentro dele so se anda na vertical e a direita volta para onde se estava no conteudo.
   const fromContent = !!active.closest('#main-content')
   const inMenu = !!active.closest('header')
+  if (inMenu && direction === 'left') return true // borda esquerda: dali para a esquerda nao ha nada
+  if (inMenu && direction === 'right') return go(lastContent && all.includes(lastContent) ? lastContent : all.find((el) => el.closest('#main-content')))
+
+  // Geometria pelas bordas, nao pelos centros: so conta quem esta inteiro adiante na direcao pedida (a folga de 8px cobre
+  // o cartao focado, que cresce um pouco), a distancia e o vao entre as bordas e quem esta na mesma linha/coluna vence.
+  const from = active.getBoundingClientRect()
+  const sign = direction === 'down' || direction === 'right' ? 1 : -1
+  const seen = new Set<Element>()
+  let best: Element | null = null
+  let bestScore = Infinity
   for (const el of all) {
     if (el === active || el === skip || el.contains(active) || active.contains(el)) continue
-    if (el.closest('header') && (inMenu ? horizontal : fromContent && !horizontal)) continue
-    const to = center(el)
-    const main = (horizontal ? to.x - from.x : to.y - from.y) * sign
-    if (main <= 8) continue // so quem esta de fato naquela direcao
-    const cross = Math.abs(horizontal ? to.y - from.y : to.x - from.x)
-    const score = main + cross * 2 // alinhado vence: andar para o lado fica na mesma linha
+    const inHeader = !!el.closest('header')
+    if (fromContent ? inHeader : inMenu && !inHeader) continue
+    const group = el.closest(GROUP)
+    const target = group && group !== own ? group : el
+    if (seen.has(target)) continue
+    seen.add(target)
+    const to = target.getBoundingClientRect()
+    let main = horizontal ? (sign > 0 ? to.left - from.right : from.left - to.right) : sign > 0 ? to.top - from.bottom : from.top - to.bottom
+    // Bordas que se sobrepoem (quadros do mosaico encostados, o microfone dentro do campo de busca): vale o centro.
+    const overlap = horizontal ? to.left < from.right && to.right > from.left : to.top < from.bottom && to.bottom > from.top
+    if (main < -8 && overlap) {
+      const entre = (horizontal ? to.left + to.width / 2 - from.left - from.width / 2 : to.top + to.height / 2 - from.top - from.height / 2) * sign
+      // So vale se o alvo avanca de verdade naquela direcao (quadro vizinho encostado) ou esta todo dentro do atual
+      // (o microfone dentro do campo de busca). Sem isso, um botao atras de um quadro grande "parecia" estar ao lado.
+      const avanca = (horizontal ? (sign > 0 ? to.right - from.right : from.left - to.left) : sign > 0 ? to.bottom - from.bottom : from.top - to.top) > 8
+      const dentro = to.left >= from.left && to.right <= from.right && to.top >= from.top && to.bottom <= from.bottom
+      // Com folga de 8px: o cartao focado cresce (scale 1.07) e encostava 4px na barra de cima, e com a fonte do CI
+      // um botao da barra "parecia" vizinho de lado. Sobrepor de verdade nos dois eixos, nao so o respingo do foco.
+      const cruzado = horizontal ? to.top < from.bottom - 8 && to.bottom > from.top + 8 : to.left < from.right - 8 && to.right > from.left + 8
+      main = entre > 8 && cruzado && (avanca || dentro) ? entre : -9 // sem sobrepor tambem no outro eixo, seria um salto diagonal
+    }
+    if (main < -8) continue
+    const cross = Math.max(0, horizontal ? Math.max(to.top - from.bottom, from.top - to.bottom) : Math.max(to.left - from.right, from.left - to.right))
+    // Para o lado so vale a mesma linha: no fim da linha a seta nao faz nada, em vez de cair na linha de baixo ou de cima.
+    // Um grupo ao lado (lista de categorias ao lado dos canais) vale em qualquer altura.
+    if (horizontal && target === el && cross > from.height) continue
+    const off = horizontal ? to.top + to.height / 2 - (from.top + from.height / 2) : to.left + to.width / 2 - (from.left + from.width / 2)
+    const score = Math.max(0, main) + cross * 3 + Math.abs(off) * 0.01
     if (score < bestScore) {
-      best = el
+      best = target
       bestScore = score
     }
   }
-  if (!best) return false
-  // Do conteudo para o menu lateral (TopNav na TV): cai na secao aberta, nao no item do menu mais perto na altura.
-  if (horizontal && fromContent && best.closest('header')) {
-    best = document.querySelector<HTMLElement>('header [aria-current="page"]') ?? best
-    lastContent = active
+  if (!best) {
+    // Do conteudo para o menu lateral (TopNav na TV): cai na secao aberta, e o menu lembra de onde se saiu.
+    if (direction !== 'left' || !fromContent) return false
+    const menu = document.querySelector<HTMLElement>('header [aria-current="page"]') ?? all.find((el) => el.closest('header'))
+    if (menu) lastContent = active
+    return go(menu)
   }
-  best.focus()
-  best.scrollIntoView({ block: 'center', inline: 'nearest' })
-  return true
+  return go(best instanceof HTMLElement && all.includes(best) ? best : enterGroup(best, from))
 }
 
 // --- TV: protecoes que so aparecem numa TV de verdade -----------------------------------------------------------

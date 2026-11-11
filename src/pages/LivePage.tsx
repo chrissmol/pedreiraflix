@@ -257,7 +257,7 @@ export default function LivePage() {
 
       <div className="md:grid md:grid-cols-[15rem_minmax(0,1fr)] md:gap-8">
         {/* Computador e tablet: lista lateral com as categorias em grupos que abrem e fecham. */}
-        <aside aria-label="Categorias" className="hidden md:sticky md:top-24 md:block md:max-h-[calc(100dvh-8rem)] md:self-start md:overflow-y-auto">
+        <aside aria-label="Categorias" data-nav-group className="hidden md:sticky md:top-24 md:block md:max-h-[calc(100dvh-8rem)] md:self-start md:overflow-y-auto">
           <div className="relative mb-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-muted" />
             <input
@@ -332,7 +332,7 @@ export default function LivePage() {
           })}
         </aside>
 
-        <div className="min-w-0">
+        <div data-nav-group className="min-w-0">
       <div className={`mb-4 items-center gap-3 ${showingRecent ? 'flex' : 'hidden md:flex'}`}>
         <h2 className="font-display hidden text-headline-sm text-white md:block">{selectionTitle}</h2>
         {showingRecent && (
