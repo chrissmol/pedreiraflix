@@ -1,7 +1,7 @@
 // Endereços de download. Preencha quando os arquivos estiverem publicados (ex.: GitHub Releases ou Drive).
 // Vazio = o botão mostra "Em breve" e não leva a lugar nenhum.
 const DOWNLOADS = {
-  apk: '',
+  apk: 'https://drive.google.com/uc?export=download&id=1bEaAyu_YoYruK7IcmxHFDi9kehYtdiCb',
   windows: '',
 }
 
