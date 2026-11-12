@@ -6,6 +6,7 @@ import { isTv } from '../lib/device'
 import { entrarComPareamento } from '../lib/pareamento'
 import { Calendar, Eye, EyeOff, FileArrowDown, ListIcon, Lock, Pencil, Shield, Trash, Tv, User } from '../components/icons'
 import { normalizeCredentials, signIn, signInM3u, signInSavedAccount } from '../lib/session'
+import { XtreamApiError } from '../lib/xtream'
 import { type SavedAccount, useAccountsStore } from '../store/accounts'
 import { useAuthStore } from '../store/auth'
 
@@ -60,6 +61,18 @@ const methods: { id: LoginMethod; label: string; short: string; icon: ReactNode 
   { id: 'm3u-file', label: 'Arquivo M3U', short: 'Arquivo', icon: <FileArrowDown className="h-4 w-4" /> },
 ]
 
+// Sem jargao de HTTP na tela (ex.: "Xtream request failed: 530", erro da Cloudflare na frente do provedor).
+function loginErrorMessage(err: unknown): string {
+  if (err instanceof XtreamApiError && err.status) {
+    if (err.status === 401 || err.status === 403) return 'O provedor recusou o acesso. Confira usuário, senha e servidor.'
+    if (err.status === 429) return 'O provedor está recebendo muitos pedidos. Espere alguns segundos e tente de novo.'
+    if (err.status >= 500) return 'Não foi possível falar com o provedor agora. Ele pode estar fora do ar; tente de novo em instantes.'
+    if (/^Xtream request failed/.test(err.message)) return 'Não foi possível conectar ao provedor. Confira o endereço do servidor.'
+  }
+  if (err instanceof TypeError) return 'Sem conexão com a internet. Confira a rede e tente de novo.'
+  return err instanceof Error ? err.message : 'Falha ao conectar'
+}
+
 export default function LoginPage() {
   const navigate = useNavigate()
   // "Trocar conta" no menu: mostra as contas salvas sem sair da atual (voltar continua nela).
@@ -107,7 +120,7 @@ export default function LoginPage() {
       await action()
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao conectar')
+      setError(loginErrorMessage(err))
       setBusyId(null)
     }
   }
