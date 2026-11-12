@@ -47,6 +47,17 @@ test('wrong password shows an error and does not save the account', async ({ pag
   expect(await page.evaluate(() => localStorage.getItem('iptv-accounts'))).toBeNull()
 })
 
+test('provider 530 at login shows a friendly message, not HTTP jargon', async ({ page }) => {
+  await page.route('**/api/xtream**', (route) => route.fulfill({ status: 530, body: 'error code: 1016' }))
+  await page.goto('/login')
+  await page.getByLabel('Endereço do servidor').fill(MOCK.baseUrl)
+  await page.getByLabel('Usuário', { exact: true }).fill(MOCK.username)
+  await page.getByLabel('Senha', { exact: true }).fill(MOCK.password)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText(/fora do ar/i)
+  await expect(page.getByRole('alert')).not.toContainText(/530|Xtream/)
+})
+
 test('unchecking "lembrar" does not keep the account after logout', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Endereço do servidor').fill('localhost:8790') // no scheme: http:// is assumed
