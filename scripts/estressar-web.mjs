@@ -145,7 +145,7 @@ try {
       }
       await page.goto(BASE + rota)
       // A busca do topo e um form escondido no celular: sem o filtro, o first() pegava ela e nunca ficava visivel.
-      await page.locator('#main-content, video, form').filter({ visible: true }).first().waitFor({ timeout: 20_000 })
+      await page.locator('#main-content, video, form, h1').filter({ visible: true }).first().waitFor({ timeout: 20_000 })
       await sleep(2500)
       // "Carregando" ainda na tela depois de 20s+ de espera e problema, nao paciencia.
       if (await page.getByText(/^Carregando/).first().isVisible().catch(() => false)) visual.push(`[${aparelho}/${nome}] ainda "Carregando..." depois da espera`)
