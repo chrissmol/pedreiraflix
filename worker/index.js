@@ -478,6 +478,12 @@ async function imdbRating(imdbId, env) {
   return result
 }
 
+// Titulo com poucos votos (lancamento novo) muda muito a nota: 173 votos mostraram 8.2 no app enquanto o IMDb ja dava 4.2.
+// Por isso a nota vale pouco quando ha poucos votos e mais quando e estavel. Sem nota: 3 dias (a nota nova assume logo).
+const ratingDays = (votes) => (votes == null ? 30 : votes >= 50000 ? 30 : votes >= 1000 ? 7 : 2)
+// Fresca = tem a hora em que o OMDb foi perguntado (ratedAt) e ainda esta dentro do prazo; entradas antigas nao tem e sao refeitas.
+const ratingFresh = (saved) => Date.now() - (saved?.ratedAt || 0) < (saved.imdbRating ? ratingDays(saved.imdbVotes) : 3) * 86400000
+
 async function omdbLookup(imdbId, env) {
   try {
     const res = await fetch(`https://www.omdbapi.com/?${new URLSearchParams({ i: imdbId, apikey: String(env.OMDB_KEY).trim() })}`, {
@@ -485,7 +491,7 @@ async function omdbLookup(imdbId, env) {
     })
     const data = res.ok ? await res.json() : null
     if (!data || data.Response === 'False') return undefined
-    return /^\d+(\.\d)?$/.test(data.imdbRating || '') ? data.imdbRating : null
+    return /^\d+(\.\d)?$/.test(data.imdbRating || '') ? { rating: data.imdbRating, votes: Number(String(data.imdbVotes).replace(/,/g, '')) || 0 } : null
   } catch {
     return undefined
   }
@@ -573,7 +579,7 @@ async function tmdb(url, env) {
   const answer = (body) => Response.json(body, { headers: { 'cache-control': 'public, max-age=86400' } })
   const saved = await notasGet(env, cacheKey)
   // Guardado antes do logo, da classificacao e do elenco: refaz so o TMDB e reaproveita a nota (o OMDb so da 1.000/dia).
-  if (saved && 'cast' in saved) return answer(saved)
+  if (saved && 'cast' in saved && ratingFresh(saved)) return answer(saved)
   const yearParam = /^\d{4}$/.test(year) ? { [tv ? 'first_air_date_year' : 'year']: year } : {}
   const search = await get(tv ? '/search/tv' : '/search/movie', { query: title, language: 'pt-BR', ...yearParam })
   const hit = search.ok ? (await search.json()).results?.[0] : null
@@ -587,7 +593,10 @@ async function tmdb(url, env) {
   if (!details.ok) return saved ? answer(saved) : none(`details-${details.status}`)
   const d = await details.json()
   const firstDate = tv ? d.first_air_date : d.release_date
-  const imdb = saved ? saved.imdbRating : await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
+  const fresh = saved && ratingFresh(saved)
+  const asked = fresh ? undefined : await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
+  // OMDb fora do ar ou sem chave: mantem a nota que ja tinhamos (mesmo velha) em vez de sumir com ela.
+  const imdb = asked === undefined ? saved?.imdbRating : asked?.rating ?? null
   const logos = d.images?.logos || []
   const logo = ['pt', 'en', null].map((lang) => logos.find((l) => l.iso_639_1 === lang)).find(Boolean)?.file_path
   const br = (tv ? d.content_ratings?.results : d.release_dates?.results)?.find((r) => r.iso_3166_1 === 'BR')
@@ -598,6 +607,8 @@ async function tmdb(url, env) {
     rating: d.vote_average || null,
     overview: d.overview || null,
     imdbRating: imdb ?? null,
+    imdbVotes: asked ? asked.votes : saved?.imdbVotes ?? null,
+    ratedAt: asked !== undefined ? Date.now() : fresh ? saved.ratedAt : 0,
     logo: logo ? `https://image.tmdb.org/t/p/w500${logo}` : null,
     certification: /^(L|10|12|14|16|18)$/.test(certification || '') ? certification : null,
     // Elenco na ordem de creditos do TMDB, com foto e personagem (a tela mostra os primeiros e deixa o resto expandir).
@@ -607,9 +618,8 @@ async function tmdb(url, env) {
       .map((c) => ({ name: c.name, character: c.character || null, photo: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : null })),
     ...(tv ? { tvmaze: await tvmaze(d.external_ids?.imdb_id) } : {}),
   }
-  // Com nota do IMDb: 30 dias. Sem nota (lancamento novo, o app mostra a do TMDB): so 3 dias, para a do IMDb
-  // assumir assim que existir e quando houver consultas do dia no OMDb. shortcut: cada refazer gasta 1 consulta.
-  if (imdb !== undefined) await notasPut(env, cacheKey, body, imdb ? 30 : 3)
+  // So grava se o OMDb respondeu agora ou a nota guardada ainda vale; a validade e a de ratingFresh (o KV so limpa o resto).
+  if (body.ratedAt) await notasPut(env, cacheKey, body, 30)
   return answer(body)
 }
 

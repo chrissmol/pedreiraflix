@@ -157,7 +157,7 @@ test('logo (portugues antes do ingles) e classificacao indicativa do Brasil vem 
 
 test('nota guardada sem logo (versao antiga): refaz o TMDB e reaproveita a nota sem chamar o OMDb', async () => {
   const NOTAS = memoryKv()
-  NOTAS.data.set('tmdb:movie:interestelar:2014', JSON.stringify({ genres: [], imdbRating: '8.7' }))
+  NOTAS.data.set('tmdb:movie:interestelar:2014', JSON.stringify({ genres: [], imdbRating: '8.7', imdbVotes: 900000, ratedAt: Date.now() }))
   const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
   const body = await (await ask({ ...ENV, NOTAS })).json()
   assert.equal(body.imdbRating, '8.7')
@@ -183,16 +183,36 @@ test('com Cache API: guarda nela, nao faz put no KV e a segunda pergunta nao cha
   }
 })
 
-// Ignora o contador diario de OMDb (omdb:AAAA-MM-DD), que tambem grava em NOTAS.
-const ttlsDasNotas = (kv) => Object.entries(kv.ttls).filter(([k]) => !k.startsWith('omdb:')).map(([, v]) => v)
+const guardada = (extra) => JSON.stringify({ genres: [], cast: [], imdbRating: '8.2', ...extra })
+const DIA = 86400000
 
-test('sem nota no IMDb guarda so 3 dias (a nota nova assume logo); com nota, 30 dias', async () => {
+test('nota de titulo com poucos votos vence em 2 dias e e refeita no OMDb (caso Authentic Games: 8.2 velho, IMDb dava 4.2)', async () => {
   const NOTAS = memoryKv()
-  stubFetch(() => Response.json({ imdbRating: 'N/A' }))
-  await ask({ ...ENV, NOTAS })
-  assert.deepEqual(ttlsDasNotas(NOTAS), [3 * 86400])
-  const COM = memoryKv()
-  stubFetch(() => Response.json({ imdbRating: '8.7' }))
-  await ask({ ...ENV, NOTAS: COM })
-  assert.deepEqual(ttlsDasNotas(COM), [30 * 86400])
+  NOTAS.data.set('tmdb:movie:interestelar:2014', guardada({ imdbVotes: 173, ratedAt: Date.now() - 3 * DIA }))
+  const calls = stubFetch(() => Response.json({ imdbRating: '4.2', imdbVotes: '173' }))
+  const body = await (await ask({ ...ENV, NOTAS })).json()
+  assert.equal(body.imdbRating, '4.2')
+  assert.equal(body.imdbVotes, 173)
+  assert.ok(calls.some((u) => u.includes('i=tt0816692')))
+})
+
+test('nota com poucos votos ainda dentro de 2 dias, ou de titulo famoso dentro de 30, nao chama o OMDb', async () => {
+  for (const extra of [{ imdbVotes: 173, ratedAt: Date.now() - 1 * DIA }, { imdbVotes: 2000000, ratedAt: Date.now() - 29 * DIA }]) {
+    const NOTAS = memoryKv()
+    NOTAS.data.set('tmdb:movie:interestelar:2014', guardada(extra))
+    const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
+    assert.equal((await (await ask({ ...ENV, NOTAS })).json()).imdbRating, '8.2')
+    assert.equal(calls.length, 0)
+  }
+})
+
+test('nota guardada sem ratedAt (entrada antiga) e refeita; se o OMDb falhar, mantem a nota antiga', async () => {
+  const NOTAS = memoryKv()
+  NOTAS.data.set('tmdb:movie:interestelar:2014', guardada({}))
+  stubFetch(() => Response.json({ imdbRating: '4.2', imdbVotes: '1,173' }))
+  assert.equal((await (await ask({ ...ENV, NOTAS })).json()).imdbRating, '4.2')
+  const FALHA = memoryKv()
+  FALHA.data.set('tmdb:movie:interestelar:2014', guardada({}))
+  stubFetch(() => new Response('x', { status: 500 }))
+  assert.equal((await (await ask({ ...ENV, NOTAS: FALHA })).json()).imdbRating, '8.2')
 })
