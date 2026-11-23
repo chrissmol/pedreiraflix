@@ -480,6 +480,9 @@ async function imdbRating(imdbId, env) {
 
 // Titulo com poucos votos (lancamento novo) muda muito a nota: 173 votos mostraram 8.2 no app enquanto o IMDb ja dava 4.2.
 // Por isso a nota vale pouco quando ha poucos votos e mais quando e estavel. Sem nota: 3 dias (a nota nova assume logo).
+// Abaixo disto o OMDb costuma estar atrasado em relacao ao IMDb (Authentic Games: OMDb 8.2 com 79 votos, IMDb 4.2 com 173):
+// melhor nao mostrar nota nenhuma (nem a do TMDB) do que uma errada. Votos desconhecidos (null) nao escondem.
+const MIN_VOTES = 1000
 const ratingDays = (votes) => (votes == null ? 30 : votes >= 50000 ? 30 : votes >= 1000 ? 7 : 2)
 // Fresca = tem a hora em que o OMDb foi perguntado (ratedAt) e ainda esta dentro do prazo; entradas antigas nao tem e sao refeitas.
 const ratingFresh = (saved) => Date.now() - (saved?.ratedAt || 0) < (saved.imdbRating ? ratingDays(saved.imdbVotes) : 3) * 86400000
@@ -491,7 +494,7 @@ async function omdbLookup(imdbId, env) {
     })
     const data = res.ok ? await res.json() : null
     if (!data || data.Response === 'False') return undefined
-    return /^\d+(\.\d)?$/.test(data.imdbRating || '') ? { rating: data.imdbRating, votes: Number(String(data.imdbVotes).replace(/,/g, '')) || 0 } : null
+    return /^\d+(\.\d)?$/.test(data.imdbRating || '') ? { rating: data.imdbRating, votes: Number(String(data.imdbVotes).replace(/,/g, '')) || null } : null
   } catch {
     return undefined
   }
@@ -597,6 +600,8 @@ async function tmdb(url, env) {
   const asked = fresh ? undefined : await imdbRating(tv ? d.external_ids?.imdb_id : d.imdb_id, env)
   // OMDb fora do ar ou sem chave: mantem a nota que ja tinhamos (mesmo velha) em vez de sumir com ela.
   const imdb = asked === undefined ? saved?.imdbRating : asked?.rating ?? null
+  const votes = asked ? asked.votes : saved?.imdbVotes ?? null
+  const hide = votes != null && votes < MIN_VOTES
   const logos = d.images?.logos || []
   const logo = ['pt', 'en', null].map((lang) => logos.find((l) => l.iso_639_1 === lang)).find(Boolean)?.file_path
   const br = (tv ? d.content_ratings?.results : d.release_dates?.results)?.find((r) => r.iso_3166_1 === 'BR')
@@ -604,10 +609,10 @@ async function tmdb(url, env) {
   const body = {
     genres: (d.genres || []).map((g) => g.name),
     year: firstDate ? firstDate.slice(0, 4) : null,
-    rating: d.vote_average || null,
+    rating: hide ? null : d.vote_average || null,
     overview: d.overview || null,
-    imdbRating: imdb ?? null,
-    imdbVotes: asked ? asked.votes : saved?.imdbVotes ?? null,
+    imdbRating: hide ? null : imdb ?? null,
+    imdbVotes: votes,
     ratedAt: asked !== undefined ? Date.now() : fresh ? saved.ratedAt : 0,
     logo: logo ? `https://image.tmdb.org/t/p/w500${logo}` : null,
     certification: /^(L|10|12|14|16|18)$/.test(certification || '') ? certification : null,
