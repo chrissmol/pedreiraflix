@@ -186,24 +186,32 @@ test('com Cache API: guarda nela, nao faz put no KV e a segunda pergunta nao cha
 const guardada = (extra) => JSON.stringify({ genres: [], cast: [], imdbRating: '8.2', ...extra })
 const DIA = 86400000
 
-test('nota de titulo com poucos votos vence em 2 dias e e refeita no OMDb (caso Authentic Games: 8.2 velho, IMDb dava 4.2)', async () => {
+test('nota de titulo com poucos votos vence em 2 dias, e com menos de 1.000 votos nao mostra nota nenhuma, nem a do TMDB (caso Authentic Games)', async () => {
   const NOTAS = memoryKv()
   NOTAS.data.set('tmdb:movie:interestelar:2014', guardada({ imdbVotes: 173, ratedAt: Date.now() - 3 * DIA }))
   const calls = stubFetch(() => Response.json({ imdbRating: '4.2', imdbVotes: '173' }))
   const body = await (await ask({ ...ENV, NOTAS })).json()
-  assert.equal(body.imdbRating, '4.2')
+  assert.equal(body.imdbRating, null)
+  assert.equal(body.rating, null)
   assert.equal(body.imdbVotes, 173)
   assert.ok(calls.some((u) => u.includes('i=tt0816692')))
 })
 
-test('nota com poucos votos ainda dentro de 2 dias, ou de titulo famoso dentro de 30, nao chama o OMDb', async () => {
-  for (const extra of [{ imdbVotes: 173, ratedAt: Date.now() - 1 * DIA }, { imdbVotes: 2000000, ratedAt: Date.now() - 29 * DIA }]) {
+test('nota com votos suficientes ainda dentro de 2 dias, ou de titulo famoso dentro de 30, nao chama o OMDb', async () => {
+  for (const extra of [{ imdbVotes: 5000, ratedAt: Date.now() - 1 * DIA }, { imdbVotes: 2000000, ratedAt: Date.now() - 29 * DIA }]) {
     const NOTAS = memoryKv()
     NOTAS.data.set('tmdb:movie:interestelar:2014', guardada(extra))
     const calls = stubFetch(() => assert.fail('nao devia chamar o OMDb'))
     assert.equal((await (await ask({ ...ENV, NOTAS })).json()).imdbRating, '8.2')
     assert.equal(calls.length, 0)
   }
+})
+
+test('votos desconhecidos (OMDb sem imdbVotes) nao escondem a nota', async () => {
+  stubFetch(() => Response.json({ imdbRating: '7.1' }))
+  const body = await (await ask(ENV)).json()
+  assert.equal(body.imdbRating, '7.1')
+  assert.equal(body.rating, 8.4)
 })
 
 test('nota guardada sem ratedAt (entrada antiga) e refeita; se o OMDb falhar, mantem a nota antiga', async () => {
