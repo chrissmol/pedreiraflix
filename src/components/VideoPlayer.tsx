@@ -510,8 +510,13 @@ export default function VideoPlayer({
           else onChannelDown?.()
         }
       }}
-      // Touch fires an emulated mousemove right before click; ignoring it keeps a tap from re-showing the controls it is about to hide.
-      onMouseMove={() => lastPointerType.current !== 'touch' && wakeControls()}
+      // Pointer events say what moved right now (mouse/pen vs finger), so a mouse still works on a touch laptop after a tap.
+      // The emulated mousemove a tap fires has no pointermove, so a tap does not re-show the controls it is about to hide.
+      onPointerMove={(e) => {
+        if (e.pointerType === 'touch') return
+        lastPointerType.current = e.pointerType
+        wakeControls()
+      }}
       onClick={onContainerClick}
       // Mouse, YouTube-style: the two clicks of a double-click cancel out (pause+play), net effect is fullscreen only.
       onDoubleClick={(e) => {
